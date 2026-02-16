@@ -139,7 +139,7 @@ usta-go-complete/
 
 ## 👨‍💻 Geliştirici
 
-Oyasim Ahmed (@oyasim)
+quasim0doo and kenZzZ
 
 ---
 
