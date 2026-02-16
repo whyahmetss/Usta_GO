@@ -1,0 +1,143 @@
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
+
+
+function AdminDashboard() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const stats = [
+    { label: 'Toplam Kullanıcı', value: '1,234', icon: Users, color: 'blue' },
+    { label: 'Aktif İşler', value: '89', icon: Briefcase, color: 'green' },
+    { label: 'Aylık Gelir', value: '₺156K', icon: DollarSign, color: 'purple' },
+    { label: 'Büyüme', value: '+23%', icon: TrendingUp, color: 'orange' },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-lg">⚙️</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Admin Paneli</h1>
+              <p className="text-sm text-gray-500">Hoş geldin, {user?.name}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition"
+          >
+            <LogOut size={18} />
+            Çıkış
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* İstatistikler */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, idx) => {
+            const Icon = stat.icon
+            return (
+              <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className={`w-12 h-12 bg-${stat.color}-100 rounded-xl flex items-center justify-center`}>
+                    <Icon size={24} className={`text-${stat.color}-600`} />
+                  </div>
+                  <div className={`text-3xl font-black text-${stat.color}-600`}>
+                    {stat.value}
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Yönetim Kartları */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
+            <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-3xl">👥</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h3>
+            <p className="text-gray-600 text-sm">Müşteri ve usta hesaplarını yönet</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
+            <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-3xl">📋</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">İş Yönetimi</h3>
+            <p className="text-gray-600 text-sm">Tüm işleri görüntüle ve yönet</p>
+          </div>
+          <div
+            onClick={() => navigate('/admin/withdrawals')}
+            className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer"
+          >
+            <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-3xl">💰</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Para Çekme Talepleri</h3>
+            <p className="text-gray-600 text-sm">Usta ödemelerini onayla</p>
+            <div className="mt-3">
+              <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">
+                3 Bekliyor
+              </span>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
+            <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-3xl">📊</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Raporlar</h3>
+            <p className="text-gray-600 text-sm">Detaylı analiz ve istatistikler</p>
+          </div>
+        </div>
+
+        {/* Son Aktiviteler */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📈 Son Aktiviteler</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl">
+              <span className="text-2xl">✅</span>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">Yeni iş tamamlandı</p>
+                <p className="text-sm text-gray-600">Elektrik arızası - Kadıköy</p>
+              </div>
+              <span className="text-sm text-gray-500">2 dk önce</span>
+            </div>
+            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
+              <span className="text-2xl">👤</span>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">Yeni kullanıcı kaydı</p>
+                <p className="text-sm text-gray-600">Ahmet Y. - Müşteri</p>
+              </div>
+              <span className="text-sm text-gray-500">15 dk önce</span>
+            </div>
+            <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl">
+              <span className="text-2xl">💰</span>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">Ödeme alındı</p>
+                <p className="text-sm text-gray-600">₺450 - İş #1234</p>
+              </div>
+              <span className="text-sm text-gray-500">28 dk önce</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AdminDashboard
