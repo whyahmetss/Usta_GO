@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, Radio } from 'lucide-react'
 
 function JobDetailPage() {
   const { id } = useParams()
@@ -279,6 +279,17 @@ function JobDetailPage() {
             className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
           >
             ⭐ Değerlendir
+          </button>
+        )}
+
+        {/* Live Tracking Button */}
+        {(job.status === 'accepted' || job.status === 'in_progress') && (
+          <button
+            onClick={() => navigate(`/live-tracking/${job.id}`)}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2"
+          >
+            <Radio size={20} />
+            Canlı Takip
           </button>
         )}
 

@@ -18,6 +18,7 @@ import WithdrawPage from './pages/WithdrawPage'
 import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
+import LiveTrackingPage from './pages/LiveTrackingPage'
 
 // Protected Route wrapper
 function ProtectedRoute({ children, roleRequired = null }) {
@@ -218,6 +219,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <CancelJobPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Canlı Takip Route */}
+      <Route
+        path="/live-tracking/:id"
+        element={
+          <ProtectedRoute>
+            <LiveTrackingPage />
           </ProtectedRoute>
         }
       />
