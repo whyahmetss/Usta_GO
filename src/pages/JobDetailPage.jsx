@@ -1,21 +1,165 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X } from 'lucide-react'
+
+function CameraModal({ isOpen, onClose, onCapture }) {
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
+  const [stream, setStream] = useState(null)
+  const [error, setError] = useState(null)
+  const [facingMode, setFacingMode] = useState('environment')
+
+  useEffect(() => {
+    if (isOpen) {
+      startCamera()
+    }
+    return () => {
+      stopCamera()
+    }
+  }, [isOpen, facingMode])
+
+  const startCamera = async () => {
+    try {
+      setError(null)
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+      setStream(mediaStream)
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+      }
+    } catch (err) {
+      console.error('Camera error:', err)
+      setError('Kamera erisimi reddedildi veya kamera bulunamadi.')
+    }
+  }
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+  }
+
+  const takePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(video, 0, 0)
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+    stopCamera()
+    onCapture(dataUrl)
+    onClose()
+  }
+
+  const switchCamera = () => {
+    stopCamera()
+    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black">
+      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
+        <button
+          onClick={() => { stopCamera(); onClose() }}
+          className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center"
+        >
+          <X size={24} className="text-white" />
+        </button>
+        <span className="text-white font-bold">Fotograf Cek</span>
+        <button
+          onClick={switchCamera}
+          className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center"
+        >
+          <span className="text-white text-lg">🔄</span>
+        </button>
+      </div>
+
+      {error ? (
+        <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+          <div className="text-6xl mb-4">📷</div>
+          <p className="text-white text-lg mb-4">{error}</p>
+          <label className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold cursor-pointer">
+            Dosyadan Sec
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files[0]
+                if (file) {
+                  const reader = new FileReader()
+                  reader.onloadend = () => {
+                    onCapture(reader.result)
+                    onClose()
+                  }
+                  reader.readAsDataURL(file)
+                }
+              }}
+            />
+          </label>
+          <button
+            onClick={() => { stopCamera(); onClose() }}
+            className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-xl font-bold"
+          >
+            Iptal
+          </button>
+        </div>
+      ) : (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+      )}
+
+      {!error && (
+        <div className="absolute bottom-0 left-0 right-0 p-8 flex justify-center bg-gradient-to-t from-black/60 to-transparent">
+          <button
+            onClick={takePhoto}
+            className="w-20 h-20 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-2xl"
+          >
+            <div className="w-16 h-16 bg-white rounded-full border-2 border-gray-400"></div>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function JobDetailPage() {
   const { id } = useParams()
   const { user, jobs, acceptJob, startJob, completeJob } = useAuth()
   const navigate = useNavigate()
-  
+
   const job = jobs.find(j => j.id === id)
   const [beforePhotos, setBeforePhotos] = useState(job?.beforePhotos || [])
   const [afterPhotos, setAfterPhotos] = useState(job?.afterPhotos || [])
+  const [showCamera, setShowCamera] = useState(false)
+  const [cameraType, setCameraType] = useState('before')
 
   if (!job) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">İş bulunamadı</p>
+        <p className="text-gray-600">Is bulunamadi</p>
       </div>
     )
   }
@@ -24,46 +168,62 @@ function JobDetailPage() {
   const isCustomer = user?.role === 'customer'
 
   const handleAccept = () => {
-    if (confirm('Bu işi kabul etmek istiyor musunuz?')) {
+    if (confirm('Bu isi kabul etmek istiyor musunuz?')) {
       acceptJob(job.id)
-      alert('İş kabul edildi! Müşteri bilgilendirild i.')
+      alert('Is kabul edildi! Musteri bilgilendirildi.')
     }
   }
 
   const handleStartNavigation = () => {
-    // Google Maps'te aç
     const { lat, lng } = job.location
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
     window.open(url, '_blank')
   }
 
-  const handleTakePhoto = (type) => {
-    // Gerçek uygulamada kamera açılacak
-    const photoUrl = `https://placehold.co/400x300/blue/white?text=${type === 'before' ? 'Once' : 'Sonra'}`
-    
-    if (type === 'before') {
-      setBeforePhotos([...beforePhotos, photoUrl])
+  const openCamera = (type) => {
+    setCameraType(type)
+    setShowCamera(true)
+  }
+
+  const handleCameraCapture = (dataUrl) => {
+    if (cameraType === 'before') {
+      setBeforePhotos(prev => [...prev, dataUrl])
     } else {
-      setAfterPhotos([...afterPhotos, photoUrl])
+      setAfterPhotos(prev => [...prev, dataUrl])
+    }
+  }
+
+  const handleFileUpload = (e, type) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (type === 'before') {
+          setBeforePhotos(prev => [...prev, reader.result])
+        } else {
+          setAfterPhotos(prev => [...prev, reader.result])
+        }
+      }
+      reader.readAsDataURL(file)
     }
   }
 
   const handleStartJob = () => {
     if (beforePhotos.length === 0) {
-      alert('Lütfen işe başlamadan önce fotoğraf çekin')
+      alert('Lutfen ise baslamadan once fotograf cekin')
       return
     }
     startJob(job.id, beforePhotos)
-    alert('İş başlatıldı! İyi çalışmalar.')
+    alert('Is baslatildi! Iyi calismalar.')
   }
 
   const handleCompleteJob = () => {
     if (afterPhotos.length === 0) {
-      alert('Lütfen iş bitim fotoğrafı çekin')
+      alert('Lutfen is bitim fotografi cekin')
       return
     }
     completeJob(job.id, afterPhotos)
-    alert('İş tamamlandı! Müşteri değerlendirme yapacak.')
+    alert('Is tamamlandi! Musteri degerlendirme yapacak.')
     navigate('/professional')
   }
 
@@ -71,9 +231,15 @@ function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
+      <CameraModal
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCameraCapture}
+      />
+
       {/* Header */}
       <div className="blue-gradient-bg pb-6 pt-4 px-4">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-6"
         >
@@ -96,42 +262,41 @@ function JobDetailPage() {
               job.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
               job.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
               job.status === 'in_progress' ? 'bg-purple-100 text-purple-600' :
+              job.status === 'cancelled' ? 'bg-red-100 text-red-600' :
               'bg-green-100 text-green-600'
             }`}>
               {job.status === 'pending' ? 'Bekliyor' :
                job.status === 'accepted' ? 'Kabul Edildi' :
                job.status === 'in_progress' ? 'Devam Ediyor' :
-               'Tamamlandı'}
+               job.status === 'cancelled' ? 'Iptal Edildi' :
+               job.status === 'rated' ? 'Degerlendirildi' :
+               'Tamamlandi'}
             </span>
           </div>
         </div>
 
         {/* Job Info */}
         <div className="bg-white rounded-2xl p-5 shadow-lg">
-          <h3 className="font-bold text-gray-900 mb-3">İş Detayları</h3>
+          <h3 className="font-bold text-gray-900 mb-3">Is Detaylari</h3>
           <p className="text-gray-700 mb-4">{job.description}</p>
-          
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <span className="text-sm text-gray-600">Ücret</span>
-            <span className="text-2xl font-black text-green-600">₺{job.price}</span>
+            <span className="text-sm text-gray-600">Ucret</span>
+            <span className="text-2xl font-black text-green-600">{job.price} TL</span>
           </div>
         </div>
 
-        {/* Customer/Professional Info */}
+        {/* Other Person Info */}
         {otherPerson && (
           <div className="bg-white rounded-2xl p-5 shadow-lg">
             <h3 className="font-bold text-gray-900 mb-3">
-              {isProfessional ? 'Müşteri Bilgileri' : 'Usta Bilgileri'}
+              {isProfessional ? 'Musteri Bilgileri' : 'Usta Bilgileri'}
             </h3>
             <div className="flex items-center gap-4 mb-3">
               <div className="text-4xl">{otherPerson.avatar}</div>
               <div className="flex-1">
                 <p className="font-bold text-gray-900">{otherPerson.name}</p>
                 {otherPerson.phone && (
-                  <a 
-                    href={`tel:${otherPerson.phone}`}
-                    className="flex items-center gap-2 text-blue-600 text-sm mt-1"
-                  >
+                  <a href={`tel:${otherPerson.phone}`} className="flex items-center gap-2 text-blue-600 text-sm mt-1">
                     <Phone size={14} />
                     {otherPerson.phone}
                   </a>
@@ -143,76 +308,142 @@ function JobDetailPage() {
                 onClick={() => navigate(`/professional-profile/${job.professional.id}`)}
                 className="w-full py-2 bg-blue-50 text-blue-600 rounded-xl font-semibold text-sm hover:bg-blue-100 transition"
               >
-                Profili Görüntüle →
+                Profili Goruntule
               </button>
             )}
           </div>
         )}
 
-        {/* Photos */}
-        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed') && isProfessional && (
+        {/* Photos - Professional View */}
+        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed' || job.status === 'rated') && isProfessional && (
           <div className="bg-white rounded-2xl p-5 shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-3">📸 Fotoğraflar</h3>
-            
-            {/* Before Photos */}
+            <h3 className="font-bold text-gray-900 mb-3">Fotograflar</h3>
+
             {job.status === 'accepted' && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-700">Başlangıç Fotoğrafları</p>
-                  <button
-                    onClick={() => handleTakePhoto('before')}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-600 rounded-xl text-sm font-bold"
-                  >
-                    <Camera size={16} />
-                    Fotoğraf Çek
-                  </button>
+                  <p className="text-sm font-semibold text-gray-700">Baslangic Fotograflari</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openCamera('before')}
+                      className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-600 rounded-xl text-sm font-bold"
+                    >
+                      <Camera size={16} />
+                      Kamera
+                    </button>
+                    <label className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold cursor-pointer">
+                      Dosya
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'before')} />
+                    </label>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {beforePhotos.map((photo, idx) => (
-                    <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                      <img src={photo} alt="Önce" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
+                {beforePhotos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {beforePhotos.map((photo, idx) => (
+                      <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden relative">
+                        <img src={photo} alt="Once" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => setBeforePhotos(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                        >
+                          X
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-4">Henuz fotograf eklenmedi</p>
+                )}
               </div>
             )}
 
-            {/* After Photos */}
             {job.status === 'in_progress' && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-700">Bitim Fotoğrafları</p>
-                  <button
-                    onClick={() => handleTakePhoto('after')}
-                    className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-600 rounded-xl text-sm font-bold"
-                  >
-                    <Camera size={16} />
-                    Fotoğraf Çek
-                  </button>
+                  <p className="text-sm font-semibold text-gray-700">Bitim Fotograflari</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openCamera('after')}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-600 rounded-xl text-sm font-bold"
+                    >
+                      <Camera size={16} />
+                      Kamera
+                    </button>
+                    <label className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold cursor-pointer">
+                      Dosya
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'after')} />
+                    </label>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {afterPhotos.map((photo, idx) => (
-                    <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                      <img src={photo} alt="Sonra" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
+                {afterPhotos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {afterPhotos.map((photo, idx) => (
+                      <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden relative">
+                        <img src={photo} alt="Sonra" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => setAfterPhotos(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                        >
+                          X
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-4">Henuz fotograf eklenmedi</p>
+                )}
               </div>
             )}
 
-            {/* View Photos */}
-            {job.status === 'completed' && (
+            {(job.status === 'completed' || job.status === 'rated') && (
               <div className="space-y-4">
+                {job.beforePhotos?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Baslangic</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {job.beforePhotos.map((photo, idx) => (
+                        <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                          <img src={photo} alt="Once" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {job.afterPhotos?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Bitim</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {job.afterPhotos.map((photo, idx) => (
+                        <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                          <img src={photo} alt="Sonra" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Customer photo view */}
+        {isCustomer && (job.status === 'completed' || job.status === 'rated') && (job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
+          <div className="bg-white rounded-2xl p-5 shadow-lg">
+            <h3 className="font-bold text-gray-900 mb-3">Is Fotograflari</h3>
+            <div className="space-y-4">
+              {job.beforePhotos?.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Başlangıç</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Baslangic</p>
                   <div className="grid grid-cols-3 gap-2">
                     {job.beforePhotos.map((photo, idx) => (
                       <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                        <img src={photo} alt="Önce" className="w-full h-full object-cover" />
+                        <img src={photo} alt="Once" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
                 </div>
+              )}
+              {job.afterPhotos?.length > 0 && (
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-2">Bitim</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -223,12 +454,12 @@ function JobDetailPage() {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
-        {/* Actions for Professional */}
+        {/* Professional Actions */}
         {isProfessional && (
           <div className="space-y-3">
             {job.status === 'pending' && (
@@ -236,7 +467,7 @@ function JobDetailPage() {
                 onClick={handleAccept}
                 className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
               >
-                ✅ İşi Kabul Et
+                Isi Kabul Et
               </button>
             )}
 
@@ -247,14 +478,18 @@ function JobDetailPage() {
                   className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2"
                 >
                   <Navigation size={20} />
-                  Yola Çık (Google Maps)
+                  Yola Cik (Google Maps)
                 </button>
                 <button
                   onClick={handleStartJob}
-                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
+                  className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition ${
+                    beforePhotos.length === 0
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-xl'
+                  }`}
                   disabled={beforePhotos.length === 0}
                 >
-                  🚀 İşe Başla
+                  Ise Basla ({beforePhotos.length} fotograf)
                 </button>
               </>
             )}
@@ -262,43 +497,47 @@ function JobDetailPage() {
             {job.status === 'in_progress' && (
               <button
                 onClick={handleCompleteJob}
-                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2"
+                className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 ${
+                  afterPhotos.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'
+                }`}
                 disabled={afterPhotos.length === 0}
               >
                 <CheckCircle size={20} />
-                İşi Tamamla
+                Isi Tamamla ({afterPhotos.length} fotograf)
               </button>
             )}
           </div>
         )}
 
-        {/* Actions for Customer */}
+        {/* Customer rate */}
         {isCustomer && job.status === 'completed' && !job.rating && (
           <button
             onClick={() => navigate(`/rate/${job.id}`)}
             className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
           >
-            ⭐ Değerlendir
+            Degerlendir
           </button>
         )}
 
         {/* Message Button */}
-        {otherPerson && job.status !== 'pending' && (
+        {otherPerson && job.status !== 'pending' && job.status !== 'cancelled' && (
           <button
             onClick={() => navigate(`/messages/${job.id}`)}
             className="w-full py-4 bg-white border-2 border-blue-600 text-blue-600 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
           >
-            💬 Mesaj Gönder
+            Mesaj Gonder
           </button>
         )}
 
         {/* Cancel Button */}
-        {job.status !== 'completed' && job.status !== 'cancelled' && (
+        {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'rated' && (
           <button
             onClick={() => navigate(`/cancel-job/${job.id}`)}
             className="w-full py-3 bg-red-50 border border-red-200 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition"
           >
-            ❌ İşi İptal Et
+            Isi Iptal Et
           </button>
         )}
       </div>
