@@ -3,24 +3,28 @@ import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User } from 'lucide
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
+
 function HomePage() {
-  const { user, logout } = useAuth()
+  const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('home')
   const [showMenu, setShowMenu] = useState(false)
 
+  const unreadNotifs = getUnreadNotificationCount()
+  const unreadMessages = getUnreadMessageCount()
+
   const categories = [
     {
       id: 'electric',
-      name: 'Elektrikçi',
+      name: 'Elektrikci',
       icon: '⚡',
       color: 'from-yellow-400 to-orange-500',
       active: true,
-      path: '/services/electric'
+      path: '/create-job'
     },
     {
       id: 'plumbing',
-      name: 'Tesisatçı',
+      name: 'Tesisatci',
       icon: '🔧',
       color: 'from-blue-400 to-blue-600',
       active: false
@@ -41,7 +45,7 @@ function HomePage() {
     },
     {
       id: 'painting',
-      name: 'Boyacı',
+      name: 'Boyaci',
       icon: '🎨',
       color: 'from-green-400 to-teal-500',
       active: false
@@ -78,17 +82,16 @@ function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <Search size={20} className="text-white" />
-              </button>
               <button
                 onClick={() => navigate('/notifications')}
                 className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center relative"
               >
                 <Bell size={20} className="text-white" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
-                  3
-                </span>
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
+                    {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setShowMenu(true)}
@@ -106,16 +109,19 @@ function HomePage() {
             </div>
             <div className="relative z-10">
               <div className="inline-block px-3 py-1 bg-white/30 backdrop-blur rounded-full mb-2">
-                <span className="text-white font-bold text-sm">🔥 20% İndirim</span>
+                <span className="text-white font-bold text-sm">🔥 20% Indirim</span>
               </div>
               <h2 className="text-2xl font-black text-white mb-2">
-                İlk Siparişinizde!
+                Ilk Siparisizde!
               </h2>
               <p className="text-white/90 mb-4 text-sm">
-                Hemen kayıt olun, profesyonel hizmet alın
+                Hemen kayit olun, profesyonel hizmet alin
               </p>
-              <button className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold shadow-lg hover:scale-105 transition">
-                Hemen Başla
+              <button
+                onClick={() => navigate('/create-job')}
+                className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold shadow-lg hover:scale-105 transition"
+              >
+                Hemen Basla
               </button>
             </div>
           </div>
@@ -124,10 +130,15 @@ function HomePage() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Hangi hizmete ihtiyacınız var?"
+              placeholder="Hangi hizmete ihtiyaciniz var?"
               className="w-full px-5 py-4 rounded-2xl bg-white/20 backdrop-blur border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+              onFocus={() => navigate('/create-job')}
+              readOnly
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur rounded-xl flex items-center justify-center">
+            <button
+              onClick={() => navigate('/create-job')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur rounded-xl flex items-center justify-center"
+            >
               <span className="text-xl">🎯</span>
             </button>
           </div>
@@ -138,14 +149,13 @@ function HomePage() {
       <div className="px-4 py-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-gray-900">Kategoriler</h3>
-          <button className="text-blue-600 font-semibold text-sm">Tümünü Gör →</button>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           {categories.map(category => (
             <div key={category.id} className="relative">
               {!category.active && (
-                <span className="coming-soon-badge">Yakında</span>
+                <span className="coming-soon-badge">Yakinda</span>
               )}
               <button
                 onClick={() => handleCategoryClick(category)}
@@ -165,67 +175,74 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Popüler Ustalar */}
+      {/* Populer Ustalar */}
       <div className="px-4 py-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Popüler Ustalar</h3>
+          <h3 className="text-xl font-bold text-gray-900">Populer Ustalar</h3>
         </div>
 
         <div className="space-y-3">
-          <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-4">
+          <div
+            onClick={() => navigate('/professional-profile/pro-1')}
+            className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-4 cursor-pointer hover:shadow-xl transition"
+          >
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-2xl">
               ⚡
             </div>
             <div className="flex-1">
-              <h4 className="font-bold text-gray-900">Ahmet Yılmaz</h4>
-              <p className="text-sm text-gray-600">Elektrik Ustası</p>
+              <h4 className="font-bold text-gray-900">Ahmet Yilmaz</h4>
+              <p className="text-sm text-gray-600">Elektrik Ustasi</p>
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-yellow-500">⭐</span>
                 <span className="text-sm font-bold">4.9</span>
-                <span className="text-xs text-gray-500">(127 değerlendirme)</span>
+                <span className="text-xs text-gray-500">(127 degerlendirme)</span>
               </div>
             </div>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold">
-              İncele
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate('/create-job')
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold"
+            >
+              Hizmet Al
             </button>
           </div>
         </div>
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-xl">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-xl z-50">
         <div className="flex items-center justify-around">
           <button
             onClick={() => navigate('/home')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-400'
-              }`}
+            className="flex flex-col items-center gap-1 text-blue-600"
           >
             <Home size={24} />
             <span className="text-xs font-semibold">Ana Sayfa</span>
           </button>
           <button
             onClick={() => navigate('/my-jobs')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'jobs' ? 'text-blue-600' : 'text-gray-400'
-              }`}
+            className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Briefcase size={24} />
-            <span className="text-xs font-semibold">İşlerim</span>
+            <span className="text-xs font-semibold">Islerim</span>
           </button>
           <button
             onClick={() => navigate('/messages')}
-            className={`flex flex-col items-center gap-1 relative ${activeTab === 'messages' ? 'text-blue-600' : 'text-gray-400'
-              }`}
+            className="flex flex-col items-center gap-1 relative text-gray-400"
           >
             <MessageSquare size={24} />
             <span className="text-xs font-semibold">Mesajlar</span>
-            <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
-              5
-            </span>
+            {unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                {unreadMessages > 9 ? '9+' : unreadMessages}
+              </span>
+            )}
           </button>
           <button
             onClick={() => navigate('/profile')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-blue-600' : 'text-gray-400'
-              }`}
+            className="flex flex-col items-center gap-1 text-gray-400"
           >
             <User size={24} />
             <span className="text-xs font-semibold">Profil</span>
