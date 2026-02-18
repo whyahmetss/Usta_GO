@@ -20,6 +20,8 @@ import AdminJobsPage from './pages/AdminJobsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
+import HelpPage from './pages/HelpPage'
+import AboutPage from './pages/AboutPage'
 
 // Protected Route wrapper
 function ProtectedRoute({ children, roleRequired = null }) {
@@ -107,6 +109,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/help"
+        element={
+          <ProtectedRoute>
+            <HelpPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute>
+            <AboutPage />
           </ProtectedRoute>
         }
       />

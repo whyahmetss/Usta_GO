@@ -15,6 +15,25 @@ function CreateJobPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [address, setAddress] = useState('')
 
+  // Get region multiplier from address
+  const getRegionMultiplier = (addr) => {
+    if (!addr) return 1.0
+    const premiumZones = ['Kadikoy', 'Besiktas', 'Nisantasi']
+    const economyZones = ['Esenyurt', 'Sultanbeyli']
+
+    const upperAddr = addr.toUpperCase()
+    if (premiumZones.some(zone => upperAddr.includes(zone.toUpperCase()))) {
+      return 1.3
+    }
+    if (economyZones.some(zone => upperAddr.includes(zone.toUpperCase()))) {
+      return 1.0
+    }
+    return 1.15 // Default for other zones
+  }
+
+  const regionMultiplier = getRegionMultiplier(address)
+  const finalPrice = aiPrice ? Math.round(aiPrice * regionMultiplier) : 0
+
   const handlePhotoCapture = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -237,7 +256,12 @@ function CreateJobPage() {
               <div className="bg-white/20 backdrop-blur rounded-xl p-4 mb-4">
                 <div className="text-center">
                   <p className="text-white/80 text-sm mb-1">Tahmini Ucret</p>
-                  <p className="text-5xl font-black">{aiPrice} TL</p>
+                  <p className="text-5xl font-black">{finalPrice} TL</p>
+                  {regionMultiplier !== 1.0 && (
+                    <p className="text-white/80 text-xs mt-2">
+                      Temel fiyat: {aiPrice} TL ({regionMultiplier === 1.3 ? 'Premium Bölge +30%' : regionMultiplier === 1.0 ? 'Ekonomi Bölge' : 'Standart +15%'})
+                    </p>
+                  )}
                 </div>
               </div>
 
