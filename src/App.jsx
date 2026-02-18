@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
-import ElectricServicesPage from './pages/ElectricServicesPage'
 import ProfessionalDashboard from './pages/ProfessionalDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import ProfilePage from './pages/ProfilePage'
@@ -18,6 +17,7 @@ import WithdrawPage from './pages/WithdrawPage'
 import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
+import LiveTrackingPage from './pages/LiveTrackingPage'
 
 // Protected Route wrapper
 function ProtectedRoute({ children, roleRequired = null }) {
@@ -28,7 +28,7 @@ function ProtectedRoute({ children, roleRequired = null }) {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-semibold">Yükleniyor...</p>
+          <p className="text-gray-600 font-semibold">Yukleniyor...</p>
         </div>
       </div>
     )
@@ -39,7 +39,6 @@ function ProtectedRoute({ children, roleRequired = null }) {
   }
 
   if (roleRequired && user.role !== roleRequired) {
-    // Kullanıcıyı kendi paneline yönlendir
     if (user.role === 'admin') return <Navigate to="/admin" />
     if (user.role === 'professional') return <Navigate to="/professional" />
     return <Navigate to="/home" />
@@ -53,8 +52,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
           user ? (
             user.role === 'admin' ? <Navigate to="/admin" /> :
@@ -63,10 +62,10 @@ function AppRoutes() {
           ) : (
             <AuthPage />
           )
-        } 
+        }
       />
-      
-      {/* Müşteri Routes */}
+
+      {/* Musteri Routes */}
       <Route
         path="/home"
         element={
@@ -75,13 +74,11 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* /services/electric -> redirect to /create-job */}
       <Route
         path="/services/electric"
-        element={
-          <ProtectedRoute roleRequired="customer">
-            <ElectricServicesPage />
-          </ProtectedRoute>
-        }
+        element={<Navigate to="/create-job" replace />}
       />
 
       {/* Usta Routes */}
@@ -94,7 +91,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Ortak Routes (Müşteri & Usta) */}
+      {/* Ortak Routes */}
       <Route
         path="/profile"
         element={
@@ -212,6 +209,16 @@ function AppRoutes() {
         }
       />
 
+      {/* Live Tracking Route */}
+      <Route
+        path="/track/:id"
+        element={
+          <ProtectedRoute>
+            <LiveTrackingPage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Cancel Job Route */}
       <Route
         path="/cancel-job/:id"
@@ -222,7 +229,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 404 - Ana sayfaya yönlendir */}
+      {/* 404 */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )

@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, Camera, Sparkles } from 'lucide-react'
+import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
 
 function CreateJobPage() {
-  const { user } = useAuth()
+  const { user, createJob } = useAuth()
   const navigate = useNavigate()
-  const [step, setStep] = useState(1) // 1: Problem yazma, 2: AI analiz, 3: Onay
+  const [step, setStep] = useState(1)
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [aiPrice, setAiPrice] = useState(null)
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [address, setAddress] = useState('')
 
   const handlePhotoCapture = (e) => {
     const file = e.target.files[0]
@@ -28,37 +29,33 @@ function CreateJobPage() {
 
   const handleAIAnalysis = async () => {
     if (!description.trim()) {
-      alert('Lütfen problemi açıklayın')
+      alert('Lutfen problemi aciklayin')
       return
     }
 
     setIsAnalyzing(true)
     setStep(2)
 
-    // AI Analiz simülasyonu (gerçek uygulamada Anthropic Claude API çağrısı)
-    // Backend'e bağlanınca burası değişecek
     setTimeout(() => {
-      // Basit keyword bazlı fiyat tahmini (demo için)
       let estimatedPrice = 150
       let category = 'Genel Elektrik'
-      
+
       const desc = description.toLowerCase()
-      
+
       if (desc.includes('priz') || desc.includes('sigorta')) {
         estimatedPrice = 120
         category = 'Priz/Sigorta'
       } else if (desc.includes('avize') || desc.includes('lamba')) {
         estimatedPrice = 200
-        category = 'Aydınlatma'
-      } else if (desc.includes('kıvılcım') || desc.includes('yangın') || desc.includes('tehlike')) {
+        category = 'Aydinlatma'
+      } else if (desc.includes('kivilcim') || desc.includes('yangin') || desc.includes('tehlike')) {
         estimatedPrice = 350
-        category = 'Acil Arıza'
+        category = 'Acil Ariza'
       } else if (desc.includes('kablo') || desc.includes('tesisat')) {
         estimatedPrice = 400
         category = 'Tesisat'
       }
 
-      // Fotoğraf varsa +50₺
       if (photo) {
         estimatedPrice += 50
       }
@@ -66,7 +63,7 @@ function CreateJobPage() {
       setAiPrice(estimatedPrice)
       setAiAnalysis({
         category,
-        urgency: desc.includes('acil') || desc.includes('tehlike') ? 'Yüksek' : 'Normal',
+        urgency: desc.includes('acil') || desc.includes('tehlike') ? 'Yuksek' : 'Normal',
         estimatedDuration: estimatedPrice > 300 ? '2-3 saat' : '1-2 saat'
       })
       setIsAnalyzing(false)
@@ -75,9 +72,7 @@ function CreateJobPage() {
   }
 
   const handleCreateJob = () => {
-    // İş oluşturma (backend'e bağlanınca gerçek olacak)
-    const newJob = {
-      id: Date.now().toString(),
+    const jobData = {
       title: aiAnalysis.category,
       description,
       price: aiPrice,
@@ -86,18 +81,21 @@ function CreateJobPage() {
         id: user.id,
         name: user.name,
         phone: user.phone || '',
-        avatar: user.avatar
+        avatar: user.avatar || '👤'
       },
-      location: { address: 'Kadıköy, İstanbul', lat: 40.9929, lng: 29.0260 },
+      location: {
+        address: address || 'Kadikoy, Istanbul',
+        lat: 40.9929,
+        lng: 29.0260
+      },
       date: new Date().toISOString(),
-      status: 'pending',
-      urgent: aiAnalysis.urgency === 'Yüksek',
+      urgent: aiAnalysis.urgency === 'Yuksek',
       category: 'electric'
     }
 
-    // Context'e ekle (gerçekte backend'e POST)
-    alert('İş talebi oluşturuldu! Ustalar yakında teklif verecek.')
-    navigate('/home')
+    createJob(jobData)
+    alert('Is talebi olusturuldu! Ustalar yakinda teklif verecek.')
+    navigate('/my-jobs')
   }
 
   return (
@@ -105,14 +103,14 @@ function CreateJobPage() {
       {/* Header */}
       <div className="blue-gradient-bg pb-6 pt-4 px-4">
         <div className="flex items-center gap-4 mb-6">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"
           >
             <ArrowLeft size={20} className="text-white" />
           </button>
           <div>
-            <h1 className="text-2xl font-black text-white">Yeni İş Talebi</h1>
+            <h1 className="text-2xl font-black text-white">Yeni Is Talebi</h1>
             <p className="text-white/80 text-sm">Elektrik hizmeti</p>
           </div>
         </div>
@@ -134,31 +132,46 @@ function CreateJobPage() {
       </div>
 
       <div className="px-4 py-6">
-        {/* Step 1: Problem Açıklaması */}
+        {/* Step 1: Problem */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold text-gray-900 mb-3">Sorunu Açıklayın</h3>
+              <h3 className="font-bold text-gray-900 mb-3">Sorunu Aciklayin</h3>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Örn: Salon prizlerinde kıvılcım çıkıyor, kontrol edilmesi gerekiyor..."
+                placeholder="Orn: Salon prizlerinde kivilcim cikiyor, kontrol edilmesi gerekiyor..."
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={6}
               />
             </div>
 
-            {/* Fotoğraf Ekleme */}
+            {/* Adres */}
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold text-gray-900 mb-3">Fotoğraf Ekle (Opsiyonel)</h3>
+              <h3 className="font-bold text-gray-900 mb-3">
+                <MapPin size={18} className="inline mr-1" />
+                Adres
+              </h3>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Orn: Kadikoy, Istanbul"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Fotograf Ekleme */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-bold text-gray-900 mb-3">Fotograf Ekle (Opsiyonel)</h3>
               <p className="text-sm text-gray-600 mb-3">
-                Fotoğraf eklemek fiyat tahmininin daha doğru olmasını sağlar
+                Fotograf eklemek fiyat tahmininin daha dogru olmasini saglar
               </p>
-              
+
               {!photoPreview ? (
                 <label className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition">
                   <Camera size={32} className="text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-600">Fotoğraf Çek</span>
+                  <span className="text-sm text-gray-600">Fotograf Cek veya Sec</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -177,7 +190,7 @@ function CreateJobPage() {
                     }}
                     className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center"
                   >
-                    ✕
+                    X
                   </button>
                 </div>
               )}
@@ -198,29 +211,28 @@ function CreateJobPage() {
           </div>
         )}
 
-        {/* Step 2: AI Analiz Ediy or */}
+        {/* Step 2: AI Analyzing */}
         {step === 2 && isAnalyzing && (
           <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
             <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">AI Analiz Ediyor...</h3>
-            <p className="text-gray-600">Probleminiz değerlendiriliyor ve fiyat hesaplanıyor</p>
+            <p className="text-gray-600">Probleminiz degerlendiriliyor ve fiyat hesaplaniyor</p>
           </div>
         )}
 
-        {/* Step 3: Sonuç ve Onay */}
+        {/* Step 3: Result & Confirm */}
         {step === 3 && aiPrice && (
           <div className="space-y-4">
-            {/* AI Analiz Sonucu */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={24} />
                 <h3 className="text-xl font-bold">AI Analiz Sonucu</h3>
               </div>
-              
+
               <div className="bg-white/20 backdrop-blur rounded-xl p-4 mb-4">
                 <div className="text-center">
-                  <p className="text-white/80 text-sm mb-1">Tahmini Ücret</p>
-                  <p className="text-5xl font-black">₺{aiPrice}</p>
+                  <p className="text-white/80 text-sm mb-1">Tahmini Ucret</p>
+                  <p className="text-5xl font-black">{aiPrice} TL</p>
                 </div>
               </div>
 
@@ -234,41 +246,44 @@ function CreateJobPage() {
                   <p className="font-bold">{aiAnalysis.urgency}</p>
                 </div>
                 <div className="bg-white/20 backdrop-blur rounded-xl p-3 col-span-2">
-                  <p className="text-white/80 mb-1">Tahmini Süre</p>
+                  <p className="text-white/80 mb-1">Tahmini Sure</p>
                   <p className="font-bold">{aiAnalysis.estimatedDuration}</p>
                 </div>
               </div>
             </div>
 
-            {/* Problem Özeti */}
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold text-gray-900 mb-3">Problem Detayı</h3>
-              <p className="text-gray-700 mb-4">{description}</p>
+              <h3 className="font-bold text-gray-900 mb-3">Problem Detayi</h3>
+              <p className="text-gray-700 mb-2">{description}</p>
+              {address && (
+                <p className="text-sm text-gray-500 mb-4">
+                  <MapPin size={14} className="inline mr-1" />
+                  {address}
+                </p>
+              )}
               {photoPreview && (
                 <img src={photoPreview} alt="Problem" className="w-full h-48 object-cover rounded-xl" />
               )}
             </div>
 
-            {/* Bilgilendirme */}
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
               <p className="text-sm text-blue-900">
-                ℹ️ Bu fiyat AI tarafından hesaplanmış bir tahmindir. Ustalar teklif verdiğinde kesinleşecektir.
+                Bu fiyat AI tarafindan hesaplanmis bir tahmindir. Ustalar teklif verdiginde kesinlesecektir.
               </p>
             </div>
 
-            {/* Butonlar */}
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setStep(1)}
                 className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
               >
-                Düzenle
+                Duzenle
               </button>
               <button
                 onClick={handleCreateJob}
                 className="py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:shadow-xl transition"
               >
-                Onayla & Gönder
+                Onayla & Gonder
               </button>
             </div>
           </div>
