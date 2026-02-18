@@ -17,6 +17,7 @@ import WithdrawPage from './pages/WithdrawPage'
 import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
+import LiveTrackingPage from './pages/LiveTrackingPage'
 
 // Protected Route wrapper
 function ProtectedRoute({ children, roleRequired = null }) {
@@ -204,6 +205,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute roleRequired="admin">
             <AdminWithdrawalsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Live Tracking Route */}
+      <Route
+        path="/track/:id"
+        element={
+          <ProtectedRoute>
+            <LiveTrackingPage />
           </ProtectedRoute>
         }
       />

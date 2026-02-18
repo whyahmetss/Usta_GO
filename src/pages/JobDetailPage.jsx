@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
 
 function CameraModal({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null)
@@ -312,6 +312,19 @@ function JobDetailPage() {
               </button>
             )}
           </div>
+        )}
+
+        {/* Live Tracking Button - for customer when job is accepted or in_progress */}
+        {isCustomer && (job.status === 'accepted' || job.status === 'in_progress') && job.professional && (
+          <button
+            onClick={() => navigate(`/track/${job.id}`)}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-3 relative overflow-hidden"
+          >
+            <span className="absolute left-4 w-3 h-3 bg-green-400 rounded-full animate-ping" />
+            <span className="absolute left-4 w-3 h-3 bg-green-400 rounded-full" />
+            <Radio size={22} className="ml-4" />
+            Canli Takip
+          </button>
         )}
 
         {/* Photos - Professional View */}
