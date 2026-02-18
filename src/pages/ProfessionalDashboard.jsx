@@ -10,6 +10,9 @@ function ProfessionalDashboard() {
   const [showMenu, setShowMenu] = useState(false)
   const [allJobs, setAllJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
 
+  const unreadNotifs = getUnreadNotificationCount()
+  const unreadMessages = getUnreadMessageCount()
+
   // Poll localStorage for real-time job updates
   useEffect(() => {
     const interval = setInterval(() => {
