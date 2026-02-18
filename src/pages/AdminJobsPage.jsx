@@ -1,10 +1,21 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { ArrowLeft, LogOut, Trash2 } from 'lucide-react'
 
 function AdminJobsPage() {
-  const { logout, jobs } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
+  const [jobs, setJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
+
+  // Poll localStorage for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+      setJobs(updatedJobs)
+    }, 500) // Check every 500ms for faster updates
+    return () => clearInterval(interval)
+  }, [])
 
   const handleLogout = () => {
     logout()

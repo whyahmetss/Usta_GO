@@ -1,11 +1,21 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { ArrowLeft, LogOut, Trash2, Shield } from 'lucide-react'
 
 function AdminUsersPage() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+  const [savedUsers, setSavedUsers] = useState(() => JSON.parse(localStorage.getItem('users') || '[]'))
+
+  // Poll localStorage for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+      setSavedUsers(updatedUsers)
+    }, 500) // Check every 500ms for faster updates
+    return () => clearInterval(interval)
+  }, [])
 
   const handleLogout = () => {
     logout()

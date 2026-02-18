@@ -93,7 +93,12 @@ function CreateJobPage() {
       category: 'electric'
     }
 
-    createJob(jobData)
+    const result = createJob(jobData)
+
+    // Verify localStorage update
+    const savedJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+    console.log('Jobs in localStorage:', savedJobs.length, 'Last job:', result)
+
     alert('Is talebi olusturuldu! Ustalar yakinda teklif verecek.')
     navigate('/my-jobs')
   }
