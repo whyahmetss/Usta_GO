@@ -15,6 +15,8 @@ import CreateJobPage from './pages/CreateJobPage'
 import WalletPage from './pages/WalletPage'
 import WithdrawPage from './pages/WithdrawPage'
 import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
+import AdminUsersPage from './pages/AdminUsersPage'
+import AdminJobsPage from './pages/AdminJobsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
@@ -205,6 +207,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute roleRequired="admin">
             <AdminWithdrawalsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute roleRequired="admin">
+            <AdminUsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/jobs"
+        element={
+          <ProtectedRoute roleRequired="admin">
+            <AdminJobsPage />
           </ProtectedRoute>
         }
       />

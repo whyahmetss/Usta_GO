@@ -110,8 +110,18 @@ export function AuthProvider({ children }) {
         id: 'admin-001',
         email: 'admin@admin.com',
         name: 'Admin',
-        role: 'admin'
+        role: 'admin',
+        avatar: '👑',
+        createdAt: new Date().toISOString()
       }
+
+      // Add admin to users list if not already there
+      const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+      if (!savedUsers.find(u => u.id === 'admin-001')) {
+        savedUsers.push(adminUser)
+        localStorage.setItem('users', JSON.stringify(savedUsers))
+      }
+
       setUser(adminUser)
       localStorage.setItem('user', JSON.stringify(adminUser))
       return { success: true, role: 'admin' }
