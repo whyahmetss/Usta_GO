@@ -1,16 +1,29 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
 
 function AdminDashboard() {
-  const { user, logout, jobs, withdrawals, transactions } = useAuth()
+  const { user, logout, withdrawals, transactions } = useAuth()
   const navigate = useNavigate()
+  const [savedUsers, setSavedUsers] = useState(() => JSON.parse(localStorage.getItem('users') || '[]'))
+  const [allJobs, setAllJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
+
+  // Poll localStorage for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const users = JSON.parse(localStorage.getItem('users') || '[]')
+      const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+      setSavedUsers(users)
+      setAllJobs(jobs)
+    }, 1000) // Check every second
+    return () => clearInterval(interval)
+  }, [])
 
   const handleLogout = () => { logout(); navigate('/') }
 
-  const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
   const totalUsers = savedUsers.length
-  const activeJobs = jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated').length
+  const activeJobs = allJobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated').length
   const totalRevenue = transactions.filter(t => t.type === 'earning').reduce((sum, t) => sum + t.amount, 0)
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').length
 
@@ -18,10 +31,10 @@ function AdminDashboard() {
     { label: 'Toplam Kullanici', value: totalUsers.toString(), icon: Users, color: 'blue' },
     { label: 'Aktif Isler', value: activeJobs.toString(), icon: Briefcase, color: 'green' },
     { label: 'Toplam Gelir', value: `${totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'purple' },
-    { label: 'Toplam Is', value: jobs.length.toString(), icon: TrendingUp, color: 'orange' },
+    { label: 'Toplam Is', value: allJobs.length.toString(), icon: TrendingUp, color: 'orange' },
   ]
 
-  const recentJobs = [...jobs].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)).slice(0, 5)
+  const recentJobs = [...allJobs].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)).slice(0, 5)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">

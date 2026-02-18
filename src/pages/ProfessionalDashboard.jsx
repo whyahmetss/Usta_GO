@@ -1,22 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu.jsx'
 
 function ProfessionalDashboard() {
-  const { user, jobs, getPendingJobs, getUnreadNotificationCount, getUnreadMessageCount, getThisMonthEarnings, getWalletBalance } = useAuth()
+  const { user, getUnreadNotificationCount, getUnreadMessageCount, getThisMonthEarnings, getWalletBalance } = useAuth()
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
+  const [allJobs, setAllJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
 
-  const unreadNotifs = getUnreadNotificationCount()
-  const unreadMessages = getUnreadMessageCount()
-  const jobRequests = getPendingJobs()
+  // Poll localStorage for real-time job updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+      setAllJobs(jobs)
+    }, 1000) // Check every second
+    return () => clearInterval(interval)
+  }, [])
+
+  const jobRequests = allJobs.filter(j => j.status === 'pending')
   const thisMonthEarnings = getThisMonthEarnings()
   const balance = getWalletBalance()
 
-  const myCompletedJobs = jobs.filter(j => j.professional?.id === user?.id && (j.status === 'completed' || j.status === 'rated'))
-  const myActiveJobs = jobs.filter(j => j.professional?.id === user?.id && (j.status === 'accepted' || j.status === 'in_progress'))
+  const myCompletedJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'completed' || j.status === 'rated'))
+  const myActiveJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'accepted' || j.status === 'in_progress'))
 
   const avgRating = myCompletedJobs.length > 0
     ? (myCompletedJobs.reduce((sum, j) => sum + (j.rating?.customerRating || 0), 0) / myCompletedJobs.filter(j => j.rating?.customerRating).length || 0).toFixed(1)
