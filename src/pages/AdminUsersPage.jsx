@@ -13,7 +13,7 @@ function AdminUsersPage() {
     const interval = setInterval(() => {
       const updatedUsers = JSON.parse(localStorage.getItem('users') || '[]')
       setSavedUsers(updatedUsers)
-    }, 1000) // Check every second
+    }, 500) // Check every 500ms for faster updates
     return () => clearInterval(interval)
   }, [])
 

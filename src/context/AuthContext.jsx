@@ -220,6 +220,11 @@ export function AuthProvider({ children }) {
 
     setJobs(prev => [...prev, newJob])
 
+    // Immediately save to localStorage (don't wait for state update)
+    const currentJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+    currentJobs.push(newJob)
+    localStorage.setItem('jobs', JSON.stringify(currentJobs))
+
     // Auto-match: notify all professionals about the new job
     const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
     const professionals = savedUsers.filter(u => u.role === 'professional')
@@ -268,31 +273,38 @@ export function AuthProvider({ children }) {
         }
         return job
       })
+      // Immediately save to localStorage
+      localStorage.setItem('jobs', JSON.stringify(updated))
       return updated
     })
   }, [user])
 
   const startJob = useCallback((jobId, beforePhotos) => {
-    setJobs(prev => prev.map(job => {
-      if (job.id === jobId) {
-        // Notify customer
-        const notif = {
-          id: Date.now().toString() + 'start',
-          type: 'status',
-          title: 'Is Basladi',
-          message: `${user.name} isinize basladi: ${job.title}`,
-          icon: '🚀',
-          targetUserId: job.customer.id,
-          jobId: job.id,
-          read: false,
-          time: new Date().toISOString(),
-        }
-        setNotifications(prev => [notif, ...prev])
+    setJobs(prev => {
+      const updated = prev.map(job => {
+        if (job.id === jobId) {
+          // Notify customer
+          const notif = {
+            id: Date.now().toString() + 'start',
+            type: 'status',
+            title: 'Is Basladi',
+            message: `${user.name} isinize basladi: ${job.title}`,
+            icon: '🚀',
+            targetUserId: job.customer.id,
+            jobId: job.id,
+            read: false,
+            time: new Date().toISOString(),
+          }
+          setNotifications(prev => [notif, ...prev])
 
-        return { ...job, status: 'in_progress', beforePhotos, startedAt: new Date().toISOString() }
-      }
-      return job
-    }))
+          return { ...job, status: 'in_progress', beforePhotos, startedAt: new Date().toISOString() }
+        }
+        return job
+      })
+      // Immediately save to localStorage
+      localStorage.setItem('jobs', JSON.stringify(updated))
+      return updated
+    })
   }, [user])
 
   const completeJob = useCallback((jobId, afterPhotos) => {
@@ -341,138 +353,150 @@ export function AuthProvider({ children }) {
         }
         return job
       })
+      // Immediately save to localStorage
+      localStorage.setItem('jobs', JSON.stringify(updated))
       return updated
     })
   }, [user])
 
   const cancelJob = useCallback((jobId, reason, penalty) => {
-    setJobs(prev => prev.map(job => {
-      if (job.id === jobId) {
-        // Track cancellations in localStorage
-        const cancellations = JSON.parse(localStorage.getItem('cancellations') || '{}')
-        const userId = user.id
-        if (!cancellations[userId]) {
-          cancellations[userId] = { count: 0, history: [] }
-        }
-        cancellations[userId].count += 1
-        cancellations[userId].history.push({
-          jobId,
-          reason,
-          penalty,
-          date: new Date().toISOString()
-        })
-        localStorage.setItem('cancellations', JSON.stringify(cancellations))
-
-        // Apply penalty - deduct from balance
-        if (penalty > 0) {
-          const penaltyTransaction = {
-            id: Date.now().toString() + 'penalty',
-            type: 'penalty',
-            title: `Iptal Cezasi - ${job.title}`,
-            amount: -penalty,
-            date: new Date().toISOString(),
-            status: 'completed',
-            professionalId: user.role === 'professional' ? user.id : (job.professional?.id || null),
+    setJobs(prev => {
+      const updated = prev.map(job => {
+        if (job.id === jobId) {
+          // Track cancellations in localStorage
+          const cancellations = JSON.parse(localStorage.getItem('cancellations') || '{}')
+          const userId = user.id
+          if (!cancellations[userId]) {
+            cancellations[userId] = { count: 0, history: [] }
           }
-          setTransactions(prev => [penaltyTransaction, ...prev])
-        }
+          cancellations[userId].count += 1
+          cancellations[userId].history.push({
+            jobId,
+            reason,
+            penalty,
+            date: new Date().toISOString()
+          })
+          localStorage.setItem('cancellations', JSON.stringify(cancellations))
 
-        // If customer cancels an accepted/in_progress job, refund can happen
-        if (user.role === 'customer' && job.status !== 'pending') {
-          const refundNotif = {
-            id: Date.now().toString() + 'refund',
-            type: 'status',
-            title: 'Is Iptal Edildi',
-            message: `${job.title} musteri tarafindan iptal edildi.`,
-            icon: '❌',
-            targetUserId: job.professional?.id,
-            jobId: job.id,
-            read: false,
-            time: new Date().toISOString(),
+          // Apply penalty - deduct from balance
+          if (penalty > 0) {
+            const penaltyTransaction = {
+              id: Date.now().toString() + 'penalty',
+              type: 'penalty',
+              title: `Iptal Cezasi - ${job.title}`,
+              amount: -penalty,
+              date: new Date().toISOString(),
+              status: 'completed',
+              professionalId: user.role === 'professional' ? user.id : (job.professional?.id || null),
+            }
+            setTransactions(prev => [penaltyTransaction, ...prev])
           }
-          if (job.professional?.id) {
-            setNotifications(prev => [refundNotif, ...prev])
-          }
-        }
 
-        // If professional cancels, notify customer
-        if (user.role === 'professional') {
-          const cancelNotif = {
-            id: Date.now().toString() + 'cancel',
-            type: 'status',
-            title: 'Is Iptal Edildi',
-            message: `${user.name} isinizi iptal etti: ${job.title}`,
-            icon: '❌',
-            targetUserId: job.customer.id,
-            jobId: job.id,
-            read: false,
-            time: new Date().toISOString(),
+          // If customer cancels an accepted/in_progress job, refund can happen
+          if (user.role === 'customer' && job.status !== 'pending') {
+            const refundNotif = {
+              id: Date.now().toString() + 'refund',
+              type: 'status',
+              title: 'Is Iptal Edildi',
+              message: `${job.title} musteri tarafindan iptal edildi.`,
+              icon: '❌',
+              targetUserId: job.professional?.id,
+              jobId: job.id,
+              read: false,
+              time: new Date().toISOString(),
+            }
+            if (job.professional?.id) {
+              setNotifications(prev => [refundNotif, ...prev])
+            }
           }
-          setNotifications(prev => [cancelNotif, ...prev])
-        }
 
-        return {
-          ...job,
-          status: 'cancelled',
-          cancelledBy: user.role,
-          cancelReason: reason,
-          cancelPenalty: penalty,
-          cancelledAt: new Date().toISOString()
+          // If professional cancels, notify customer
+          if (user.role === 'professional') {
+            const cancelNotif = {
+              id: Date.now().toString() + 'cancel',
+              type: 'status',
+              title: 'Is Iptal Edildi',
+              message: `${user.name} isinizi iptal etti: ${job.title}`,
+              icon: '❌',
+              targetUserId: job.customer.id,
+              jobId: job.id,
+              read: false,
+              time: new Date().toISOString(),
+            }
+            setNotifications(prev => [cancelNotif, ...prev])
+          }
+
+          return {
+            ...job,
+            status: 'cancelled',
+            cancelledBy: user.role,
+            cancelReason: reason,
+            cancelPenalty: penalty,
+            cancelledAt: new Date().toISOString()
+          }
         }
-      }
-      return job
-    }))
+        return job
+      })
+      // Immediately save to localStorage
+      localStorage.setItem('jobs', JSON.stringify(updated))
+      return updated
+    })
   }, [user])
 
   const rateJob = useCallback((jobId, ratingData, review) => {
-    setJobs(prev => prev.map(job => {
-      if (job.id === jobId) {
-        // Notify the rated person
-        const targetId = user.role === 'customer'
-          ? job.professional?.id
-          : job.customer.id
-        const stars = ratingData.customerRating || ratingData.professionalRating
+    setJobs(prev => {
+      const updated = prev.map(job => {
+        if (job.id === jobId) {
+          // Notify the rated person
+          const targetId = user.role === 'customer'
+            ? job.professional?.id
+            : job.customer.id
+          const stars = ratingData.customerRating || ratingData.professionalRating
 
-        if (targetId) {
-          const ratingNotif = {
-            id: Date.now().toString() + 'rate',
-            type: 'rating',
-            title: 'Yeni Degerlendirme',
-            message: `${user.name} size ${stars} yildiz verdi!`,
-            icon: '⭐',
-            targetUserId: targetId,
-            jobId: job.id,
-            read: false,
-            time: new Date().toISOString(),
-          }
-          setNotifications(prev => [ratingNotif, ...prev])
-        }
-
-        // Update professional's rating in users list
-        if (user.role === 'customer' && job.professional?.id) {
-          const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
-          const proId = job.professional.id
-          const proJobs = prev.filter(j =>
-            j.professional?.id === proId && j.rating && (j.rating.customerRating || j.rating.professionalRating)
-          )
-          const totalRatings = proJobs.reduce((sum, j) => {
-            return sum + (j.rating.customerRating || j.rating.professionalRating || 0)
-          }, 0) + stars
-          const avgRating = totalRatings / (proJobs.length + 1)
-
-          const updatedUsers = savedUsers.map(u => {
-            if (u.id === proId) {
-              return { ...u, rating: Math.round(avgRating * 10) / 10 }
+          if (targetId) {
+            const ratingNotif = {
+              id: Date.now().toString() + 'rate',
+              type: 'rating',
+              title: 'Yeni Degerlendirme',
+              message: `${user.name} size ${stars} yildiz verdi!`,
+              icon: '⭐',
+              targetUserId: targetId,
+              jobId: job.id,
+              read: false,
+              time: new Date().toISOString(),
             }
-            return u
-          })
-          localStorage.setItem('users', JSON.stringify(updatedUsers))
-        }
+            setNotifications(prev => [ratingNotif, ...prev])
+          }
 
-        return { ...job, status: 'rated', rating: { ...ratingData, review } }
-      }
-      return job
-    }))
+          // Update professional's rating in users list
+          if (user.role === 'customer' && job.professional?.id) {
+            const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+            const proId = job.professional.id
+            const proJobs = updated.filter(j =>
+              j.professional?.id === proId && j.rating && (j.rating.customerRating || j.rating.professionalRating)
+            )
+            const totalRatings = proJobs.reduce((sum, j) => {
+              return sum + (j.rating.customerRating || j.rating.professionalRating || 0)
+            }, 0) + stars
+            const avgRating = totalRatings / (proJobs.length + 1)
+
+            const updatedUsers = savedUsers.map(u => {
+              if (u.id === proId) {
+                return { ...u, rating: Math.round(avgRating * 10) / 10 }
+              }
+              return u
+            })
+            localStorage.setItem('users', JSON.stringify(updatedUsers))
+          }
+
+          return { ...job, status: 'rated', rating: { ...ratingData, review } }
+        }
+        return job
+      })
+      // Immediately save to localStorage
+      localStorage.setItem('jobs', JSON.stringify(updated))
+      return updated
+    })
   }, [user])
 
   // --- FINANCIAL ---
@@ -551,7 +575,12 @@ export function AuthProvider({ children }) {
       status: 'pending'
     }
 
-    setWithdrawals(prev => [withdrawal, ...prev])
+    setWithdrawals(prev => {
+      const updated = [withdrawal, ...prev]
+      // Immediately save to localStorage
+      localStorage.setItem('withdrawals', JSON.stringify(updated))
+      return updated
+    })
 
     // Notify admin
     const adminNotif = {
@@ -602,30 +631,37 @@ export function AuthProvider({ children }) {
         }
         return w
       })
+      // Immediately save to localStorage
+      localStorage.setItem('withdrawals', JSON.stringify(updated))
       return updated
     })
   }, [])
 
   const rejectWithdrawal = useCallback((withdrawalId, rejectionReason) => {
-    setWithdrawals(prev => prev.map(w => {
-      if (w.id === withdrawalId) {
-        // Notify professional
-        const notif = {
-          id: Date.now().toString() + 'wdreject',
-          type: 'status',
-          title: 'Cekim Reddedildi',
-          message: `${w.amount} TL cekim talebiniz reddedildi. Neden: ${rejectionReason || 'Belirtilmedi'}`,
-          icon: '❌',
-          targetUserId: w.professionalId,
-          read: false,
-          time: new Date().toISOString(),
-        }
-        setNotifications(prev => [notif, ...prev])
+    setWithdrawals(prev => {
+      const updated = prev.map(w => {
+        if (w.id === withdrawalId) {
+          // Notify professional
+          const notif = {
+            id: Date.now().toString() + 'wdreject',
+            type: 'status',
+            title: 'Cekim Reddedildi',
+            message: `${w.amount} TL cekim talebiniz reddedildi. Neden: ${rejectionReason || 'Belirtilmedi'}`,
+            icon: '❌',
+            targetUserId: w.professionalId,
+            read: false,
+            time: new Date().toISOString(),
+          }
+          setNotifications(prev => [notif, ...prev])
 
-        return { ...w, status: 'rejected', processedDate: new Date().toISOString(), rejectionReason }
-      }
-      return w
-    }))
+          return { ...w, status: 'rejected', processedDate: new Date().toISOString(), rejectionReason }
+        }
+        return w
+      })
+      // Immediately save to localStorage
+      localStorage.setItem('withdrawals', JSON.stringify(updated))
+      return updated
+    })
   }, [])
 
   // --- MESSAGING ---
@@ -637,7 +673,12 @@ export function AuthProvider({ children }) {
       sender,
       timestamp: new Date().toISOString()
     }
-    setMessages(prev => [...prev, newMessage])
+    setMessages(prev => {
+      const updated = [...prev, newMessage]
+      // Immediately save to localStorage
+      localStorage.setItem('messages', JSON.stringify(updated))
+      return updated
+    })
 
     // Find the job to notify the other party
     const job = jobs.find(j => j.id === jobId)

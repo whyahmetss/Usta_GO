@@ -13,7 +13,7 @@ function AdminJobsPage() {
     const interval = setInterval(() => {
       const updatedJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
       setJobs(updatedJobs)
-    }, 1000) // Check every second
+    }, 500) // Check every 500ms for faster updates
     return () => clearInterval(interval)
   }, [])
 

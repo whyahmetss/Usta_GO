@@ -16,7 +16,7 @@ function AdminDashboard() {
       const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
       setSavedUsers(users)
       setAllJobs(jobs)
-    }, 1000) // Check every second
+    }, 500) // Check every 500ms for faster updates
     return () => clearInterval(interval)
   }, [])
 

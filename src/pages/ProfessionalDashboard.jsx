@@ -15,7 +15,7 @@ function ProfessionalDashboard() {
     const interval = setInterval(() => {
       const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
       setAllJobs(jobs)
-    }, 1000) // Check every second
+    }, 500) // Check every 500ms for faster updates
     return () => clearInterval(interval)
   }, [])
 
