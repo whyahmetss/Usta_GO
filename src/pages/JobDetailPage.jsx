@@ -155,6 +155,9 @@ function JobDetailPage() {
   const [afterPhotos, setAfterPhotos] = useState(job?.afterPhotos || [])
   const [showCamera, setShowCamera] = useState(false)
   const [cameraType, setCameraType] = useState('before')
+  const [showComplaintModal, setShowComplaintModal] = useState(false)
+  const [complaintReason, setComplaintReason] = useState('')
+  const [complaintDetails, setComplaintDetails] = useState('')
 
   if (!job) {
     return (
@@ -225,6 +228,30 @@ function JobDetailPage() {
     completeJob(job.id, afterPhotos)
     alert('Is tamamlandi! Musteri degerlendirme yapacak.')
     navigate('/professional')
+  }
+
+  const handleComplaint = () => {
+    if (!complaintReason) {
+      alert('Lütfen bir şikayet nedeni seçin')
+      return
+    }
+    // Create complaint object and add to job
+    const complaint = {
+      id: Date.now().toString(),
+      reason: complaintReason,
+      details: complaintDetails,
+      filedBy: user.id,
+      filedAt: new Date().toISOString(),
+      status: 'open'
+    }
+    // Update job with complaint
+    const allJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
+    const updatedJobs = allJobs.map(j => j.id === job.id ? { ...j, complaint } : j)
+    localStorage.setItem('jobs', JSON.stringify(updatedJobs))
+
+    alert('Şikayetiniz başarıyla iletildi. Admin tarafından incelenecektir.')
+    setShowComplaintModal(false)
+    navigate('/my-jobs')
   }
 
   const otherPerson = isProfessional ? job.customer : job.professional
@@ -552,6 +579,69 @@ function JobDetailPage() {
           >
             Isi Iptal Et
           </button>
+        )}
+
+        {/* Complaint Button */}
+        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed') && !job.complaint && (
+          <button
+            onClick={() => setShowComplaintModal(true)}
+            className="w-full py-3 bg-orange-50 border border-orange-200 text-orange-600 rounded-2xl font-bold hover:bg-orange-100 transition"
+          >
+            Şikayet Et
+          </button>
+        )}
+
+        {/* Complaint Modal */}
+        {showComplaintModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+            <div className="w-full bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Şikayet Et</h3>
+                <button onClick={() => setShowComplaintModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">Şikayet Nedeni</label>
+                  <div className="space-y-2">
+                    {['Geç kaldı', 'İşi yapmıyor', 'Terbiyesiz', 'Farklı bir sorun'].map(reason => (
+                      <label key={reason} className="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="reason"
+                          value={reason}
+                          checked={complaintReason === reason}
+                          onChange={(e) => setComplaintReason(e.target.value)}
+                          className="mr-3"
+                        />
+                        <span className="text-gray-700">{reason}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">Detaylar (Opsiyonel)</label>
+                  <textarea
+                    value={complaintDetails}
+                    onChange={(e) => setComplaintDetails(e.target.value)}
+                    placeholder="Detaylı olarak açıklayın..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                    rows={4}
+                  />
+                </div>
+
+                <button
+                  onClick={handleComplaint}
+                  className="w-full py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition"
+                >
+                  Şikayeti Gönder
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
