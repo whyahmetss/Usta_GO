@@ -246,6 +246,74 @@ function WalletPage() {
               </div>
             )}
           </div>
+
+          {/* Değerlendirmelerim */}
+          <div>
+            <h3 className="font-bold text-gray-900 mb-3">⭐ Değerlendirmelerim</h3>
+            {!customerJobs.some(j => j.rating) ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-2">⭐</div>
+                <p className="text-gray-600 text-sm">Henüz değerlendirme yapmadınız</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {customerJobs.filter(j => j.rating).map(job => (
+                  <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-gray-900">{job.professional?.name || 'Usta'}</p>
+                        <p className="text-xs text-gray-500">{job.title}</p>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={i < (job.rating?.professionalRating || 0) ? '⭐' : '☆'} />
+                        ))}
+                      </div>
+                    </div>
+                    {job.rating?.review && (
+                      <p className="text-sm text-gray-600 mb-2">{job.rating.review}</p>
+                    )}
+                    <p className="text-xs text-gray-500">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Şikayetlerim */}
+          <div>
+            <h3 className="font-bold text-gray-900 mb-3">🚨 Şikayetlerim</h3>
+            {!customerJobs.some(j => j.complaint) ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-2">✅</div>
+                <p className="text-gray-600 text-sm">Şikayet göndermediniz</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {customerJobs.filter(j => j.complaint).map(job => (
+                  <div key={job.id} className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-gray-900">{job.title}</p>
+                        <p className="text-xs text-gray-500">{job.complaint?.reason}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                        job.complaint?.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                        job.complaint?.status === 'open' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {job.complaint?.status === 'open' ? 'Açık' : job.complaint?.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                      </span>
+                    </div>
+                    {job.complaint?.details && (
+                      <p className="text-sm text-gray-600 mb-2">{job.complaint.details}</p>
+                    )}
+                    <p className="text-xs text-gray-500">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     )

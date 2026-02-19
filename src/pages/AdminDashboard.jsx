@@ -139,6 +139,80 @@ function AdminDashboard() {
             </div>
           )}
         </div>
+
+        {/* Değerlendirmeler */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">⭐ Tüm Değerlendirmeler</h3>
+          {allJobs.filter(j => j.rating).length === 0 ? (
+            <p className="text-gray-500 text-center py-6">Henüz değerlendirme yok</p>
+          ) : (
+            <div className="space-y-3">
+              {allJobs.filter(j => j.rating).slice(0, 10).map(job => (
+                <div key={job.id} className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-bold text-gray-900">{job.customer.name} → {job.professional?.name || 'Usta'}</p>
+                      <p className="text-sm text-gray-600">{job.title}</p>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={i < (job.rating?.customerRating || job.rating?.professionalRating || 0) ? '⭐' : '☆'} />
+                      ))}
+                    </div>
+                  </div>
+                  {job.rating?.review && (
+                    <p className="text-sm text-gray-700 bg-white p-2 rounded">"{job.rating.review}"</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Şikayetler */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">🚨 Tüm Şikayetler</h3>
+          {allJobs.filter(j => j.complaint).length === 0 ? (
+            <p className="text-gray-500 text-center py-6">Henüz şikayet yok</p>
+          ) : (
+            <div className="space-y-3">
+              {allJobs.filter(j => j.complaint).map(job => (
+                <div key={job.id} className={`p-4 rounded-xl border-2 ${
+                  job.complaint?.status === 'resolved' ? 'bg-green-50 border-green-300' :
+                  job.complaint?.status === 'rejected' ? 'bg-red-50 border-red-300' :
+                  'bg-orange-50 border-orange-300'
+                }`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-bold text-gray-900">{job.customer.name}</p>
+                      <p className="text-sm text-gray-600">{job.title} - Neden: {job.complaint?.reason}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                      job.complaint?.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                      job.complaint?.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {job.complaint?.status === 'open' ? 'Açık' : job.complaint?.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                    </span>
+                  </div>
+                  {job.complaint?.details && (
+                    <p className="text-sm text-gray-700 bg-white p-2 rounded mb-2">{job.complaint.details}</p>
+                  )}
+                  <div className="flex gap-2">
+                    {job.complaint?.status === 'open' && (
+                      <>
+                        <button className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Çöz</button>
+                        <button className="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Reddet</button>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
