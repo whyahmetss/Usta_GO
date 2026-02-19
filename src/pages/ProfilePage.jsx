@@ -116,6 +116,21 @@ function ProfilePage() {
           })}
         </div>
 
+        {/* Wallet Button */}
+        <button
+          onClick={() => navigate('/wallet')}
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition font-bold mb-6 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💰</span>
+            <div className="text-left">
+              <p className="font-bold">Cüzdanım</p>
+              <p className="text-xs text-white/80">{user?.role === 'professional' ? 'Kazançlarınız' : 'Bakiye ve kuponlar'}</p>
+            </div>
+          </div>
+          <span className="text-xl">→</span>
+        </button>
+
         {/* Info Section */}
         <div className="bg-white rounded-2xl p-6 shadow-lg mb-4">
           <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>

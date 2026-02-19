@@ -17,6 +17,7 @@ import WithdrawPage from './pages/WithdrawPage'
 import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminJobsPage from './pages/AdminJobsPage'
+import AdminComplaintsPage from './pages/AdminComplaintsPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
@@ -241,6 +242,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roleRequired="admin">
             <AdminJobsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/complaints"
+        element={
+          <ProtectedRoute roleRequired="admin">
+            <AdminComplaintsPage />
           </ProtectedRoute>
         }
       />

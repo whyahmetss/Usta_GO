@@ -257,7 +257,7 @@ function WalletPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {customerJobs.filter(j => j.rating).map(job => (
+                {customerJobs.filter(j => j.rating && (j.rating?.customerRating || j.rating?.professionalRating)).map(job => (
                   <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -265,13 +265,14 @@ function WalletPage() {
                         <p className="text-xs text-gray-500">{job.title}</p>
                       </div>
                       <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className={i < (job.rating?.professionalRating || 0) ? '⭐' : '☆'} />
-                        ))}
+                        {[...Array(5)].map((_, i) => {
+                          const stars = job.rating?.customerRating || job.rating?.professionalRating || 0
+                          return <span key={i} className={i < stars ? '⭐' : '☆'} />
+                        })}
                       </div>
                     </div>
                     {job.rating?.review && (
-                      <p className="text-sm text-gray-600 mb-2">{job.rating.review}</p>
+                      <p className="text-sm text-gray-600 mb-2">"{job.rating.review}"</p>
                     )}
                     <p className="text-xs text-gray-500">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
                   </div>
