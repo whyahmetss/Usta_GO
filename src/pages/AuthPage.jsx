@@ -7,6 +7,8 @@ function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [role, setRole] = useState('customer') // customer veya professional
   const [error, setError] = useState('')
   
@@ -34,12 +36,19 @@ function AuthPage() {
       }
     } else {
       // Kayıt
-      if (!name || !email || !password) {
+      if (!name || !email || !password || !phone) {
         setError('Lütfen tüm alanları doldurun')
         return
       }
-      
-      const result = register(email, password, name, role)
+
+      // Phone format validation (05XX XXX XX XX)
+      const phoneRegex = /^05\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        setError('Telefon formatı: 05XX XXX XX XX')
+        return
+      }
+
+      const result = register(email, password, name, role, phone, referralCode || null)
       if (result.success) {
         // Role'e göre yönlendir
         if (result.role === 'professional') {
@@ -148,9 +157,40 @@ function AuthPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Telefon Numarası */}
+                <input
+                  type="tel"
+                  placeholder="Telefon (05XX XXX XX XX)"
+                  value={phone}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '')
+                    if (val.length > 10) val = val.slice(0, 10)
+                    if (val.startsWith('5')) val = '0' + val
+                    // Format: 05XX XXX XX XX
+                    if (val.length === 10) {
+                      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7, 9)} ${val.slice(9)}`
+                    } else if (val.length > 4 && val.length <= 7) {
+                      val = `${val.slice(0, 4)} ${val.slice(4)}`
+                    } else if (val.length > 7) {
+                      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7)}`
+                    }
+                    setPhone(val)
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+
+                {/* Davet Kodu */}
+                <input
+                  type="text"
+                  placeholder="Davet Kodun Var Mı? (Opsiyonel)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
               </>
             )}
-            
+
             <input
               type="email"
               placeholder="E-posta"

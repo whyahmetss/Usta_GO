@@ -16,7 +16,11 @@ function AdminComplaintsPage() {
         jobId: job.id,
         jobTitle: job.title,
         customerName: job.customer.name,
-        professionalName: job.professional?.name || 'Usta'
+        customerEmail: job.customer.email || '-',
+        customerPhone: job.customer.phone || '-',
+        professionalName: job.professional?.name || 'Usta',
+        professionalEmail: job.professional?.email || '-',
+        professionalPhone: job.professional?.phone || '-'
       }))
     setAllComplaints(complaints)
   }, [])
@@ -103,62 +107,79 @@ function AdminComplaintsPage() {
                 complaint.status === 'rejected' ? 'border-red-500' :
                 'border-yellow-500'
               }`}>
-                <div className="grid grid-cols-3 gap-6 mb-4">
+                <div className="grid grid-cols-2 gap-6 mb-4">
                   {/* Info */}
                   <div>
                     <h3 className="font-bold text-gray-900 mb-2">Şikayet Detayları</h3>
-                    <div className="space-y-2">
-                      <p><span className="text-gray-600">Müşteri:</span> <strong>{complaint.customerName}</strong></p>
-                      <p><span className="text-gray-600">Usta:</span> <strong>{complaint.professionalName}</strong></p>
-                      <p><span className="text-gray-600">İş:</span> <strong>{complaint.jobTitle}</strong></p>
-                      <p><span className="text-gray-600">Neden:</span> <strong>{complaint.reason}</strong></p>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Açıklama</h3>
-                    <p className="text-gray-700 bg-gray-50 p-3 rounded-lg text-sm">
-                      {complaint.details || 'Detaylı açıklama yok'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {new Date(complaint.filedAt).toLocaleDateString('tr-TR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Status & Actions */}
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Durum & İşlem</h3>
-                    <div className={`px-3 py-2 rounded-lg mb-3 text-center font-bold ${
-                      complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                      complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {complaint.status === 'open' ? '📋 Açık' : complaint.status === 'resolved' ? '✅ Çözüldü' : '❌ Reddedildi'}
-                    </div>
-
-                    {complaint.status === 'open' && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleResolveComplaint(complaint.jobId)}
-                          className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
-                        >
-                          <CheckCircle size={16} /> Çöz
-                        </button>
-                        <button
-                          onClick={() => handleRejectComplaint(complaint.jobId)}
-                          className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition flex items-center justify-center gap-1 text-sm"
-                        >
-                          <XCircle size={16} /> Reddet
-                        </button>
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Müşteri Bilgileri:</p>
+                        <p><strong>{complaint.customerName}</strong></p>
+                        <p className="text-sm text-gray-600">{complaint.customerEmail}</p>
+                        <p className="text-sm text-gray-600">{complaint.customerPhone}</p>
                       </div>
-                    )}
+                      <div className="bg-orange-50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Usta Bilgileri:</p>
+                        <p><strong>{complaint.professionalName}</strong></p>
+                        <p className="text-sm text-gray-600">{complaint.professionalEmail}</p>
+                        <p className="text-sm text-gray-600">{complaint.professionalPhone}</p>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">İş:</p>
+                        <p><strong>{complaint.jobTitle}</strong></p>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Şikayet Nedeni:</p>
+                        <p><strong>{complaint.reason}</strong></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description & Status */}
+                  <div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-2">Açıklama</h3>
+                      <p className="text-gray-700 bg-gray-50 p-3 rounded-lg text-sm mb-4">
+                        {complaint.details || 'Detaylı açıklama yok'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(complaint.filedAt).toLocaleDateString('tr-TR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h3 className="font-bold text-gray-900 mb-2">Durum & İşlem</h3>
+                      <div className={`px-3 py-2 rounded-lg mb-3 text-center font-bold ${
+                        complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                        complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {complaint.status === 'open' ? '📋 Açık' : complaint.status === 'resolved' ? '✅ Çözüldü' : '❌ Reddedildi'}
+                      </div>
+
+                      {complaint.status === 'open' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleResolveComplaint(complaint.jobId)}
+                            className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
+                          >
+                            <CheckCircle size={16} /> Çöz
+                          </button>
+                          <button
+                            onClick={() => handleRejectComplaint(complaint.jobId)}
+                            className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition flex items-center justify-center gap-1 text-sm"
+                          >
+                            <XCircle size={16} /> Reddet
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -140,7 +140,7 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'E-posta veya sifre hatali' }
   }
 
-  const register = (email, password, name, role, referralCode = null) => {
+  const register = (email, password, name, role, phone = '', referralCode = null) => {
     const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
 
     if (savedUsers.find(u => u.email === email)) {
@@ -158,7 +158,7 @@ export function AuthProvider({ children }) {
       password,
       name,
       role: role || 'customer',
-      phone: '',
+      phone: phone || '',
       avatar: role === 'professional' ? '⚡' : '👤',
       profilePhoto: null,
       rating: 0,
