@@ -73,7 +73,7 @@ function AdminDashboard() {
           })}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div onClick={() => navigate('/admin/users')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
             <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">👥</span></div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanici Yonetimi</h3>
@@ -91,6 +91,16 @@ function AdminDashboard() {
             {pendingWithdrawals > 0 && (
               <div className="mt-3">
                 <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{pendingWithdrawals} Bekliyor</span>
+              </div>
+            )}
+          </div>
+          <div onClick={() => navigate('/admin/complaints')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
+            <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">🚨</span></div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Şikayet Yönetimi</h3>
+            <p className="text-gray-600 text-sm">Müşteri şikayetlerini yönet</p>
+            {allJobs.filter(j => j.complaint?.status === 'open').length > 0 && (
+              <div className="mt-3">
+                <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{allJobs.filter(j => j.complaint?.status === 'open').length} Açık</span>
               </div>
             )}
           </div>

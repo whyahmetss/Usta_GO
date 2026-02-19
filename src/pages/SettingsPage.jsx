@@ -12,6 +12,10 @@ function SettingsPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [certificateFile, setCertificateFile] = useState(null)
+  const [reminderSettings, setReminderSettings] = useState({
+    electricalCheck: user?.reminderSettings?.electricalCheck ?? true,
+    plumbingMaintenance: user?.reminderSettings?.plumbingMaintenance ?? true
+  })
 
   const handlePasswordChange = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -64,6 +68,17 @@ function SettingsPage() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleReminderToggle = (key) => {
+    const newSettings = { ...reminderSettings, [key]: !reminderSettings[key] }
+    setReminderSettings(newSettings)
+    // Save to localStorage
+    const users = JSON.parse(localStorage.getItem('users') || '[]')
+    const updatedUsers = users.map(u =>
+      u.id === user.id ? { ...u, reminderSettings: newSettings } : u
+    )
+    localStorage.setItem('users', JSON.stringify(updatedUsers))
   }
 
   return (
@@ -155,12 +170,13 @@ function SettingsPage() {
                   <p className="text-xs text-gray-500">Her 6 ayda bir hatırlat</p>
                 </div>
                 <button
+                  onClick={() => handleReminderToggle('electricalCheck')}
                   className={`relative w-12 h-6 rounded-full transition ${
-                    user?.reminderSettings?.electricalCheck ? 'bg-green-500' : 'bg-gray-300'
+                    reminderSettings.electricalCheck ? 'bg-green-500' : 'bg-gray-300'
                   }`}
                 >
                   <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                    user?.reminderSettings?.electricalCheck ? 'translate-x-6' : 'translate-x-0.5'
+                    reminderSettings.electricalCheck ? 'translate-x-6' : 'translate-x-0.5'
                   }`}></div>
                 </button>
               </div>
@@ -170,12 +186,13 @@ function SettingsPage() {
                   <p className="text-xs text-gray-500">Her 1 yılda bir hatırlat</p>
                 </div>
                 <button
+                  onClick={() => handleReminderToggle('plumbingMaintenance')}
                   className={`relative w-12 h-6 rounded-full transition ${
-                    user?.reminderSettings?.plumbingMaintenance ? 'bg-green-500' : 'bg-gray-300'
+                    reminderSettings.plumbingMaintenance ? 'bg-green-500' : 'bg-gray-300'
                   }`}
                 >
                   <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                    user?.reminderSettings?.plumbingMaintenance ? 'translate-x-6' : 'translate-x-0.5'
+                    reminderSettings.plumbingMaintenance ? 'translate-x-6' : 'translate-x-0.5'
                   }`}></div>
                 </button>
               </div>

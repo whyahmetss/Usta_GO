@@ -5,17 +5,28 @@ import { ArrowLeft, Star } from 'lucide-react'
 
 function RateJobPage() {
   const { id } = useParams()
-  const { user, jobs, rateJob } = useAuth()
+  const { user, jobs: contextJobs, rateJob } = useAuth()
   const navigate = useNavigate()
-  
+
+  // Use context jobs or fallback to localStorage
+  const jobs = contextJobs || JSON.parse(localStorage.getItem('jobs') || '[]')
   const job = jobs.find(j => j.id === id)
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [review, setReview] = useState('')
 
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-600">Lütfen giriş yapın</p>
+    </div>
+  }
+
   if (!job) {
     return <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-600">İş bulunamadı</p>
+      <div className="text-center">
+        <p className="text-gray-600 text-xl mb-4">İş bulunamadı</p>
+        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Geri Dön</button>
+      </div>
     </div>
   }
 
