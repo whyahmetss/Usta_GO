@@ -18,6 +18,7 @@ import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminJobsPage from './pages/AdminJobsPage'
 import AdminComplaintsPage from './pages/AdminComplaintsPage'
+import AdminMessagesPage from './pages/AdminMessagesPage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
@@ -194,11 +195,11 @@ function AppRoutes() {
         }
       />
 
-      {/* Usta Routes - Finansal */}
+      {/* Finansal Routes - Usta & Müşteri */}
       <Route
         path="/wallet"
         element={
-          <ProtectedRoute roleRequired="professional">
+          <ProtectedRoute>
             <WalletPage />
           </ProtectedRoute>
         }
@@ -250,6 +251,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roleRequired="admin">
             <AdminComplaintsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/messages"
+        element={
+          <ProtectedRoute roleRequired="admin">
+            <AdminMessagesPage />
           </ProtectedRoute>
         }
       />

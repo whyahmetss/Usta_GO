@@ -160,7 +160,7 @@ function WalletPage() {
 
         <div className="px-4 py-6 space-y-6">
           {/* Balance Card */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg text-white">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg text-white pointer-events-none">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
