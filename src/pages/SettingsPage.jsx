@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, User, Mail, Phone, Lock, Power } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock } from 'lucide-react'
 
 function SettingsPage() {
   const { user } = useAuth()
@@ -11,6 +11,7 @@ function SettingsPage() {
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [certificateFile, setCertificateFile] = useState(null)
 
   const handlePasswordChange = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -40,6 +41,28 @@ function SettingsPage() {
       alert('Hesabınız aktif edildi. Artık iş alabilirsiniz.')
     } else {
       alert('Hesabınız pasif edildi. Yeni iş talepleri almayacaksınız.')
+    }
+  }
+
+  const handleCertificateUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setCertificateFile(reader.result)
+        // Save to localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const updatedUsers = users.map(u =>
+          u.id === user.id ? {
+            ...u,
+            licenseCertificate: reader.result,
+            verificationStatus: 'pending'
+          } : u
+        )
+        localStorage.setItem('users', JSON.stringify(updatedUsers))
+        alert('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -117,6 +140,102 @@ function SettingsPage() {
                   isActive ? 'translate-x-9' : 'translate-x-1'
                 }`}></div>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Hatırlatıcı Ayarları (Müşteriler için) */}
+        {user?.role === 'customer' && (
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 className="font-bold text-gray-900 mb-4">📬 Hatırlatıcı Ayarları</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Elektrik Bakımı</p>
+                  <p className="text-xs text-gray-500">Her 6 ayda bir hatırlat</p>
+                </div>
+                <button
+                  className={`relative w-12 h-6 rounded-full transition ${
+                    user?.reminderSettings?.electricalCheck ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    user?.reminderSettings?.electricalCheck ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}></div>
+                </button>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Tesisat Bakımı</p>
+                  <p className="text-xs text-gray-500">Her 1 yılda bir hatırlat</p>
+                </div>
+                <button
+                  className={`relative w-12 h-6 rounded-full transition ${
+                    user?.reminderSettings?.plumbingMaintenance ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    user?.reminderSettings?.plumbingMaintenance ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}></div>
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">Hatırlatıcıları etkinleştirerek önemli bakım işleriyle ilgili bildirim alırsınız.</p>
+          </div>
+        )}
+
+        {/* Doğrulama (Usta için) */}
+        {user?.role === 'professional' && (
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 className="font-bold text-gray-900 mb-4">🆔 Doğrulama</h3>
+            <div className="space-y-3">
+              <div className={`p-4 rounded-xl border-2 ${
+                user?.verificationStatus === 'verified' ? 'border-green-300 bg-green-50' :
+                user?.verificationStatus === 'pending' ? 'border-yellow-300 bg-yellow-50' :
+                'border-gray-300 bg-gray-50'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {user?.verificationStatus === 'verified' ? (
+                    <>
+                      <CheckCircle size={20} className="text-green-600" />
+                      <span className="font-bold text-green-700">Doğrulanmış</span>
+                    </>
+                  ) : user?.verificationStatus === 'pending' ? (
+                    <>
+                      <Clock size={20} className="text-yellow-600" />
+                      <span className="font-bold text-yellow-700">İnceleme Bekleniyor</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-gray-600" />
+                      <span className="font-bold text-gray-700">Doğrulanmamış</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {user?.verificationStatus === 'verified'
+                    ? 'Profil öğenin "Doğrulanmış" rozetine sahiptir. ⭐'
+                    : user?.verificationStatus === 'pending'
+                    ? 'Sertifikanız admin tarafından incelenmektedir.'
+                    : 'Sertifika yükleyerek profil güvenilirliğini artırın.'}
+                </p>
+              </div>
+
+              {user?.verificationStatus !== 'verified' && (
+                <label className="block">
+                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition">
+                    <Upload size={24} className="mx-auto mb-2 text-blue-600" />
+                    <p className="text-sm font-bold text-gray-900">Sertifika Yükle</p>
+                    <p className="text-xs text-gray-500">PDF, JPG veya PNG</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleCertificateUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </div>
         )}

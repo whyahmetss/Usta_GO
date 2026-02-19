@@ -1,12 +1,31 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift } from 'lucide-react'
+import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
 import { useState } from 'react'
 
 function ProfilePage() {
   const { user, logout, jobs } = useAuth()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result)
+        // Save to localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const updatedUsers = users.map(u =>
+          u.id === user.id ? { ...u, profilePhoto: reader.result } : u
+        )
+        localStorage.setItem('users', JSON.stringify(updatedUsers))
+        alert('Profil fotoğrafı güncellendi!')
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleLogout = () => {
     if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
@@ -54,10 +73,25 @@ function ProfilePage() {
           <ArrowLeft size={20} className="text-white" />
         </button>
 
-        {/* Avatar */}
+        {/* Avatar with Photo Upload */}
         <div className="text-center">
-          <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
-            <span className="text-5xl">{user?.avatar || '👤'}</span>
+          <div className="relative mx-auto mb-4 w-fit">
+            <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center border-4 border-white/30 overflow-hidden">
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl">{user?.avatar || '👤'}</span>
+              )}
+            </div>
+            <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition">
+              <Camera size={18} className="text-blue-600" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+            </label>
           </div>
           <h1 className="text-2xl font-black text-white mb-1">{user?.name}</h1>
           <p className="text-white/80 text-sm">

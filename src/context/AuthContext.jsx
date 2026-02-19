@@ -596,14 +596,53 @@ export function AuthProvider({ children }) {
                   completedJobs: (u.completedJobs || 0) + 1
                 }
               }
-              // Release customer's escrow hold
+              // Release customer's escrow hold & award loyalty coupons
               if (u.id === job.customer.id) {
                 const escrowAmount = job.escrowAmount || job.price || job.basePrice
+                const newCompletedJobs = (u.completedJobs || 0) + 1
+                const newCoupons = [...(u.coupons || [])]
+
+                // Award loyalty coupons on milestones
+                if (newCompletedJobs === 5) {
+                  newCoupons.push({
+                    id: Date.now().toString(),
+                    code: `LOYAL5-${Date.now()}`,
+                    amount: 25,
+                    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                    used: false,
+                    usedOn: null,
+                    reason: '5 işe ulaştığınız için teşekkürler!'
+                  })
+                }
+                if (newCompletedJobs === 10) {
+                  newCoupons.push({
+                    id: Date.now().toString() + '1',
+                    code: `LOYAL10-${Date.now()}`,
+                    amount: 50,
+                    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                    used: false,
+                    usedOn: null,
+                    reason: '10 işe ulaştığınız için teşekkürler!'
+                  })
+                }
+                if (newCompletedJobs === 20) {
+                  newCoupons.push({
+                    id: Date.now().toString() + '2',
+                    code: `LOYAL20-${Date.now()}`,
+                    amount: 100,
+                    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                    used: false,
+                    usedOn: null,
+                    reason: '20 işe ulaştığınız için teşekkürler!'
+                  })
+                }
+
                 return {
                   ...u,
                   escrowBalance: Math.max(0, (u.escrowBalance || 0) - escrowAmount),
                   totalSpent: (u.totalSpent || 0) + escrowAmount,
-                  completedJobs: (u.completedJobs || 0) + 1
+                  completedJobs: newCompletedJobs,
+                  coupons: newCoupons
                 }
               }
               return u
