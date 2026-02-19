@@ -175,41 +175,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Populer Ustalar */}
-      <div className="px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Populer Ustalar</h3>
-        </div>
-
-        <div className="space-y-3">
-          <div
-            onClick={() => navigate('/professional-profile/pro-1')}
-            className="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-4 cursor-pointer hover:shadow-xl transition"
-          >
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-2xl">
-              ⚡
-            </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-gray-900">Ahmet Yilmaz</h4>
-              <p className="text-sm text-gray-600">Elektrik Ustasi</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-yellow-500">⭐</span>
-                <span className="text-sm font-bold">4.9</span>
-                <span className="text-xs text-gray-500">(127 degerlendirme)</span>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate('/create-job')
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold"
-            >
-              Hizmet Al
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-xl z-50">

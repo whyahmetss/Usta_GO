@@ -1,69 +1,72 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Star, MapPin, Award, Clock, CheckCircle, MessageSquare } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { ArrowLeft, Star, MapPin, Award, Clock, CheckCircle, MessageSquare, Shield } from 'lucide-react'
 
 function ProfessionalProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('about') // about, portfolio, reviews
+  const { jobs } = useAuth()
+  const [activeTab, setActiveTab] = useState('about')
 
-  // Mock professional data
-  const professional = {
-    id: id || '1',
-    name: 'Ahmet Yılmaz',
-    avatar: '⚡',
-    title: 'Elektrik Ustası',
-    rating: 4.9,
-    reviewCount: 127,
-    completedJobs: 234,
-    memberSince: '2022-03-15',
-    location: 'Kadıköy, İstanbul',
-    responseTime: '5 dakika',
-    about: '10 yıllık deneyimli elektrik ustasıyım. Konut ve işyeri elektrik tesisatı, arıza onarımı, aydınlatma sistemleri konularında uzmanım. Müşteri memnuniyeti benim için en önemli önceliktir.',
-    skills: ['Elektrik Tesisatı', 'Arıza Onarımı', 'Aydınlatma', 'Pano Montajı', 'Otomasyon'],
-    certificates: [
-      { name: 'Elektrik Teknisyeni Sertifikası', year: '2012' },
-      { name: 'İSG Eğitimi', year: '2021' }
-    ],
-    portfolio: [
-      { id: 1, image: 'https://placehold.co/400x300/blue/white?text=İş+1', title: 'Villa Elektrik Tesisatı' },
-      { id: 2, image: 'https://placehold.co/400x300/green/white?text=İş+2', title: 'Restoran Aydınlatma' },
-      { id: 3, image: 'https://placehold.co/400x300/orange/white?text=İş+3', title: 'Ofis Elektrik Panosu' },
-      { id: 4, image: 'https://placehold.co/400x300/purple/white?text=İş+4', title: 'Daire Arıza Onarımı' }
-    ],
-    reviews: [
-      {
-        id: 1,
-        customer: 'Zeynep K.',
-        rating: 5,
-        comment: 'Çok profesyonel ve hızlı çalıştı. Kesinlikle tavsiye ederim!',
-        date: '2024-02-10',
-        jobTitle: 'Elektrik Arızası'
-      },
-      {
-        id: 2,
-        customer: 'Mehmet D.',
-        rating: 5,
-        comment: 'İşini titizlikle yaptı, çok memnun kaldık.',
-        date: '2024-02-08',
-        jobTitle: 'Avize Montajı'
-      },
-      {
-        id: 3,
-        customer: 'Ayşe Y.',
-        rating: 4,
-        comment: 'Güler yüzlü ve işini bilen bir usta. Teşekkürler.',
-        date: '2024-02-05',
-        jobTitle: 'Priz Değişimi'
-      }
-    ],
-    stats: [
-      { label: 'Tamamlanan İş', value: '234', icon: CheckCircle },
-      { label: 'Ortalama Süre', value: '1.5 saat', icon: Clock },
-      { label: 'Yanıt Süresi', value: '5 dk', icon: MessageSquare },
-      { label: 'Memnuniyet', value: '%98', icon: Award }
-    ]
-  }
+  // Get real professional data from jobs
+  const professional = useMemo(() => {
+    const allJobs = jobs || JSON.parse(localStorage.getItem('jobs') || '[]')
+    const users = JSON.parse(localStorage.getItem('users') || '[]')
+
+    // Find professional's jobs
+    const proJobs = allJobs.filter(j => j.professional?.id === id)
+    const completedJobs = proJobs.filter(j => j.status === 'completed' || j.status === 'rated')
+    const ratedJobs = completedJobs.filter(j => j.rating)
+
+    // Calculate rating
+    const totalRating = ratedJobs.reduce((sum, j) => sum + (j.rating?.customerRating || 0), 0)
+    const avgRating = ratedJobs.length > 0 ? (totalRating / ratedJobs.length).toFixed(1) : '0.0'
+
+    // Get user data
+    const user = users.find(u => u.id === id) || {
+      id,
+      name: 'Usta',
+      avatar: '⚡',
+      createdAt: new Date().toISOString(),
+      verificationStatus: 'unverified'
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      title: 'Profesyonel Usta',
+      rating: parseFloat(avgRating),
+      reviewCount: ratedJobs.length,
+      completedJobs: completedJobs.length,
+      memberSince: user.createdAt,
+      location: proJobs.length > 0 ? proJobs[0].location.address : 'İstanbul',
+      responseTime: '5 dakika',
+      about: `Profesyonel hizmet için hazırım. ${completedJobs.length} iş tamamladım.`,
+      verified: user.verificationStatus === 'verified',
+      skills: ['Elektrik Tesisatı', 'Arıza Onarımı'],
+      portfolio: completedJobs.filter(j => j.afterPhotos?.length > 0).map((job, idx) => ({
+        id: idx,
+        image: job.afterPhotos[0] || 'https://placehold.co/400x300/blue/white',
+        title: job.title
+      })),
+      reviews: ratedJobs.map(job => ({
+        id: job.id,
+        customer: job.customer.name,
+        rating: job.rating.customerRating,
+        comment: job.rating.review || 'Harika iş çıkardı.',
+        date: job.createdAt,
+        jobTitle: job.title
+      })),
+      stats: [
+        { label: 'Tamamlanan İş', value: completedJobs.length.toString(), icon: CheckCircle },
+        { label: 'Ortalama Puan', value: avgRating, icon: Star },
+        { label: 'Metnli Yorum', value: ratedJobs.length.toString(), icon: MessageSquare },
+        { label: 'Durum', value: user.verificationStatus === 'verified' ? '✓' : '?', icon: Award }
+      ]
+    }
+  }, [id, jobs])
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
@@ -83,7 +86,14 @@ function ProfessionalProfilePage() {
               {professional.avatar}
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-black text-gray-900 mb-1">{professional.name}</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-black text-gray-900">{professional.name}</h1>
+                {professional.verified && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">
+                    <Shield size={12} /> Doğrulandı
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-gray-600 mb-2">{professional.title}</p>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">

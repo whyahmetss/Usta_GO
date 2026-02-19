@@ -140,11 +140,16 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'E-posta veya sifre hatali' }
   }
 
-  const register = (email, password, name, role) => {
+  const register = (email, password, name, role, referralCode = null) => {
     const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
 
     if (savedUsers.find(u => u.email === email)) {
       return { success: false, error: 'Bu e-posta zaten kayitli' }
+    }
+
+    // Generate unique referral code
+    const generateReferralCode = () => {
+      return `${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`
     }
 
     const newUser = {
@@ -155,9 +160,62 @@ export function AuthProvider({ children }) {
       role: role || 'customer',
       phone: '',
       avatar: role === 'professional' ? '⚡' : '👤',
+      profilePhoto: null,
       rating: 0,
       completedJobs: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      // Financial
+      balance: 0,
+      escrowBalance: 0,
+      totalSpent: 0,
+      // Referral System
+      referralCode: generateReferralCode(),
+      referredBy: null,
+      referralCount: 0,
+      // Coupons & Loyalty
+      coupons: [],
+      loyaltyPoints: 0,
+      // Professional Verification
+      verificationStatus: 'unverified', // unverified, pending, verified
+      licenseCertificate: null,
+      verificationDocuments: [],
+      // Complaints & Warnings
+      warnings: [],
+      // Settings
+      reminderSettings: {
+        electricalCheck: true,
+        plumbingMaintenance: true
+      }
+    }
+
+    // Process referral if provided
+    if (referralCode) {
+      const referrer = savedUsers.find(u => u.referralCode === referralCode)
+      if (referrer) {
+        newUser.referredBy = referrer.id
+        // Add ₺50 coupon to both
+        newUser.coupons.push({
+          id: Date.now().toString(),
+          code: `REF-${Date.now()}`,
+          amount: 50,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          used: false,
+          usedOn: null
+        })
+        // Update referrer
+        referrer.referralCount += 1
+        referrer.coupons.push({
+          id: Date.now().toString() + '1',
+          code: `REF-${Date.now()}-1`,
+          amount: 50,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          used: false,
+          usedOn: null
+        })
+        // Update referrer in users array
+        const referrerIndex = savedUsers.findIndex(u => u.id === referrer.id)
+        savedUsers[referrerIndex] = referrer
+      }
     }
 
     savedUsers.push(newUser)
@@ -207,15 +265,44 @@ export function AuthProvider({ children }) {
   }, [notifications, user])
 
   // --- JOBS ---
+  // Helper function to get region multiplier
+  const getRegionMultiplier = (address) => {
+    if (!address) return 1.0
+    const premiumZones = ['Kadikoy', 'Besiktas', 'Nisantasi']
+    const economyZones = ['Esenyurt', 'Sultanbeyli']
+
+    const upperAddress = address.toUpperCase()
+    if (premiumZones.some(zone => upperAddress.includes(zone.toUpperCase()))) {
+      return 1.3
+    }
+    if (economyZones.some(zone => upperAddress.includes(zone.toUpperCase()))) {
+      return 1.0
+    }
+    return 1.15 // Default for other zones
+  }
+
   const createJob = useCallback((jobData) => {
+    // Calculate regional pricing
+    const basePrice = jobData.price
+    const regionMultiplier = getRegionMultiplier(jobData.location?.address)
+    const finalPrice = Math.round(basePrice * regionMultiplier)
+
     const newJob = {
       id: Date.now().toString(),
       ...jobData,
+      price: finalPrice,
+      basePrice: basePrice,
+      regionMultiplier: regionMultiplier,
       status: 'pending',
       beforePhotos: [],
       afterPhotos: [],
       rating: null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      // Escrow System
+      escrowAmount: 0,
+      escrowStatus: 'pending', // pending, released, refunded
+      // Complaint System
+      complaint: null
     }
 
     setJobs(prev => [...prev, newJob])
@@ -255,6 +342,16 @@ export function AuthProvider({ children }) {
     setJobs(prev => {
       const updated = prev.map(job => {
         if (job.id === jobId) {
+          // Hold escrow: deduct from customer's balance
+          const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+          const customerIndex = savedUsers.findIndex(u => u.id === job.customer.id)
+          if (customerIndex !== -1) {
+            const finalPrice = job.price || job.basePrice
+            savedUsers[customerIndex].escrowBalance += finalPrice
+            savedUsers[customerIndex].balance = Math.max(0, savedUsers[customerIndex].balance - finalPrice)
+            localStorage.setItem('users', JSON.stringify(savedUsers))
+          }
+
           // Notify customer
           const notif = {
             id: Date.now().toString() + 'accept',
@@ -269,7 +366,15 @@ export function AuthProvider({ children }) {
           }
           setNotifications(prev => [notif, ...prev])
 
-          return { ...job, status: 'accepted', professional: user, acceptedAt: new Date().toISOString() }
+          const finalPrice = job.price || job.basePrice
+          return {
+            ...job,
+            status: 'accepted',
+            professional: user,
+            acceptedAt: new Date().toISOString(),
+            escrowAmount: finalPrice,
+            escrowStatus: 'pending'
+          }
         }
         return job
       })
@@ -468,7 +573,7 @@ export function AuthProvider({ children }) {
             setNotifications(prev => [ratingNotif, ...prev])
           }
 
-          // Update professional's rating in users list
+          // Update professional's rating in users list and release escrow
           if (user.role === 'customer' && job.professional?.id) {
             const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
             const proId = job.professional.id
@@ -482,14 +587,36 @@ export function AuthProvider({ children }) {
 
             const updatedUsers = savedUsers.map(u => {
               if (u.id === proId) {
-                return { ...u, rating: Math.round(avgRating * 10) / 10 }
+                // Release escrow: add to professional's wallet
+                const escrowAmount = job.escrowAmount || job.price || job.basePrice
+                return {
+                  ...u,
+                  rating: Math.round(avgRating * 10) / 10,
+                  balance: (u.balance || 0) + escrowAmount,
+                  completedJobs: (u.completedJobs || 0) + 1
+                }
+              }
+              // Release customer's escrow hold
+              if (u.id === job.customer.id) {
+                const escrowAmount = job.escrowAmount || job.price || job.basePrice
+                return {
+                  ...u,
+                  escrowBalance: Math.max(0, (u.escrowBalance || 0) - escrowAmount),
+                  totalSpent: (u.totalSpent || 0) + escrowAmount,
+                  completedJobs: (u.completedJobs || 0) + 1
+                }
               }
               return u
             })
             localStorage.setItem('users', JSON.stringify(updatedUsers))
           }
 
-          return { ...job, status: 'rated', rating: { ...ratingData, review } }
+          return {
+            ...job,
+            status: 'rated',
+            rating: { ...ratingData, review },
+            escrowStatus: 'completed'
+          }
         }
         return job
       })

@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings } from 'lucide-react'
+import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift } from 'lucide-react'
+import { useState } from 'react'
 
 function ProfilePage() {
-  const { user, logout } = useAuth()
+  const { user, logout, jobs } = useAuth()
   const navigate = useNavigate()
+  const [copied, setCopied] = useState(false)
 
   const handleLogout = () => {
     if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
@@ -13,13 +15,33 @@ function ProfilePage() {
     }
   }
 
+  // Get real customer data
+  const allJobs = jobs || JSON.parse(localStorage.getItem('jobs') || '[]')
+  const customerCompletedJobs = allJobs.filter(j => j.customer?.id === user?.id && (j.status === 'completed' || j.status === 'rated')).length
+
   const stats = user?.role === 'professional' ? [
     { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },
     { label: 'Ortalama Puan', value: user?.rating || '0.0', icon: Star },
   ] : [
-    { label: 'Tamamlanan İş', value: '0', icon: Briefcase },
-    { label: 'Harcanan', value: '₺0', icon: Settings },
+    { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase },
+    { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings },
   ]
+
+  // Loyalty points calculation
+  const loyaltyLevel = customerCompletedJobs >= 20 ? 'Gold' : customerCompletedJobs >= 10 ? 'Silver' : customerCompletedJobs >= 5 ? 'Bronze' : 'Member'
+  const nextMilestone = customerCompletedJobs >= 20 ? 20 : customerCompletedJobs >= 10 ? 20 : customerCompletedJobs >= 5 ? 10 : 5
+  const loyaltyProgress = Math.min(100, (customerCompletedJobs / nextMilestone) * 100)
+
+  const handleCopyReferral = () => {
+    if (user?.referralCode) {
+      navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${user.referralCode}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const coupons = user?.coupons || []
+  const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,9 +115,78 @@ function ProfilePage() {
           </div>
         </div>
 
+        {/* Loyalty Program (Customers) */}
+        {user?.role === 'customer' && (
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-4 shadow-lg mb-4 text-white">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold">Sadakat Programı</h3>
+              <span className="px-2 py-1 bg-white/20 rounded-lg text-sm font-bold">{loyaltyLevel}</span>
+            </div>
+            <div className="mb-2">
+              <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white transition-all duration-300"
+                  style={{ width: `${loyaltyProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-white/80 mt-1">{customerCompletedJobs} / {nextMilestone} işe kadar ilerleme</p>
+            </div>
+          </div>
+        )}
+
+        {/* Referral Section (Customers) */}
+        {user?.role === 'customer' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-lg mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Share2 size={20} className="text-blue-600" />
+              <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
+                <code className="text-xs text-gray-600 font-mono truncate">{user?.referralCode}</code>
+              </div>
+              <button
+                onClick={handleCopyReferral}
+                className="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
+              >
+                <Copy size={16} />
+                {copied ? 'Kopyalandı' : 'Kopyala'}
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-600">
+              <Gift size={14} className="inline mr-1" />
+              <strong>{user?.referralCount || 0}</strong> kişi davet edildi
+            </div>
+          </div>
+        )}
+
+        {/* Active Coupons */}
+        {activeCoupons.length > 0 && (
+          <div className="mb-4">
+            <h3 className="font-bold text-gray-900 mb-2">Aktif Kuponlar ({activeCoupons.length})</h3>
+            <div className="space-y-2">
+              {activeCoupons.slice(0, 2).map(coupon => (
+                <div key={coupon.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{coupon.amount} TL İndirim</p>
+                      <p className="text-xs text-gray-500">Süresi: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                    <Gift size={20} className="text-purple-600" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Settings */}
         <div className="bg-white rounded-2xl p-4 shadow-lg mb-4">
-          <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition">
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+          >
             <div className="flex items-center gap-3">
               <Settings size={20} className="text-gray-600" />
               <span className="font-semibold text-gray-900">Ayarlar</span>

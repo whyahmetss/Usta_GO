@@ -181,7 +181,10 @@ function SettingsPage() {
 
         {/* Yardım & Destek */}
         <div className="bg-white rounded-2xl p-4 shadow-lg">
-          <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition">
+          <button
+            onClick={() => navigate('/help')}
+            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+          >
             <div className="flex items-center gap-3">
               <span className="text-xl">💬</span>
               <span className="font-semibold text-gray-900">Yardım & Destek</span>
@@ -192,7 +195,10 @@ function SettingsPage() {
 
         {/* Hakkında */}
         <div className="bg-white rounded-2xl p-4 shadow-lg">
-          <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition">
+          <button
+            onClick={() => navigate('/about')}
+            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+          >
             <div className="flex items-center gap-3">
               <span className="text-xl">ℹ️</span>
               <span className="font-semibold text-gray-900">Hakkında</span>
