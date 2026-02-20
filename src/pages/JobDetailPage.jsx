@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
 import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
+import { CameraSource } from '@capacitor/camera'
 
 function CameraModal({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null)
@@ -9,15 +12,18 @@ function CameraModal({ isOpen, onClose, onCapture }) {
   const [stream, setStream] = useState(null)
   const [error, setError] = useState(null)
   const [facingMode, setFacingMode] = useState('environment')
+  const [isNative, setIsNative] = useState(false)
+  const { takePhotoWithCamera, pickFromGallery } = useCapacitorCamera()
 
   useEffect(() => {
-    if (isOpen) {
+    setIsNative(Capacitor.isNativePlatform())
+    if (isOpen && !isNative) {
       startCamera()
     }
     return () => {
       stopCamera()
     }
-  }, [isOpen, facingMode])
+  }, [isOpen, facingMode, isNative])
 
   const startCamera = async () => {
     try {
@@ -46,29 +52,84 @@ function CameraModal({ isOpen, onClose, onCapture }) {
     }
   }
 
-  const takePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return
+  const takePhoto = async () => {
+    if (isNative) {
+      try {
+        const dataUrl = await takePhotoWithCamera()
+        onCapture(dataUrl)
+        onClose()
+      } catch (err) {
+        console.error('Camera error:', err)
+        setError('Fotograf cekilemedi')
+      }
+    } else {
+      if (!videoRef.current || !canvasRef.current) return
 
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
 
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0)
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0)
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-    stopCamera()
-    onCapture(dataUrl)
-    onClose()
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      stopCamera()
+      onCapture(dataUrl)
+      onClose()
+    }
   }
 
   const switchCamera = () => {
-    stopCamera()
-    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
+    if (!isNative) {
+      stopCamera()
+      setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
+    }
+  }
+
+  const handleGalleryPick = async () => {
+    try {
+      const dataUrl = await pickFromGallery()
+      onCapture(dataUrl)
+      onClose()
+    } catch (err) {
+      console.error('Gallery error:', err)
+      setError('Fotograf secilemedi')
+    }
   }
 
   if (!isOpen) return null
+
+  if (isNative) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+          <div className="text-6xl mb-4">📷</div>
+          <p className="text-white text-lg mb-6">Fotograf Cek veya Kütüphaneden Sec</p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+              onClick={takePhoto}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold"
+            >
+              Kamera ile Cek
+            </button>
+            <button
+              onClick={handleGalleryPick}
+              className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold"
+            >
+              Galeriden Sec
+            </button>
+            <button
+              onClick={() => { onClose() }}
+              className="px-6 py-3 bg-gray-600 text-white rounded-xl font-bold"
+            >
+              Iptal
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
