@@ -31,7 +31,17 @@ function RateJobPage() {
   }
 
   const isProfessional = user?.role === 'professional'
-  const otherPerson = isProfessional ? job.customer : job.professional
+  const otherPerson = isProfessional ? job?.customer : job?.professional
+
+  if (!otherPerson) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-gray-600 text-xl mb-4">Değerlendirme yapılamıyor</p>
+        <p className="text-gray-500 text-sm mb-4">Usta veya müşteri bilgisi eksik</p>
+        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Geri Dön</button>
+      </div>
+    </div>
+  }
 
   const handleSubmit = () => {
     if (rating === 0) {
@@ -39,13 +49,18 @@ function RateJobPage() {
       return
     }
 
-    const ratingData = isProfessional
-      ? { professionalRating: rating, professionalReview: review }
-      : { customerRating: rating, customerReview: review }
+    try {
+      const ratingData = isProfessional
+        ? { professionalRating: rating, professionalReview: review }
+        : { customerRating: rating, customerReview: review }
 
-    rateJob(job.id, ratingData, review)
-    alert('Değerlendirme kaydedildi. Teşekkürler!')
-    navigate(isProfessional ? '/professional' : '/home')
+      rateJob(job.id, ratingData, review)
+      alert('Değerlendirme kaydedildi. Teşekkürler!')
+      navigate(isProfessional ? '/professional' : '/home')
+    } catch (error) {
+      console.error('Rating error:', error)
+      alert('Değerlendirme kaydedilirken hata oluştu')
+    }
   }
 
   return (

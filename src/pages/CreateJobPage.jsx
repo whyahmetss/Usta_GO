@@ -14,6 +14,8 @@ function CreateJobPage() {
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [address, setAddress] = useState('')
+  const [selectedCoupon, setSelectedCoupon] = useState(null)
+  const [activeCoupons, setActiveCoupons] = useState([])
 
   // Get region multiplier from address
   const getRegionMultiplier = (addr) => {
@@ -90,11 +92,50 @@ function CreateJobPage() {
     }, 2000)
   }
 
+  const handleLoadCoupons = () => {
+    const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+    const currentUser = savedUsers.find(u => u.id === user.id)
+    if (currentUser?.coupons) {
+      const unused = currentUser.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
+      setActiveCoupons(unused)
+    }
+  }
+
   const handleCreateJob = () => {
+    let finalJobPrice = aiPrice
+    const regionMultiplier = getRegionMultiplier(address)
+    finalJobPrice = Math.round(finalJobPrice * regionMultiplier)
+
+    // Apply coupon discount if selected
+    let couponDiscount = 0
+    if (selectedCoupon) {
+      couponDiscount = selectedCoupon.amount
+      finalJobPrice = Math.max(0, finalJobPrice - couponDiscount)
+
+      // Mark coupon as used
+      const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+      const userIndex = savedUsers.findIndex(u => u.id === user.id)
+      if (userIndex !== -1) {
+        const couponIndex = savedUsers[userIndex].coupons.findIndex(c => c.id === selectedCoupon.id)
+        if (couponIndex !== -1) {
+          savedUsers[userIndex].coupons[couponIndex].used = true
+          savedUsers[userIndex].coupons[couponIndex].usedOn = new Date().toISOString()
+          localStorage.setItem('users', JSON.stringify(savedUsers))
+        }
+      }
+    }
+
     const jobData = {
       title: aiAnalysis.category,
       description,
-      price: aiPrice,
+      price: finalJobPrice,
+      basePrice: aiPrice,
+      regionMultiplier: regionMultiplier,
+      couponApplied: selectedCoupon ? {
+        couponId: selectedCoupon.id,
+        couponCode: selectedCoupon.code,
+        discountAmount: couponDiscount
+      } : null,
       photo: photoPreview,
       customer: {
         id: user.id,
@@ -247,6 +288,49 @@ function CreateJobPage() {
         {/* Step 3: Result & Confirm */}
         {step === 3 && aiPrice && (
           <div className="space-y-4">
+            {/* Coupon Section */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
+              <h3 className="font-bold text-gray-900 mb-4">🎟️ Kupon Kullan</h3>
+              {activeCoupons.length === 0 ? (
+                <>
+                  <p className="text-gray-600 text-sm mb-3">Aktif kuponunuz yok</p>
+                  <button
+                    onClick={handleLoadCoupons}
+                    className="w-full py-2 bg-yellow-100 text-yellow-700 rounded-lg font-bold hover:bg-yellow-200 transition text-sm"
+                  >
+                    Kuponları Yükle
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  {activeCoupons.map((coupon) => (
+                    <button
+                      key={coupon.id}
+                      onClick={() => setSelectedCoupon(selectedCoupon?.id === coupon.id ? null : coupon)}
+                      className={`w-full p-3 rounded-lg border-2 transition text-left ${
+                        selectedCoupon?.id === coupon.id
+                          ? 'bg-yellow-50 border-yellow-500 shadow-md'
+                          : 'bg-gray-50 border-gray-200 hover:border-yellow-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-gray-900">{coupon.code}</p>
+                          <p className="text-sm text-gray-600">+{coupon.amount} TL indirim</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-black text-yellow-600">+{coupon.amount} TL</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')} kadar
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={24} />
@@ -256,7 +340,12 @@ function CreateJobPage() {
               <div className="bg-white/20 backdrop-blur rounded-xl p-4 mb-4">
                 <div className="text-center">
                   <p className="text-white/80 text-sm mb-1">Tahmini Ucret</p>
-                  <p className="text-5xl font-black">{finalPrice} TL</p>
+                  <p className="text-5xl font-black">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
+                  {selectedCoupon && (
+                    <p className="text-yellow-200 text-sm mt-2">
+                      -{selectedCoupon.amount} TL kupon indirimi ✓
+                    </p>
+                  )}
                   {regionMultiplier !== 1.0 && (
                     <p className="text-white/80 text-xs mt-2">
                       Temel fiyat: {aiPrice} TL ({regionMultiplier === 1.3 ? 'Premium Bölge +30%' : regionMultiplier === 1.0 ? 'Ekonomi Bölge' : 'Standart +15%'})
