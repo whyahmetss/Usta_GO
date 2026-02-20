@@ -28,7 +28,7 @@ const STATUS_STEPS = [
 function LiveTrackingPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user, jobs } = useAuth()
+  const { user, jobs, addNotification } = useAuth()
 
   const job = jobs.find(j => j.id === id)
 
@@ -37,6 +37,8 @@ function LiveTrackingPage() {
   const [eta, setEta] = useState(15) // minutes
   const [distance, setDistance] = useState(3.2) // km
   const [arrivedNotified, setArrivedNotified] = useState(false)
+  const [fiveMinNotified, setFiveMinNotified] = useState(false)
+  const [onWayNotified, setOnWayNotified] = useState(false)
   const mapRef = useRef(null)
   const animationRef = useRef(null)
 
@@ -66,8 +68,27 @@ function LiveTrackingPage() {
           setDistance(0)
           if (!arrivedNotified) {
             setArrivedNotified(true)
+            // Send arrival notification
+            addNotification({
+              type: 'tracking',
+              title: '🎉 Usta Geldi!',
+              message: 'Ustanız kapınızda',
+              targetUserId: user?.id,
+              jobId: id
+            })
           }
           return 0
+        }
+        // 5 dakika kaldı bildirimi
+        if (!fiveMinNotified && prev <= 5 && prev > 4.5) {
+          setFiveMinNotified(true)
+          addNotification({
+            type: 'tracking',
+            title: '⏰ Neredeyse Varış',
+            message: 'Usta 5 dakika içinde kapınızda olacak',
+            targetUserId: user?.id,
+            jobId: id
+          })
         }
         return Math.round((prev - 0.5) * 10) / 10
       })
@@ -87,6 +108,17 @@ function LiveTrackingPage() {
     const fastInterval = setInterval(() => {
       if (trackingStatus === 'accepted') {
         setTrackingStatus('on_the_way')
+        // Send on_the_way notification
+        if (!onWayNotified) {
+          setOnWayNotified(true)
+          addNotification({
+            type: 'tracking',
+            title: '🚗 Usta Yola Çıktı',
+            message: 'Ustanız yola çıktı, tahmini 15 dakikada varış',
+            targetUserId: user?.id,
+            jobId: id
+          })
+        }
       }
       setCurrentPointIndex(prev => {
         if (prev < ROUTE_POINTS.length - 1) return prev + 1
@@ -98,7 +130,7 @@ function LiveTrackingPage() {
       clearInterval(interval)
       clearInterval(fastInterval)
     }
-  }, [trackingStatus, arrivedNotified])
+  }, [trackingStatus, arrivedNotified, fiveMinNotified, onWayNotified, user?.id, id, addNotification])
 
   // Draw map simulation on canvas
   useEffect(() => {
