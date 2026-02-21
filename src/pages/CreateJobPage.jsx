@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI, uploadFile } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
 
 function CreateJobPage() {
@@ -16,6 +18,8 @@ function CreateJobPage() {
   const [address, setAddress] = useState('')
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [activeCoupons, setActiveCoupons] = useState([])
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState(null)
 
   // Get region multiplier from address
   const getRegionMultiplier = (addr) => {
@@ -92,75 +96,95 @@ function CreateJobPage() {
     }, 2000)
   }
 
-  const handleLoadCoupons = () => {
-    const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
-    const currentUser = savedUsers.find(u => u.id === user.id)
-    if (currentUser?.coupons) {
-      const unused = currentUser.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
-      setActiveCoupons(unused)
-    }
-  }
-
-  const handleCreateJob = () => {
-    let finalJobPrice = aiPrice
-    const regionMultiplier = getRegionMultiplier(address)
-    finalJobPrice = Math.round(finalJobPrice * regionMultiplier)
-
-    // Apply coupon discount if selected
-    let couponDiscount = 0
-    if (selectedCoupon) {
-      couponDiscount = selectedCoupon.amount
-      finalJobPrice = Math.max(0, finalJobPrice - couponDiscount)
-
-      // Mark coupon as used
-      const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
-      const userIndex = savedUsers.findIndex(u => u.id === user.id)
-      if (userIndex !== -1) {
-        const couponIndex = savedUsers[userIndex].coupons.findIndex(c => c.id === selectedCoupon.id)
-        if (couponIndex !== -1) {
-          savedUsers[userIndex].coupons[couponIndex].used = true
-          savedUsers[userIndex].coupons[couponIndex].usedOn = new Date().toISOString()
-          localStorage.setItem('users', JSON.stringify(savedUsers))
+  useEffect(() => {
+    // Load active coupons from API on component mount
+    const loadCoupons = async () => {
+      try {
+        const response = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        if (response.data?.coupons) {
+          const unused = response.data.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
+          setActiveCoupons(unused)
         }
+      } catch (err) {
+        console.warn('Failed to load coupons:', err)
       }
     }
+    loadCoupons()
+  }, [user])
 
-    const jobData = {
-      title: aiAnalysis.category,
-      description,
-      price: finalJobPrice,
-      basePrice: aiPrice,
-      regionMultiplier: regionMultiplier,
-      couponApplied: selectedCoupon ? {
-        couponId: selectedCoupon.id,
-        couponCode: selectedCoupon.code,
-        discountAmount: couponDiscount
-      } : null,
-      photo: photoPreview,
-      customer: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone || '',
-        avatar: user.avatar || '👤'
-      },
-      location: {
-        address: address || 'Kadikoy, Istanbul',
-        lat: 40.9929,
-        lng: 29.0260
-      },
-      date: new Date().toISOString(),
-      urgent: aiAnalysis.urgency === 'Yuksek',
-      category: 'electric'
+  const handleLoadCoupons = () => {
+    // Auto-load coupons when opening the coupon section
+    const unused = activeCoupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
+    setActiveCoupons(unused)
+  }
+
+  const handleCreateJob = async () => {
+    if (isCreating) return
+
+    setError(null)
+    setIsCreating(true)
+
+    try {
+      let finalJobPrice = aiPrice
+      const regionMultiplier = getRegionMultiplier(address)
+      finalJobPrice = Math.round(finalJobPrice * regionMultiplier)
+
+      // Apply coupon discount if selected
+      let couponDiscount = 0
+      let photoUrl = null
+
+      if (selectedCoupon) {
+        couponDiscount = selectedCoupon.amount
+        finalJobPrice = Math.max(0, finalJobPrice - couponDiscount)
+      }
+
+      // Upload photo if selected
+      if (photo) {
+        try {
+          const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
+          photoUrl = uploadResponse.data?.url || photoPreview
+        } catch (err) {
+          console.warn('Photo upload failed, using preview:', err)
+          photoUrl = photoPreview
+        }
+      }
+
+      const jobData = {
+        title: aiAnalysis.category,
+        description,
+        price: finalJobPrice,
+        basePrice: aiPrice,
+        regionMultiplier: regionMultiplier,
+        couponApplied: selectedCoupon ? {
+          couponId: selectedCoupon.id,
+          couponCode: selectedCoupon.code,
+          discountAmount: couponDiscount
+        } : null,
+        photo: photoUrl,
+        location: {
+          address: address || 'Kadikoy, Istanbul',
+          lat: 40.9929,
+          lng: 29.0260
+        },
+        urgent: aiAnalysis.urgency === 'Yuksek',
+        category: 'electric'
+      }
+
+      // Create job via API
+      const result = await createJob(jobData)
+
+      if (result) {
+        alert('Is talebi olusturuldu! Ustalar yakinda teklif verecek.')
+        navigate('/my-jobs')
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Is olusturulurken hata olustu'
+      setError(errorMessage)
+      console.error('Create job error:', err)
+      alert(`Hata: ${errorMessage}`)
+    } finally {
+      setIsCreating(false)
     }
-
-    const result = createJob(jobData)
-
-    // Verify localStorage update
-    const savedJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
-    console.log('Jobs in localStorage:', savedJobs.length, 'Last job:', result)
-
-    alert('Is talebi olusturuldu! Ustalar yakinda teklif verecek.')
-    navigate('/my-jobs')
   }
 
   return (
@@ -390,18 +414,37 @@ function CreateJobPage() {
               </p>
             </div>
 
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
+                disabled={isCreating}
+                className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Duzenle
               </button>
               <button
                 onClick={handleCreateJob}
-                className="py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:shadow-xl transition"
+                disabled={isCreating}
+                className={`py-4 rounded-xl font-bold hover:shadow-xl transition flex items-center justify-center gap-2 ${
+                  isCreating
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                }`}
               >
-                Onayla & Gonder
+                {isCreating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Gonderiliyor...
+                  </>
+                ) : (
+                  'Onayla & Gonder'
+                )}
               </button>
             </div>
           </div>

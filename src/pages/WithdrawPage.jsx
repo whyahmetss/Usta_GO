@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, Building, AlertCircle } from 'lucide-react'
 
 function WithdrawPage() {
-  const { user, getWalletBalance, getPendingWithdrawals, requestWithdrawal } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [amount, setAmount] = useState('')
@@ -12,13 +14,37 @@ function WithdrawPage() {
   const [iban, setIban] = useState('')
   const [accountHolder, setAccountHolder] = useState(user?.name || '')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [balance, setBalance] = useState(0)
+  const [pendingAmount, setPendingAmount] = useState(0)
 
-  const balance = getWalletBalance()
-  const pendingAmount = getPendingWithdrawals()
-  const availableBalance = balance - pendingAmount
   const minWithdrawal = 100
 
-  const handleSubmit = (e) => {
+  // Load wallet data
+  useEffect(() => {
+    const loadWalletData = async () => {
+      try {
+        setLoading(true)
+        const response = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        if (response.data) {
+          setBalance(response.data.balance || 0)
+          setPendingAmount(response.data.pendingWithdrawal || 0)
+        }
+      } catch (err) {
+        console.error('Load wallet error:', err)
+        setError('Cuzdan verisi yuklenemedi')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadWalletData()
+  }, [])
+
+  const availableBalance = balance - pendingAmount
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     const withdrawAmount = parseInt(amount)
@@ -27,13 +53,40 @@ function WithdrawPage() {
     if (withdrawAmount > availableBalance) { setError('Yetersiz bakiye'); return }
     if (!bankName || !iban || !accountHolder) { setError('Lutfen tum alanlari doldurun'); return }
 
-    const result = requestWithdrawal(withdrawAmount, bankName, iban, accountHolder)
-    if (result.success) {
-      alert(`${withdrawAmount} TL cekim talebi olusturuldu! Admin onayindan sonra hesabiniza yatirilacak.`)
-      navigate('/wallet')
-    } else {
-      setError(result.error)
+    setSubmitting(true)
+
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.WALLET.WITHDRAW, {
+        method: 'POST',
+        body: {
+          amount: withdrawAmount,
+          bankName,
+          iban,
+          accountHolder
+        }
+      })
+
+      if (response.data) {
+        alert(`${withdrawAmount} TL cekim talebi olusturuldu! Admin onayindan sonra hesabiniza yatirilacak.`)
+        navigate('/wallet')
+      }
+    } catch (err) {
+      console.error('Withdrawal error:', err)
+      setError(err.message || 'Para cekme talebi olusturulamadi')
+    } finally {
+      setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Cuzdan yukleniyor...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -109,9 +162,18 @@ function WithdrawPage() {
 
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4"><p className="text-red-700 text-sm font-semibold">{error}</p></div>}
 
-        <button type="submit" disabled={!amount || parseInt(amount) <= 0}
-          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition ${!amount || parseInt(amount) <= 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'}`}>
-          Para Cekme Talebi Olustur
+        <button type="submit" disabled={!amount || parseInt(amount) <= 0 || submitting}
+          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 ${
+            !amount || parseInt(amount) <= 0 || submitting ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'
+          }`}>
+          {submitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Isleniyor...
+            </>
+          ) : (
+            'Para Cekme Talebi Olustur'
+          )}
         </button>
       </form>
     </div>

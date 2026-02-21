@@ -1,32 +1,58 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, LogOut, Trash2, Shield } from 'lucide-react'
+import { fetchAPI } from '../utils/api'
+import { ArrowLeft, LogOut, Trash2, Shield, AlertCircle, Loader } from 'lucide-react'
 
 function AdminUsersPage() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const [savedUsers, setSavedUsers] = useState(() => JSON.parse(localStorage.getItem('users') || '[]'))
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
-  // Poll localStorage for real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const updatedUsers = JSON.parse(localStorage.getItem('users') || '[]')
-      setSavedUsers(updatedUsers)
-    }, 500) // Check every 500ms for faster updates
-    return () => clearInterval(interval)
+    fetchUsers()
   }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      // TODO: Replace with actual admin endpoint when available
+      // For now, trying GET /api/users as placeholder
+      const res = await fetchAPI('/users', {
+        method: 'GET'
+      })
+      setUsers(Array.isArray(res) ? res : res.data || [])
+    } catch (err) {
+      setError(err.message)
+      // Fallback to empty array if endpoint not available yet
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     logout()
     navigate('/')
   }
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
-      const updatedUsers = savedUsers.filter(u => u.id !== userId)
-      localStorage.setItem('users', JSON.stringify(updatedUsers))
-      window.location.reload()
+      try {
+        setDeletingId(userId)
+        setError(null)
+        // TODO: Use DELETE /api/users/:id when admin endpoint is available
+        // For now, placeholder implementation
+        alert('Kullanıcı silme özelliği yakında etkinleştirilecektir.')
+        setDeletingId(null)
+      } catch (err) {
+        setError(err.message)
+        setDeletingId(null)
+      }
     }
   }
 
@@ -56,8 +82,23 @@ function AdminUsersPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {error && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-yellow-700">Uyarı</p>
+              <p className="text-sm text-yellow-600">{error}</p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          {savedUsers.length === 0 ? (
+          {loading ? (
+            <div className="p-12 text-center">
+              <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
+              <p className="text-gray-600 font-semibold">Kullanıcılar yükleniyor...</p>
+            </div>
+          ) : users.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-5xl mb-3">👥</div>
               <p className="text-gray-600 font-semibold">Henüz kullanıcı yok</p>
@@ -76,7 +117,7 @@ function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {savedUsers.map((user, idx) => (
+                  {users.map((user, idx) => (
                     <tr key={user.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-6 py-4 text-sm">
                         <div className="flex items-center gap-2">
@@ -113,9 +154,10 @@ function AdminUsersPage() {
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="flex items-center gap-1 px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-semibold text-xs"
+                            disabled={deletingId === user.id}
+                            className="flex items-center gap-1 px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Trash2 size={14} /> Sil
+                            <Trash2 size={14} /> {deletingId === user.id ? 'Siliniyor...' : 'Sil'}
                           </button>
                         )}
                       </td>
