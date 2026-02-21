@@ -1,84 +1,118 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock } from 'lucide-react'
+import { fetchAPI, uploadFile } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
+import { ArrowLeft, User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 
 function SettingsPage() {
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
   const navigate = useNavigate()
-  const [isActive, setIsActive] = useState(true) // Aktif/Pasif durum
+  const [loading, setLoading] = useState(false)
+  const [isActive, setIsActive] = useState(user?.isActive ?? true)
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [certificateFile, setCertificateFile] = useState(null)
+  const [certificateLoading, setCertificateLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
   const [reminderSettings, setReminderSettings] = useState({
     electricalCheck: user?.reminderSettings?.electricalCheck ?? true,
     plumbingMaintenance: user?.reminderSettings?.plumbingMaintenance ?? true
   })
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      alert('Lütfen tüm alanları doldurun')
+      setError('Lütfen tüm alanları doldurun')
       return
     }
     if (newPassword !== confirmPassword) {
-      alert('Yeni şifreler eşleşmiyor')
+      setError('Yeni şifreler eşleşmiyor')
       return
     }
     if (newPassword.length < 6) {
-      alert('Şifre en az 6 karakter olmalı')
+      setError('Şifre en az 6 karakter olmalı')
       return
     }
-    
-    // Şifre değiştirme işlemi (backend'e bağlanınca gerçek olacak)
-    alert('Şifreniz başarıyla değiştirildi!')
-    setShowPasswordChange(false)
-    setOldPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-  }
 
-  const handleToggleActive = () => {
-    setIsActive(!isActive)
-    if (!isActive) {
-      alert('Hesabınız aktif edildi. Artık iş alabilirsiniz.')
-    } else {
-      alert('Hesabınız pasif edildi. Yeni iş talepleri almayacaksınız.')
+    try {
+      setLoading(true)
+      setError(null)
+      await fetchAPI(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+        method: 'PUT',
+        body: { oldPassword, newPassword }
+      })
+      setSuccess('Şifreniz başarıyla değiştirildi!')
+      setShowPasswordChange(false)
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleCertificateUpload = (e) => {
+  const handleToggleActive = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const newActiveStatus = !isActive
+      const res = await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
+        method: 'PUT',
+        body: { isActive: newActiveStatus }
+      })
+      setIsActive(newActiveStatus)
+      setUser(res.data || res)
+      setSuccess(newActiveStatus ? 'Hesabınız aktif edildi. Artık iş alabilirsiniz.' : 'Hesabınız pasif edildi. Yeni iş talepleri almayacaksınız.')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCertificateUpload = async (e) => {
     const file = e.target.files[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setCertificateFile(reader.result)
-        // Save to localStorage
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const updatedUsers = users.map(u =>
-          u.id === user.id ? {
-            ...u,
-            licenseCertificate: reader.result,
-            verificationStatus: 'pending'
-          } : u
-        )
-        localStorage.setItem('users', JSON.stringify(updatedUsers))
-        alert('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
+      try {
+        setCertificateLoading(true)
+        setError(null)
+        const res = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'certificate')
+        setCertificateFile(res.url)
+        setSuccess('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
+        setTimeout(() => setSuccess(null), 3000)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setCertificateLoading(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
-  const handleReminderToggle = (key) => {
-    const newSettings = { ...reminderSettings, [key]: !reminderSettings[key] }
-    setReminderSettings(newSettings)
-    // Save to localStorage
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    const updatedUsers = users.map(u =>
-      u.id === user.id ? { ...u, reminderSettings: newSettings } : u
-    )
-    localStorage.setItem('users', JSON.stringify(updatedUsers))
+  const handleReminderToggle = async (key) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const newSettings = { ...reminderSettings, [key]: !reminderSettings[key] }
+      const res = await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
+        method: 'PUT',
+        body: { reminderSettings: newSettings }
+      })
+      setReminderSettings(newSettings)
+      setUser(res.data || res)
+      setSuccess('Ayarlarınız güncellendi!')
+      setTimeout(() => setSuccess(null), 2000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -86,7 +120,7 @@ function SettingsPage() {
       {/* Header */}
       <div className="blue-gradient-bg pb-6 pt-4 px-4">
         <div className="flex items-center gap-4 mb-6">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"
           >
@@ -97,6 +131,28 @@ function SettingsPage() {
       </div>
 
       <div className="px-4 py-6 space-y-4">
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-700">Hata</p>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+            <CheckCircle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-green-700">Başarılı</p>
+              <p className="text-sm text-green-600">{success}</p>
+            </div>
+          </div>
+        )}
+
         {/* Hesap Bilgileri */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
           <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>
@@ -147,9 +203,10 @@ function SettingsPage() {
               </div>
               <button
                 onClick={handleToggleActive}
+                disabled={loading}
                 className={`relative w-16 h-8 rounded-full transition ${
                   isActive ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
                   isActive ? 'translate-x-9' : 'translate-x-1'
@@ -240,15 +297,20 @@ function SettingsPage() {
 
               {user?.verificationStatus !== 'verified' && (
                 <label className="block">
-                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition">
+                  <div className={`border-2 border-dashed border-blue-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition ${
+                    certificateLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}>
                     <Upload size={24} className="mx-auto mb-2 text-blue-600" />
-                    <p className="text-sm font-bold text-gray-900">Sertifika Yükle</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {certificateLoading ? 'Yükleniyor...' : 'Sertifika Yükle'}
+                    </p>
                     <p className="text-xs text-gray-500">PDF, JPG veya PNG</p>
                   </div>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={handleCertificateUpload}
+                    disabled={certificateLoading}
                     className="hidden"
                   />
                 </label>
@@ -288,27 +350,31 @@ function SettingsPage() {
                   placeholder="Mevcut Şifre"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
                 <input
                   type="password"
                   placeholder="Yeni Şifre"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
                 <input
                   type="password"
                   placeholder="Yeni Şifre (Tekrar)"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
                 <button
                   onClick={handlePasswordChange}
-                  className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+                  disabled={loading}
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Şifreyi Güncelle
+                  {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
                 </button>
               </div>
             </div>

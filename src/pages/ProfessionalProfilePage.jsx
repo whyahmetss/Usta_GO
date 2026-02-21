@@ -1,72 +1,89 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, Star, MapPin, Award, Clock, CheckCircle, MessageSquare, Shield } from 'lucide-react'
+import { fetchAPI } from '../utils/api'
+import { ArrowLeft, Star, MapPin, Award, Clock, CheckCircle, MessageSquare, Shield, AlertCircle, Loader } from 'lucide-react'
 
 function ProfessionalProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { jobs } = useAuth()
   const [activeTab, setActiveTab] = useState('about')
+  const [professional, setProfessional] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Get real professional data from jobs
-  const professional = useMemo(() => {
-    const allJobs = jobs || JSON.parse(localStorage.getItem('jobs') || '[]')
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
+  useEffect(() => {
+    fetchProfessional()
+  }, [id])
 
-    // Find professional's jobs
-    const proJobs = allJobs.filter(j => j.professional?.id === id)
-    const completedJobs = proJobs.filter(j => j.status === 'completed' || j.status === 'rated')
-    const ratedJobs = completedJobs.filter(j => j.rating)
+  const fetchProfessional = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await fetchAPI(`/users/${id}`, {
+        method: 'GET'
+      })
+      const userData = res.data || res
 
-    // Calculate rating
-    const totalRating = ratedJobs.reduce((sum, j) => sum + (j.rating?.customerRating || 0), 0)
-    const avgRating = ratedJobs.length > 0 ? (totalRating / ratedJobs.length).toFixed(1) : '0.0'
-
-    // Get user data
-    const user = users.find(u => u.id === id) || {
-      id,
-      name: 'Usta',
-      avatar: '⚡',
-      createdAt: new Date().toISOString(),
-      verificationStatus: 'unverified'
+      // Transform user data to professional profile format
+      setProfessional({
+        id: userData.id,
+        name: userData.name,
+        avatar: userData.avatar || '⚡',
+        title: userData.title || 'Profesyonel Usta',
+        rating: userData.rating || 0,
+        reviewCount: userData.reviewCount || 0,
+        completedJobs: userData.completedJobs || 0,
+        memberSince: userData.createdAt || new Date().toISOString(),
+        location: userData.location || userData.city || 'İstanbul',
+        responseTime: userData.responseTime || '5 dakika',
+        about: userData.bio || `Profesyonel hizmet için hazırım. ${userData.completedJobs || 0} iş tamamladım.`,
+        verified: userData.verificationStatus === 'verified',
+        skills: userData.skills || ['Elektrik Tesisatı', 'Arıza Onarımı'],
+        portfolio: userData.portfolio || [],
+        reviews: userData.reviews || [],
+        certificates: userData.certificates || [],
+        stats: [
+          { label: 'Tamamlanan İş', value: (userData.completedJobs || 0).toString(), icon: CheckCircle },
+          { label: 'Ortalama Puan', value: (userData.rating || 0).toFixed(1), icon: Star },
+          { label: 'Metnli Yorum', value: (userData.reviewCount || 0).toString(), icon: MessageSquare },
+          { label: 'Durum', value: userData.verificationStatus === 'verified' ? '✓' : '?', icon: Award }
+        ]
+      })
+    } catch (err) {
+      setError(err.message)
+      setProfessional(null)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    return {
-      id: user.id,
-      name: user.name,
-      avatar: user.avatar,
-      title: 'Profesyonel Usta',
-      rating: parseFloat(avgRating),
-      reviewCount: ratedJobs.length,
-      completedJobs: completedJobs.length,
-      memberSince: user.createdAt,
-      location: proJobs.length > 0 ? proJobs[0].location.address : 'İstanbul',
-      responseTime: '5 dakika',
-      about: `Profesyonel hizmet için hazırım. ${completedJobs.length} iş tamamladım.`,
-      verified: user.verificationStatus === 'verified',
-      skills: ['Elektrik Tesisatı', 'Arıza Onarımı'],
-      portfolio: completedJobs.filter(j => j.afterPhotos?.length > 0).map((job, idx) => ({
-        id: idx,
-        image: job.afterPhotos[0] || 'https://placehold.co/400x300/blue/white',
-        title: job.title
-      })),
-      reviews: ratedJobs.map(job => ({
-        id: job.id,
-        customer: job.customer.name,
-        rating: job.rating.customerRating,
-        comment: job.rating.review || 'Harika iş çıkardı.',
-        date: job.createdAt,
-        jobTitle: job.title
-      })),
-      stats: [
-        { label: 'Tamamlanan İş', value: completedJobs.length.toString(), icon: CheckCircle },
-        { label: 'Ortalama Puan', value: avgRating, icon: Star },
-        { label: 'Metnli Yorum', value: ratedJobs.length.toString(), icon: MessageSquare },
-        { label: 'Durum', value: user.verificationStatus === 'verified' ? '✓' : '?', icon: Award }
-      ]
-    }
-  }, [id, jobs])
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
+          <p className="text-gray-600 font-semibold">Profil yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !professional) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <AlertCircle size={40} className="mx-auto mb-3 text-red-600" />
+          <p className="text-gray-600 font-semibold mb-4">{error || 'Profil bulunamadı'}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold"
+          >
+            Geri Dön
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
