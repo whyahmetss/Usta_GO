@@ -1,16 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, Star } from 'lucide-react'
 
 function MyJobsPage() {
-  const { user, jobs } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('active')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [userJobs, setUserJobs] = useState([])
 
-  const userJobs = user?.role === 'customer'
-    ? jobs.filter(j => j.customer.id === user.id)
-    : jobs.filter(j => j.professional?.id === user?.id)
+  // Load jobs from API
+  useEffect(() => {
+    const loadUserJobs = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+        if (response.data && Array.isArray(response.data)) {
+          const filtered = user?.role === 'customer'
+            ? response.data.filter(j => j.customer?.id === user.id)
+            : response.data.filter(j => j.professional?.id === user?.id)
+          setUserJobs(filtered)
+        }
+      } catch (err) {
+        console.error('Load jobs error:', err)
+        setError(err.message || 'Isler yuklenirken hata olustu')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user) {
+      loadUserJobs()
+    }
+  }, [user])
 
   const activeJobs = userJobs.filter(j => ['pending', 'accepted', 'in_progress'].includes(j.status))
   const completedJobs = userJobs.filter(j => ['completed', 'rated'].includes(j.status))
@@ -61,7 +88,19 @@ function MyJobsPage() {
       </div>
 
       <div className="px-4 py-6">
-        {displayJobs.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Isler yukleniyor...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+              Yenile
+            </button>
+          </div>
+        ) : displayJobs.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📋</div>
             <p className="text-gray-600 font-semibold">

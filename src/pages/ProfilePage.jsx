@@ -1,29 +1,39 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { uploadFile } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function ProfilePage() {
-  const { user, logout, jobs } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
+  const [uploading, setUploading] = useState(false)
+  const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
 
-  const handlePhotoUpload = (e) => {
+  useEffect(() => {
+    setProfilePhoto(user?.profilePhoto || null)
+  }, [user])
+
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result)
-        // Save to localStorage
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const updatedUsers = users.map(u =>
-          u.id === user.id ? { ...u, profilePhoto: reader.result } : u
-        )
-        localStorage.setItem('users', JSON.stringify(updatedUsers))
-        alert('Profil fotoğrafı güncellendi!')
+      setUploading(true)
+      try {
+        const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+        const photoUrl = uploadResponse.data?.url
+        if (photoUrl) {
+          setProfilePhoto(photoUrl)
+          alert('Profil fotoğrafı güncellendi!')
+        }
+      } catch (err) {
+        console.error('Photo upload error:', err)
+        alert('Fotoğraf yuklemesi basarisiz oldu')
+      } finally {
+        setUploading(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -33,10 +43,6 @@ function ProfilePage() {
       navigate('/')
     }
   }
-
-  // Get real customer data
-  const allJobs = jobs || JSON.parse(localStorage.getItem('jobs') || '[]')
-  const customerCompletedJobs = allJobs.filter(j => j.customer?.id === user?.id && (j.status === 'completed' || j.status === 'rated')).length
 
   const stats = user?.role === 'professional' ? [
     { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },

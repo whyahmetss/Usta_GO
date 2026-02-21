@@ -1,31 +1,52 @@
 import { useState, useEffect } from 'react'
 import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu.jsx'
 
 function ProfessionalDashboard() {
-  const { user, getUnreadNotificationCount, getUnreadMessageCount, getThisMonthEarnings, getWalletBalance } = useAuth()
+  const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
-  const [allJobs, setAllJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
+  const [loading, setLoading] = useState(true)
+  const [allJobs, setAllJobs] = useState([])
+  const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
+  const [balance, setBalance] = useState(0)
 
   const unreadNotifs = getUnreadNotificationCount()
   const unreadMessages = getUnreadMessageCount()
 
-  // Poll localStorage for real-time job updates
+  // Load professional dashboard data
   useEffect(() => {
-    const interval = setInterval(() => {
-      const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
-      setAllJobs(jobs)
-    }, 500) // Check every 500ms for faster updates
-    return () => clearInterval(interval)
-  }, [])
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true)
+        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+          setAllJobs(jobsResponse.data)
+        }
+
+        // Load wallet data
+        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        if (walletResponse.data) {
+          setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
+          setBalance(walletResponse.data.balance || 0)
+        }
+      } catch (err) {
+        console.error('Load dashboard error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user?.role === 'professional') {
+      loadDashboardData()
+    }
+  }, [user])
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
-  const thisMonthEarnings = getThisMonthEarnings()
-  const balance = getWalletBalance()
-
   const myCompletedJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'completed' || j.status === 'rated'))
   const myActiveJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'accepted' || j.status === 'in_progress'))
 

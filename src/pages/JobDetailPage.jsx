@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI, uploadFiles } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
 import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
@@ -208,22 +210,71 @@ function CameraModal({ isOpen, onClose, onCapture }) {
 
 function JobDetailPage() {
   const { id } = useParams()
-  const { user, jobs, acceptJob, startJob, completeJob } = useAuth()
+  const { user, acceptJob, startJob, completeJob } = useAuth()
   const navigate = useNavigate()
 
-  const job = jobs.find(j => j.id === id)
-  const [beforePhotos, setBeforePhotos] = useState(job?.beforePhotos || [])
-  const [afterPhotos, setAfterPhotos] = useState(job?.afterPhotos || [])
+  const [job, setJob] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [beforePhotos, setBeforePhotos] = useState([])
+  const [afterPhotos, setAfterPhotos] = useState([])
   const [showCamera, setShowCamera] = useState(false)
   const [cameraType, setCameraType] = useState('before')
   const [showComplaintModal, setShowComplaintModal] = useState(false)
   const [complaintReason, setComplaintReason] = useState('')
   const [complaintDetails, setComplaintDetails] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!job) {
+  // Fetch job details from API
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
+        if (response.data) {
+          setJob(response.data)
+          setBeforePhotos(response.data.beforePhotos || [])
+          setAfterPhotos(response.data.afterPhotos || [])
+        } else {
+          setError('Is bulunamadi')
+        }
+      } catch (err) {
+        console.error('Fetch job error:', err)
+        setError(err.message || 'Is yüklenirken hata oluştu')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      fetchJobDetails()
+    }
+  }, [id])
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Is bulunamadi</p>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Is yukleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">{error || 'Is bulunamadi'}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            Geri Don
+          </button>
+        </div>
       </div>
     )
   }
@@ -291,28 +342,37 @@ function JobDetailPage() {
     navigate('/professional')
   }
 
-  const handleComplaint = () => {
+  const handleComplaint = async () => {
     if (!complaintReason) {
       alert('Lütfen bir şikayet nedeni seçin')
       return
     }
-    // Create complaint object and add to job
-    const complaint = {
-      id: Date.now().toString(),
-      reason: complaintReason,
-      details: complaintDetails,
-      filedBy: user.id,
-      filedAt: new Date().toISOString(),
-      status: 'open'
-    }
-    // Update job with complaint
-    const allJobs = JSON.parse(localStorage.getItem('jobs') || '[]')
-    const updatedJobs = allJobs.map(j => j.id === job.id ? { ...j, complaint } : j)
-    localStorage.setItem('jobs', JSON.stringify(updatedJobs))
 
-    alert('Şikayetiniz başarıyla iletildi. Admin tarafından incelenecektir.')
-    setShowComplaintModal(false)
-    navigate('/my-jobs')
+    setIsSubmitting(true)
+
+    try {
+      // POST complaint via API
+      const response = await fetchAPI(`/complaints`, {
+        method: 'POST',
+        body: {
+          jobId: job.id,
+          reason: complaintReason,
+          details: complaintDetails,
+          filedBy: user.id
+        }
+      })
+
+      if (response.data) {
+        alert('Şikayetiniz başarıyla iletildi. Admin tarafından incelenecektir.')
+        setShowComplaintModal(false)
+        navigate('/my-jobs')
+      }
+    } catch (err) {
+      console.error('Complaint submission error:', err)
+      alert(`Hata: ${err.message || 'Şikayet gönderilemedi'}`)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const otherPerson = isProfessional ? job.customer : job.professional
@@ -696,9 +756,21 @@ function JobDetailPage() {
 
                 <button
                   onClick={handleComplaint}
-                  className="w-full py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition"
+                  disabled={isSubmitting}
+                  className={`w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : 'bg-orange-600 text-white hover:bg-orange-700'
+                  }`}
                 >
-                  Şikayeti Gönder
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Gonderiliyor...
+                    </>
+                  ) : (
+                    'Şikayeti Gönder'
+                  )}
                 </button>
               </div>
             </div>

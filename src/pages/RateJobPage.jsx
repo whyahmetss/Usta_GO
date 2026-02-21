@@ -1,19 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, Star } from 'lucide-react'
 
 function RateJobPage() {
   const { id } = useParams()
-  const { user, jobs: contextJobs, rateJob } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Use context jobs or fallback to localStorage
-  const jobs = contextJobs || JSON.parse(localStorage.getItem('jobs') || '[]')
-  const job = jobs.find(j => j.id === id)
+  const [job, setJob] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [review, setReview] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const loadJob = async () => {
+      try {
+        setLoading(true)
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
+        if (response.data) {
+          setJob(response.data)
+        } else {
+          setError('Is bulunamadi')
+        }
+      } catch (err) {
+        console.error('Load job error:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      loadJob()
+    }
+  }, [id])
 
   if (!user) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -21,10 +47,19 @@ function RateJobPage() {
     </div>
   }
 
-  if (!job) {
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <p className="text-gray-600 text-xl mb-4">İş bulunamadı</p>
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Is yukleniyor...</p>
+      </div>
+    </div>
+  }
+
+  if (error || !job) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-gray-600 text-xl mb-4">{error || 'İş bulunamadı'}</p>
         <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Geri Dön</button>
       </div>
     </div>
@@ -43,23 +78,32 @@ function RateJobPage() {
     </div>
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       alert('Lütfen yıldız puanı verin')
       return
     }
 
-    try {
-      const ratingData = isProfessional
-        ? { professionalRating: rating, professionalReview: review }
-        : { customerRating: rating, customerReview: review }
+    setSubmitting(true)
 
-      rateJob(job.id, ratingData, review)
-      alert('Değerlendirme kaydedildi. Teşekkürler!')
-      navigate(isProfessional ? '/professional' : '/home')
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.RATE(job.id), {
+        method: 'PUT',
+        body: {
+          rating,
+          review
+        }
+      })
+
+      if (response.data) {
+        alert('Değerlendirme kaydedildi. Teşekkürler!')
+        navigate(isProfessional ? '/professional' : '/home')
+      }
     } catch (error) {
       console.error('Rating error:', error)
-      alert('Değerlendirme kaydedilirken hata oluştu')
+      alert(`Değerlendirme kaydedilirken hata oluştu: ${error.message}`)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -136,14 +180,21 @@ function RateJobPage() {
         {/* Submit */}
         <button
           onClick={handleSubmit}
-          disabled={rating === 0}
-          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition ${
-            rating === 0
+          disabled={rating === 0 || submitting}
+          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 ${
+            rating === 0 || submitting
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl'
           }`}
         >
-          Değerlendirmeyi Gönder
+          {submitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Gonderiliyor...
+            </>
+          ) : (
+            'Değerlendirmeyi Gönder'
+          )}
         </button>
       </div>
     </div>

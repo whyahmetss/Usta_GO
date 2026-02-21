@@ -1,34 +1,118 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download } from 'lucide-react'
 
 function WalletPage() {
-  const { user, getWalletBalance, getThisMonthEarnings, getLastMonthEarnings, getPendingWithdrawals, getUserTransactions, jobs } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const balance = getWalletBalance()
-  const pendingWithdrawal = getPendingWithdrawals()
-  const thisMonthEarnings = getThisMonthEarnings()
-  const lastMonthEarnings = getLastMonthEarnings()
-  const transactions = getUserTransactions()
+  // Professional wallet data
+  const [walletData, setWalletData] = useState(null)
+  const [transactions, setTransactions] = useState([])
+  const [balance, setBalance] = useState(0)
+  const [pendingWithdrawal, setPendingWithdrawal] = useState(0)
+  const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
+  const [lastMonthEarnings, setLastMonthEarnings] = useState(0)
 
-  // For customers
-  const customerBalance = user?.balance || 0
-  const customerEscrow = user?.escrowBalance || 0
-  const totalSpent = user?.totalSpent || 0
-  const coupons = user?.coupons || []
+  // Customer wallet data
+  const [customerBalance, setCustomerBalance] = useState(0)
+  const [customerEscrow, setCustomerEscrow] = useState(0)
+  const [totalSpent, setTotalSpent] = useState(0)
+  const [coupons, setCoupons] = useState([])
+  const [customerJobs, setCustomerJobs] = useState([])
+  const [completedJobs, setCompletedJobs] = useState([])
+
+  // Load wallet data based on user role
+  useEffect(() => {
+    const loadWalletData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        if (user?.role === 'professional') {
+          // Load professional wallet data
+          const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+          if (walletResponse.data) {
+            setWalletData(walletResponse.data)
+            setBalance(walletResponse.data.balance || 0)
+            setPendingWithdrawal(walletResponse.data.pendingWithdrawal || 0)
+            setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
+            setLastMonthEarnings(walletResponse.data.lastMonthEarnings || 0)
+          }
+
+          const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
+          if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
+            setTransactions(transactionsResponse.data)
+          }
+        } else if (user?.role === 'customer') {
+          // Load customer wallet data
+          const response = await fetchAPI(API_ENDPOINTS.AUTH.ME)
+          if (response.data) {
+            setCustomerBalance(response.data.balance || 0)
+            setCustomerEscrow(response.data.escrowBalance || 0)
+            setTotalSpent(response.data.totalSpent || 0)
+            setCoupons(response.data.coupons || [])
+          }
+
+          // Load customer's jobs
+          const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+          if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+            const userJobs = jobsResponse.data.filter(j => j.customer?.id === user?.id)
+            setCustomerJobs(userJobs)
+            setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
+          }
+        }
+      } catch (err) {
+        console.error('Load wallet error:', err)
+        setError(err.message || 'Cuzdan verileri yuklenirken hata olustu')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user) {
+      loadWalletData()
+    }
+  }, [user])
+
   const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
-
-  // Get customer's jobs
-  const allJobs = jobs || JSON.parse(localStorage.getItem('jobs') || '[]')
-  const customerJobs = allJobs.filter(j => j.customer?.id === user?.id)
-  const completedJobs = customerJobs.filter(j => j.status === 'completed' || j.status === 'rated')
 
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
     : thisMonthEarnings > 0 ? 100 : 0
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Cuzdan yukleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            Yenile
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Professional view
   if (user?.role === 'professional') {

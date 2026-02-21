@@ -1,40 +1,120 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
 
 function AdminDashboard() {
-  const { user, logout, withdrawals, transactions } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [savedUsers, setSavedUsers] = useState(() => JSON.parse(localStorage.getItem('users') || '[]'))
-  const [allJobs, setAllJobs] = useState(() => JSON.parse(localStorage.getItem('jobs') || '[]'))
 
-  // Poll localStorage for real-time updates
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeJobs: 0,
+    totalRevenue: 0,
+    totalJobs: 0
+  })
+  const [savedUsers, setSavedUsers] = useState([])
+  const [allJobs, setAllJobs] = useState([])
+  const [recentJobs, setRecentJobs] = useState([])
+
+  // Load dashboard data from API
   useEffect(() => {
-    const interval = setInterval(() => {
-      const users = JSON.parse(localStorage.getItem('users') || '[]')
-      const jobs = JSON.parse(localStorage.getItem('jobs') || '[]')
-      setSavedUsers(users)
-      setAllJobs(jobs)
-    }, 500) // Check every 500ms for faster updates
-    return () => clearInterval(interval)
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch users
+        try {
+          const usersResponse = await fetchAPI('/admin/users')
+          if (usersResponse.data && Array.isArray(usersResponse.data)) {
+            setSavedUsers(usersResponse.data)
+          }
+        } catch (err) {
+          console.warn('Failed to load users:', err)
+        }
+
+        // Fetch all jobs
+        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+          setAllJobs(jobsResponse.data)
+          const recent = [...jobsResponse.data]
+            .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+            .slice(0, 5)
+          setRecentJobs(recent)
+        }
+
+        // Fetch transactions for revenue
+        try {
+          const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
+          if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
+            const totalRevenue = transactionsResponse.data
+              .filter(t => t.type === 'earning')
+              .reduce((sum, t) => sum + t.amount, 0)
+
+            const activeJobsCount = jobsResponse.data.filter(
+              j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated'
+            ).length
+
+            setStats({
+              totalUsers: savedUsers.length,
+              activeJobs: activeJobsCount,
+              totalRevenue: totalRevenue,
+              totalJobs: jobsResponse.data.length
+            })
+          }
+        } catch (err) {
+          console.warn('Failed to load transactions:', err)
+        }
+      } catch (err) {
+        console.error('Load dashboard error:', err)
+        setError(err.message || 'Veri yuklenirken hata olustu')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadDashboardData()
   }, [])
 
   const handleLogout = () => { logout(); navigate('/') }
 
-  const totalUsers = savedUsers.length
-  const activeJobs = allJobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated').length
-  const totalRevenue = transactions.filter(t => t.type === 'earning').reduce((sum, t) => sum + t.amount, 0)
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').length
+  const pendingWithdrawals = allJobs.filter(j => j.withdrawalRequest?.status === 'pending').length
 
-  const stats = [
-    { label: 'Toplam Kullanici', value: totalUsers.toString(), icon: Users, color: 'blue' },
-    { label: 'Aktif Isler', value: activeJobs.toString(), icon: Briefcase, color: 'green' },
-    { label: 'Toplam Gelir', value: `${totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'purple' },
-    { label: 'Toplam Is', value: allJobs.length.toString(), icon: TrendingUp, color: 'orange' },
+  const statsList = [
+    { label: 'Toplam Kullanici', value: stats.totalUsers.toString(), icon: Users, color: 'blue' },
+    { label: 'Aktif Isler', value: stats.activeJobs.toString(), icon: Briefcase, color: 'green' },
+    { label: 'Toplam Gelir', value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'purple' },
+    { label: 'Toplam Is', value: stats.totalJobs.toString(), icon: TrendingUp, color: 'orange' },
   ]
 
-  const recentJobs = [...allJobs].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)).slice(0, 5)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Admin paneli yukleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+            Yenile
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
@@ -57,15 +137,27 @@ function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => {
+          {statsList.map((stat, idx) => {
             const Icon = stat.icon
+            const colorMap = {
+              blue: 'bg-blue-100 text-blue-600',
+              green: 'bg-green-100 text-green-600',
+              purple: 'bg-purple-100 text-purple-600',
+              orange: 'bg-orange-100 text-orange-600'
+            }
+            const textColorMap = {
+              blue: 'text-blue-600',
+              green: 'text-green-600',
+              purple: 'text-purple-600',
+              orange: 'text-orange-600'
+            }
             return (
               <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className={`w-12 h-12 bg-${stat.color}-100 rounded-xl flex items-center justify-center`}>
-                    <Icon size={24} className={`text-${stat.color}-600`} />
+                  <div className={`w-12 h-12 ${colorMap[stat.color]} rounded-xl flex items-center justify-center`}>
+                    <Icon size={24} />
                   </div>
-                  <div className={`text-3xl font-black text-${stat.color}-600`}>{stat.value}</div>
+                  <div className={`text-3xl font-black ${textColorMap[stat.color]}`}>{stat.value}</div>
                 </div>
                 <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
               </div>

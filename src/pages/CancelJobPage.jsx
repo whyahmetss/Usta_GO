@@ -1,20 +1,63 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
 
 function CancelJobPage() {
   const { id } = useParams()
-  const { user, jobs, cancelJob, getCancellationCount } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [reason, setReason] = useState('')
   const [customReason, setCustomReason] = useState('')
+  const [job, setJob] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [cancellationCount, setCancellationCount] = useState(0)
 
-  const job = jobs.find(j => j.id === id)
-  const cancellationCount = getCancellationCount()
+  useEffect(() => {
+    const loadJob = async () => {
+      try {
+        setLoading(true)
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
+        if (response.data) {
+          setJob(response.data)
+          // Get cancellation count from user data
+          setCancellationCount(user?.cancellationCount || 0)
+        } else {
+          setError('Is bulunamadi')
+        }
+      } catch (err) {
+        console.error('Load job error:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  if (!job) {
-    return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Is bulunamadi</p></div>
+    if (id) {
+      loadJob()
+    }
+  }, [id, user])
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Is yukleniyor...</p>
+      </div>
+    </div>
+  }
+
+  if (error || !job) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-gray-600 mb-4">{error || 'Is bulunamadi'}</p>
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Geri Don</button>
+      </div>
+    </div>
   }
 
   const isProfessional = user?.role === 'professional'
@@ -31,7 +74,7 @@ function CancelJobPage() {
     ? ['Musait degilim', 'Malzeme eksikligi', 'Konum cok uzak', 'Acil durum', 'Diger']
     : ['Vazgectim', 'Yanlis adres girdim', 'Baska usta buldum', 'Fiyat yuksek', 'Diger']
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     const finalReason = reason === 'Diger' ? customReason : reason
     if (!finalReason) {
       alert('Lutfen bir iptal nedeni secin')
@@ -43,9 +86,26 @@ function CancelJobPage() {
       : 'Bu is iptal edilecek. Devam etmek istiyor musunuz?'
 
     if (confirm(warningMsg)) {
-      cancelJob(id, finalReason, penalty)
-      alert('Is iptal edildi.')
-      navigate(isProfessional ? '/professional' : '/home')
+      setSubmitting(true)
+      try {
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
+          method: 'PUT',
+          body: {
+            reason: finalReason,
+            penalty
+          }
+        })
+
+        if (response.data) {
+          alert('Is iptal edildi.')
+          navigate(isProfessional ? '/professional' : '/home')
+        }
+      } catch (err) {
+        console.error('Cancel job error:', err)
+        alert(`Hata: ${err.message}`)
+      } finally {
+        setSubmitting(false)
+      }
     }
   }
 
@@ -109,14 +169,23 @@ function CancelJobPage() {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => navigate(-1)} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition">Vazgec</button>
-          <button onClick={handleCancel} disabled={!reason || (reason === 'Diger' && !customReason)}
-            className={`py-4 rounded-xl font-bold transition ${
-              !reason || (reason === 'Diger' && !customReason)
+          <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgec</button>
+          <button onClick={handleCancel} disabled={!reason || (reason === 'Diger' && !customReason) || submitting}
+            className={`py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+              !reason || (reason === 'Diger' && !customReason) || submitting
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-red-600 text-white hover:bg-red-700'
             }`}>
-            Iptal Et {penalty > 0 && `(${penalty} TL)`}
+            {submitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Isleniyor...
+              </>
+            ) : (
+              <>
+                Iptal Et {penalty > 0 && `(${penalty} TL)`}
+              </>
+            )}
           </button>
         </div>
       </div>
