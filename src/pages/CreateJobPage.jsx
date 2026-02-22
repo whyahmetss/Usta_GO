@@ -60,40 +60,48 @@ function CreateJobPage() {
     }, 2000)
   }
 
-  const handleCreateJob = async () => {
-    if (isCreating) return
-    setIsCreating(true)
+ const handleCreateJob = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
     try {
-      let photoUrl = null
+      let photoUrl = null;
       if (photo) {
         try {
-          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = uploadRes?.data?.url || uploadRes?.url
-        } catch (e) { console.warn("Fotoğraf yükleme hatası") }
+          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo');
+          photoUrl = uploadRes?.data?.url || uploadRes?.url;
+        } catch (e) { console.warn("Fotoğraf yükleme hatası"); }
       }
 
-      const finalAmount = Number(aiPrice - (selectedCoupon?.amount || 0))
+      const finalAmount = Number(aiPrice - (selectedCoupon?.amount || 0));
+      
+      // ADMIN PANELİNDEKİ EKSİKLERİ DÜZELTEN VERİ YAPISI
       const jobData = {
-        title: aiAnalysis?.category || 'Elektrik Arıza',
+        title: aiAnalysis?.category || 'Genel Elektrik',
         description: description,
-        budget: finalAmount > 0 ? finalAmount : 0,
-        location: address,
-        photo: photoUrl,
-        urgent: aiAnalysis?.urgency === 'Yüksek',
-        category: 'Elektrikci'
-      }
+        price: finalAmount, // budget yerine price dene
+        budget: finalAmount, // ikisi de kalsın garanti olsun
+        // ADRESİ OBJE OLARAK GÖNDERİYORUZ (Admin panelinde görünmesi için)
+        location: {
+          address: address,
+          city: "Istanbul" // Varsa ilçe/şehir bilgisi eklenebilir
+        },
+        photo: photoUrl || "",
+        urgency: aiAnalysis?.urgency || 'Normal', // urgent yerine urgency dene
+        category: 'Elektrikci',
+        status: 'pending'
+      };
 
-      const result = await createJob(jobData)
+      const result = await createJob(jobData);
       if (result) {
-        alert('İş talebi başarıyla oluşturuldu!')
-        navigate('/my-jobs')
+        alert('İş talebi başarıyla oluşturuldu!');
+        navigate('/my-jobs');
       }
     } catch (err) {
-      alert('Hata: ' + (err.message || 'Bir sorun oluştu'))
+      alert('Hata: ' + (err.message || 'Bir sorun oluştu'));
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
