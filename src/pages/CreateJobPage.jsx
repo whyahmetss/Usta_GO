@@ -118,17 +118,65 @@ function CreateJobPage() {
     setActiveCoupons(unused)
   }
 
-  const handleCreateJob = async () => {
+ const handleCreateJob = async () => {
     if (isCreating) return
 
     setError(null)
     setIsCreating(true)
 
     try {
+      // 1. Fiyat ve Bölge Çarpanı Hesabı
       let finalJobPrice = aiPrice
       const regionMultiplier = getRegionMultiplier(address)
       finalJobPrice = Math.round(finalJobPrice * regionMultiplier)
 
+      let couponDiscount = 0
+      let photoUrl = null
+
+      // 2. Kupon İndirimi Uygulama
+      if (selectedCoupon) {
+        couponDiscount = selectedCoupon.amount
+        finalJobPrice = Math.max(0, finalJobPrice - couponDiscount)
+      }
+
+      // 3. Fotoğraf Yükleme (Hata alsa bile devam eder)
+      if (photo) {
+        try {
+          const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
+          photoUrl = uploadResponse.data?.url || photoPreview
+        } catch (err) {
+          console.warn('Fotoğraf yüklenemedi, önizleme kullanılıyor:', err)
+          photoUrl = photoPreview
+        }
+      }
+
+      // 4. KRİTİK DÜZELTME: Backend'in tam istediği format
+      const jobData = {
+        title: aiAnalysis.category,
+        description: description,
+        budget: Number(finalJobPrice), // "price" yerine "budget" ve sayı formatı
+        location: address || 'Kadikoy, Istanbul', // Obje yerine düz metin (string)
+        photo: photoUrl,
+        urgent: aiAnalysis.urgency === 'Yuksek',
+        category: 'electric'
+      }
+
+      // 5. API Çağrısı
+      const result = await createJob(jobData)
+
+      if (result) {
+        alert('Is talebi olusturuldu! Ustalar yakinda teklif verecek.')
+        navigate('/my-jobs')
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Is olusturulurken hata olustu'
+      setError(errorMessage)
+      console.error('Create job error:', err)
+      alert(`Hata: ${errorMessage}`)
+    } finally {
+      setIsCreating(false)
+    }
+  }
       // Apply coupon discount if selected
       let couponDiscount = 0
       let photoUrl = null
