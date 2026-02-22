@@ -134,14 +134,25 @@ function AuthPage() {
   type="tel"
   placeholder="Telefon (05XX XXX XX XX)"
   value={phone}
-  maxLength={11} // En fazla 11 karakter (05XXXXXXXXX)
   onChange={(e) => {
-    const val = e.target.value.replace(/\D/g, '') // Sadece rakam kabul et
-    setPhone(val)
+    let val = e.target.value.replace(/\D/g, '') // Sadece rakamları al
+    
+    // 11 karakter sınırı (05XXXXXXXXX)
+    if (val.length > 11) val = val.slice(0, 11)
+    
+    // Formatlama: 4-3-2-2 (05XX XXX XX XX)
+    let formattedVal = ''
+    if (val.length > 0) {
+      formattedVal = val.slice(0, 4) // 05XX
+      if (val.length > 4) formattedVal += ' ' + val.slice(4, 7) // XXX
+      if (val.length > 7) formattedVal += ' ' + val.slice(7, 9) // XX
+      if (val.length > 9) formattedVal += ' ' + val.slice(9, 11) // XX
+    }
+    
+    setPhone(formattedVal)
   }}
   className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
 />
-
                 <input
                   type="text"
                   placeholder="Davet Kodu (Opsiyonel)"
