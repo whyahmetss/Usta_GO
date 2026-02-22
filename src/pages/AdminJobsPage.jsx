@@ -58,9 +58,9 @@ function AdminJobsPage() {
     cancelled: 'bg-red-100 text-red-700'
   }
 
-  const filteredJobs = filterStatus === 'all'
-    ? jobs
-    : jobs.filter(j => j.status === filterStatus)
+const filteredJobs = filterStatus === 'all'
+  ? jobs
+  : jobs.filter(j => j.status?.toUpperCase() === filterStatus.toUpperCase())
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -142,27 +142,28 @@ function AdminJobsPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Fiyat</p>
-                      <p className="text-2xl font-black text-gray-900">{job.price} TL</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Kategori</p>
-                      <p className="text-2xl font-black text-gray-900">{job.budget || job.price || 0} TL</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Tarih</p>
-                      <p className="text-sm font-bold text-gray-900">
-                        {new Date(job.createdAt).toLocaleDateString('tr-TR')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Aciliyet</p>
-                      <p className="text-lg font-bold">{job.urgent ? '🔴 Acil' : '🟢 Normal'}</p>
-                    </div>
-                  </div>
-
+                 <div className="grid grid-cols-4 gap-4 mb-4">
+  <div>
+    <p className="text-xs text-gray-600 mb-1">Fiyat</p>
+    {/* Backend verisinde 'budget' olduğu için onu çekiyoruz */}
+    <p className="text-2xl font-black text-gray-900">{job.budget || job.price || 0} TL</p>
+  </div>
+  <div>
+    <p className="text-xs text-gray-600 mb-1">Kategori</p>
+    {/* Kategori kaymasını engellemek için job.category kullanıyoruz */}
+    <p className="text-lg font-bold text-gray-900">{job.category || 'Elektrikçi'}</p>
+  </div>
+  <div>
+    <p className="text-xs text-gray-600 mb-1">Tarih</p>
+    <p className="text-sm font-bold text-gray-900">
+      {new Date(job.createdAt).toLocaleDateString('tr-TR')}
+    </p>
+  </div>
+  <div>
+    <p className="text-xs text-gray-600 mb-1">Aciliyet</p>
+    <p className="text-lg font-bold">{job.urgent ? '🔴 Acil' : '🟢 Normal'}</p>
+  </div>
+</div>
                   <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
                     {job.description}
                   </p>
