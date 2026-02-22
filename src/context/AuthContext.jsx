@@ -100,7 +100,14 @@ export function AuthProvider({ children }) {
       setError(null)
       const response = await fetchAPI(API_ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',
-        body: { email, password, name, role: role || 'customer', phone, referralCode },
+        body: { 
+  email, 
+  password, 
+  name, 
+  role: role?.toUpperCase() || 'CUSTOMER', 
+  phone, 
+  referralCode 
+},
         includeAuth: false
       })
 
@@ -734,15 +741,15 @@ export function AuthProvider({ children }) {
     try {
       if (useLocalStorage) {
         // Fallback to localStorage
-        if (userRole === 'customer') {
+        if (userRole === 'CUSTOMER') {
           return jobs.filter(j => j.customer.id === userId)
-        } else if (userRole === 'professional') {
-          return jobs.filter(j => j.professional?.id === userId)
+        } else if (userRole === 'USTA') {
+          return jobs.filter(j => j.usta?.id === userId)
         }
         return jobs
       }
 
-      const endpoint = userRole === 'customer' || userRole === 'professional'
+      const endpoint = userRole === 'CUSTOMER' || userRole === 'USTA'
         ? API_ENDPOINTS.JOBS.BY_USER(userId)
         : API_ENDPOINTS.JOBS.LIST
 
@@ -754,10 +761,10 @@ export function AuthProvider({ children }) {
       return []
     } catch (err) {
       console.error('Get user jobs error:', err)
-      if (userRole === 'customer') {
+      if (userRole === 'CUSTOMER') {
         return jobs.filter(j => j.customer.id === userId)
-      } else if (userRole === 'professional') {
-        return jobs.filter(j => j.professional?.id === userId)
+      } else if (userRole === 'USTA') {
+        return jobs.filter(j => j.usta?.id === userId)
       }
       return jobs
     }
