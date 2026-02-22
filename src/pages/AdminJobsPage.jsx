@@ -15,6 +15,7 @@ function AdminJobsPage() {
     fetchJobs()
   }, [])
 
+
   const fetchJobs = async () => {
     try {
       setLoading(true)
@@ -134,7 +135,7 @@ function AdminJobsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{job.title}</h3>
-                      <p className="text-sm text-gray-600 mb-3">{job.location?.address || 'Adres'}</p>
+                      <p className="text-sm text-gray-600 mb-3">{job.location || job.address || 'Adres belirtilmedi'}</p>
                     </div>
                     <span className={`px-4 py-2 rounded-lg font-bold text-sm ${statusColors[job.status]}`}>
                       {statusLabels[job.status]}
@@ -148,7 +149,7 @@ function AdminJobsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 mb-1">Kategori</p>
-                      <p className="text-lg font-bold text-gray-900">{job.category || '-'}</p>
+                      <p className="text-2xl font-black text-gray-900">{job.budget || job.price || 0} TL</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 mb-1">Tarih</p>
