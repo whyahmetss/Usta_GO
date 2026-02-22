@@ -24,21 +24,15 @@ function MyJobsPage() {
         const rawData = response?.data || response || []
         
         if (Array.isArray(rawData)) {
-   const filtered = rawData.filter(j => {
-  // SQL'deki sütun adın tam olarak "customerId" değilse bile hepsine bakıyoruz
-  // Tablonda "custc" olarak göründüğü için onu en başa aldım
-  const dbCustomerId = String(j.customerId || j.custc || j.customer?.id || j.customer || "").trim();
-  const dbProId = String(j.professionalId || j.professional?.id || j.professional || "").trim();
-  const currentUserId = String(user?.id || "").trim();
+  const filtered = rawData.filter(j => {
+      // SQL'den gelen ID'leri ve senin giriş yaptığın ID'yi loglayalım
+      console.log("DEBUG - İş ID:", j.id);
+      console.log("DEBUG - Veritabanı Customer ID:", j.customerId || j.custc);
+      console.log("DEBUG - Senin User ID:", user?.id);
 
-  // Debug için konsola bas (F12'de karşılaştırmayı göreceksin)
-  console.log("Karşılaştırma:", { dbCustomerId, currentUserId, match: dbCustomerId === currentUserId });
-
-  if (user?.role === 'customer') {
-    return dbCustomerId === currentUserId;
-  }
-  return dbProId === currentUserId;
-});
+      // ŞİMDİLİK TEST İÇİN: Filtrelemeyi devre dışı bırakıyoruz, her şeyi göster diyoruz
+      return true; 
+    });
           setUserJobs(filtered)
         }
       } catch (err) {
