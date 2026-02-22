@@ -103,14 +103,14 @@ function CreateJobPage() {
         } catch (e) { photoUrl = photoPreview }
       }
 
-      const jobData = {
+const jobData = {
         title: aiAnalysis.category,
         description: description,
-        budget: Number(currentFinalPrice), // Backend budget bekliyor
-        location: address || 'Kadikoy, Istanbul', // Backend string bekliyor
+        budget: Number(finalJobPrice),
+        location: address || 'Kadikoy, Istanbul',
         photo: photoUrl,
         urgent: aiAnalysis.urgency === 'Yuksek',
-        category: 'electric'
+        category: 'Elektrikci' // <--- 'electric' yerine tam olarak bunu yaz
       }
 
       const result = await createJob(jobData)
