@@ -128,8 +128,8 @@ function CreateJobPage() {
 location: address.trim(), // Obje isteyen backendler için
         address: address.trim(),            // String isteyen backendler için
         photo: photoUrl || "",
-        urgent: aiAnalysis?.urgency === 'Yüksek',
-        urgency: aiAnalysis?.urgency || 'Normal',
+        urgent: aiAnalysis?.urgency === 'Yüksek' || false,
+urgency: aiAnalysis?.urgency === 'Yüksek' ? 'high' : 'normal', // Backend bazen string 'high' bekler
         category: 'Elektrikci',
         status: 'pending'
       }
