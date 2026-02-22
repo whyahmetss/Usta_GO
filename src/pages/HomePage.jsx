@@ -16,7 +16,7 @@ function HomePage() {
   const categories = [
     {
       id: 'electric',
-      name: 'Elektrikci',
+      name: 'Elektrikçi',
       icon: '⚡',
       color: 'from-yellow-400 to-orange-500',
       active: true,
@@ -109,19 +109,19 @@ function HomePage() {
             </div>
             <div className="relative z-10">
               <div className="inline-block px-3 py-1 bg-white/30 backdrop-blur rounded-full mb-2">
-                <span className="text-white font-bold text-sm">🔥 20% Indirim</span>
+                <span className="text-white font-bold text-sm">🔥 20% İndirim</span>
               </div>
               <h2 className="text-2xl font-black text-white mb-2">
-                Ilk Siparisizde!
+                İlk Siparişinizde!
               </h2>
               <p className="text-white/90 mb-4 text-sm">
-                Hemen kayit olun, profesyonel hizmet alin
+                Hemen ilan açın,profesyonel hizmet alın!
               </p>
               <button
                 onClick={() => navigate('/create-job')}
                 className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold shadow-lg hover:scale-105 transition"
               >
-                Hemen Basla
+                Hemen Başla
               </button>
             </div>
           </div>
@@ -130,7 +130,7 @@ function HomePage() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Hangi hizmete ihtiyaciniz var?"
+              placeholder="Hangi hizmete ihtiyacınız var?"
               className="w-full px-5 py-4 rounded-2xl bg-white/20 backdrop-blur border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
               onFocus={() => navigate('/create-job')}
               readOnly
@@ -155,7 +155,7 @@ function HomePage() {
           {categories.map(category => (
             <div key={category.id} className="relative">
               {!category.active && (
-                <span className="coming-soon-badge">Yakinda</span>
+                <span className="coming-soon-badge">Yakında</span>
               )}
               <button
                 onClick={() => handleCategoryClick(category)}
@@ -191,7 +191,7 @@ function HomePage() {
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Briefcase size={24} />
-            <span className="text-xs font-semibold">Islerim</span>
+            <span className="text-xs font-semibold">İşlerim</span>
           </button>
           <button
             onClick={() => navigate('/messages')}
