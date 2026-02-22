@@ -72,7 +72,7 @@ function CreateJobPage() {
   useEffect(() => {
     const loadCoupons = async () => {
       try {
-        const response = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        const response = await fetchAPI('/api' + API_ENDPOINTS.WALLET.GET)
         if (response.data?.coupons) {
           const unused = response.data.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
           setActiveCoupons(unused)
