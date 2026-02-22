@@ -9,7 +9,7 @@ function AuthPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [referralCode, setReferralCode] = useState('')
-  const [role, setRole] = useState('customer') // customer veya professional
+  const [role, setRole] = useState('CUSTOMER') // customer veya usta
   const [error, setError] = useState('')
   
   const navigate = useNavigate()
@@ -26,8 +26,8 @@ function AuthPage() {
         // Role'e göre yönlendir
         if (result.role === 'admin') {
           navigate('/admin')
-        } else if (result.role === 'professional') {
-          navigate('/professional')
+        } else if (result.role === 'USTA') {
+          navigate('/usta')
         } else {
           navigate('/home')
         }
@@ -41,6 +41,11 @@ function AuthPage() {
         return
       }
 
+if (password.length < 6) {
+  setError('Şifre en az 6 karakter olmalı')
+  return
+}
+
       // Phone format validation (05XX XXX XX XX)
       const phoneRegex = /^05\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/
       if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
@@ -51,8 +56,8 @@ function AuthPage() {
       const result = register(email, password, name, role, phone, referralCode || null)
       if (result.success) {
         // Role'e göre yönlendir
-        if (result.role === 'professional') {
-          navigate('/professional')
+        if (result.role === 'USTA') {
+          navigate('/usta')
         } else {
           navigate('/home')
         }
@@ -122,36 +127,36 @@ function AuthPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setRole('customer')}
+                      onClick={() => setRole('CUSTOMER')}
                       className={`p-4 rounded-xl border-2 transition ${
-                        role === 'customer'
+                        role === 'CUSTOMER'
                           ? 'bg-white border-white'
                           : 'bg-white/20 border-white/30'
                       }`}
                     >
                       <div className="text-3xl mb-2">👤</div>
-                      <div className={`font-bold text-sm ${role === 'customer' ? 'text-blue-600' : 'text-white'}`}>
+                      <div className={`font-bold text-sm ${role === 'CUSTOMER' ? 'text-blue-600' : 'text-white'}`}>
                         Müşteri
                       </div>
-                      <div className={`text-xs ${role === 'customer' ? 'text-blue-600/70' : 'text-white/60'}`}>
+                      <div className={`text-xs ${role === 'CUSTOMER' ? 'text-blue-600/70' : 'text-white/60'}`}>
                         Hizmet almak için
                       </div>
                     </button>
                     
                     <button
                       type="button"
-                      onClick={() => setRole('professional')}
+                      onClick={() => setRole('USTA')}
                       className={`p-4 rounded-xl border-2 transition ${
-                        role === 'professional'
+                        role === 'USTA'
                           ? 'bg-white border-white'
                           : 'bg-white/20 border-white/30'
                       }`}
                     >
                       <div className="text-3xl mb-2">⚡</div>
-                      <div className={`font-bold text-sm ${role === 'professional' ? 'text-blue-600' : 'text-white'}`}>
+                      <div className={`font-bold text-sm ${role === 'USTA' ? 'text-blue-600' : 'text-white'}`}>
                         Usta
                       </div>
-                      <div className={`text-xs ${role === 'professional' ? 'text-blue-600/70' : 'text-white/60'}`}>
+                      <div className={`text-xs ${role === 'USTA' ? 'text-blue-600/70' : 'text-white/60'}`}>
                         Hizmet vermek için
                       </div>
                     </button>
