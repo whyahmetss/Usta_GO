@@ -24,15 +24,12 @@ function MyJobsPage() {
         const rawData = response?.data || response || []
         
         if (Array.isArray(rawData)) {
-  const filtered = rawData.filter(j => {
-      // SQL'den gelen ID'leri ve senin giriş yaptığın ID'yi loglayalım
-      console.log("DEBUG - İş ID:", j.id);
-      console.log("DEBUG - Veritabanı Customer ID:", j.customerId || j.custc);
-      console.log("DEBUG - Senin User ID:", user?.id);
-
-      // ŞİMDİLİK TEST İÇİN: Filtrelemeyi devre dışı bırakıyoruz, her şeyi göster diyoruz
-      return true; 
-    });
+ const filtered = rawData.filter(j => {
+  // JSON'da hem customerId hem de customer.id var
+  const dbId = String(j.customerId || j.customer?.id || "").trim();
+  const userId = String(user?.id || "").trim();
+  return dbId === userId;
+});
           setUserJobs(filtered)
         }
       } catch (err) {
@@ -46,9 +43,16 @@ function MyJobsPage() {
     if (user) loadUserJobs()
   }, [user])
 
-  const activeJobs = userJobs.filter(j => ['pending', 'accepted', 'in_progress'].includes(j.status))
-  const completedJobs = userJobs.filter(j => ['completed', 'rated'].includes(j.status))
-  const cancelledJobs = userJobs.filter(j => j.status === 'cancelled')
+ // MyJobsPage.jsx içinde bu satırları güncelle:
+const activeJobs = userJobs.filter(j => 
+  ['pending', 'accepted', 'in_progress', 'PENDING', 'ACCEPTED', 'IN_PROGRESS'].includes(j.status)
+)
+const completedJobs = userJobs.filter(j => 
+  ['completed', 'rated', 'COMPLETED', 'RATED'].includes(j.status)
+)
+const cancelledJobs = userJobs.filter(j => 
+  ['cancelled', 'CANCELLED'].includes(j.status)
+)
 
   const displayJobs = activeTab === 'active' ? activeJobs : activeTab === 'completed' ? completedJobs : cancelledJobs
 
