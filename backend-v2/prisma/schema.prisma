@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Supports CUSTOMER, USTA (Service Provider), ADMIN
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  password  String
+  phone     String?
+  bio       String?
+
+  // Role: CUSTOMER, USTA, ADMIN
+  role      UserRole   @default(CUSTOMER)
+
+  // Account status
+  status    UserStatus @default(ACTIVE)
+
+  // Profile info
+  profileImage String?
+  ratings   Float      @default(0)
+
+  // Relations
+  createdJobs Job[]
+  offeredOn   Offer[]
+  reviews     Review[]
+  sentMessages     Message[] @relation("sender")
+  receivedMessages Message[] @relation("receiver")
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+enum UserRole {
+  CUSTOMER
+  USTA
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  SUSPENDED
+  DELETED
+}
+
+// Job Model
+model Job {
+  id          String      @id @default(cuid())
+
+  // Job details
+  title       String
+  description String      @db.Text
+  category    String
+  location    String
+  budget      Float
+
+  // Job status
+  status      JobStatus   @default(PENDING)
+
+  // Relations
+  customerId  String
+  customer    User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  offers      Offer[]
+  reviews     Review[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([category])
+  @@index([location])
+}
+
+enum JobStatus {
+  PENDING       // Waiting for offers
+  IN_PROGRESS   // Accepted by USTA
+  COMPLETED     // Work finished
+  CANCELLED     // Job cancelled
+}
+
+// Offer Model
+model Offer {
+  id        String      @id @default(cuid())
+
+  // Offer details
+  price     Float
+  message   String?     @db.Text
+
+  // Offer status
+  status    OfferStatus @default(PENDING)
+
+  // Relations
+  jobId     String
+  job       Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  ustaId    String
+  usta      User        @relation(fields: [ustaId], references: [id], onDelete: Cascade)
+
+  acceptedAt DateTime?
+  rejectedAt DateTime?
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([jobId, ustaId])
+  @@index([jobId])
+  @@index([ustaId])
+  @@index([status])
+}
+
+enum OfferStatus {
+  PENDING    // Waiting for customer response
+  ACCEPTED   // Accepted by customer
+  REJECTED   // Rejected by customer
+  WITHDRAWN  // Withdrawn by USTA
+}
+
+// Review Model
+model Review {
+  id        String   @id @default(cuid())
+
+  // Review details
+  rating    Int      // 1-5 stars
+  comment   String?  @db.Text
+
+  // Relations
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  ustaId    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId])
+  @@index([jobId])
+  @@index([customerId])
+  @@index([ustaId])
+}
+
+// Message Model - For Socket.IO integration
+model Message {
+  id        String   @id @default(cuid())
+
+  content   String   @db.Text
+
+  // Relations
+  senderId  String
+  sender    User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   User    @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  // Message metadata
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([isRead])
+}
