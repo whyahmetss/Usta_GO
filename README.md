@@ -79,10 +79,9 @@ npm run build
 \`\`\`
 
 ## 🔑 Test Kullanıcıları
+ctrl s yapuıyouz 
 
-### Admin
-- **Email:** `admin@admin.com`
-- **Şifre:** `1234`
+örneğin burada düzletme yaptık
 
 ### Müşteri
 1. Kayıt ol → Müşteri seç
