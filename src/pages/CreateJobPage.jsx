@@ -63,6 +63,8 @@ function CreateJobPage() {
  const handleCreateJob = async () => {
     if (isCreating) return;
     setIsCreating(true);
+    setError(null);
+
     try {
       let photoUrl = null;
       if (photo) {
@@ -74,30 +76,37 @@ function CreateJobPage() {
 
       const finalAmount = Number(aiPrice - (selectedCoupon?.amount || 0));
       
-      // ADMIN PANELİNDEKİ EKSİKLERİ DÜZELTEN VERİ YAPISI
+      // Backend'in reddedemeyeceği "Full Paket" veri yapısı
       const jobData = {
-        title: aiAnalysis?.category || 'Genel Elektrik',
-        description: description,
-        price: finalAmount, // budget yerine price dene
-        budget: finalAmount, // ikisi de kalsın garanti olsun
-        // ADRESİ OBJE OLARAK GÖNDERİYORUZ (Admin panelinde görünmesi için)
-        location: {
+        title: aiAnalysis?.category || 'Genel Elektrik Arıza',
+        description: description.trim(),
+        price: finalAmount,      // Admin panelindeki 'Fiyat' için
+        budget: finalAmount,     // Alternatif fiyat alanı
+        location: address,       // Düz metin olarak adres
+        address: address,        // Alternatif adres alanı
+        locationData: {          // Obje bekliyorsa diye yedek
           address: address,
-          city: "Istanbul" // Varsa ilçe/şehir bilgisi eklenebilir
+          city: "Istanbul"
         },
         photo: photoUrl || "",
-        urgency: aiAnalysis?.urgency || 'Normal', // urgent yerine urgency dene
-        category: 'Elektrikci',
-        status: 'pending'
+        urgency: aiAnalysis?.urgency || 'Normal',
+        urgent: aiAnalysis?.urgency === 'Yüksek',
+        category: 'Elektrikci'
       };
+
+      console.log("API'ye Giden Veri:", jobData);
 
       const result = await createJob(jobData);
       if (result) {
-        alert('İş talebi başarıyla oluşturuldu!');
+        alert('İş başarıyla oluşturuldu!');
         navigate('/my-jobs');
       }
     } catch (err) {
-      alert('Hata: ' + (err.message || 'Bir sorun oluştu'));
+      console.error("API Hatası Detayı:", err.response?.data || err);
+      // Backend'in gönderdiği gerçek hata mesajını yakala
+      const backendMessage = err.response?.data?.message || err.message;
+      alert(`API Error: ${backendMessage}`);
+      setError(backendMessage);
     } finally {
       setIsCreating(false);
     }
