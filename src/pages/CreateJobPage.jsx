@@ -63,14 +63,13 @@ function CreateJobPage() {
 const handleCreateJob = async () => {
     if (isCreating) return;
     
-    // Form kontrolü
-    if (!description || !address) {
-      alert("Lütfen tüm alanları doldurun.");
-      return;
-    }
-
     setIsCreating(true);
     setError(null);
+
+    // EMNİYET KİLİDİ: Ne olursa olsun 5 saniye sonra butonu tekrar açar
+    const timeoutId = setTimeout(() => {
+      setIsCreating(false);
+    }, 5000);
 
     try {
       let photoUrl = null;
@@ -79,47 +78,40 @@ const handleCreateJob = async () => {
           const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo');
           photoUrl = uploadRes?.data?.url || uploadRes?.url;
         } catch (e) { 
-          console.warn("Fotoğraf yüklenemedi, fotoğrafsız devam ediliyor...");
+          console.warn("Fotoğraf yüklenemedi, devam ediliyor...");
         }
       }
 
-      // Admin panelindeki boşlukları dolduracak "Full Paket" veri
+      const finalAmount = Number(aiPrice - (selectedCoupon?.amount || 0));
+      
+      // Admin panelindeki boşlukları dolduran ve My-Jobs'a düşmesini sağlayan yapı
       const jobData = {
-        title: aiAnalysis?.category || 'Genel Elektrik Arıza',
+        title: aiAnalysis?.category || 'Genel Elektrik',
         description: description.trim(),
-        price: Number(aiPrice) || 250, // Fiyat alanı (Admin panel için)
-        budget: Number(aiPrice) || 250, // Budget alanı
+        price: finalAmount,      // Admin panel 'Fiyat' için
+        budget: finalAmount,     // Yedek fiyat
         location: {
-          address: address // Adres objesi (Admin panel için)
+          address: address       // Admin panel 'Adres' için
         },
-        address: address, // Yedek düz metin adres
+        address: address,        // Yedek adres
         photo: photoUrl || "",
         urgency: aiAnalysis?.urgency || 'Normal',
-        category: 'Elektrikci',
-        status: 'pending'
+        category: 'Elektrikci'
       };
 
-      console.log("Gönderilen Veri:", jobData);
-
-      // Zaman aşımı (timeout) riski için createJob'u bekliyoruz
       const result = await createJob(jobData);
       
       if (result) {
-        alert('İş başarıyla oluşturuldu! My Jobs sayfasına yönlendiriliyorsunuz.');
+        clearTimeout(timeoutId); // Başarılıysa emniyet kilidini iptal et
         navigate('/my-jobs');
-      } else {
-        throw new Error("Sunucudan geçerli bir yanıt alınamadı.");
       }
-
     } catch (err) {
-      console.error("HATA DETAYI:", err);
-      const msg = err.response?.data?.message || err.message || "Bilinmeyen API Hatası";
-      alert(`Hata: ${msg}`);
-      setError(msg);
-      setIsCreating(false); // Hata durumunda butonu geri aç
+      console.error("API Hatası:", err);
+      alert("Bir hata oluştu: " + (err.response?.data?.message || err.message));
     } finally {
-      // Burası çok kritik, ne olursa olsun butonu serbest bırakır
-      setTimeout(() => setIsCreating(false), 5000); 
+      // Normal şartlarda butonu burada açarız ama timeout da garanti sağlar
+      setIsCreating(false);
+      clearTimeout(timeoutId);
     }
   };
   return (
