@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, X, ZoomIn, AlertCircle, Loader } from 'lucide-react'
 
 function AdminJobsPage() {
@@ -22,7 +23,8 @@ function AdminJobsPage() {
       setError(null);
       // Backend'e status parametresi göndermeyi bırakıyoruz
       const res = await fetchAPI('/jobs', { method: 'GET' });
-      setJobs(Array.isArray(res) ? res : res.data || []);
+      const raw = Array.isArray(res) ? res : res.data || []
+      setJobs(mapJobsFromBackend(raw));
     } catch (err) {
       setError(err.message);
       setJobs([]);
@@ -56,9 +58,10 @@ function AdminJobsPage() {
     cancelled: 'bg-red-100 text-red-700'
   }
 
+// After mapJobsFromBackend, statuses are lowercase; filterStatus is also lowercase
 const filteredJobs = filterStatus === 'all'
   ? jobs
-  : jobs.filter(j => j.status?.toUpperCase() === filterStatus.toUpperCase())
+  : jobs.filter(j => j.status === filterStatus)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -102,7 +105,7 @@ const filteredJobs = filterStatus === 'all'
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {statusLabels[status]}
-              {status !== 'all' && ` (${jobs.filter(j => j.status?.toUpperCase() === status.toUpperCase()).length})`}
+              {status !== 'all' && ` (${jobs.filter(j => j.status === status).length})`}
             </button>
           ))}
         </div>
