@@ -23,16 +23,15 @@ function CreateJobPage() {
 
   const getRegionMultiplier = (addr) => {
     if (!addr) return 1.0
-    const premiumZones = ['Kadikoy', 'Besiktas', 'Nisantasi']
-    const economyZones = ['Esenyurt', 'Sultanbeyli']
+    const premiumZones = ['KADIKOY', 'BESIKTAS', 'NISANTASI']
+    const economyZones = ['ESENYURT', 'SULTANBEYLI']
     const upperAddr = addr.toUpperCase()
-    if (premiumZones.some(zone => upperAddr.includes(zone.toUpperCase()))) return 1.3
-    if (economyZones.some(zone => upperAddr.includes(zone.toUpperCase()))) return 1.0
+    if (premiumZones.some(zone => upperAddr.includes(zone))) return 1.3
+    if (economyZones.some(zone => upperAddr.includes(zone))) return 1.0
     return 1.15 
   }
 
   const regionMultiplier = getRegionMultiplier(address)
-  // BURASI KRİTİK: handleCreateJob içinde de bu değişkeni kullanmalıyız
   const finalPrice = aiPrice ? Math.round(aiPrice * regionMultiplier) : 0
 
   const handlePhotoCapture = (e) => {
@@ -73,7 +72,6 @@ function CreateJobPage() {
   useEffect(() => {
     const loadCoupons = async () => {
       try {
-        // DÜZELTME: Başına '/api' ekledik çünkü config'deki base URL ile endpoint uyuşmuyor
         const response = await fetchAPI('/api' + API_ENDPOINTS.WALLET.GET)
         if (response.data?.coupons) {
           const unused = response.data.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
@@ -92,7 +90,6 @@ function CreateJobPage() {
     setIsCreating(true)
 
     try {
-      // HATA BURADAYDI: finalPrice değişkenini yukarıdan alıyoruz
       let currentFinalPrice = finalPrice 
       let photoUrl = null
 
@@ -116,7 +113,7 @@ function CreateJobPage() {
         location: address || 'Kadikoy, Istanbul', 
         photo: photoUrl,
         urgent: aiAnalysis.urgency === 'Yuksek',
-        category: 'Elektrikci' // DÜZELTME: Görseldeki usta kategorisiyle eşitledik
+        category: 'Elektrikci'
       }
 
       const result = await createJob(jobData)
@@ -139,71 +136,91 @@ function CreateJobPage() {
           <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
             <ArrowLeft size={20} className="text-white" />
           </button>
-          <div>
-            <h1 className="text-2xl font-black text-white">Yeni Is Talebi</h1>
-          </div>
+          <h1 className="text-2xl font-black text-white">Yeni Is Talebi</h1>
         </div>
         <div className="flex items-center justify-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>1</div>
-          <div className={`w-12 h-1 ${step >= 2 ? 'bg-white' : 'bg-white/20'}`}></div>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>2</div>
-          <div className={`w-12 h-1 ${step >= 3 ? 'bg-white' : 'bg-white/20'}`}></div>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 3 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>3</div>
+          {[1, 2, 3].map((num) => (
+            <div key={num} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= num ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>{num}</div>
+              {num < 3 && <div className={`w-12 h-1 mx-2 ${step > num ? 'bg-white' : 'bg-white/20'}`}></div>}
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="px-4 py-6">
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900">Sorunu Aciklayin</h3>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200" rows={6} />
+            <div className="bg-white rounded-2xl p-6 shadow-lg text-center">
+              <h3 className="font-bold mb-3 text-gray-900 text-left">Fotoğraf Ekle (Opsiyonel)</h3>
+              <input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" id="photo-upload" />
+              <label htmlFor="photo-upload" className="cursor-pointer block">
+                {photoPreview ? (
+                  <div className="relative inline-block w-full">
+                    <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border-2 border-blue-500" />
+                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg"><Camera size={18} /></div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-blue-500 transition-colors">
+                    <Camera size={40} className="text-gray-400" />
+                    <p className="text-gray-500 font-medium">Sorunu fotoğrafla veya yükle</p>
+                  </div>
+                )}
+              </label>
             </div>
+
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900"><MapPin size={18} className="inline mr-1" />Adres</h3>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200" placeholder="Orn: Kadikoy, Istanbul" />
+              <h3 className="font-bold mb-3 text-gray-900 text-left">Sorunu Aciklayin</h3>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" rows={4} placeholder="Prizden kivilcim cikiyor..." />
             </div>
-            <button onClick={handleAIAnalysis} disabled={!description.trim()} className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"><Sparkles size={20} className="inline mr-2" /> AI ile Fiyat Hesapla</button>
+
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-bold mb-3 text-gray-900 text-left"><MapPin size={18} className="inline mr-1" />Adres</h3>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" placeholder="Kadikoy, Istanbul" />
+            </div>
+
+            <button onClick={handleAIAnalysis} disabled={!description.trim()} className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl hover:opacity-90 transition-opacity"><Sparkles size={20} className="inline mr-2" /> AI ile Analiz Et</button>
           </div>
         )}
 
         {step === 2 && (
           <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
             <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-2xl font-bold">AI Analiz Ediyor...</h3>
+            <h3 className="text-2xl font-bold text-gray-800">AI Analiz Ediyor...</h3>
           </div>
         )}
 
         {step === 3 && aiPrice && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
-              <h3 className="font-bold text-gray-900 mb-4">🎟️ Kupon Kullan</h3>
-              {activeCoupons.length === 0 ? <p className="text-gray-600 text-sm">Aktif kupon bulunamadi</p> : (
+            <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-yellow-200">
+              <h3 className="font-bold text-gray-900 mb-3">🎟️ Kupon Kullan</h3>
+              {activeCoupons.length === 0 ? <p className="text-gray-500 text-sm">Aktif kupon bulunamadi</p> : (
                 <div className="space-y-2">
                   {activeCoupons.map((c) => (
-                    <button key={c.id} onClick={() => setSelectedCoupon(selectedCoupon?.id === c.id ? null : c)} className={`w-full p-3 rounded-lg border-2 text-left ${selectedCoupon?.id === c.id ? 'bg-yellow-50 border-yellow-500 shadow-md' : 'bg-gray-50'}`}>
-                      <div className="flex justify-between"><div><p className="font-bold text-gray-900">{c.code}</p><p className="text-sm text-gray-600">+{c.amount} TL indirim</p></div><p className="text-2xl font-black text-yellow-600">+{c.amount} TL</p></div>
+                    <button key={c.id} onClick={() => setSelectedCoupon(selectedCoupon?.id === c.id ? null : c)} className={`w-full p-3 rounded-xl border-2 text-left transition-all ${selectedCoupon?.id === c.id ? 'bg-yellow-50 border-yellow-500 shadow-md' : 'bg-gray-50 border-gray-100'}`}>
+                      <div className="flex justify-between items-center">
+                        <div><p className="font-black text-gray-900">{c.code}</p><p className="text-xs text-gray-500">{c.amount} TL indirim</p></div>
+                        <p className="text-xl font-black text-yellow-600">-{c.amount} TL</p>
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
-              <div className="text-center">
-                <p className="text-white/80 text-sm">Tahmini Ucret</p>
-                <p className="text-5xl font-black">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
-                <div className="grid grid-cols-2 gap-3 mt-6 text-sm">
-                  <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80 mb-1">Kategori</p><p className="font-bold">{aiAnalysis.category}</p></div>
-                  <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80 mb-1">Aciliyet</p><p className="font-bold">{aiAnalysis.urgency}</p></div>
-                </div>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 shadow-2xl text-white text-center">
+              <p className="text-white/70 text-sm font-bold uppercase tracking-wider mb-2">Tahmini Ucret</p>
+              <p className="text-6xl font-black mb-6">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20"><p className="text-white/60 text-xs mb-1">Kategori</p><p className="font-bold text-sm">{aiAnalysis.category}</p></div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20"><p className="text-white/60 text-xs mb-1">Aciliyet</p><p className="font-bold text-sm">{aiAnalysis.urgency}</p></div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setStep(1)} disabled={isCreating} className="py-4 bg-gray-200 rounded-xl font-bold">Duzenle</button>
-              <button onClick={handleCreateJob} disabled={isCreating} className="py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold">
-                {isCreating ? 'Gonderiliyor...' : 'Onayla & Gonder'}
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <button onClick={() => setStep(1)} disabled={isCreating} className="py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300 transition-colors">Geri Don</button>
+              <button onClick={handleCreateJob} disabled={isCreating} className="py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg hover:bg-green-600 transition-all">
+                {isCreating ? 'Is Olusturuluyor...' : 'Onayla ve Gonder'}
               </button>
             </div>
           </div>
