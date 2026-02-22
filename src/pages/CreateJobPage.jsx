@@ -125,7 +125,7 @@ function CreateJobPage() {
         description: description.trim(),
         price: Number(currentFinalPrice),   // Bazı backendler price ister
         budget: Number(currentFinalPrice),  // Bazı backendler budget ister
-        location: { address: address.trim() }, // Obje isteyen backendler için
+location: address.trim(), // Obje isteyen backendler için
         address: address.trim(),            // String isteyen backendler için
         photo: photoUrl || "",
         urgent: aiAnalysis?.urgency === 'Yüksek',
