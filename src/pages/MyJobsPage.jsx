@@ -26,15 +26,16 @@ function MyJobsPage() {
         if (Array.isArray(rawData)) {
           // Filtreleme mantığını daha esnek yapıyoruz (eşleşmeme riskine karşı)
 const filtered = rawData.filter(j => {
-  // Hem obje içindeki ID'ye hem de düz ID'ye bakıyoruz (En garantisi budur)
-  const customerId = (j.customer?.id || j.customerId || (typeof j.customer === 'string' ? j.customer : null));
-  const proId = (j.professional?.id || j.professionalId || (typeof j.professional === 'string' ? j.professional : null));
+  // SQL görüntüsüne göre ID'ler bazen direkt alan adıyla geliyor
+  const customerId = j.customerId || j.custc || (j.customer?.id) || (typeof j.customer === 'string' ? j.customer : null);
+  const professionalId = j.professionalId || j.professional?.id || (typeof j.professional === 'string' ? j.professional : null);
 
+  // Senin user.id ile SQL'deki customer id'sini karşılaştırıyoruz
   if (user?.role === 'customer') {
     return customerId === user.id;
   }
-  return proId === user.id;
-})
+  return professionalId === user.id;
+});
           setUserJobs(filtered)
         }
       } catch (err) {
