@@ -82,51 +82,55 @@ function CreateJobPage() {
     if (user) loadCoupons()
   }, [user])
 
-  // İŞ OLUŞTURMA DÜZELTİLDİ (Validation error fix)
   const handleCreateJob = async () => {
-    if (isCreating) return
+    if (isCreating) return;
     
+    // Backend'in istediği 10 karakter sınırı
     if (description.trim().length < 10) {
-      alert('Lütfen en az 10 karakterlik bir açıklama yazın.')
-      return
+      alert('Lütfen en az 10 karakterlik bir açıklama yazın.');
+      return;
     }
 
-    setError(null)
-    setIsCreating(true)
+    setError(null);
+    setIsCreating(true);
 
     try {
-      let currentFinalPrice = finalPrice - (selectedCoupon?.amount || 0)
-      let photoUrl = null
+      let currentFinalPrice = finalPrice - (selectedCoupon?.amount || 0);
+      let photoUrl = null;
 
       if (photo) {
         try {
-          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = uploadRes?.data?.url || uploadRes?.url || ""
-        } catch (e) { console.warn("Fotoğraf yüklenemedi") }
+          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo');
+          photoUrl = uploadRes?.data?.url || uploadRes?.url || "";
+        } catch (e) { console.warn("Fotoğraf yüklenemedi"); }
       }
 
-      // Backend'in tam istediği format (Location string yapıldı)
+      // HEM BACKEND VALIDATION HEM ADMIN PANELİ İÇİN TAM LİSTE
       const jobData = {
-        title: aiAnalysis?.category || 'Elektrik Arıza',
+        title: aiAnalysis?.category || 'Genel Elektrik',
         description: description.trim(),
-        budget: Number(currentFinalPrice),
-        location: address.trim(), 
+        price: Number(currentFinalPrice),   // <--- Admin panelindeki 'Fiyat' için bu şart!
+        budget: Number(currentFinalPrice),  
+        address: address.trim(),            // <--- Admin panelindeki 'Adres' için bu şart!
+        location: address.trim(),           
         photo: photoUrl || "",
         category: 'Elektrikci',
-        urgent: aiAnalysis?.urgency === 'Yüksek'
-      }
+        urgent: aiAnalysis?.urgency === 'Yüksek' || false,
+        status: 'pending'
+      };
 
-      const result = await createJob(jobData)
+      const result = await createJob(jobData);
       if (result) {
-        navigate('/my-jobs')
+        navigate('/my-jobs');
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'API Hatası'
-      setError(errorMsg)
+      const errorMsg = err.response?.data?.message || err.message || 'API Hatası';
+      setError(errorMsg);
+      alert(`Hata: ${errorMsg}`);
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
