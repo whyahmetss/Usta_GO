@@ -130,14 +130,17 @@ function AuthPage() {
                     </button>
                   </div>
                 </div>
-
-                <input
-                  type="tel"
-                  placeholder="Telefon (05XX XXX XX XX)"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
+<input
+  type="tel"
+  placeholder="Telefon (05XX XXX XX XX)"
+  value={phone}
+  maxLength={11} // En fazla 11 karakter (05XXXXXXXXX)
+  onChange={(e) => {
+    const val = e.target.value.replace(/\D/g, '') // Sadece rakam kabul et
+    setPhone(val)
+  }}
+  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+/>
 
                 <input
                   type="text"
