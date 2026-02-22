@@ -136,7 +136,7 @@ function CreateJobPage() {
           <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
             <ArrowLeft size={20} className="text-white" />
           </button>
-          <h1 className="text-2xl font-black text-white">Yeni Is Talebi</h1>
+          <h1 className="text-2xl font-black text-white">Yeni İş Talebi</h1>
         </div>
         <div className="flex items-center justify-center gap-2">
           {[1, 2, 3].map((num) => (
@@ -152,7 +152,7 @@ function CreateJobPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-6 shadow-lg text-center">
-              <h3 className="font-bold mb-3 text-gray-900 text-left">Fotoğraf Ekle (Opsiyonel)</h3>
+              <h3 className="font-bold mb-3 text-gray-900 text-left">Fotoğraf Ekle</h3>
               <input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" id="photo-upload" />
               <label htmlFor="photo-upload" className="cursor-pointer block">
                 {photoPreview ? (
@@ -163,19 +163,19 @@ function CreateJobPage() {
                 ) : (
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-blue-500 transition-colors">
                     <Camera size={40} className="text-gray-400" />
-                    <p className="text-gray-500 font-medium">Sorunu fotoğrafla veya yükle</p>
+                    <p className="text-gray-500 font-medium">Sorunu fotoğrafla</p>
                   </div>
                 )}
               </label>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900 text-left">Sorunu Aciklayin</h3>
+              <h3 className="font-bold mb-3 text-gray-900 text-left">Sorunu Açıklayın</h3>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" rows={4} placeholder="Prizden kivilcim cikiyor..." />
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900 text-left"><MapPin size={18} className="inline mr-1" />Adres</h3>
+              <h3 className="font-bold mb-3 text-gray-900 text-left"><MapPin size={18} className="inline mr-1" />Adres(Tam adres girin)</h3>
               <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" placeholder="Kadikoy, Istanbul" />
             </div>
 
