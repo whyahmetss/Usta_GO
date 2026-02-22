@@ -90,11 +90,18 @@ function CreateJobPage() {
     loadCoupons()
   }, [user])
 
-  // İŞ OLUŞTURMA (ASIL NOKTA)
+  // İŞ OLUŞTURMA (HATASIZ VERSİYON)
   const handleCreateJob = async () => {
     if (isCreating) return
-    if (!description.trim() || !address.trim()) {
-      alert('Lütfen eksik alanları doldurun.')
+    
+    // 1. DÜZELTME: Karakter kontrolü
+    if (description.trim().length < 10) {
+      alert('Lütfen sorunu daha detaylı anlatın (En az 10 karakter).')
+      return
+    }
+    
+    if (!address.trim()) {
+      alert('Lütfen adresinizi girin.')
       return
     }
 
@@ -109,15 +116,39 @@ function CreateJobPage() {
         currentFinalPrice = Math.max(0, currentFinalPrice - selectedCoupon.amount)
       }
 
-      // Fotoğraf yükleme işlemi (Hata alırsa işleme devam eder)
       if (photo) {
         try {
           const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
           photoUrl = uploadResponse?.data?.url || uploadResponse?.url || ""
         } catch (uploadErr) {
-          console.warn("Fotoğraf yüklenemedi, iş fotoğrafsız devam ediyor.")
+          console.warn("Fotoğraf yüklenemedi.")
         }
       }
+
+      // 2. DÜZELTME: Backend'in tam olarak beklediği format
+      const jobData = {
+        title: aiAnalysis?.category || 'Elektrik Arıza',
+        description: description.trim(),
+        budget: Number(currentFinalPrice),
+        location: address.trim(), // OBJE DEĞİL, DÜZ STRING YAPTIK (F12 hatası çözüldü)
+        photo: photoUrl || "",
+        urgent: aiAnalysis?.urgency === 'Yüksek',
+        category: 'Elektrikci'
+      }
+
+      const result = await createJob(jobData)
+      if (result) {
+        alert('İş talebi başarıyla oluşturuldu!')
+        navigate('/my-jobs')
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.details?.[0]?.message || err.message || 'Hata oluştu'
+      setError(errorMsg)
+      alert(`Hata: ${errorMsg}`)
+    } finally {
+      setIsCreating(false)
+    }
+  }
 
       // BACKEND İÇİN HER İHTİMALİ KAPSAYAN VERİ YAPISI
       const jobData = {
