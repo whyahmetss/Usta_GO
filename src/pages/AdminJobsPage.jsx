@@ -18,20 +18,18 @@ function AdminJobsPage() {
 
   const fetchJobs = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const params = filterStatus !== 'all' ? `?status=${filterStatus}` : ''
-      const res = await fetchAPI(`/jobs${params}`, {
-        method: 'GET'
-      })
-      setJobs(Array.isArray(res) ? res : res.data || [])
+      setLoading(true);
+      setError(null);
+      // Backend'e status parametresi göndermeyi bırakıyoruz
+      const res = await fetchAPI('/jobs', { method: 'GET' });
+      setJobs(Array.isArray(res) ? res : res.data || []);
     } catch (err) {
-      setError(err.message)
-      setJobs([])
+      setError(err.message);
+      setJobs([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     // Refetch when filter changes
@@ -104,7 +102,7 @@ const filteredJobs = filterStatus === 'all'
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {statusLabels[status]}
-              {status !== 'all' && ` (${jobs.filter(j => j.status === status).length})`}
+              {status !== 'all' && ` (${jobs.filter(j => j.status?.toUpperCase() === status.toUpperCase()).length})`}
             </button>
           ))}
         </div>
