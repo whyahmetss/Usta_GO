@@ -25,12 +25,16 @@ function MyJobsPage() {
         
         if (Array.isArray(rawData)) {
           // Filtreleme mantığını daha esnek yapıyoruz (eşleşmeme riskine karşı)
-          const filtered = rawData.filter(j => {
-            if (user?.role === 'customer') {
-              return j.customer?.id === user.id || j.customerId === user.id
-            }
-            return j.professional?.id === user?.id || j.professionalId === user?.id
-          })
+const filtered = rawData.filter(j => {
+  // Hem obje içindeki ID'ye hem de düz ID'ye bakıyoruz (En garantisi budur)
+  const customerId = (j.customer?.id || j.customerId || (typeof j.customer === 'string' ? j.customer : null));
+  const proId = (j.professional?.id || j.professionalId || (typeof j.professional === 'string' ? j.professional : null));
+
+  if (user?.role === 'customer') {
+    return customerId === user.id;
+  }
+  return proId === user.id;
+})
           setUserJobs(filtered)
         }
       } catch (err) {
