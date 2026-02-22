@@ -119,20 +119,22 @@ function CreateJobPage() {
         }
       }
 
-      // BACKEND İÇİN HER İHTİMALİ KAPSAYAN VERİ YAPISI
-      const jobData = {
-        title: aiAnalysis?.category || 'Elektrik Arıza',
-        description: description.trim(),
-        price: Number(currentFinalPrice),   // Bazı backendler price ister
-        budget: Number(currentFinalPrice),  // Bazı backendler budget ister
-location: address.trim(), // Obje isteyen backendler için
-        address: address.trim(),            // String isteyen backendler için
-        photo: photoUrl || "",
-        urgent: aiAnalysis?.urgency === 'Yüksek' || false,
-urgency: aiAnalysis?.urgency === 'Yüksek' ? 'high' : 'normal', // Backend bazen string 'high' bekler
-        category: 'Elektrikci',
-        status: 'pending'
-      }
+ const jobData = {
+  title: aiAnalysis?.category || 'Genel Elektrik',
+  description: description.trim(),
+  
+  // FİYAT: Admin 'price' bekliyor olabilir, backend 'budget' bekliyor
+  price: Number(finalPrice), 
+  budget: Number(finalPrice), 
+
+  // ADRES: Admin 'address' bekliyor olabilir, backend 'location' bekliyor
+  address: address.trim(),
+  location: address.trim(), 
+
+  category: 'Elektrikci',
+  urgent: aiAnalysis?.urgency === 'Yüksek' || false,
+  status: 'PENDING' // Büyük harf gönderelim, SQL ile tam uyumlu olsun
+};
 
       const result = await createJob(jobData)
       if (result) {
