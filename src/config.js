@@ -1,8 +1,8 @@
 // API Configuration
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+export const API_URL = 'https://usta-go-1.onrender.com/api';
 
 // Socket.IO Configuration
-export const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+export const SOCKET_URL = 'https://usta-go-1.onrender.com';
 
 // Storage Keys
 export const STORAGE_KEYS = {
