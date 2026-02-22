@@ -25,7 +25,7 @@ import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
 import AboutPage from './pages/AboutPage'
 
-// Protected Route wrapper
+// Protected Route wrapper - Büyük/Küçük harf hatası giderildi
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
@@ -44,9 +44,13 @@ function ProtectedRoute({ children, roleRequired = null }) {
     return <Navigate to="/" />
   }
 
-  if (roleRequired && user.role !== roleRequired) {
-    if (user.role === 'admin') return <Navigate to="/admin" />
-    if (user.role === 'professional') return <Navigate to="/professional" />
+  // Veritabanından gelen rolü ve beklenen rolü küçük harfe çevirip karşılaştırıyoruz
+  const userRole = user.role?.toLowerCase();
+  const requiredRole = roleRequired?.toLowerCase();
+
+  if (requiredRole && userRole !== requiredRole) {
+    if (userRole === 'admin') return <Navigate to="/admin" />
+    if (userRole === 'professional') return <Navigate to="/professional" />
     return <Navigate to="/home" />
   }
 
@@ -55,6 +59,7 @@ function ProtectedRoute({ children, roleRequired = null }) {
 
 function AppRoutes() {
   const { user } = useAuth()
+  const userRole = user?.role?.toLowerCase(); // Rolü burada da standart hale getirdik
 
   return (
     <Routes>
@@ -62,8 +67,8 @@ function AppRoutes() {
         path="/"
         element={
           user ? (
-            user.role === 'admin' ? <Navigate to="/admin" /> :
-            user.role === 'professional' ? <Navigate to="/professional" /> :
+            userRole === 'admin' ? <Navigate to="/admin" /> :
+            userRole === 'professional' ? <Navigate to="/professional" /> :
             <Navigate to="/home" />
           ) : (
             <AuthPage />
@@ -80,6 +85,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* ... Diğer rotaların aynı kalabilir ... */}
 
       {/* /services/electric -> redirect to /create-job */}
       <Route
