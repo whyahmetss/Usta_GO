@@ -33,7 +33,7 @@ const io = new SocketIOServer(httpServer, {
 
 // Middlewares
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  origin: '*', // Herkese izin ver
   credentials: true,
 }));
 
