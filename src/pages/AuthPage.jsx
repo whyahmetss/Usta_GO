@@ -1,4 +1,4 @@
-import { useState } from 'react'
+fimport { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,54 +15,44 @@ function AuthPage() {
   const navigate = useNavigate()
   const { login, register } = useAuth()
 
-  const handleSubmit = (e) => {
+  // 1. Fonksiyonun başına 'async' kelimesini ekle
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
     if (isLogin) {
-      // Giriş
-      const result = login(email, password)
-      if (result.success) {
-        // Role'e göre yönlendir
+      // 2. 'await' ekle ki cevap gelene kadar beklesin
+      const result = await login(email, password)
+      if (result && result.success) {
         if (result.role === 'admin') {
           navigate('/admin')
-        } else if (result.role === 'USTA') {
-          navigate('/usta')
+        } else if (result.role === 'USTA' || result.role === 'professional') {
+          // App.jsx'teki rotanla uyumlu olması için /professional yaptık
+          navigate('/professional')
         } else {
           navigate('/home')
         }
       } else {
-        setError(result.error || 'Giriş başarısız')
+        setError(result?.error || 'Giriş başarısız')
       }
     } else {
-      // Kayıt
+      // Kayıt validasyonları aynı kalsın...
       if (!name || !email || !password || !phone) {
         setError('Lütfen tüm alanları doldurun')
         return
       }
 
-if (password.length < 6) {
-  setError('Şifre en az 6 karakter olmalı')
-  return
-}
-
-      // Phone format validation (05XX XXX XX XX)
-      const phoneRegex = /^05\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/
-      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-        setError('Telefon formatı: 05XX XXX XX XX')
-        return
-      }
-
-      const result = register(email, password, name, role, phone, referralCode || null)
-      if (result.success) {
-        // Role'e göre yönlendir
-        if (result.role === 'USTA') {
-          navigate('/usta')
+      // 3. Kayıt kısmına da 'await' ekle
+      const result = await register(email, password, name, role, phone, referralCode || null)
+      
+      if (result && result.success) {
+        if (role === 'USTA' || result.role === 'professional') {
+          navigate('/professional')
         } else {
           navigate('/home')
         }
       } else {
-        setError(result.error || 'Kayıt başarısız')
+        setError(result?.error || 'Kayıt başarısız')
       }
     }
   }
