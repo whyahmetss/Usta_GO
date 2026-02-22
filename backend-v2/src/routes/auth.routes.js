@@ -25,7 +25,11 @@ router.post("/login", validateBody(loginSchema), authController.login);
  * @desc Get current user profile
  */
 router.get("/profile", authMiddleware, authController.getProfile);
-
+/**
+ * @route GET /api/auth/me
+ * @desc Get current user (Frontend specifically asks for this)
+ */
+router.get("/me", authMiddleware, authController.getProfile);
 /**
  * @route PUT /api/auth/profile
  * @desc Update current user profile
