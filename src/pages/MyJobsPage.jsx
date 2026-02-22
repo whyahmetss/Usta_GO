@@ -24,12 +24,15 @@ function MyJobsPage() {
         const rawData = response?.data || response || []
         
         if (Array.isArray(rawData)) {
-          // Filtreleme mantığını daha esnek yapıyoruz (eşleşmeme riskine karşı)
-const filtered = rawData.filter(j => {
-  // SQL tablosundaki verileri string'e çevirip her ihtimali kontrol ediyoruz
+   const filtered = rawData.filter(j => {
+  // SQL'deki sütun adın tam olarak "customerId" değilse bile hepsine bakıyoruz
+  // Tablonda "custc" olarak göründüğü için onu en başa aldım
   const dbCustomerId = String(j.customerId || j.custc || j.customer?.id || j.customer || "").trim();
   const dbProId = String(j.professionalId || j.professional?.id || j.professional || "").trim();
   const currentUserId = String(user?.id || "").trim();
+
+  // Debug için konsola bas (F12'de karşılaştırmayı göreceksin)
+  console.log("Karşılaştırma:", { dbCustomerId, currentUserId, match: dbCustomerId === currentUserId });
 
   if (user?.role === 'customer') {
     return dbCustomerId === currentUserId;
