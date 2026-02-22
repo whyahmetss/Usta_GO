@@ -41,45 +41,52 @@ function CreateJobPage() {
     }, 1500)
   }
 
-  const handleCreateJob = async () => {
-    if (isCreating) return
-    setIsCreating(true)
-    setLocalError(null)
+ const handleCreateJob = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
+    setLocalError(null);
 
     try {
-      let photoUrl = null
+      let photoUrl = null;
       if (photo) {
         try {
-          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = uploadRes?.data?.url || uploadRes?.url
-        } catch (e) { console.warn("Fotoğraf yüklenemedi") }
+          const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo');
+          photoUrl = uploadRes?.data?.url || uploadRes?.url;
+        } catch (e) { console.warn("Fotoğraf yüklenemedi"); }
       }
 
-      // Admin panelindeki boşlukları doldurmak için tasarlanmış veri yapısı
+      // Backend'in tüm varyasyonlarını kapsayan veri paketi
       const jobData = {
-        title: aiAnalysis?.category || 'Genel Elektrik',
-        description: description,
-        price: Number(aiPrice) || 250,
-        budget: Number(aiPrice) || 250,
-        location: { address: address }, // Admin panelinde 'Adres' kısmını doldurur
-        photo: photoUrl || "",
-        urgency: aiAnalysis?.urgency || 'Normal',
-        category: 'Elektrikci'
-      }
-
-     const jobData = {
         title: aiAnalysis?.category || 'Genel Elektrik Arıza',
         description: description.trim(),
-        price: Number(aiPrice),      // Sayı formatında
-        budget: Number(aiPrice),     // Alternatif isim
-        // Hem obje hem düz metin gönderiyoruz, backend hangisini seviyorsa onu alsın
-        location: { address: address }, 
-        address: address,            
+        price: Number(aiPrice) || 250,      // Sayı olarak gönderiyoruz
+        budget: Number(aiPrice) || 250,     // Bazı backendler budget bekler
+        location: {
+          address: address.trim()           // Admin panelindeki 'Adres' alanı için
+        },
+        address: address.trim(),            // Bazı backendler düz string bekler
         photo: photoUrl || "",
         urgency: aiAnalysis?.urgency || 'Normal',
         category: 'Elektrikci',
-        status: 'pending'            // Durumu garantiye alalım
+        status: 'pending'                   // Statü her zaman pending başlamalı
       };
+
+      console.log("API'ye Giden Veri:", jobData);
+
+      const result = await createJob(jobData);
+      if (result) {
+        navigate('/my-jobs');
+      }
+    } catch (err) {
+      // Backend'den gelen asıl hata mesajını yakala
+      const errorMsg = err.response?.data?.message || err.message || "Bilinmeyen API Hatası";
+      console.error("Hata Detayı:", err.response?.data);
+      setLocalError(`API Hatası: ${errorMsg}`);
+    } finally {
+      // Butonu her zaman 3 saniye sonra geri aç ki kilitlenmesin
+      setTimeout(() => setIsCreating(false), 3000);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header UI */}
