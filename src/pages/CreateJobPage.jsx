@@ -28,10 +28,11 @@ function CreateJobPage() {
     const upperAddr = addr.toUpperCase()
     if (premiumZones.some(zone => upperAddr.includes(zone.toUpperCase()))) return 1.3
     if (economyZones.some(zone => upperAddr.includes(zone.toUpperCase()))) return 1.0
-    return 1.15
+    return 1.15 
   }
 
   const regionMultiplier = getRegionMultiplier(address)
+  // BURASI KRİTİK: handleCreateJob içinde de bu değişkeni kullanmalıyız
   const finalPrice = aiPrice ? Math.round(aiPrice * regionMultiplier) : 0
 
   const handlePhotoCapture = (e) => {
@@ -72,45 +73,50 @@ function CreateJobPage() {
   useEffect(() => {
     const loadCoupons = async () => {
       try {
+        // DÜZELTME: Başına '/api' ekledik çünkü config'deki base URL ile endpoint uyuşmuyor
         const response = await fetchAPI('/api' + API_ENDPOINTS.WALLET.GET)
         if (response.data?.coupons) {
           const unused = response.data.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
           setActiveCoupons(unused)
         }
-      } catch (err) { console.warn('Kuponlar yuklenemedi', err) }
+      } catch (err) {
+        console.warn('Failed to load coupons:', err)
+      }
     }
     loadCoupons()
   }, [user])
-
-  const handleLoadCoupons = () => {
-    const unused = activeCoupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
-    setActiveCoupons(unused)
-  }
 
   const handleCreateJob = async () => {
     if (isCreating) return
     setError(null)
     setIsCreating(true)
+
     try {
-      let currentFinalPrice = finalPrice
+      // HATA BURADAYDI: finalPrice değişkenini yukarıdan alıyoruz
+      let currentFinalPrice = finalPrice 
       let photoUrl = null
-      if (selectedCoupon) currentFinalPrice = Math.max(0, currentFinalPrice - selectedCoupon.amount)
-      
-      if (photo) {
-        try {
-          const res = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = res.data?.url || photoPreview
-        } catch (e) { photoUrl = photoPreview }
+
+      if (selectedCoupon) {
+        currentFinalPrice = Math.max(0, currentFinalPrice - selectedCoupon.amount)
       }
 
-const jobData = {
+      if (photo) {
+        try {
+          const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
+          photoUrl = uploadResponse.data?.url || photoPreview
+        } catch (err) {
+          photoUrl = photoPreview
+        }
+      }
+
+      const jobData = {
         title: aiAnalysis.category,
         description: description,
-        budget: Number(finalJobPrice),
-        location: address || 'Kadikoy, Istanbul',
+        budget: Number(currentFinalPrice), 
+        location: address || 'Kadikoy, Istanbul', 
         photo: photoUrl,
         urgent: aiAnalysis.urgency === 'Yuksek',
-        category: 'Elektrikci' // <--- 'electric' yerine tam olarak bunu yaz
+        category: 'Elektrikci' // DÜZELTME: Görseldeki usta kategorisiyle eşitledik
       }
 
       const result = await createJob(jobData)
@@ -121,22 +127,28 @@ const jobData = {
     } catch (err) {
       setError(err.message || 'Hata olustu')
       alert(`Hata: ${err.message}`)
-    } finally { setIsCreating(false) }
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="blue-gradient-bg pb-6 pt-4 px-4 text-white">
+      <div className="blue-gradient-bg pb-6 pt-4 px-4">
         <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><ArrowLeft size={20} /></button>
-          <div><h1 className="text-2xl font-black">Yeni Is Talebi</h1><p className="text-white/80 text-sm">Elektrik hizmeti</p></div>
+          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <ArrowLeft size={20} className="text-white" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-white">Yeni Is Talebi</h1>
+          </div>
         </div>
         <div className="flex items-center justify-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-white text-blue-600' : 'bg-white/20'}`}>1</div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>1</div>
           <div className={`w-12 h-1 ${step >= 2 ? 'bg-white' : 'bg-white/20'}`}></div>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-white text-blue-600' : 'bg-white/20'}`}>2</div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>2</div>
           <div className={`w-12 h-1 ${step >= 3 ? 'bg-white' : 'bg-white/20'}`}></div>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 3 ? 'bg-white text-blue-600' : 'bg-white/20'}`}>3</div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 3 ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>3</div>
         </div>
       </div>
 
@@ -144,20 +156,12 @@ const jobData = {
         {step === 1 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3">Sorunu Aciklayin</h3>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border focus:ring-2 focus:ring-blue-500" rows={6} />
+              <h3 className="font-bold mb-3 text-gray-900">Sorunu Aciklayin</h3>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200" rows={6} />
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3"><MapPin size={18} className="inline mr-1" />Adres</h3>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border" placeholder="Orn: Kadikoy, Istanbul" />
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3">Fotograf Ekle (Opsiyonel)</h3>
-              {!photoPreview ? (
-                <label className="w-full py-4 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer"><Camera size={32} className="text-gray-400 mb-2" /><span className="text-sm">Fotograf Cek veya Sec</span><input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" /></label>
-              ) : (
-                <div className="relative"><img src={photoPreview} className="w-full h-48 object-cover rounded-xl" /><button onClick={() => { setPhoto(null); setPhotoPreview(null) }} className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full">X</button></div>
-              )}
+              <h3 className="font-bold mb-3 text-gray-900"><MapPin size={18} className="inline mr-1" />Adres</h3>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200" placeholder="Orn: Kadikoy, Istanbul" />
             </div>
             <button onClick={handleAIAnalysis} disabled={!description.trim()} className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"><Sparkles size={20} className="inline mr-2" /> AI ile Fiyat Hesapla</button>
           </div>
@@ -166,31 +170,33 @@ const jobData = {
         {step === 2 && (
           <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
             <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-2xl font-bold mb-2">AI Analiz Ediyor...</h3>
+            <h3 className="text-2xl font-bold">AI Analiz Ediyor...</h3>
           </div>
         )}
 
         {step === 3 && aiPrice && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
-              <h3 className="font-bold mb-4">🎟️ Kupon Kullan</h3>
-              {activeCoupons.length === 0 ? <button onClick={handleLoadCoupons} className="w-full py-2 bg-yellow-100 text-yellow-700 rounded-lg font-bold">Kuponları Yukle</button> : (
+              <h3 className="font-bold text-gray-900 mb-4">🎟️ Kupon Kullan</h3>
+              {activeCoupons.length === 0 ? <p className="text-gray-600 text-sm">Aktif kupon bulunamadi</p> : (
                 <div className="space-y-2">
                   {activeCoupons.map((c) => (
                     <button key={c.id} onClick={() => setSelectedCoupon(selectedCoupon?.id === c.id ? null : c)} className={`w-full p-3 rounded-lg border-2 text-left ${selectedCoupon?.id === c.id ? 'bg-yellow-50 border-yellow-500 shadow-md' : 'bg-gray-50'}`}>
-                      <div className="flex justify-between"><div><p className="font-bold">{c.code}</p><p className="text-sm">+{c.amount} TL indirim</p></div><div className="text-right"><p className="text-2xl font-black text-yellow-600">+{c.amount} TL</p></div></div>
+                      <div className="flex justify-between"><div><p className="font-bold text-gray-900">{c.code}</p><p className="text-sm text-gray-600">+{c.amount} TL indirim</p></div><p className="text-2xl font-black text-yellow-600">+{c.amount} TL</p></div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white text-center">
-              <p className="text-white/80 text-sm mb-1">Tahmini Ucret</p>
-              <p className="text-5xl font-black">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
-              <div className="grid grid-cols-2 gap-3 mt-6 text-sm">
-                <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80">Kategori</p><p className="font-bold">{aiAnalysis.category}</p></div>
-                <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80">Aciliyet</p><p className="font-bold">{aiAnalysis.urgency}</p></div>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
+              <div className="text-center">
+                <p className="text-white/80 text-sm">Tahmini Ucret</p>
+                <p className="text-5xl font-black">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
+                <div className="grid grid-cols-2 gap-3 mt-6 text-sm">
+                  <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80 mb-1">Kategori</p><p className="font-bold">{aiAnalysis.category}</p></div>
+                  <div className="bg-white/20 rounded-xl p-3"><p className="text-white/80 mb-1">Aciliyet</p><p className="font-bold">{aiAnalysis.urgency}</p></div>
+                </div>
               </div>
             </div>
 
