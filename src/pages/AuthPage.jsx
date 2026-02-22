@@ -158,27 +158,33 @@ function AuthPage() {
                   </div>
                 </div>
 
-                {/* Telefon Numarası */}
-                <input
-                  type="tel"
-                  placeholder="Telefon (05XX XXX XX XX)"
-                  value={phone}
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/\D/g, '')
-                    if (val.length > 10) val = val.slice(0, 10)
-                    if (val.startsWith('5')) val = '0' + val
-                    // Format: 05XX XXX XX XX
-                    if (val.length === 10) {
-                      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7, 9)} ${val.slice(9)}`
-                    } else if (val.length > 4 && val.length <= 7) {
-                      val = `${val.slice(0, 4)} ${val.slice(4)}`
-                    } else if (val.length > 7) {
-                      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7)}`
-                    }
-                    setPhone(val)
-                  }}
-                  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
+               {/* Telefon Numarası */}
+<input
+  type="tel"
+  placeholder="Telefon (05XX XXX XX XX)"
+  value={phone}
+  onChange={(e) => {
+    let val = e.target.value.replace(/\D/g, '') // Sadece rakamlar
+    
+    // 11 karakterden fazla girişi engelle
+    if (val.length > 11) val = val.slice(0, 11)
+    
+    // Eğer 5 ile başlıyorsa başına 0 ekle
+    if (val.length > 0 && val[0] === '5') {
+      val = '0' + val.slice(0, 10)
+    }
+    
+    // Format: 05XX XXX XX XX
+    if (val.length > 7) {
+      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7, 9)} ${val.slice(9, 11)}`
+    } else if (val.length > 4) {
+      val = `${val.slice(0, 4)} ${val.slice(4, 7)} ${val.slice(7)}`
+    }
+    
+    setPhone(val)
+  }}
+  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+/>
 
                 {/* Davet Kodu */}
                 <input
