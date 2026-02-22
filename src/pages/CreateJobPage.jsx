@@ -113,20 +113,25 @@ function CreateJobPage() {
       if (photo) {
         try {
           const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = uploadResponse?.data?.url || uploadResponse?.url
+          photoUrl = uploadResponse?.data?.url || uploadResponse?.url || ""
         } catch (uploadErr) {
           console.warn("Fotoğraf yüklenemedi, iş fotoğrafsız devam ediyor.")
         }
       }
 
+      // BACKEND İÇİN HER İHTİMALİ KAPSAYAN VERİ YAPISI
       const jobData = {
         title: aiAnalysis?.category || 'Elektrik Arıza',
-        description: description,
-        budget: Number(currentFinalPrice), 
-        location: address, 
-        photo: photoUrl,
+        description: description.trim(),
+        price: Number(currentFinalPrice),   // Bazı backendler price ister
+        budget: Number(currentFinalPrice),  // Bazı backendler budget ister
+        location: { address: address.trim() }, // Obje isteyen backendler için
+        address: address.trim(),            // String isteyen backendler için
+        photo: photoUrl || "",
         urgent: aiAnalysis?.urgency === 'Yüksek',
-        category: 'Elektrikci'
+        urgency: aiAnalysis?.urgency || 'Normal',
+        category: 'Elektrikci',
+        status: 'pending'
       }
 
       const result = await createJob(jobData)
@@ -135,8 +140,11 @@ function CreateJobPage() {
         navigate('/my-jobs')
       }
     } catch (err) {
-      setError(err.message || 'Hata oluştu')
-      alert(`Hata: ${err.message}`)
+      // BURASI DÜZELTİLDİ: Artık API'nin gizli mesajı ekrana basılacak
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'API Hatası oluştu'
+      console.error("API'DEN GELEN TAM HATA:", err.response?.data)
+      setError(errorMsg)
+      alert(`Hata: ${errorMsg}`)
     } finally {
       setIsCreating(false)
     }
