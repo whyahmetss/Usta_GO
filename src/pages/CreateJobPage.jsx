@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
 
 function CreateJobPage() {
@@ -78,7 +79,7 @@ function CreateJobPage() {
   useEffect(() => {
     const loadCoupons = async () => {
       try {
-        const response = await fetchAPI('/api' + API_ENDPOINTS.WALLET.GET)
+        const response = await fetchAPI(API_ENDPOINTS.WALLET.GET)
         if (response.data?.coupons) {
           const unused = response.data.coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
           setActiveCoupons(unused)
@@ -119,22 +120,17 @@ function CreateJobPage() {
         }
       }
 
- const jobData = {
-  title: aiAnalysis?.category || 'Genel Elektrik',
-  description: description.trim(),
-  
-  // FİYAT: Admin 'price' bekliyor olabilir, backend 'budget' bekliyor
-  price: Number(finalPrice), 
-  budget: Number(finalPrice), 
-
-  // ADRES: Admin 'address' bekliyor olabilir, backend 'location' bekliyor
-  address: address.trim(),
-  location: address.trim(), 
-
-  category: 'Elektrikci',
-  urgent: aiAnalysis?.urgency === 'Yüksek' || false,
-  status: 'PENDING' // Büyük harf gönderelim, SQL ile tam uyumlu olsun
-};
+ // Use frontend field names; AuthContext.createJob applies mapJobToBackend
+      // which converts: address->location, price->budget, status->UPPERCASE
+      const jobData = {
+        title: aiAnalysis?.category || 'Genel Elektrik',
+        description: description.trim(),
+        price: Number(finalPrice),
+        address: address.trim(),
+        category: 'Elektrikci',
+        urgent: aiAnalysis?.urgency === 'Yüksek' || false,
+        status: 'pending',
+      };
 
       const result = await createJob(jobData)
       if (result) {

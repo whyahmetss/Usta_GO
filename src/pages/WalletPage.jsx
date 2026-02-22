@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download } from 'lucide-react'
 
 function WalletPage() {
@@ -35,6 +36,7 @@ function WalletPage() {
         setLoading(true)
         setError(null)
 
+        // user.role is already mapped (professional/customer/admin) by AuthContext
         if (user?.role === 'professional') {
           // Load professional wallet data
           const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
@@ -60,11 +62,13 @@ function WalletPage() {
             setCoupons(response.data.coupons || [])
           }
 
-          // Load customer's jobs
+          // Load customer's jobs and map from backend format
           const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
           if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-            const userJobs = jobsResponse.data.filter(j => j.customer?.id === user?.id)
+            const mapped = mapJobsFromBackend(jobsResponse.data)
+            const userJobs = mapped.filter(j => j.customer?.id === user?.id)
             setCustomerJobs(userJobs)
+            // After mapping, statuses are lowercase
             setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
           }
         }
@@ -114,12 +118,11 @@ function WalletPage() {
     )
   }
 
-  // Professional view
+  // user.role is already mapped by AuthContext (professional/customer/admin)
   if (user?.role === 'professional') {
     return renderProfessionalWallet()
   }
 
-  // Customer view
   if (user?.role === 'customer') {
     return renderCustomerWallet()
   }
@@ -323,8 +326,9 @@ function WalletPage() {
                         {job.status === 'pending' ? 'Beklemede' : job.status === 'accepted' ? 'Kabul Edildi' : 'Tamamlandı'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{job.location.address}</p>
-                    <p className="text-lg font-black text-gray-900">{job.price} TL</p>
+                    {/* job.address is the mapped field; job.price is also mapped from budget */}
+                    <p className="text-sm text-gray-600 mb-2">{job.address || job.location || ''}</p>
+                    <p className="text-lg font-black text-gray-900">{job.price ?? job.budget ?? 0} TL</p>
                   </div>
                 ))}
               </div>

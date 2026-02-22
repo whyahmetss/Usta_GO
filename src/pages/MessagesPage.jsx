@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Send } from 'lucide-react'
 
 function MessagesPage() {
@@ -29,9 +30,11 @@ function MessagesPage() {
         setError(null)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (response.data && Array.isArray(response.data)) {
+          // Map from backend format; statuses become lowercase, user.role is already mapped
+          const mapped = mapJobsFromBackend(response.data)
           const filtered = user?.role === 'customer'
-            ? response.data.filter(j => j.customer?.id === user.id && j.status !== 'pending' && j.status !== 'cancelled')
-            : response.data.filter(j => j.professional?.id === user?.id && j.status !== 'pending' && j.status !== 'cancelled')
+            ? mapped.filter(j => j.customer?.id === user.id && j.status !== 'pending' && j.status !== 'cancelled')
+            : mapped.filter(j => j.professional?.id === user?.id && j.status !== 'pending' && j.status !== 'cancelled')
           setUserJobs(filtered)
         }
       } catch (err) {

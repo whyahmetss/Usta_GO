@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
 
 function CancelJobPage() {
@@ -23,7 +24,7 @@ function CancelJobPage() {
         setLoading(true)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
         if (response.data) {
-          setJob(response.data)
+          setJob(mapJobFromBackend(response.data))
           // Get cancellation count from user data
           setCancellationCount(user?.cancellationCount || 0)
         } else {

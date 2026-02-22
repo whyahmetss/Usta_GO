@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFiles } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobFromBackend } from '../utils/fieldMapper'
 import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
 import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
@@ -233,9 +234,10 @@ function JobDetailPage() {
         setError(null)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
         if (response.data) {
-          setJob(response.data)
-          setBeforePhotos(response.data.beforePhotos || [])
-          setAfterPhotos(response.data.afterPhotos || [])
+          const mapped = mapJobFromBackend(response.data)
+          setJob(mapped)
+          setBeforePhotos(mapped.beforePhotos || [])
+          setAfterPhotos(mapped.afterPhotos || [])
         } else {
           setError('Is bulunamadi')
         }
@@ -290,8 +292,15 @@ function JobDetailPage() {
   }
 
   const handleStartNavigation = () => {
-    const { lat, lng } = job.location
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+    // location may be a plain text address (string) or an object with lat/lng
+    const loc = job.location
+    let destination
+    if (loc && typeof loc === 'object' && loc.lat && loc.lng) {
+      destination = `${loc.lat},${loc.lng}`
+    } else {
+      destination = encodeURIComponent(job.address || loc || '')
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`
     window.open(url, '_blank')
   }
 
@@ -397,7 +406,8 @@ function JobDetailPage() {
         <h1 className="text-2xl font-black text-white mb-2">{job.title}</h1>
         <div className="flex items-center gap-2 text-white/90">
           <MapPin size={16} />
-          <span className="text-sm">{job.location.address}</span>
+          {/* job.address is the mapped field (from backend 'location') */}
+          <span className="text-sm">{job.address || job.location || 'Adres belirtilmedi'}</span>
         </div>
       </div>
 
@@ -429,7 +439,8 @@ function JobDetailPage() {
           <p className="text-gray-700 mb-4">{job.description}</p>
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <span className="text-sm text-gray-600">Ucret</span>
-            <span className="text-2xl font-black text-green-600">{job.price} TL</span>
+            {/* job.price is the mapped field (from backend 'budget') */}
+            <span className="text-2xl font-black text-green-600">{job.price ?? job.budget ?? 0} TL</span>
           </div>
         </div>
 

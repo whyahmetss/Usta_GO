@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
+import { mapUsersFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, LogOut, Trash2, Shield, AlertCircle, Loader } from 'lucide-react'
 
 function AdminUsersPage() {
@@ -25,7 +26,8 @@ function AdminUsersPage() {
       const res = await fetchAPI('/users', {
         method: 'GET'
       })
-      setUsers(Array.isArray(res) ? res : res.data || [])
+      const raw = Array.isArray(res) ? res : res.data || []
+      setUsers(mapUsersFromBackend(raw))
     } catch (err) {
       setError(err.message)
       // Fallback to empty array if endpoint not available yet
@@ -69,7 +71,7 @@ function AdminUsersPage() {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Kullanıcı Yönetimi</h1>
-              <p className="text-sm text-gray-500">Toplam {savedUsers.length} kullanıcı</p>
+              <p className="text-sm text-gray-500">Toplam {users.length} kullanıcı</p>
             </div>
           </div>
           <button
@@ -128,6 +130,7 @@ function AdminUsersPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                       <td className="px-6 py-4 text-sm">
                         <div className="flex items-center gap-2">
+                          {/* After mapUsersFromBackend: role is 'admin','professional','customer' */}
                           {user.role === 'admin' && (
                             <>
                               <Shield size={16} className="text-purple-600" />
@@ -151,7 +154,7 @@ function AdminUsersPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{user.completedJobs || 0}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.rating || 0}⭐</td>
                       <td className="px-6 py-4 text-sm">
-                        {user.role !== 'admin' && (
+                        {user.role !== 'admin' && user.role !== 'ADMIN' && (
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             disabled={deletingId === user.id}

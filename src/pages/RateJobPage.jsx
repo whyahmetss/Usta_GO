@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Star } from 'lucide-react'
 
 function RateJobPage() {
@@ -24,7 +25,7 @@ function RateJobPage() {
         setLoading(true)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
         if (response.data) {
-          setJob(response.data)
+          setJob(mapJobFromBackend(response.data))
         } else {
           setError('Is bulunamadi')
         }

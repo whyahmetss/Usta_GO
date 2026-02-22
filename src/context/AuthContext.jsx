@@ -10,6 +10,12 @@ import {
   uploadFiles
 } from '../utils/api'
 import { API_ENDPOINTS, STORAGE_KEYS } from '../config'
+import {
+  mapUserFromBackend,
+  mapJobFromBackend,
+  mapJobsFromBackend,
+  mapJobToBackend,
+} from '../utils/fieldMapper'
 
 const AuthContext = createContext()
 
@@ -36,8 +42,9 @@ export function AuthProvider({ children }) {
             // Try to fetch user from API
             const userData = await fetchAPI(API_ENDPOINTS.AUTH.ME)
             if (userData.data) {
-              setUser(userData.data)
-              setStoredUser(userData.data)
+              const mappedUser = mapUserFromBackend(userData.data)
+              setUser(mappedUser)
+              setStoredUser(mappedUser)
               setUseLocalStorage(false)
             }
           } catch (err) {
@@ -45,7 +52,7 @@ export function AuthProvider({ children }) {
             console.warn('API fetch failed, falling back to localStorage:', err)
             const storedUser = getStoredUser()
             if (storedUser) {
-              setUser(storedUser)
+              setUser(mapUserFromBackend(storedUser))
               setUseLocalStorage(true)
             }
           }
@@ -53,7 +60,7 @@ export function AuthProvider({ children }) {
           // No token, try localStorage for transition period
           const storedUser = getStoredUser()
           if (storedUser) {
-            setUser(storedUser)
+            setUser(mapUserFromBackend(storedUser))
             setUseLocalStorage(true)
           }
         }
@@ -80,10 +87,11 @@ export function AuthProvider({ children }) {
 
       if (response.data && response.data.token) {
         setToken(response.data.token)
-        setStoredUser(response.data.user)
-        setUser(response.data.user)
+        const mappedUser = mapUserFromBackend(response.data.user)
+        setStoredUser(mappedUser)
+        setUser(mappedUser)
         setUseLocalStorage(false)
-        return { success: true, role: response.data.user.role }
+        return { success: true, role: mappedUser.role }
       }
 
       return { success: false, error: response.message || 'Login failed' }
@@ -113,10 +121,11 @@ export function AuthProvider({ children }) {
 
       if (response.data && response.data.token) {
         setToken(response.data.token)
-        setStoredUser(response.data.user)
-        setUser(response.data.user)
+        const mappedUser = mapUserFromBackend(response.data.user)
+        setStoredUser(mappedUser)
+        setUser(mappedUser)
         setUseLocalStorage(false)
-        return { success: true, role: response.data.user.role }
+        return { success: true, role: mappedUser.role }
       }
 
       return { success: false, error: response.message || 'Registration failed' }
@@ -223,18 +232,19 @@ export function AuthProvider({ children }) {
 
       const response = await fetchAPI(API_ENDPOINTS.JOBS.CREATE, {
         method: 'POST',
-        body: jobData
+        body: mapJobToBackend(jobData)
       })
 
       if (response.data) {
-        setJobs(prev => [...prev, response.data])
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => [...prev, mapped])
         addNotification({
           type: 'job',
           title: 'Is Olusturuldu',
-          message: `${response.data.title} basariyla olusturuldu`,
+          message: `${mapped.title} basariyla olusturuldu`,
           icon: '✨'
         })
-        return response.data
+        return mapped
       }
 
       throw new Error('Failed to create job')
@@ -266,7 +276,8 @@ export function AuthProvider({ children }) {
       })
 
       if (response.data) {
-        setJobs(prev => prev.map(job => job.id === jobId ? response.data : job))
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
           title: 'Is Kabul Edildi',
@@ -309,7 +320,8 @@ export function AuthProvider({ children }) {
       })
 
       if (response.data) {
-        setJobs(prev => prev.map(job => job.id === jobId ? response.data : job))
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
           title: 'Is Basladi',
@@ -352,7 +364,8 @@ export function AuthProvider({ children }) {
       })
 
       if (response.data) {
-        setJobs(prev => prev.map(job => job.id === jobId ? response.data : job))
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
           title: 'Is Tamamlandi',
@@ -388,7 +401,8 @@ export function AuthProvider({ children }) {
       })
 
       if (response.data) {
-        setJobs(prev => prev.map(job => job.id === jobId ? response.data : job))
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
           title: 'Is Iptal Edildi',
@@ -424,7 +438,8 @@ export function AuthProvider({ children }) {
       })
 
       if (response.data) {
-        setJobs(prev => prev.map(job => job.id === jobId ? response.data : job))
+        const mapped = mapJobFromBackend(response.data)
+        setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
           title: 'Degerlendirme Yapildi',
@@ -739,32 +754,39 @@ export function AuthProvider({ children }) {
 
   const getUserJobs = useCallback(async (userId, userRole) => {
     try {
+      // Normalize role to lowercase for comparison
+      const role = userRole?.toLowerCase()
+      const isUsta = role === 'professional' || role === 'usta'
+      const isCustomer = role === 'customer'
+
       if (useLocalStorage) {
         // Fallback to localStorage
-        if (userRole === 'CUSTOMER') {
-          return jobs.filter(j => j.customer.id === userId)
-        } else if (userRole === 'USTA') {
-          return jobs.filter(j => j.usta?.id === userId)
+        if (isCustomer) {
+          return jobs.filter(j => j.customer?.id === userId)
+        } else if (isUsta) {
+          return jobs.filter(j => j.professional?.id === userId || j.usta?.id === userId)
         }
         return jobs
       }
 
-      const endpoint = userRole === 'CUSTOMER' || userRole === 'USTA'
+      const endpoint = isCustomer || isUsta
         ? API_ENDPOINTS.JOBS.BY_USER(userId)
         : API_ENDPOINTS.JOBS.LIST
 
       const response = await fetchAPI(endpoint)
       if (response.data && Array.isArray(response.data)) {
-        setJobs(response.data)
-        return response.data
+        const mapped = mapJobsFromBackend(response.data)
+        setJobs(mapped)
+        return mapped
       }
       return []
     } catch (err) {
       console.error('Get user jobs error:', err)
-      if (userRole === 'CUSTOMER') {
-        return jobs.filter(j => j.customer.id === userId)
-      } else if (userRole === 'USTA') {
-        return jobs.filter(j => j.usta?.id === userId)
+      const role = userRole?.toLowerCase()
+      if (role === 'customer') {
+        return jobs.filter(j => j.customer?.id === userId)
+      } else if (role === 'professional' || role === 'usta') {
+        return jobs.filter(j => j.professional?.id === userId || j.usta?.id === userId)
       }
       return jobs
     }
@@ -773,14 +795,16 @@ export function AuthProvider({ children }) {
   const getPendingJobs = useCallback(async () => {
     try {
       if (useLocalStorage) {
-        // Fallback to localStorage
+        // Fallback to localStorage (status already lowercase after mapping)
         return jobs.filter(j => j.status === 'pending')
       }
 
       const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
       if (response.data && Array.isArray(response.data)) {
-        const pendingJobs = response.data.filter(j => j.status === 'pending')
-        setJobs(response.data)
+        const mapped = mapJobsFromBackend(response.data)
+        // After mapping, statuses are lowercase
+        const pendingJobs = mapped.filter(j => j.status === 'pending')
+        setJobs(mapped)
         return pendingJobs
       }
       return []
