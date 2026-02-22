@@ -149,27 +149,33 @@ function CreateJobPage() {
         }
       }
 
+  // HATALARI BURADA DÜZELTTİK:
       const jobData = {
         title: aiAnalysis.category,
-        description,
-        price: finalJobPrice,
-        basePrice: aiPrice,
-        regionMultiplier: regionMultiplier,
-        couponApplied: selectedCoupon ? {
-          couponId: selectedCoupon.id,
-          couponCode: selectedCoupon.code,
-          discountAmount: couponDiscount
-        } : null,
+        description: description,
+        // 1. DÜZELTME: Backend "budget" bekliyor (Validation Error'daki path: budget)
+        budget: Number(finalJobPrice), 
+        // 2. DÜZELTME: Backend "location" için sadece string bekliyor (Expected string, received object)
+        location: address || 'Kadikoy, Istanbul', 
         photo: photoUrl,
-        location: {
-          address: address || 'Kadikoy, Istanbul',
-          lat: 40.9929,
-          lng: 29.0260
-        },
         urgent: aiAnalysis.urgency === 'Yuksek',
         category: 'electric'
       }
 
+      const result = await createJob(jobData)
+
+      if (result) {
+        alert('Is talebi olusturuldu!')
+        navigate('/my-jobs')
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Is olusturulurken hata olustu'
+      setError(errorMessage)
+      alert(`Hata: ${errorMessage}`)
+    } finally {
+      setIsCreating(false)
+    }
+  }
       // Create job via API
       const result = await createJob(jobData)
 
