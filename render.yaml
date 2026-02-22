@@ -9,3 +9,13 @@ services:
       - key: NODE_ENV
         value: production
     autoDeploy: true
+
+staticSites:
+  - name: usta-go-frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
