@@ -91,34 +91,66 @@ function CreateJobPage() {
   }, [user])
 
   // İŞ OLUŞTURMA (ASIL NOKTA)
-  const handleCreateJob = async () => {
-    if (isCreating) return
+ const handleCreateJob = async () => {
+    if (isCreating) return;
     if (!description.trim() || !address.trim()) {
-      alert('Lütfen eksik alanları doldurun.')
-      return
+      alert('Lütfen eksik alanları doldurun.');
+      return;
     }
 
-    setError(null)
-    setIsCreating(true)
+    setError(null);
+    setIsCreating(true);
 
     try {
-      let currentFinalPrice = finalPrice 
-      let photoUrl = null
+      let currentFinalPrice = finalPrice;
+      let photoUrl = null;
 
       if (selectedCoupon) {
-        currentFinalPrice = Math.max(0, currentFinalPrice - selectedCoupon.amount)
+        currentFinalPrice = Math.max(0, currentFinalPrice - selectedCoupon.amount);
       }
 
-      // Fotoğraf yükleme işlemi (Hata alırsa işleme devam eder)
+      // Fotoğraf yükleme (Hata toleranslı)
       if (photo) {
         try {
-          const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo')
-          photoUrl = uploadResponse?.data?.url || uploadResponse?.url
+          const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, photo, 'photo');
+          // Backend cevabına göre url'i al
+          photoUrl = uploadResponse?.data?.url || uploadResponse?.url || null;
         } catch (uploadErr) {
-          console.warn("Fotoğraf yüklenemedi, iş fotoğrafsız devam ediyor.")
+          console.warn("Fotoğraf yükleme başarısız, devam ediliyor...");
         }
       }
 
+      // BACKEND'İN BEKLEDİĞİ STANDART FORMAT
+      const jobData = {
+        title: aiAnalysis?.category || 'Elektrik Arıza',
+        description: description.trim(),
+        budget: Number(currentFinalPrice) || 0,
+        location: address.trim(), // Obje değil düz string gönderiyoruz
+        photo: photoUrl,
+        urgent: aiAnalysis?.urgency === 'Yüksek',
+        category: 'Elektrikci',
+        status: 'pending' // Bazı backendler status bekleyebilir
+      };
+
+      console.log("Gönderilen Veri:", jobData); // Hata ayıklama için
+
+      const result = await createJob(jobData);
+      
+      // Eğer createJob içindeki API çağrısı 200/201 dönerse burası çalışır
+      if (result) {
+        alert('İş talebi başarıyla oluşturuldu!');
+        navigate('/my-jobs');
+      }
+    } catch (err) {
+      console.error("API Error Detayı:", err);
+      // Hata mesajını kullanıcıya göster
+      const errorMsg = err.response?.data?.message || err.message || 'API Hatası oluştu';
+      setError(errorMsg);
+      alert(`Hata: ${errorMsg}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
       const jobData = {
         title: aiAnalysis?.category || 'Elektrik Arıza',
         description: description,
