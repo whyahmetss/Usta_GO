@@ -82,7 +82,7 @@ function AboutPage() {
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white text-center">
           <p className="text-sm text-gray-300 mb-2">Geliştirilen Teknoloji</p>
           <p className="text-lg font-black mb-4">React + Vite + Tailwind CSS</p>
-          <p className="text-xs text-gray-400">© 2024 Usta GO. Tüm hakları saklıdır.</p>
+          <p className="text-xs text-gray-400">© 2026 Usta GO. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </div>
