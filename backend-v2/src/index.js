@@ -15,7 +15,7 @@ import offerRoutes from "./routes/offer.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
-
+import userRoutes from "./routes/user.routes.js";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 
@@ -53,7 +53,7 @@ app.use("/api/offers", offerRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/users", userRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
