@@ -6,48 +6,46 @@ import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, 
 import { useState, useEffect } from 'react'
 
 function ProfilePage() {
-  alert("SAYFA YÜKLENDİ!"); // Bunu ekle
-  console.log("BURADAYIM!"); // Bunu ekle
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
   const [uploading, setUploading] = useState(false)
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
- // Bu fonksiyon backend'den işleri çekip tamamlananları sayacak
-const fetchStats = async () => {
+ const fetchStats = async () => {
     try {
-      console.log("1. İstek gönderiliyor: ", `${API_ENDPOINTS.JOBS}/my-jobs`); 
-      
+      console.log("İşlem başladı..."); 
       const token = localStorage.getItem('token');
+      
+      // Token yoksa zaten 0 kalır, kontrol edelim
       if (!token) {
-        console.error("HATA: Token bulunamadı! Giriş yapmamış olabilirsin.");
+        console.log("HATA: Token bulunamadı!");
         return;
       }
 
-      const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
+      // API_ENDPOINTS yerine direkt backend linkini dene (Emin olmak için)
+      // Örnek: 'https://usta-go-backend.onrender.com/api/jobs/my-jobs'
+      const response = await fetch('https://ustago-backend-v2.onrender.com/api/jobs/my-jobs', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log("2. Backend yanıt durumu:", response.status);
-
       const result = await response.json();
-      console.log("3. Backend'den gelen veri:", result);
+      console.log("Backend'den ne geldi?:", result);
 
-      // Veri yapısına göre normalize edelim (result direkt array olabilir veya result.data içindedir)
       const jobs = Array.isArray(result) ? result : (result.data || []);
       
-      // Filtreleme: Statüsü 'COMPLETED' olanları sayıyoruz
-      const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
+      // Filtreleme yaparken hem büyük hem küçük harfe bakalım (garanti olsun)
+      const completedCount = jobs.filter(j => 
+        j.status?.toLowerCase() === 'completed' || j.status?.toLowerCase() === 'tamamlandı'
+      ).length;
       
-      console.log("4. Sayılan Tamamlanan İş:", completedCount);
+      console.log("Tamamlanan iş sayısı:", completedCount);
       setCustomerCompletedJobs(completedCount);
 
     } catch (err) {
-      console.error('BÜYÜK HATA:', err);
+      console.log("Bir şeyler ters gitti:", err);
     }
   };
 
