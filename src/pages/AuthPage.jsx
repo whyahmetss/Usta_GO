@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react' // useEffect ekledik
+import { useNavigate, useLocation } from 'react-router-dom' // useLocation ekledik
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -14,6 +16,17 @@ function AuthPage() {
   
   const navigate = useNavigate()
   const { login, register } = useAuth()
+  const location = useLocation()
+
+  // URL'den gelen referans kodunu otomatik yakala
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      setReferralCode(ref.toUpperCase())
+      setIsLogin(false) // Kodla gelmişse direkt Kayıt Ol sayfasını aç
+    }
+  }, [location])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
