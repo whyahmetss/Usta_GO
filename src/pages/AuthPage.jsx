@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // useEffect burada MUTLAKA olmalı!
 import { useNavigate, useLocation } from 'react-router-dom' // useLocation burada MUTLAKA olmalı!
 import { useAuth } from '../context/AuthContext'
 
