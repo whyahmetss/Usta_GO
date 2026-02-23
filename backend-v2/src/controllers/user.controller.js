@@ -1,18 +1,25 @@
 // src/controllers/user.controller.js
+import { PrismaClient } from "@prisma/client"; // Prisma kullanıyorsan
+const prisma = new PrismaClient();
+
 export const uploadPhoto = async (req, res) => {
   try {
-    // Kanka burası normalde Multer veya Cloudinary ile dolar.
-    // Şimdilik frontend'e "yükledim" diyip bir resim URL'si dönelim:
-    
+    const userId = req.user.id; // authMiddleware sayesinde kullanıcı ID'si buraya gelir
+    const { photoUrl } = req.body; // Frontend'den gelen fotoğraf URL'si
+
+    // Veritabanında kullanıcının fotoğrafını güncelle
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profilePhoto: photoUrl }
+    });
+
     res.status(200).json({
       success: true,
-      message: "Fotoğraf başarıyla yüklendi!",
-      data: { 
-        // Test için gerçek bir resim URL'si koyalım:
-        url: "https://ui-avatars.com/api/?name=Musteri&background=random&size=128" 
-      }
+      message: "Profil fotoğrafı veritabanına kaydedildi!",
+      data: { url: updatedUser.profilePhoto }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Yükleme Hatası:", error);
+    res.status(500).json({ error: "Fotoğraf kaydedilirken bir hata oluştu." });
   }
 };
