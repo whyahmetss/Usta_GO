@@ -87,10 +87,21 @@ function ProfilePage() {
     { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings }
   ]
 
-  const loyaltyLevel = customerCompletedJobs >= 20 ? 'Gold' : customerCompletedJobs >= 10 ? 'Silver' : customerCompletedJobs >= 5 ? 'Bronze' : 'Member'
-  const nextMilestone = customerCompletedJobs >= 20 ? 20 : customerCompletedJobs >= 10 ? 20 : customerCompletedJobs >= 5 ? 10 : 5
-  const loyaltyProgress = Math.min(100, (customerCompletedJobs / nextMilestone) * 100)
-  const activeCoupons = (user?.coupons || []).filter(c => !c.used && new Date(c.expiresAt) > new Date())
+ // Sadakat seviyeleri hesaplaması (Türkçeleştirilmiş)
+  const loyaltyLevel = customerCompletedJobs >= 20 ? 'Efsane' : 
+                       customerCompletedJobs >= 10 ? 'Usta Müşteri' : 
+                       customerCompletedJobs >= 5 ? 'Sadık Üye' : 'Yeni Üye';
+
+  // Bir sonraki seviye hedefi
+  const nextMilestone = customerCompletedJobs >= 20 ? 20 : 
+                        customerCompletedJobs >= 10 ? 20 : 
+                        customerCompletedJobs >= 5 ? 10 : 5;
+
+  // İlerleme çubuğu yüzdesi
+  const loyaltyProgress = Math.min(100, (customerCompletedJobs / nextMilestone) * 100);
+
+  // Aktif kupon filtresi
+  const activeCoupons = (user?.coupons || []).filter(c => !c.used && new Date(c.expiresAt) > new Date());
 
   return (
     <div className="min-h-screen bg-gray-50">
