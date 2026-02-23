@@ -34,7 +34,7 @@ function HamburgerMenu({ isOpen, onClose }) {
         {/* Header */}
         <div className="blue-gradient-bg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-white">Menu</h2>
+            <h2 className="text-2xl font-black text-white">Menü</h2>
             <button 
               onClick={onClose}
               className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"
@@ -97,7 +97,7 @@ function HamburgerMenu({ isOpen, onClose }) {
           <p className="text-center text-xs text-gray-500">
             Usta Go v3.0.0
             <br />
-            © 2024 Tüm hakları saklıdır
+            © 2026 Tüm hakları saklıdır
           </p>
         </div>
       </div>
