@@ -12,40 +12,42 @@ function ProfilePage() {
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
   const [uploading, setUploading] = useState(false)
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
-  // useState satırlarının hemen altına ekle:
-// Bu fonksiyon backend'den işleri çekip tamamlananları sayacak
+ // Bu fonksiyon backend'den işleri çekip tamamlananları sayacak
 const fetchStats = async () => {
-  try {
-    console.log("1. İstek gönderiliyor..."); // İzleme noktası
-    const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    try {
+      console.log("1. İstek gönderiliyor: ", `${API_ENDPOINTS.JOBS}/my-jobs`); 
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error("HATA: Token bulunamadı! Giriş yapmamış olabilirsin.");
+        return;
       }
-    });
 
-    console.log("2. Backend yanıt verdi, durum:", response.status);
+      const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    const result = await response.json();
-    console.log("3. Backend'den gelen ham veri:", result);
+      console.log("2. Backend yanıt durumu:", response.status);
 
-    // Veri bazen result.data içinde, bazen direkt result içindedir
-    const jobs = Array.isArray(result) ? result : (result.data || []);
-    console.log("4. İşlenen iş listesi:", jobs);
+      const result = await response.json();
+      console.log("3. Backend'den gelen veri:", result);
 
-    // Kritik nokta: Statü tam olarak ne yazıyor? 'completed' mı 'COMPLETED' mı?
-    const completedCount = jobs.filter(j => {
-      const status = j.status?.toUpperCase();
-      console.log(`İş ID: ${j.id}, Statü: ${status}`); // Tek tek kontrol
-      return status === 'COMPLETED';
-    }).length;
-    
-    console.log("5. Bulunan tamamlanmış iş sayısı:", completedCount);
-    setCustomerCompletedJobs(completedCount);
+      // Veri yapısına göre normalize edelim (result direkt array olabilir veya result.data içindedir)
+      const jobs = Array.isArray(result) ? result : (result.data || []);
+      
+      // Filtreleme: Statüsü 'COMPLETED' olanları sayıyoruz
+      const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
+      
+      console.log("4. Sayılan Tamamlanan İş:", completedCount);
+      setCustomerCompletedJobs(completedCount);
 
-  } catch (err) {
-    console.error('BÜYÜK HATA:', err);
-  }
-};
+    } catch (err) {
+      console.error('BÜYÜK HATA:', err);
+    }
+  };
 
 useEffect(() => {
   console.log("useEffect Tetiklendi! Mevcut Kullanıcı:", user); // Bu satırı mutlaka ekle!
