@@ -73,6 +73,81 @@ function ProfilePage() {
     }
   }
 
+  import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { uploadFile, fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
+import { ArrowLeft, LogOut, User, Mail, Phone, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
+
+function ProfilePage() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  // --- DURUM DEĞİŞKENLERİ ---
+  const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
+  const [copied, setCopied] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  // --- VERİ ÇEKME (Wallet Mantığı) ---
+  const fetchStats = async () => {
+    try {
+      if (!user?.id) return
+      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+      
+      if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+        const mapped = mapJobsFromBackend(jobsResponse.data)
+        const userJobs = mapped.filter(j => j.customer?.id === user?.id)
+        
+        // Cüzdandaki "1" rakamını getiren o meşhur filtre
+        const completedCount = userJobs.filter(j => 
+          j.status === 'completed' || j.status === 'rated'
+        ).length
+
+        console.log("HEDEF VURULDU! Sayı:", completedCount)
+        setCustomerCompletedJobs(completedCount)
+      }
+    } catch (err) {
+      console.error('İstatistik yüklenirken hata:', err)
+    }
+  }
+
+  // --- YÜKLEME VE FOTOĞRAF AYARLARI ---
+  useEffect(() => {
+    if (user?.id) {
+      fetchStats()
+      setProfilePhoto(user?.profilePhoto || null)
+    }
+  }, [user])
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setUploading(true)
+      try {
+        const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo')
+        const photoUrl = uploadResponse.data?.url || uploadResponse.url || uploadResponse.data
+        if (photoUrl) {
+          setProfilePhoto(photoUrl)
+          alert('Profil fotoğrafı güncellendi!')
+        }
+      } catch (err) {
+        console.error('Yükleme hatası:', err)
+      } finally {
+        setUploading(false)
+      }
+    }
+  }
+
+  const handleLogout = () => {
+    if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+      logout()
+      navigate('/')
+    }
+  }
+
   const handleCopyReferral = () => {
     // Ekranda hangi kod görünüyorsa onu belirle (Gerçek kod yoksa yedek kodu al)
     const codeToCopy = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
@@ -85,6 +160,163 @@ const shareLink = `https://usta-go-app.onrender.com/auth?ref=${codeToCopy}`;
       setTimeout(() => setCopied(false), 2000)
     }
   }
+
+  // --- HESAPLAMALAR ---
+  const stats = [
+    { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase },
+    { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings }
+  ]
+
+ // Sadakat seviyeleri hesaplaması (Türkçeleştirilmiş)
+  const loyaltyLevel = customerCompletedJobs >= 20 ? 'Efsane' : 
+                       customerCompletedJobs >= 10 ? 'Usta Müşteri' : 
+                       customerCompletedJobs >= 5 ? 'Sadık Üye' : 'Yeni Üye';
+
+  // Bir sonraki seviye hedefi
+  const nextMilestone = customerCompletedJobs >= 20 ? 20 : 
+                        customerCompletedJobs >= 10 ? 20 : 
+                        customerCompletedJobs >= 5 ? 10 : 5;
+
+  // İlerleme çubuğu yüzdesi
+  const loyaltyProgress = Math.min(100, (customerCompletedJobs / nextMilestone) * 100);
+
+  // Aktif kupon filtresi
+  const activeCoupons = (user?.coupons || []).filter(c => !c.used && new Date(c.expiresAt) > new Date());
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="blue-gradient-bg pb-20 pt-4 px-4">
+        <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-6">
+          <ArrowLeft size={20} className="text-white" />
+        </button>
+        <div className="text-center">
+          <div className="relative mx-auto mb-4 w-fit">
+            <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center border-4 border-white/30 overflow-hidden">
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl">{user?.avatar || '👤'}</span>
+              )}
+            </div>
+            <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition">
+              <Camera size={18} className="text-blue-600" />
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+            </label>
+          </div>
+          <h1 className="text-2xl font-black text-white mb-1">{user?.name}</h1>
+          <p className="text-white/80 text-sm">{user?.role === 'professional' ? '⚡ Usta' : '👤 Müşteri'}</p>
+        </div>
+      </div>
+
+      <div className="px-4 -mt-12">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {stats.map((stat, idx) => {
+            const Icon = stat.icon
+            return (
+              <div key={idx} className="bg-white rounded-2xl p-4 shadow-lg">
+                <Icon size={20} className="text-blue-600 mb-2" />
+                <div className="text-2xl font-black text-gray-900">{stat.value}</div>
+                <div className="text-xs text-gray-600">{stat.label}</div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Cüzdan Butonu */}
+        <button onClick={() => navigate('/wallet')} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition font-bold mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💰</span>
+            <div className="text-left">
+              <p className="font-bold">Cüzdanım</p>
+              <p className="text-xs text-white/80">Bakiye ve kuponlar</p>
+            </div>
+          </div>
+          <span className="text-xl">→</span>
+        </button>
+
+        {/* Bilgiler */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg mb-4">
+          <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <User size={20} className="text-gray-600" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500">Ad Soyad</p>
+                <p className="font-semibold text-gray-900">{user?.name}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <Mail size={20} className="text-gray-600" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500">E-posta</p>
+                <p className="font-semibold text-gray-900">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sadakat Programı */}
+        {user?.role === 'customer' && (
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-4 shadow-lg mb-4 text-white">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold">Sadakat Programı</h3>
+              <span className="px-2 py-1 bg-white/20 rounded-lg text-sm font-bold">{loyaltyLevel}</span>
+            </div>
+            <div className="mb-2">
+              <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
+                <div className="h-full bg-white transition-all duration-300" style={{ width: `${loyaltyProgress}%` }}></div>
+              </div>
+              <p className="text-xs text-white/80 mt-1">{customerCompletedJobs} / {nextMilestone} işe kadar ilerleme</p>
+            </div>
+          </div>
+        )}
+
+        {/* Referral Section (Düzeltilmiş Halı) */}
+        {user?.role === 'customer' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-lg mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Share2 size={20} className="text-blue-600" />
+              <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            
+            <div className="flex gap-2">
+              {/* Kodun göründüğü alan */}
+              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
+                <code className="text-xs text-gray-600 font-mono truncate">
+  {user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : 'Kod Hazırlanıyor...')}
+</code>
+              </div>
+              
+              {/* Kopyala butonu */}
+              <button
+                onClick={handleCopyReferral}
+                className="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
+              >
+                <Copy size={16} />
+                {copied ? 'Kopyalandı' : 'Kopyala'}
+              </button>
+            </div>
+
+            <div className="mt-2 text-xs text-gray-600">
+              <Gift size={14} className="inline mr-1" />
+              <strong>{user?.referralCount || 0}</strong> kişi davet edildi
+            </div>
+          </div>
+        )}
+
+        {/* Çıkış Yap */}
+        <button onClick={handleLogout} className="w-full flex items-center justify-center gap-3 p-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 transition mb-20">
+          <LogOut size={20} /> Çıkış Yap
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default ProfilePage
 
   // --- HESAPLAMALAR ---
   const stats = [
