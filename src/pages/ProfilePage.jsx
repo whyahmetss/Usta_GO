@@ -23,14 +23,14 @@ function ProfilePage() {
       setUploading(true)
       try {
        const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo')
-        const photoUrl = uploadResponse.data?.url
-        if (photoUrl) {
-          setProfilePhoto(photoUrl)
-          alert('Profil fotoğrafı güncellendi!')
-        }
+      const photoUrl = uploadResponse.data?.url // Burada 'data' içindeki 'url'yi bekliyor
+if (photoUrl) {
+  setProfilePhoto(photoUrl)
+  alert('Profil fotoğrafı güncellendi!')
+}
       } catch (err) {
         console.error('Photo upload error:', err)
-        alert('Fotoğraf yuklemesi basarisiz oldu')
+        alert('Fotoğraf yüklemesi başarısız oldu')
       } finally {
         setUploading(false)
       }
