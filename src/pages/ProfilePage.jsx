@@ -16,24 +16,24 @@ function ProfilePage() {
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
  const fetchStats = async () => {
   try {
-    // 1. Cüzdan sayfasındaki gibi aynı endpoint'i çağırıyoruz
+    // Wallet sayfasındaki gibi veriyi çekiyoruz
     const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
     
     if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-      // 2. Cüzdanın kullandığı o meşhur mapping fonksiyonunu burada da kullanıyoruz
+      // Wallet sayfasının kullandığı mapping
       const mapped = mapJobsFromBackend(jobsResponse.data)
       
-      // 3. Sadece bu kullanıcıya ait işleri filtreliyoruz
+      // Sadece senin işlerin
       const userJobs = mapped.filter(j => j.customer?.id === user?.id)
       
-      // 4. Cüzdan sayfasının "Tamamlandı" sayarken kullandığı mantığın aynısı:
-      const completed = userJobs.filter(j => j.status === 'completed' || j.status === 'rated')
+      // Wallet'taki "1" rakamını veren filtre
+      const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
       
-      console.log("Cüzdanla eşleşen tamamlanan iş sayısı:", completed.length)
-      setCustomerCompletedJobs(completed.length)
+      console.log("HEDEF VURULDU! Sayı:", completedCount)
+      setCustomerCompletedJobs(completedCount)
     }
   } catch (err) {
-    console.error('Profil istatistik hatası:', err)
+    console.error('Veri çekme hatası:', err)
   }
 }
 
@@ -69,13 +69,17 @@ const handlePhotoUpload = async (e) => {
     }
   }
 
-// ProfilePage.jsx içinde bu bloğu ara:
-const stats = user?.role === 'professional' ? [
-  { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },
-  { label: 'Ortalama Puan', value: user?.rating || '0.0', icon: Star },
-] : [
-  { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase }, // <-- İşte burası!
-  { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings },
+const stats = [
+  { 
+    label: 'Tamamlanan İş', 
+    value: customerCompletedJobs, // Burası sadece 'customerCompletedJobs' olmalı!
+    icon: Briefcase 
+  },
+  { 
+    label: 'Toplam Harcama', 
+    value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, 
+    icon: Settings 
+  },
 ]
 
   // Loyalty points calculation
