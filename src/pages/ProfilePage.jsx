@@ -79,7 +79,8 @@ function ProfilePage() {
     
     if (codeToCopy) {
       // Linkle beraber veya sadece kod olarak kopyala (Nasıl istersen)
-      navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${codeToCopy}`)
+      // Kopyalanacak linki şuna çevir:
+const shareLink = `https://usta-go-app.onrender.com/auth?ref=${codeToCopy}`;
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
