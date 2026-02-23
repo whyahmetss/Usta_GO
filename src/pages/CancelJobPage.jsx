@@ -75,7 +75,7 @@ function CancelJobPage() {
     ? ['Musait degilim', 'Malzeme eksikligi', 'Konum cok uzak', 'Acil durum', 'Diger']
     : ['Vazgectim', 'Yanlis adres girdim', 'Baska usta buldum', 'Fiyat yuksek', 'Diger']
 
-  const handleCancel = async () => {
+ const handleCancel = async () => {
     const finalReason = reason === 'Diger' ? customReason : reason
     if (!finalReason) {
       alert('Lutfen bir iptal nedeni secin')
@@ -89,11 +89,13 @@ function CancelJobPage() {
     if (confirm(warningMsg)) {
       setSubmitting(true)
       try {
-        const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
-          method: 'PUT',
+        // BACKEND'E UYGUN GÜNCEL İSTEK
+        const response = await fetchAPI(`/api/jobs/${id}/status`, {
+          method: 'PATCH', // Metodu PATCH yaptık
           body: {
-            reason: finalReason,
-            penalty
+            status: 'CANCELLED', // Backend'in beklediği status bilgisi
+            reason: finalReason, // İptal nedeni
+            penalty: penalty      // Ceza tutarı
           }
         })
 
@@ -108,7 +110,7 @@ function CancelJobPage() {
         setSubmitting(false)
       }
     }
-  }
+}
 
   return (
     <div className="min-h-screen bg-gray-50">
