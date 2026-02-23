@@ -48,9 +48,14 @@ const fetchStats = async () => {
 };
 
 useEffect(() => {
-  setProfilePhoto(user?.profilePhoto || null);
-if (user?.role === 'customer') {
-    fetchStats();
+  console.log("useEffect Tetiklendi! Mevcut Kullanıcı:", user); // Bu satırı mutlaka ekle!
+
+  if (user) {
+    setProfilePhoto(user?.profilePhoto || null);
+    // Rol kontrolünü fonksiyonun içine bırakalım, burada her türlü çağıralım
+    fetchStats(); 
+  } else {
+    console.log("Kullanıcı verisi henüz yüklenmedi, bekleniyor...");
   }
 }, [user]);
 
