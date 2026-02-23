@@ -22,7 +22,7 @@ function ProfilePage() {
     if (file) {
       setUploading(true)
       try {
-        const uploadResponse = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+       const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo')
         const photoUrl = uploadResponse.data?.url
         if (photoUrl) {
           setProfilePhoto(photoUrl)
