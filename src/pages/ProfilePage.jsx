@@ -182,6 +182,33 @@ function ProfilePage() {
           </div>
         )}
 
+        {/* Referral Section (Arkadaş Davet Et) */}
+        {user?.role === 'customer' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-lg mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Share2 size={20} className="text-blue-600" />
+              <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
+                <code className="text-xs text-gray-600 font-mono truncate">{user?.referralCode}</code>
+              </div>
+              <button
+                onClick={handleCopyReferral}
+                className="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
+              >
+                <Copy size={16} />
+                {copied ? 'Kopyalandı' : 'Kopyala'}
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-600">
+              <Gift size={14} className="inline mr-1" />
+              <strong>{user?.referralCount || 0}</strong> kişi davet edildi
+            </div>
+          </div>
+        )}
+
         {/* Çıkış Yap */}
         <button onClick={handleLogout} className="w-full flex items-center justify-center gap-3 p-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 transition mb-20">
           <LogOut size={20} /> Çıkış Yap
