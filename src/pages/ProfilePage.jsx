@@ -6,7 +6,6 @@ import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, 
 import { useState, useEffect } from 'react'
 
 function ProfilePage() {
-  function ProfilePage() {
   alert("SAYFA YÜKLENDİ!"); // Bunu ekle
   console.log("BURADAYIM!"); // Bunu ekle
   const { user, logout } = useAuth()
