@@ -29,6 +29,7 @@ function ProfilePage() {
     console.log("Backend'den gelen tüm işler:", jobs);
 
     // CÜZDANDAKİ GÖRÜNTÜYE GÖRE FİLTRELEME
+
     // Cüzdanda sarı etikette ne yazıyorsa tam olarak onu aratalım
     const completedCount = jobs.filter(j => {
       const status = j.status?.toString().toLowerCase().trim();
@@ -73,13 +74,14 @@ const handlePhotoUpload = async (e) => {
     }
   }
 
-  const stats = user?.role === 'professional' ? [
-    { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },
-    { label: 'Ortalama Puan', value: user?.rating || '0.0', icon: Star },
-  ] : [
-    { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase },
-    { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings },
-  ]
+// ProfilePage.jsx içinde bu bloğu ara:
+const stats = user?.role === 'professional' ? [
+  { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },
+  { label: 'Ortalama Puan', value: user?.rating || '0.0', icon: Star },
+] : [
+  { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase }, // <-- İşte burası!
+  { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings },
+]
 
   // Loyalty points calculation
   const loyaltyLevel = customerCompletedJobs >= 20 ? 'Gold' : customerCompletedJobs >= 10 ? 'Silver' : customerCompletedJobs >= 5 ? 'Bronze' : 'Member'
