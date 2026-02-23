@@ -4,6 +4,8 @@ import { uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { fetchAPI } from '../utils/api'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 
 function ProfilePage() {
   const { user, logout } = useAuth()
@@ -14,33 +16,26 @@ function ProfilePage() {
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
  const fetchStats = async () => {
   try {
-    const token = localStorage.getItem('token');
-    // Cüzdanın çalıştığı URL'yi (Wallet sayfasından bakarak) buraya yaz
-    const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    // 1. Cüzdan sayfasındaki gibi aynı endpoint'i çağırıyoruz
+    const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
     
-    const result = await response.json();
-    
-    // ÖNEMLİ: Cüzdanda gördüğümüz o listeyi bulalım
-    // Veri bazen result içinde, bazen result.data içindedir.
-    const jobs = Array.isArray(result) ? result : (result.data || []);
-    
-    console.log("Backend'den gelen tüm işler:", jobs);
-
-    // CÜZDANDAKİ GÖRÜNTÜYE GÖRE FİLTRELEME
-
-    // Cüzdanda sarı etikette ne yazıyorsa tam olarak onu aratalım
-    const completedCount = jobs.filter(j => {
-      const status = j.status?.toString().toLowerCase().trim();
-      return status === 'tamamlandı' || status === 'completed';
-    }).length;
-
-    setCustomerCompletedJobs(completedCount);
+    if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+      // 2. Cüzdanın kullandığı o meşhur mapping fonksiyonunu burada da kullanıyoruz
+      const mapped = mapJobsFromBackend(jobsResponse.data)
+      
+      // 3. Sadece bu kullanıcıya ait işleri filtreliyoruz
+      const userJobs = mapped.filter(j => j.customer?.id === user?.id)
+      
+      // 4. Cüzdan sayfasının "Tamamlandı" sayarken kullandığı mantığın aynısı:
+      const completed = userJobs.filter(j => j.status === 'completed' || j.status === 'rated')
+      
+      console.log("Cüzdanla eşleşen tamamlanan iş sayısı:", completed.length)
+      setCustomerCompletedJobs(completed.length)
+    }
   } catch (err) {
-    console.error("Profil stats hatası:", err);
+    console.error('Profil istatistik hatası:', err)
   }
-};
+}
 
 const handlePhotoUpload = async (e) => {
   const file = e.target.files[0];
