@@ -90,14 +90,18 @@ function CancelJobPage() {
       setSubmitting(true)
       try {
         // BACKEND'E UYGUN GÜNCEL İSTEK
-        const response = await fetchAPI(`/api/jobs/${id}/status`, {
-          method: 'PATCH', // Metodu PATCH yaptık
-          body: {
-            status: 'CANCELLED', // Backend'in beklediği status bilgisi
-            reason: finalReason, // İptal nedeni
-            penalty: penalty      // Ceza tutarı
-          }
-        })
+     // HATALI SATIR:
+// const response = await fetchAPI(`/api/jobs/${id}/status`, ...
+
+// DOĞRU SATIR (Başındaki /api/ kısmını sil):
+const response = await fetchAPI(`/jobs/${id}/status`, {
+  method: 'PATCH',
+  body: {
+    status: 'CANCELLED',
+    reason: finalReason,
+    penalty: penalty
+  }
+})
 
         if (response.data) {
           alert('Is iptal edildi.')
