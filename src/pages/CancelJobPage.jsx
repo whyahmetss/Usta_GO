@@ -122,7 +122,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
         <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-6">
           <ArrowLeft size={20} className="text-white" />
         </button>
-        <h1 className="text-2xl font-black text-white mb-2">Is Iptali</h1>
+        <h1 className="text-2xl font-black text-white mb-2">İş iptali</h1>
         <p className="text-white/80 text-sm">{job.title}</p>
       </div>
 
@@ -132,9 +132,9 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
           <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex gap-3">
             <AlertTriangle size={24} className="text-red-600 flex-shrink-0" />
             <div>
-              <h3 className="font-bold text-red-900 mb-1">Iptal Cezasi</h3>
-              <p className="text-red-700 text-sm">Bu isi iptal ederseniz <span className="font-black">{penalty} TL</span> ceza kesilecektir.</p>
-              {job.status === 'in_progress' && <p className="text-red-600 text-xs mt-1">Devam eden isler icin ceza yuksektir.</p>}
+              <h3 className="font-bold text-red-900 mb-1">İptal Cezası</h3>
+              <p className="text-red-700 text-sm">Bu işi iptal ederseniz <span className="font-black">{penalty} TL</span> ceza kesilecektir.</p>
+              {job.status === 'in_progress' && <p className="text-red-600 text-xs mt-1">Devam eden işler icin ceza yüksektir.</p>}
             </div>
           </div>
         )}
@@ -145,7 +145,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
             cancellationCount >= 10 ? 'bg-red-50 border-red-300' : cancellationCount >= 5 ? 'bg-orange-50 border-orange-300' : 'bg-yellow-50 border-yellow-300'
           }`}>
             <p className={`font-bold text-sm ${cancellationCount >= 10 ? 'text-red-900' : cancellationCount >= 5 ? 'text-orange-900' : 'text-yellow-900'}`}>
-              Toplam {cancellationCount} iptal yaptiniz.
+              Toplam {cancellationCount} iptal ettiniz.
             </p>
             <p className={`text-xs mt-1 ${cancellationCount >= 10 ? 'text-red-700' : cancellationCount >= 5 ? 'text-orange-700' : 'text-yellow-700'}`}>
               {cancellationCount >= 10 ? 'Hesabiniz admin tarafindan incelenecek!' :
@@ -157,7 +157,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
 
         {/* Reason Selection */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="font-bold text-gray-900 mb-4">Iptal Nedeni</h3>
+          <h3 className="font-bold text-gray-900 mb-4">İptal nedeni</h3>
           <div className="space-y-2">
             {reasons.map(r => (
               <button key={r} onClick={() => setReason(r)}
@@ -176,7 +176,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgec</button>
+          <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgeç</button>
           <button onClick={handleCancel} disabled={!reason || (reason === 'Diger' && !customReason) || submitting}
             className={`py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
               !reason || (reason === 'Diger' && !customReason) || submitting
@@ -186,11 +186,11 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
             {submitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Isleniyor...
+                İşleniyor...
               </>
             ) : (
               <>
-                Iptal Et {penalty > 0 && `(${penalty} TL)`}
+                İptal Et {penalty > 0 && `(${penalty} TL)`}
               </>
             )}
           </button>
