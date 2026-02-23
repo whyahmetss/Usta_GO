@@ -37,13 +37,14 @@ function ProfilePage() {
       const jobs = Array.isArray(result) ? result : (result.data || []);
       
       // Filtreleme yaparken hem büyük hem küçük harfe bakalım (garanti olsun)
-      const completedCount = jobs.filter(j => 
-        j.status?.toLowerCase() === 'completed' || j.status?.toLowerCase() === 'tamamlandı'
-      ).length;
-      
-      console.log("Tamamlanan iş sayısı:", completedCount);
-      setCustomerCompletedJobs(completedCount);
+      // Hem 'COMPLETED' hem de 'TAMAMLANDI' ihtimalini kapsıyoruz
+const completedCount = jobs.filter(j => {
+  const s = j.status?.toUpperCase();
+  return s === 'COMPLETED' || s === 'TAMAMLANDI'; 
+}).length;
 
+console.log("Bulunan iş sayısı:", completedCount);
+setCustomerCompletedJobs(completedCount);
     } catch (err) {
       console.log("Bir şeyler ters gitti:", err);
     }
