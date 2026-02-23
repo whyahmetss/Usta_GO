@@ -193,7 +193,7 @@ function ProfilePage() {
           </div>
         )}
 
-        {/* Referral Section (Arkadaş Davet Et) */}
+        {/* Referral Section (Düzeltilmiş Halı) */}
         {user?.role === 'customer' && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-lg mb-4">
             <div className="flex items-center gap-2 mb-3">
@@ -201,10 +201,16 @@ function ProfilePage() {
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            
             <div className="flex gap-2">
+              {/* Kodun göründüğü alan */}
               <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
-                <code className="text-xs text-gray-600 font-mono truncate">{user?.referralCode}</code>
+                <code className="text-xs text-gray-600 font-mono truncate">
+                  {user?.referralCode || 'Kod Yükleniyor...'} 
+                </code>
               </div>
+              
+              {/* Kopyala butonu */}
               <button
                 onClick={handleCopyReferral}
                 className="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
@@ -213,6 +219,7 @@ function ProfilePage() {
                 {copied ? 'Kopyalandı' : 'Kopyala'}
               </button>
             </div>
+
             <div className="mt-2 text-xs text-gray-600">
               <Gift size={14} className="inline mr-1" />
               <strong>{user?.referralCount || 0}</strong> kişi davet edildi
