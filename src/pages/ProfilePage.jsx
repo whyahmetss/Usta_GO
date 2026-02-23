@@ -147,19 +147,21 @@ function ProfilePage() {
       navigate('/')
     }
   }
-
-  const handleCopyReferral = () => {
-    // Ekranda hangi kod görünüyorsa onu belirle (Gerçek kod yoksa yedek kodu al)
-    const codeToCopy = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
+const handleCopyReferral = () => {
+  // 1. Önce kodu oluşturuyoruz
+  const code = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
+  
+  if (code) {
+    // 2. İŞTE BURASI KRİTİK: Sadece kodu değil, linkin TAMAMINI hazırlıyoruz
+    const fullLink = `https://usta-go-app.onrender.com/auth?ref=${code}`;
     
-    if (codeToCopy) {
-      // Linkle beraber veya sadece kod olarak kopyala (Nasıl istersen)
-      // Kopyalanacak linki şuna çevir:
-const shareLink = `https://usta-go-app.onrender.com/auth?ref=${codeToCopy}`;
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+    // 3. Hafızaya sadece kodu değil, hazırladığımız bu linki yazıyoruz
+    navigator.clipboard.writeText(fullLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
+}
 
   // --- HESAPLAMALAR ---
   const stats = [
