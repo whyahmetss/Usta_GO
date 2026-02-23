@@ -206,8 +206,8 @@ function ProfilePage() {
               {/* Kodun göründüğü alan */}
               <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
                 <code className="text-xs text-gray-600 font-mono truncate">
-                  {user?.referralCode || 'Kod Yükleniyor...'} 
-                </code>
+  {user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : 'Kod Hazırlanıyor...')}
+</code>
               </div>
               
               {/* Kopyala butonu */}
