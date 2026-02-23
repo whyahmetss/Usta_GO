@@ -31,9 +31,10 @@ const fetchMyStats = async () => {
   }
 };
 
-  useEffect(() => {
-    setProfilePhoto(user?.profilePhoto || null)
-  }, [user])
+useEffect(() => {
+  setProfilePhoto(user?.profilePhoto || null);
+  fetchMyStats(); // <--- Rakamları canlandıracak olan tetikleyici tam olarak bu!
+}, [user]);
 
 const handlePhotoUpload = async (e) => {
   const file = e.target.files[0];
