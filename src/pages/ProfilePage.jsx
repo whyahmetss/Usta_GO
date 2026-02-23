@@ -17,25 +17,30 @@ function ProfilePage() {
     setProfilePhoto(user?.profilePhoto || null)
   }, [user])
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setUploading(true)
-      try {
-       const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo')
-      const photoUrl = uploadResponse.data?.url // Burada 'data' içindeki 'url'yi bekliyor
-if (photoUrl) {
-  setProfilePhoto(photoUrl)
-  alert('Profil fotoğrafı güncellendi!')
-}
-      } catch (err) {
-        console.error('Photo upload error:', err)
-        alert('Fotoğraf yüklemesi başarısız oldu')
-      } finally {
-        setUploading(false)
+const handlePhotoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setUploading(true);
+    try {
+      const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo');
+      console.log("Backendden ne geldi?", uploadResponse); // <--- Bunu mutlaka ekle, konsola bak!
+
+      // Backend'den gelen veriyi daha esnek yakalayalım
+      const photoUrl = uploadResponse.data?.url || uploadResponse.url || uploadResponse.data;
+
+      if (photoUrl) {
+        setProfilePhoto(photoUrl);
+        alert('Profil fotoğrafı güncellendi!');
+      } else {
+        console.error("URL bulunamadı, gelen yapı:", uploadResponse);
       }
+    } catch (err) {
+      console.error('Yükleme hatası:', err);
+    } finally {
+      setUploading(false);
     }
   }
+};
 
   const handleLogout = () => {
     if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
