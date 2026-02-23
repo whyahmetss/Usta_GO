@@ -12,6 +12,24 @@ function ProfilePage() {
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
   const [uploading, setUploading] = useState(false)
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
+  // useState satırlarının hemen altına ekle:
+const fetchMyStats = async () => {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
+       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    const result = await response.json();
+    const jobs = Array.isArray(result) ? result : result.data || [];
+
+    // 'COMPLETED' olanları filtreleyip sayıyoruz
+    const completedCount = jobs.filter(job => job.status?.toUpperCase() === 'COMPLETED').length;
+    
+    // Rakamı 0'dan gerçek değere yükseltiyoruz
+    setCustomerCompletedJobs(completedCount);
+  } catch (error) {
+    console.error("İstatistikler çekilemedi:", error);
+  }
+};
 
   useEffect(() => {
     setProfilePhoto(user?.profilePhoto || null)
