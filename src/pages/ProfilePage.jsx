@@ -13,54 +13,33 @@ function ProfilePage() {
   const [uploading, setUploading] = useState(false)
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
  const fetchStats = async () => {
-    try {
-      console.log("İşlem başladı..."); 
-      const token = localStorage.getItem('token');
-      
-      // Token yoksa zaten 0 kalır, kontrol edelim
-      if (!token) {
-        console.log("HATA: Token bulunamadı!");
-        return;
-      }
+  try {
+    const token = localStorage.getItem('token');
+    // Cüzdanın çalıştığı URL'yi (Wallet sayfasından bakarak) buraya yaz
+    const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    const result = await response.json();
+    
+    // ÖNEMLİ: Cüzdanda gördüğümüz o listeyi bulalım
+    // Veri bazen result içinde, bazen result.data içindedir.
+    const jobs = Array.isArray(result) ? result : (result.data || []);
+    
+    console.log("Backend'den gelen tüm işler:", jobs);
 
-      // API_ENDPOINTS yerine direkt backend linkini dene (Emin olmak için)
-      // Örnek: 'https://usta-go-backend.onrender.com/api/jobs/my-jobs'
-      const response = await fetch('https://ustago-backend-v2.onrender.com/api/jobs/my-jobs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    // CÜZDANDAKİ GÖRÜNTÜYE GÖRE FİLTRELEME
+    // Cüzdanda sarı etikette ne yazıyorsa tam olarak onu aratalım
+    const completedCount = jobs.filter(j => {
+      const status = j.status?.toString().toLowerCase().trim();
+      return status === 'tamamlandı' || status === 'completed';
+    }).length;
 
-      const result = await response.json();
-      console.log("Backend'den ne geldi?:", result);
-
-      const jobs = Array.isArray(result) ? result : (result.data || []);
-      
-      // Filtreleme yaparken hem büyük hem küçük harfe bakalım (garanti olsun)
-      // Hem 'COMPLETED' hem de 'TAMAMLANDI' ihtimalini kapsıyoruz
-const completedCount = jobs.filter(j => {
-  const s = j.status?.toUpperCase();
-  return s === 'COMPLETED' || s === 'TAMAMLANDI'; 
-}).length;
-
-console.log("Bulunan iş sayısı:", completedCount);
-setCustomerCompletedJobs(completedCount);
-    } catch (err) {
-      console.log("Bir şeyler ters gitti:", err);
-    }
-  };
-
-useEffect(() => {
-  console.log("useEffect Tetiklendi! Mevcut Kullanıcı:", user); // Bu satırı mutlaka ekle!
-
-  if (user) {
-    setProfilePhoto(user?.profilePhoto || null);
-    // Rol kontrolünü fonksiyonun içine bırakalım, burada her türlü çağıralım
-    fetchStats(); 
-  } else {
-    console.log("Kullanıcı verisi henüz yüklenmedi, bekleniyor...");
+    setCustomerCompletedJobs(completedCount);
+  } catch (err) {
+    console.error("Profil stats hatası:", err);
   }
-}, [user]);
+};
 
 const handlePhotoUpload = async (e) => {
   const file = e.target.files[0];
