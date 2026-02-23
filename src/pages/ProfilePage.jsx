@@ -74,8 +74,12 @@ function ProfilePage() {
   }
 
   const handleCopyReferral = () => {
-    if (user?.referralCode) {
-      navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${user.referralCode}`)
+    // Ekranda hangi kod görünüyorsa onu belirle (Gerçek kod yoksa yedek kodu al)
+    const codeToCopy = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
+    
+    if (codeToCopy) {
+      // Linkle beraber veya sadece kod olarak kopyala (Nasıl istersen)
+      navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${codeToCopy}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
