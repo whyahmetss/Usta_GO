@@ -16,22 +16,34 @@ function ProfilePage() {
 // Bu fonksiyon backend'den işleri çekip tamamlananları sayacak
 const fetchStats = async () => {
   try {
-    // API_ENDPOINTS.JOBS senin config dosmanda tanımlıysa onu kullanıyoruz
+    console.log("1. İstek gönderiliyor..."); // İzleme noktası
     const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}` // Token eklemeyi unutma
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
-    const result = await response.json();
-    const jobs = Array.isArray(result) ? result : result.data || [];
 
-    // 'COMPLETED' (Büyük harf) olanları filtrele
-    const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
+    console.log("2. Backend yanıt verdi, durum:", response.status);
+
+    const result = await response.json();
+    console.log("3. Backend'den gelen ham veri:", result);
+
+    // Veri bazen result.data içinde, bazen direkt result içindedir
+    const jobs = Array.isArray(result) ? result : (result.data || []);
+    console.log("4. İşlenen iş listesi:", jobs);
+
+    // Kritik nokta: Statü tam olarak ne yazıyor? 'completed' mı 'COMPLETED' mı?
+    const completedCount = jobs.filter(j => {
+      const status = j.status?.toUpperCase();
+      console.log(`İş ID: ${j.id}, Statü: ${status}`); // Tek tek kontrol
+      return status === 'COMPLETED';
+    }).length;
     
-    // Ekranda gördüğün o 0'ı bu sayıya çeviriyoruz
+    console.log("5. Bulunan tamamlanmış iş sayısı:", completedCount);
     setCustomerCompletedJobs(completedCount);
+
   } catch (err) {
-    console.error('Veri çekme hatası:', err);
+    console.error('BÜYÜK HATA:', err);
   }
 };
 
