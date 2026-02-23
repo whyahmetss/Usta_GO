@@ -13,27 +13,33 @@ function ProfilePage() {
   const [uploading, setUploading] = useState(false)
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
   // useState satırlarının hemen altına ekle:
-const fetchMyStats = async () => {
+// Bu fonksiyon backend'den işleri çekip tamamlananları sayacak
+const fetchStats = async () => {
   try {
+    // API_ENDPOINTS.JOBS senin config dosmanda tanımlıysa onu kullanıyoruz
     const response = await fetch(`${API_ENDPOINTS.JOBS}/my-jobs`, {
-       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Token eklemeyi unutma
+      }
     });
     const result = await response.json();
     const jobs = Array.isArray(result) ? result : result.data || [];
 
-    // 'COMPLETED' olanları filtreleyip sayıyoruz
-    const completedCount = jobs.filter(job => job.status?.toUpperCase() === 'COMPLETED').length;
+    // 'COMPLETED' (Büyük harf) olanları filtrele
+    const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
     
-    // Rakamı 0'dan gerçek değere yükseltiyoruz
+    // Ekranda gördüğün o 0'ı bu sayıya çeviriyoruz
     setCustomerCompletedJobs(completedCount);
-  } catch (error) {
-    console.error("İstatistikler çekilemedi:", error);
+  } catch (err) {
+    console.error('Veri çekme hatası:', err);
   }
 };
 
 useEffect(() => {
   setProfilePhoto(user?.profilePhoto || null);
-  fetchMyStats(); // <--- Rakamları canlandıracak olan tetikleyici tam olarak bu!
+if (user?.role === 'customer') {
+    fetchStats();
+  }
 }, [user]);
 
 const handlePhotoUpload = async (e) => {
