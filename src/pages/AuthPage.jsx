@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react' // useEffect ekledik
-import { useNavigate, useLocation } from 'react-router-dom' // useLocation ekledik
+
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
