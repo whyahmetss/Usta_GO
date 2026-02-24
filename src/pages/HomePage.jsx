@@ -17,7 +17,7 @@ function HomePage() {
   const categories = [
     {
       id: 'electric',
-      name: 'Elektrikçi',
+      name: 'Elektrik Ustası',
       icon: '⚡',
       color: 'from-yellow-400 to-orange-500',
       active: true,
@@ -25,7 +25,7 @@ function HomePage() {
     },
     {
       id: 'plumbing',
-      name: 'Tesisatci',
+      name: 'Su Tesisatçısı',
       icon: '🔧',
       color: 'from-blue-400 to-blue-600',
       active: false
@@ -46,7 +46,7 @@ function HomePage() {
     },
     {
       id: 'painting',
-      name: 'Boyaci',
+      name: 'Boyacı',
       icon: '🎨',
       color: 'from-green-400 to-teal-500',
       active: false
@@ -154,7 +154,7 @@ function HomePage() {
           {categories.map(category => (
             <div key={category.id} className="relative">
               {!category.active && (
-                <span className="coming-soon-badge">Yakında</span>
+                <span className="coming-soon-badge">Çok Yakında!</span>
               )}
               <button
                 onClick={() => handleCategoryClick(category)}
