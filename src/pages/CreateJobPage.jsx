@@ -139,7 +139,7 @@ function CreateJobPage() {
       }
     } catch (err) {
       // BURASI DÜZELTİLDİ: Artık API'nin gizli mesajı ekrana basılacak
-      const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'API Hatası oluştu'
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Malesef Bir hata oluştu, Tekrar deneyiniz.'
       console.error("API'DEN GELEN TAM HATA:", err.response?.data)
       setError(errorMsg)
       alert(`Hata: ${errorMsg}`)
@@ -179,7 +179,7 @@ function CreateJobPage() {
                 {photoPreview ? (
                   <div className="relative inline-block w-full">
                     <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border-2 border-blue-500" />
-                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg"><Camera size={18} /></div>
+                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg"><Kamera size={18} /></div>
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-blue-500 transition-colors">
@@ -191,7 +191,7 @@ function CreateJobPage() {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900 text-left text-red-600">Sorunu Açıklayın *</h3>
+              <h3 className="font-bold mb-3 text-gray-900 text-left text-red-600">Sorunu Açıklayınız *</h3>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" rows={4} placeholder="Örn: Mutfak prizinden duman çıkıyor..." />
             </div>
 
@@ -222,7 +222,7 @@ function CreateJobPage() {
         {step === 3 && aiPrice && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-yellow-200">
-              <h3 className="font-bold text-gray-900 mb-3 text-left">🎟️ Kupon Kullan</h3>
+              <h3 className="font-bold text-gray-900 mb-3 text-left">🎟️ Kupon Kodu Kullan</h3>
               {activeCoupons.length === 0 ? <p className="text-gray-500 text-sm text-left">Aktif kupon bulunamadı</p> : (
                 <div className="space-y-2">
                   {activeCoupons.map((c) => (
@@ -238,7 +238,7 @@ function CreateJobPage() {
             </div>
 
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 shadow-2xl text-white text-center">
-              <p className="text-white/70 text-sm font-bold uppercase tracking-wider mb-2">Tahmini Ücret</p>
+              <p className="text-white/70 text-sm font-bold uppercase tracking-wider mb-2">Ücret</p>
               <p className="text-6xl font-black mb-6">{finalPrice - (selectedCoupon?.amount || 0)} TL</p>
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20"><p className="text-white/60 text-xs mb-1">Kategori</p><p className="font-bold text-sm">{aiAnalysis.category}</p></div>
