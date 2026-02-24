@@ -68,7 +68,7 @@ function SettingsPage() {
       })
       setIsActive(newActiveStatus)
       setUser(res.data || res)
-      setSuccess(newActiveStatus ? 'Hesabınız aktif edildi. Artık iş alabilirsiniz.' : 'Hesabınız pasif edildi. Yeni iş talepleri almayacaksınız.')
+      setSuccess(newActiveStatus ? 'Hesabınız aktif edildi. Artık iş alabilirsiniz.' : 'Hesabınız bloke edildi. Yeni iş talepleri almayacaksınız.')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
       setError(err.message)
@@ -239,8 +239,8 @@ function SettingsPage() {
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">Tesisat Bakımı</p>
-                  <p className="text-xs text-gray-500">Her 1 yılda bir hatırlat</p>
+                  <p className="font-semibold text-gray-900 text-sm">Su Tesisatı Bakımı</p>
+                  <p className="text-xs text-gray-500">Her 12 ayda bir hatırlat</p>
                 </div>
                 <button
                   onClick={() => handleReminderToggle('plumbingMaintenance')}
