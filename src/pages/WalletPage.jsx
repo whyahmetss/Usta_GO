@@ -409,7 +409,7 @@ function WalletPage() {
                       </span>
                     </div>
                     {job.complaint?.details && (
-                     <p className="text-xs text-gray-500">
+                   <p className="text-xs text-gray-500">
                       {new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
@@ -419,10 +419,10 @@ function WalletPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
-export default WalletPages
+export default WalletPage;
