@@ -70,7 +70,7 @@ function ProfessionalDashboard() {
             <Logo size="md" />
             <div>
               <h1 className="text-2xl font-black text-white">Usta Paneli</h1>
-              <p className="text-white/70 text-xs">Hos geldin, {user?.name}</p>
+              <p className="text-white/70 text-xs">Hoş geldin, {user?.name}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -110,14 +110,14 @@ function ProfessionalDashboard() {
 
       <div className="px-4 py-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Yeni Is Talepleri</h2>
+          <h2 className="text-xl font-bold text-gray-900">Yeni İş Talepleri</h2>
           <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-bold">{jobRequests.length} Yeni</span>
         </div>
         {jobRequests.length === 0 ? (
           <div className="text-center py-8 bg-white rounded-2xl shadow-lg">
             <div className="text-5xl mb-3">📋</div>
-            <p className="text-gray-600 font-semibold">Yeni is talebi yok</p>
-            <p className="text-gray-400 text-sm mt-1">Musteriler is olusturdugunda burada gorunur</p>
+            <p className="text-gray-600 font-semibold">Yeni iş talebi yok</p>
+            <p className="text-gray-400 text-sm mt-1">Müşteriler iş olusturduğunda burada görünür</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -133,11 +133,11 @@ function ProfessionalDashboard() {
                   <p className="text-sm text-gray-700">{job.description}</p>
                 </div>
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                  <div><p className="text-xs text-gray-500">Musteri</p><p className="text-sm font-bold text-gray-900">{job.customer.name}</p></div>
+                  <div><p className="text-xs text-gray-500">Müşteri</p><p className="text-sm font-bold text-gray-900">{job.customer.name}</p></div>
                   <div><p className="text-xs text-gray-500">Tarih</p><p className="text-sm font-bold text-gray-900">{new Date(job.date).toLocaleDateString('tr-TR')}</p></div>
-                  <div><p className="text-xs text-gray-500">Ucret</p><p className="text-lg font-black text-green-600">{job.price} TL</p></div>
+                  <div><p className="text-xs text-gray-500">Ücret</p><p className="text-lg font-black text-green-600">{job.price} TL</p></div>
                 </div>
-                <div className="text-center text-sm text-blue-600 font-semibold">Detaylari Goruntule</div>
+                <div className="text-center text-sm text-blue-600 font-semibold">Detaylar Görüntüle</div>
               </div>
             ))}
           </div>
@@ -146,7 +146,7 @@ function ProfessionalDashboard() {
 
       {myCompletedJobs.length > 0 && (
         <div className="px-4 py-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Son Tamamlanan Isler</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Son Tamamlanan İşler</h2>
           <div className="space-y-2">
             {myCompletedJobs.slice(0, 3).map(job => (
               <div key={job.id} onClick={() => navigate(`/job/${job.id}`)} className="bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg transition">
@@ -176,7 +176,7 @@ function ProfessionalDashboard() {
             <Home size={24} /><span className="text-xs font-semibold">Ana Sayfa</span>
           </button>
           <button onClick={() => navigate('/my-jobs')} className="flex flex-col items-center gap-1 text-gray-400">
-            <Briefcase size={24} /><span className="text-xs font-semibold">Islerim</span>
+            <Briefcase size={24} /><span className="text-xs font-semibold">İşlerim</span>
           </button>
           <button onClick={() => navigate('/messages')} className="flex flex-col items-center gap-1 relative text-gray-400">
             <MessageSquare size={24} /><span className="text-xs font-semibold">Mesajlar</span>
