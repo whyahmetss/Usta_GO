@@ -33,31 +33,55 @@ function WalletPage() {
         setError(null)
 
         if (user?.role === 'professional') {
-          const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-          if (walletResponse.data) {
-            setBalance(walletResponse.data.balance || 0)
-            setPendingWithdrawal(walletResponse.data.pendingWithdrawal || 0)
-            setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
-            setLastMonthEarnings(walletResponse.data.lastMonthEarnings || 0)
+          try {
+            const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+            if (walletResponse.data) {
+              setBalance(walletResponse.data.balance || 0)
+              setPendingWithdrawal(walletResponse.data.pendingWithdrawal || 0)
+              setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
+              setLastMonthEarnings(walletResponse.data.lastMonthEarnings || 0)
+            }
+          } catch (walletErr) {
+            console.warn('Wallet endpoint not available, using defaults:', walletErr)
+            // Use default values if wallet endpoint fails
+            setBalance(0)
+            setPendingWithdrawal(0)
+            setThisMonthEarnings(0)
+            setLastMonthEarnings(0)
           }
-          const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
-          if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
-            setTransactions(transactionsResponse.data)
+
+          try {
+            const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
+            if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
+              setTransactions(transactionsResponse.data)
+            }
+          } catch (txErr) {
+            console.warn('Transactions endpoint not available:', txErr)
+            setTransactions([])
           }
         } else if (user?.role === 'customer') {
-          const response = await fetchAPI(API_ENDPOINTS.AUTH.ME)
-          if (response.data) {
-            setCustomerBalance(response.data.balance || 0)
-            setCustomerEscrow(response.data.escrowBalance || 0)
-            setTotalSpent(response.data.totalSpent || 0)
-            setCoupons(response.data.coupons || [])
+          try {
+            const response = await fetchAPI(API_ENDPOINTS.AUTH.ME)
+            if (response.data) {
+              setCustomerBalance(response.data.balance || 0)
+              setCustomerEscrow(response.data.escrowBalance || 0)
+              setTotalSpent(response.data.totalSpent || 0)
+              setCoupons(response.data.coupons || [])
+            }
+          } catch (userErr) {
+            console.warn('Could not load user data:', userErr)
           }
-          const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-          if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-            const mapped = mapJobsFromBackend(jobsResponse.data)
-            const userJobs = mapped.filter(j => j.customer?.id === user?.id)
-            setCustomerJobs(userJobs)
-            setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
+
+          try {
+            const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+            if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+              const mapped = mapJobsFromBackend(jobsResponse.data)
+              const userJobs = mapped.filter(j => j.customer?.id === user?.id)
+              setCustomerJobs(userJobs)
+              setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
+            }
+          } catch (jobsErr) {
+            console.warn('Could not load jobs:', jobsErr)
           }
         }
       } catch (err) {
