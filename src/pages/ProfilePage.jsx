@@ -210,61 +210,61 @@ function ProfilePage() {
               <p className="text-xs text-white/80">Aldığı Teklifler</p>
               <p className="text-2xl font-black">{statsData.offers}</p>
             </div>
-            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">✅</div>
               <p className="text-xs text-white/80">Tamamlanan</p>
               <p className="text-2xl font-black">{statsData.completedJobs}</p>
-            </button>
-            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">💰</div>
               <p className="text-xs text-white/80">Toplam Harcama</p>
               <p className="text-lg font-black">{Number(statsData.totalSpent).toLocaleString('tr-TR')} TL</p>
-            </button>
-            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">🎁</div>
               <p className="text-xs text-white/80">Kuponlar</p>
               <p className="text-2xl font-black">{statsData.coupons}</p>
-            </button>
-            <button onClick={() => navigate('/reviews')} className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">⭐</div>
               <p className="text-xs text-white/80">Ortalama Puan</p>
               <p className="text-2xl font-black">{statsData.averageRating}</p>
-            </button>
+            </div>
           </div>
         )}
 
         {user?.role === 'professional' && (
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">✅</div>
               <p className="text-xs text-white/80">Tamamlanan</p>
               <p className="text-2xl font-black">{statsData.completedJobs}</p>
-            </button>
-            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">📋</div>
               <p className="text-xs text-white/80">Aktif İşler</p>
               <p className="text-2xl font-black">{statsData.activeJobs}</p>
-            </button>
-            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            <div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">📝</div>
               <p className="text-xs text-white/80">Verilen Teklifler</p>
               <p className="text-2xl font-black">{statsData.offers}</p>
-            </button>
-            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">💰</div>
               <p className="text-xs text-white/80">Bu Ay Kazanç</p>
               <p className="text-lg font-black">{Number(statsData.thisMonthEarnings).toLocaleString('tr-TR')} TL</p>
-            </button>
-            <button onClick={() => navigate('/reviews')} className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">⭐</div>
               <p className="text-xs text-white/80">Ortalama Puan</p>
               <p className="text-2xl font-black">{statsData.rating}</p>
-            </button>
-            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+            </div>
+            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">📈</div>
               <p className="text-xs text-white/80">Başarı Oranı</p>
               <p className="text-2xl font-black">%{statsData.successRate}</p>
-            </button>
+            </div>
           </div>
         )}
 
