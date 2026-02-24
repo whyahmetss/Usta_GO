@@ -108,14 +108,14 @@ function AppRoutes() {
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-     {/* Ortak gibi görünen ama Role-Based (Role Göre) olan rotalar */}
-      <Route 
-        path="/my-jobs" 
+      {/* Ortak gibi görünen ama Role-Based (Role Göre) olan rotalar */}
+      <Route
+        path="/my-jobs"
         element={
           <ProtectedRoute>
-            {userRole === 'professional' ? <ProfessionalDashboard /> : <MyJobsPage />}
+            <MyJobsPage />
           </ProtectedRoute>
-        } 
+        }
       />
       <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
       <Route path="/messages/:jobId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
