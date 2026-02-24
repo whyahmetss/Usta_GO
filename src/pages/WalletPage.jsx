@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download } from 'lucide-react'
+import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download, Plus } from 'lucide-react'
 
 function WalletPage() {
   const { user } = useAuth()
