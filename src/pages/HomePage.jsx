@@ -3,6 +3,7 @@ import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User } from 'lucide
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
+import Logo from '../components/Logo'
 
 function HomePage() {
   const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
@@ -73,9 +74,7 @@ function HomePage() {
           {/* Top Bar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <span className="text-2xl font-black text-white">UG</span>
-              </div>
+              <Logo size="md" />
               <div>
                 <h1 className="text-2xl font-black text-white">Usta Go</h1>
                 <p className="text-white/70 text-xs">Merhaba, {user?.name}</p>
