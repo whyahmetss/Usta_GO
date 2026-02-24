@@ -96,7 +96,7 @@ export function AuthProvider({ children }) {
 
       return { success: false, error: response.message || 'Login failed' }
     } catch (err) {
-      const errorMsg = err.message || 'E-posta veya sifre hatali'
+      const errorMsg = err.message || 'E-posta veya şifre hatalı'
       setError(errorMsg)
       console.error('Login error:', err)
       return { success: false, error: errorMsg }
@@ -128,9 +128,9 @@ export function AuthProvider({ children }) {
         return { success: true, role: mappedUser.role }
       }
 
-      return { success: false, error: response.message || 'Registration failed' }
+      return { success: false, error: response.message || 'Kayıt başarısız oldu' }
     } catch (err) {
-      const errorMsg = err.message || 'Registration error'
+      const errorMsg = err.message || 'Kayıt başarısız oldu'
       setError(errorMsg)
       console.error('Register error:', err)
       return { success: false, error: errorMsg }
@@ -240,16 +240,16 @@ export function AuthProvider({ children }) {
         setJobs(prev => [...prev, mapped])
         addNotification({
           type: 'job',
-          title: 'Is Olusturuldu',
-          message: `${mapped.title} basariyla olusturuldu`,
+          title: 'İş Oluşturuldu',
+          message: `${mapped.title} Başarıyla oluşturuldu`,
           icon: '✨'
         })
         return mapped
       }
 
-      throw new Error('Failed to create job')
+      throw new Error('İş oluşturulurken Hata Oluştu')
     } catch (err) {
-      const errorMsg = err.message || 'Job creation failed'
+      const errorMsg = err.message || 'İş oluşturma hatası'
       setError(errorMsg)
       console.error('Create job error:', err)
       throw err
@@ -280,7 +280,7 @@ export function AuthProvider({ children }) {
         setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
-          title: 'Is Kabul Edildi',
+          title: 'İş Kabul Edildi',
           message: 'İş başarıyla kabul edildi',
           icon: '✅'
         })
@@ -324,7 +324,7 @@ export function AuthProvider({ children }) {
         setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
-          title: 'Is Basladi',
+          title: 'İş Başladı',
           message: 'İş başarıyla başlatıldı',
           icon: '🚀'
         })
@@ -368,7 +368,7 @@ export function AuthProvider({ children }) {
         setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
-          title: 'Is Tamamlandi',
+          title: 'İş Tamamlandı',
           message: 'İş tamamlandı. Lütfen değerlendiriniz.',
           icon: '🎉'
         })
@@ -405,7 +405,7 @@ export function AuthProvider({ children }) {
         setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
-          title: 'Is Iptal Edildi',
+          title: 'İş İptal Edildi',
           message: 'İş başarıyla iptal edildi',
           icon: '❌'
         })
@@ -442,7 +442,7 @@ export function AuthProvider({ children }) {
         setJobs(prev => prev.map(job => job.id === jobId ? mapped : job))
         addNotification({
           type: 'status',
-          title: 'Degerlendirme Yapildi',
+          title: 'Değerlendirme Yapıldı',
           message: 'Teşekkürler! Değerlendirmeniz kaydedildi.',
           icon: '⭐'
         })
@@ -604,7 +604,7 @@ export function AuthProvider({ children }) {
           return { success: false, error: 'Yetersiz bakiye' }
         }
         if (amount < 100) {
-          return { success: false, error: 'Minimum cekim tutari 100 TL' }
+          return { success: false, error: 'Minimum Çekim tutarı 100 TL' }
         }
 
         const withdrawal = {
@@ -630,8 +630,8 @@ export function AuthProvider({ children }) {
         setWithdrawals(prev => [response.data, ...prev])
         addNotification({
           type: 'status',
-          title: 'Para Cekme Talebi',
-          message: `${amount} TL para çekme talebiniz gönderildi`,
+          title: 'Para Çekme Talebi',
+          message: `${amount} Para çekme talebiniz gönderildi`,
           icon: '💰'
         })
         return { success: true }
