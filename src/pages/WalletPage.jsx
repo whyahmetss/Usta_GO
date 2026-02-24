@@ -224,7 +224,7 @@ function WalletPage() {
                 <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
               </div>
               <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <DollarSign size={28} />
+                <span className="text-xl font-bold text-white">Bakiye Yükleme</span>
               </div>
             </div>
             {customerEscrow > 0 && (
