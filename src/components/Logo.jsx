@@ -1,8 +1,8 @@
 import { useAuth } from '../context/AuthContext'
-import logoCustomer from '../assets/logo-customer.svg'
-import logoProfessional from '../assets/logo-professional.svg'
-import logoAdmin from '../assets/logo-admin.svg'
-import logoDefault from '../assets/logo-default.svg'
+import logoCustomer from '../assets/logo-customer.png'
+import logoProfessional from '../assets/logo-professional.png'
+import logoAdmin from '../assets/logo-admin.png'
+import logoDefault from '../assets/logo-default.png'
 
 const sizeMap = {
   xs: 'w-8 h-8',
