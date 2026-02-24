@@ -26,14 +26,26 @@ function ProfessionalDashboard() {
         setLoading(true)
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          setAllJobs(jobsResponse.data)
+          // Normalize location field - handle both string and object formats
+          const normalizedJobs = jobsResponse.data.map(job => ({
+            ...job,
+            location: typeof job.location === 'string'
+              ? { address: job.location }
+              : (job.location || { address: 'Adres belirtilmedi' })
+          }))
+          setAllJobs(normalizedJobs)
         }
 
-        // Load wallet data
-        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-        if (walletResponse.data) {
-          setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
-          setBalance(walletResponse.data.balance || 0)
+        // Load wallet data - handle gracefully if endpoint fails
+        try {
+          const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+          if (walletResponse.data) {
+            setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
+            setBalance(walletResponse.data.balance || 0)
+          }
+        } catch (walletErr) {
+          console.warn('Could not load wallet data:', walletErr)
+          // Continue without wallet data - don't block dashboard
         }
       } catch (err) {
         console.error('Load dashboard error:', err)

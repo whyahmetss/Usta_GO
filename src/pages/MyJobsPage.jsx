@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Star } from 'lucide-react'
 
 function MyJobsPage() {
@@ -19,17 +20,22 @@ function MyJobsPage() {
         setLoading(true)
         setError(null)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-        
-        // Veriyi güvenli bir şekilde alalım
+
+        // Get raw data from response
         const rawData = response?.data || response || []
-        
+
         if (Array.isArray(rawData)) {
- const filtered = rawData.filter(j => {
-  // JSON'da hem customerId hem de customer.id var
-  const dbId = String(j.customerId || j.customer?.id || "").trim();
-  const userId = String(user?.id || "").trim();
-  return dbId === userId;
-});
+          // Map jobs from backend format to frontend format
+          const mappedJobs = mapJobsFromBackend(rawData)
+
+          // Filter jobs for current user
+          const filtered = mappedJobs.filter(j => {
+            // Check both customerId and customer.id for compatibility
+            const dbId = String(j.customerId || j.customer?.id || "").trim()
+            const userId = String(user?.id || "").trim()
+            return dbId === userId
+          })
+
           setUserJobs(filtered)
         }
       } catch (err) {
@@ -43,16 +49,16 @@ function MyJobsPage() {
     if (user) loadUserJobs()
   }, [user])
 
- // MyJobsPage.jsx içinde bu satırları güncelle:
-const activeJobs = userJobs.filter(j => 
-  ['pending', 'accepted', 'in_progress', 'PENDING', 'ACCEPTED', 'IN_PROGRESS'].includes(j.status)
-)
-const completedJobs = userJobs.filter(j => 
-  ['completed', 'rated', 'COMPLETED', 'RATED'].includes(j.status)
-)
-const cancelledJobs = userJobs.filter(j => 
-  ['cancelled', 'CANCELLED'].includes(j.status)
-)
+  // Filter jobs by status (after mapping, all statuses are lowercase)
+  const activeJobs = userJobs.filter(j =>
+    ['pending', 'accepted', 'in_progress'].includes(j.status?.toLowerCase())
+  )
+  const completedJobs = userJobs.filter(j =>
+    ['completed', 'rated'].includes(j.status?.toLowerCase())
+  )
+  const cancelledJobs = userJobs.filter(j =>
+    ['cancelled'].includes(j.status?.toLowerCase())
+  )
 
   const displayJobs = activeTab === 'active' ? activeJobs : activeTab === 'completed' ? completedJobs : cancelledJobs
 
