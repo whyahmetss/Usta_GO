@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { uploadFile } from '../utils/api'
+import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, LogOut, User, Mail, Phone, Star, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
+import { ArrowLeft, LogOut, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 function ProfilePage() {
@@ -11,11 +11,87 @@ function ProfilePage() {
   const [copied, setCopied] = useState(false)
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
   const [uploading, setUploading] = useState(false)
-  const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
+  const [statsData, setStatsData] = useState({
+    activeJobs: 0,
+    offers: 0,
+    completedJobs: 0,
+    totalSpent: 0,
+    coupons: 0,
+    averageRating: '0.0',
+    thisMonthEarnings: 0,
+    rating: '0.0',
+    successRate: 0,
+  })
 
   useEffect(() => {
     setProfilePhoto(user?.profilePhoto || null)
   }, [user])
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const loadStats = async () => {
+      // Fetch jobs stats
+      try {
+        const jobsRes = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+        const jobs = Array.isArray(jobsRes.data) ? jobsRes.data : []
+
+        if (user.role === 'customer') {
+          const myJobs = jobs.filter(j => j.customer?.id === user.id || j.customerId === user.id)
+          const active = myJobs.filter(j => j.status === 'pending').length
+          const completed = myJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
+          const totalOffers = myJobs.reduce((sum, j) => sum + (j.offers?.length || 0), 0)
+          const ratedJobs = myJobs.filter(j => j.rating?.professionalRating)
+          const avgRating = ratedJobs.length > 0
+            ? (ratedJobs.reduce((sum, j) => sum + j.rating.professionalRating, 0) / ratedJobs.length).toFixed(1)
+            : '0.0'
+          setStatsData(prev => ({
+            ...prev,
+            activeJobs: active,
+            completedJobs: completed,
+            offers: totalOffers,
+            averageRating: avgRating,
+          }))
+        } else if (user.role === 'professional') {
+          const myJobs = jobs.filter(j => j.professional?.id === user.id || j.professionalId === user.id)
+          const completed = myJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
+          const active = myJobs.filter(j => j.status === 'accepted' || j.status === 'in_progress').length
+          const totalJobs = myJobs.length
+          const successRate = totalJobs > 0 ? Math.round((completed / totalJobs) * 100) : 0
+          const offersGiven = jobs.filter(j =>
+            j.offers?.some(o => o.professionalId === user.id || o.professional?.id === user.id)
+          ).length
+          setStatsData(prev => ({
+            ...prev,
+            completedJobs: completed,
+            activeJobs: active,
+            offers: offersGiven,
+            successRate,
+            rating: user.rating || '0.0',
+          }))
+        }
+      } catch (err) {
+        console.error('Stats load error:', err)
+      }
+
+      // Fetch wallet stats
+      try {
+        const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        if (walletRes.data) {
+          setStatsData(prev => ({
+            ...prev,
+            totalSpent: walletRes.data.totalSpent || 0,
+            thisMonthEarnings: walletRes.data.thisMonthEarnings || 0,
+            coupons: walletRes.data.coupons?.length ?? prev.coupons,
+          }))
+        }
+      } catch (err) {
+        console.error('Wallet stats error:', err)
+      }
+    }
+
+    loadStats()
+  }, [user?.id])
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
@@ -44,19 +120,6 @@ function ProfilePage() {
     }
   }
 
-  const stats = user?.role === 'professional' ? [
-    { label: 'Tamamlanan İş', value: user?.completedJobs || 0, icon: Briefcase },
-    { label: 'Ortalama Puan', value: user?.rating || '0.0', icon: Star },
-  ] : [
-    { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase },
-    { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings },
-  ]
-
-  // Loyalty points calculation
-  const loyaltyLevel = customerCompletedJobs >= 20 ? 'Gold' : customerCompletedJobs >= 10 ? 'Silver' : customerCompletedJobs >= 5 ? 'Bronze' : 'Member'
-  const nextMilestone = customerCompletedJobs >= 20 ? 20 : customerCompletedJobs >= 10 ? 20 : customerCompletedJobs >= 5 ? 10 : 5
-  const loyaltyProgress = Math.min(100, (customerCompletedJobs / nextMilestone) * 100)
-
   const handleCopyReferral = () => {
     if (user?.referralCode) {
       navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${user.referralCode}`)
@@ -65,14 +128,40 @@ function ProfilePage() {
     }
   }
 
+  // Loyalty calculations
+  const loyaltyLevel = statsData.completedJobs >= 20 ? 'Gold' : statsData.completedJobs >= 10 ? 'Silver' : statsData.completedJobs >= 5 ? 'Bronze' : 'Member'
+  const nextMilestone = statsData.completedJobs >= 20 ? 20 : statsData.completedJobs >= 10 ? 20 : statsData.completedJobs >= 5 ? 10 : 5
+  const loyaltyProgress = Math.min(100, (statsData.completedJobs / nextMilestone) * 100)
+
   const coupons = user?.coupons || []
   const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
+
+  // Stats card definitions
+  const customerCards = [
+    { icon: '📋', label: 'Aktif İşler',      value: statsData.activeJobs,    link: '/jobs' },
+    { icon: '📝', label: 'Aldığı Teklifler', value: statsData.offers,         link: '/jobs' },
+    { icon: '✅', label: 'Tamamlanan',        value: statsData.completedJobs,  link: '/jobs' },
+    { icon: '💰', label: 'Toplam Harcama',   value: `${Number(statsData.totalSpent).toLocaleString('tr-TR')} TL`, link: '/wallet' },
+    { icon: '🎁', label: 'Kuponlar',          value: statsData.coupons,        link: '/wallet' },
+    { icon: '⭐', label: 'Ortalama Puan',     value: statsData.averageRating,  link: '/reviews' },
+  ]
+
+  const professionalCards = [
+    { icon: '✅', label: 'Tamamlanan İşler',  value: statsData.completedJobs,  link: '/jobs' },
+    { icon: '📋', label: 'Aktif İşler',        value: statsData.activeJobs,     link: '/jobs' },
+    { icon: '📝', label: 'Verilen Teklifler',  value: statsData.offers,          link: '/jobs' },
+    { icon: '💰', label: 'Bu Ay Kazanç',       value: `${Number(statsData.thisMonthEarnings).toLocaleString('tr-TR')} TL`, link: '/wallet' },
+    { icon: '⭐', label: 'Ortalama Puan',      value: statsData.rating,          link: '/reviews' },
+    { icon: '📈', label: 'Başarı Oranı',       value: `%${statsData.successRate}`, link: '/jobs' },
+  ]
+
+  const statCards = user?.role === 'professional' ? professionalCards : customerCards
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="blue-gradient-bg pb-20 pt-4 px-4">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-6"
         >
@@ -106,26 +195,29 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* Profile Info Cards */}
       <div className="px-4 -mt-12">
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {stats.map((stat, idx) => {
-            const Icon = stat.icon
-            return (
-              <div key={idx} className="bg-white rounded-2xl p-4 shadow-lg">
-                <Icon size={20} className="text-blue-600 mb-2" />
-                <div className="text-2xl font-black text-gray-900">{stat.value}</div>
-                <div className="text-xs text-gray-600">{stat.label}</div>
-              </div>
-            )
-          })}
+        {/* İstatistik Kartları - 2x3 grid */}
+        <div className="bg-white rounded-2xl p-5 shadow-lg mb-4">
+          <h3 className="font-bold text-gray-900 mb-4">İstatistikler</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {statCards.map((card, idx) => (
+              <button
+                key={idx}
+                onClick={() => navigate(card.link)}
+                className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-4 text-left hover:opacity-90 transition active:scale-95"
+              >
+                <div className="text-2xl mb-2">{card.icon}</div>
+                <div className="text-xl font-black text-white leading-tight">{card.value}</div>
+                <div className="text-xs text-white/80 mt-1">{card.label}</div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Wallet Button */}
         <button
           onClick={() => navigate('/wallet')}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition font-bold mb-6 flex items-center justify-between"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition font-bold mb-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <span className="text-2xl">💰</span>
@@ -136,39 +228,6 @@ function ProfilePage() {
           </div>
           <span className="text-xl">→</span>
         </button>
-
-        {/* Info Section */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-4">
-          <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <User size={20} className="text-gray-600" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">Ad Soyad</p>
-                <p className="font-semibold text-gray-900">{user?.name}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Mail size={20} className="text-gray-600" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">E-posta</p>
-                <p className="font-semibold text-gray-900">{user?.email}</p>
-              </div>
-            </div>
-
-            {user?.phone && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <Phone size={20} className="text-gray-600" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Telefon</p>
-                  <p className="font-semibold text-gray-900">{user.phone}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Loyalty Program (Customers) */}
         {user?.role === 'customer' && (
@@ -184,7 +243,7 @@ function ProfilePage() {
                   style={{ width: `${loyaltyProgress}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-white/80 mt-1">{customerCompletedJobs} / {nextMilestone} işe kadar ilerleme</p>
+              <p className="text-xs text-white/80 mt-1">{statsData.completedJobs} / {nextMilestone} işe kadar ilerleme</p>
             </div>
           </div>
         )}
@@ -250,7 +309,7 @@ function ProfilePage() {
           </button>
         </div>
 
-        {/* Logout Button */}
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-3 p-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 transition mb-20"
