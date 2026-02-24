@@ -19,10 +19,10 @@ const ROUTE_POINTS = [
 
 const STATUS_STEPS = [
   { key: 'accepted', label: 'Kabul Edildi', icon: '✅' },
-  { key: 'on_the_way', label: 'Yola Cikti', icon: '🚗' },
+  { key: 'on_the_way', label: 'Yola Çıktı', icon: '🚗' },
   { key: 'arrived', label: 'Geldi', icon: '📍' },
-  { key: 'in_progress', label: 'Is Basladi', icon: '🔧' },
-  { key: 'completed', label: 'Tamamlandi', icon: '🎉' },
+  { key: 'in_progress', label: 'İş Başladı', icon: '🔧' },
+  { key: 'completed', label: 'Tamamlandı', icon: '🎉' },
 ]
 
 function LiveTrackingPage() {
@@ -315,12 +315,12 @@ function LiveTrackingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600 text-lg">Is bulunamadi</p>
+          <p className="text-gray-600 text-lg">İş bulunamadı</p>
           <button
             onClick={() => navigate(-1)}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold"
           >
-            Geri Don
+            Geri Dön
           </button>
         </div>
       </div>
@@ -376,7 +376,7 @@ function LiveTrackingPage() {
             <div className="bg-white rounded-3xl shadow-2xl px-8 py-6 text-center mx-4">
               <div className="text-5xl mb-3">🎉</div>
               <h3 className="text-xl font-black text-gray-900">Usta Geldi!</h3>
-              <p className="text-gray-600 text-sm mt-1">Ustaniz kapinizda</p>
+              <p className="text-gray-600 text-sm mt-1">Ustanız kapınızda</p>
             </div>
           </div>
         )}
@@ -423,7 +423,7 @@ function LiveTrackingPage() {
               <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-3 text-center text-white shadow-lg">
                 <Clock size={18} className="mx-auto mb-1 opacity-80" />
                 <p className="text-lg font-black">{formatEta(eta)}</p>
-                <p className="text-[10px] opacity-75">Tahmini Varis</p>
+                <p className="text-[10px] opacity-75">Tahmini Varış</p>
               </div>
               <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-3 text-center text-white shadow-lg">
                 <Navigation size={18} className="mx-auto mb-1 opacity-80" />
@@ -504,14 +504,14 @@ function LiveTrackingPage() {
           {trackingStatus === 'completed' && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 text-center">
               <CheckCircle size={40} className="text-green-500 mx-auto mb-2" />
-              <h3 className="text-lg font-black text-gray-900">Is Tamamlandi!</h3>
-              <p className="text-sm text-gray-600 mt-1">Usta isinizi basariyla tamamladi.</p>
+              <h3 className="text-lg font-black text-gray-900">İş Tamamlandı!</h3>
+              <p className="text-sm text-gray-600 mt-1">Usta işinizi başarıyla tamamladı.</p>
               {job.status === 'completed' && !job.rating && user?.role === 'customer' && (
                 <button
                   onClick={() => navigate(`/rate/${job.id}`)}
                   className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-bold shadow-lg"
                 >
-                  Degerlendir
+                  Değerlendir
                 </button>
               )}
             </div>
@@ -524,7 +524,7 @@ function LiveTrackingPage() {
               className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2"
             >
               <CheckCircle size={18} />
-              Is Detaylarina Git
+              İş Detaylarına Git
             </button>
 
             {professional?.phone && (
@@ -533,7 +533,7 @@ function LiveTrackingPage() {
                 className="w-full py-3.5 bg-white border-2 border-green-500 text-green-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-green-50 transition"
               >
                 <Phone size={18} />
-                Ustayi Ara
+                Ustayı Ara
               </a>
             )}
           </div>
