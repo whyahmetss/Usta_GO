@@ -74,7 +74,7 @@ function WalletPage() {
         }
       } catch (err) {
         console.error('Load wallet error:', err)
-        setError(err.message || 'Cuzdan verileri yuklenirken hata olustu')
+        setError(err.message || 'Cüzdan verileri yüklenirken hata oluştu')
       } finally {
         setLoading(false)
       }
@@ -137,8 +137,8 @@ function WalletPage() {
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-xl font-black text-gray-900">Cuzdan (Usta)</h1>
-                <p className="text-xs text-gray-500">Kazanclarinizi yonetin</p>
+                <h1 className="text-xl font-black text-gray-900">Cüzdan (Usta)</h1>
+                <p className="text-xs text-gray-500">Kazançlarınızı yönetin</p>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ function WalletPage() {
             </div>
             {pendingWithdrawal > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3 mb-4">
-                <p className="text-white/80 text-xs mb-1">Bekleyen Cekim</p>
+                <p className="text-white/80 text-xs mb-1">Bekleyen Çekim</p>
                 <p className="text-xl font-bold">{pendingWithdrawal.toLocaleString('tr-TR')} TL</p>
               </div>
             )}
@@ -189,7 +189,7 @@ function WalletPage() {
               <p className={`text-2xl font-black ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {growthPercentage >= 0 ? '+' : ''}{growthPercentage}%
               </p>
-              <p className="text-xs text-gray-600">Buyume</p>
+              <p className="text-xs text-gray-600">Büyüme</p>
             </div>
           </div>
 
@@ -201,12 +201,12 @@ function WalletPage() {
           {transactions.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">💰</div>
-              <p className="text-gray-600 font-semibold">Henuz islem yok</p>
-              <p className="text-gray-400 text-sm mt-2">Is tamamladiginizda kazanclariniz burada gorunur</p>
+              <p className="text-gray-600 font-semibold">Henüz işlem yok</p>
+              <p className="text-gray-400 text-sm mt-2">İş tamamladığınızda kazançlarınız burada görünür</p>
             </div>
           ) : (
             <div className="space-y-2">
-              <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son Islemler' : 'Tum Islemler'}</h3>
+              <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son İşlemler' : 'Tüm İşlemler'}</h3>
               {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
                 <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
                   <div className={`w-12 h-12 ${tx.type === 'earning' ? 'bg-green-100' : tx.type === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
