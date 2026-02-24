@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, LogOut, User, Mail, Phone, Briefcase, Settings, Copy, Share2, Gift, Camera } from 'lucide-react'
+import { ArrowLeft, LogOut, Copy, Share2, Gift, Camera } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 
@@ -12,6 +12,17 @@ function ProfilePage() {
 
   // --- DURUM DEĞİŞKENLERİ ---
   const [customerCompletedJobs, setCustomerCompletedJobs] = useState(0)
+  const [statsData, setStatsData] = useState({
+    activeJobs: 0,
+    offers: 0,
+    completedJobs: 0,
+    totalSpent: 0,
+    coupons: 0,
+    averageRating: 0,
+    thisMonthEarnings: 0,
+    rating: 0,
+    successRate: 0
+  })
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -21,18 +32,63 @@ function ProfilePage() {
     try {
       if (!user?.id) return
       const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-      
+
       if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
         const mapped = mapJobsFromBackend(jobsResponse.data)
-        const userJobs = mapped.filter(j => j.customer?.id === user?.id)
-        
-        // Cüzdandaki "1" rakamını getiren o meşhur filtre
-        const completedCount = userJobs.filter(j => 
-          j.status === 'completed' || j.status === 'rated'
-        ).length
 
-        console.log("HEDEF VURULDU! Sayı:", completedCount)
-        setCustomerCompletedJobs(completedCount)
+        if (user?.role === 'customer') {
+          const userJobs = mapped.filter(j => j.customer?.id === user?.id)
+          const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
+          const activeCount = userJobs.filter(j => j.status === 'pending' || j.status === 'in_progress').length
+          const offersCount = userJobs.reduce((sum, job) => sum + (job.offers?.length || 0), 0)
+          const ratings = userJobs.filter(j => j.rating).map(j => j.rating)
+          const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b) / ratings.length).toFixed(1) : 0
+
+          setCustomerCompletedJobs(completedCount)
+          setStatsData({
+            activeJobs: activeCount,
+            offers: offersCount,
+            completedJobs: completedCount,
+            totalSpent: user?.totalSpent || 0,
+            coupons: (user?.coupons || []).length,
+            averageRating: avgRating,
+            thisMonthEarnings: 0,
+            rating: 0,
+            successRate: 0
+          })
+        } else {
+          // Professional
+          const userJobs = mapped.filter(j => j.professional?.id === user?.id)
+          const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
+          const activeCount = userJobs.filter(j => j.status === 'in_progress' || j.status === 'pending').length
+          const offersCount = userJobs.filter(j => j.professional?.id === user?.id).length
+          const ratings = userJobs.filter(j => j.professionalRating).map(j => j.professionalRating)
+          const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b) / ratings.length).toFixed(1) : 0
+          const successRate = userJobs.length > 0 ? Math.round((completedCount / userJobs.length) * 100) : 0
+
+          // Calculate this month earnings
+          const now = new Date()
+          const currentMonth = now.getMonth()
+          const currentYear = now.getFullYear()
+          const thisMonthJobs = userJobs.filter(j => {
+            const completedDate = j.completedAt ? new Date(j.completedAt) : null
+            return completedDate && completedDate.getMonth() === currentMonth && completedDate.getFullYear() === currentYear
+          })
+          const thisMonthEarnings = thisMonthJobs.reduce((sum, j) => sum + (j.budget || 0), 0)
+
+          setCustomerCompletedJobs(completedCount)
+          setStatsData({
+            activeJobs: activeCount,
+            offers: offersCount,
+            completedJobs: completedCount,
+            totalSpent: 0,
+            coupons: 0,
+            averageRating: 0,
+            thisMonthEarnings: thisMonthEarnings,
+            rating: avgRating,
+            successRate: successRate
+          })
+        }
       }
     } catch (err) {
       console.error('İstatistik yüklenirken hata:', err)
@@ -86,11 +142,6 @@ function ProfilePage() {
   }
 
   // --- HESAPLAMALAR ---
-  const stats = [
-    { label: 'Tamamlanan İş', value: customerCompletedJobs, icon: Briefcase },
-    { label: 'Toplam Harcama', value: `${(user?.totalSpent || 0).toLocaleString('tr-TR')} TL`, icon: Settings }
-  ]
-
  // Sadakat seviyeleri hesaplaması (Türkçeleştirilmiş)
   const loyaltyLevel = customerCompletedJobs >= 20 ? 'Efsane' : 
                        customerCompletedJobs >= 10 ? 'Usta Müşteri' : 
@@ -134,20 +185,6 @@ function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-12">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {stats.map((stat, idx) => {
-            const Icon = stat.icon
-            return (
-              <div key={idx} className="bg-white rounded-2xl p-4 shadow-lg">
-                <Icon size={20} className="text-blue-600 mb-2" />
-                <div className="text-2xl font-black text-gray-900">{stat.value}</div>
-                <div className="text-xs text-gray-600">{stat.label}</div>
-              </div>
-            )
-          })}
-        </div>
-
         {/* Cüzdan Butonu */}
         <button onClick={() => navigate('/wallet')} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition font-bold mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -160,26 +197,76 @@ function ProfilePage() {
           <span className="text-xl">→</span>
         </button>
 
-        {/* Bilgiler */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-4">
-          <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <User size={20} className="text-gray-600" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">Ad Soyad</p>
-                <p className="font-semibold text-gray-900">{user?.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Mail size={20} className="text-gray-600" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">E-posta</p>
-                <p className="font-semibold text-gray-900">{user?.email}</p>
-              </div>
-            </div>
+        {/* İstatistik Kartları */}
+        {user?.role === 'customer' && (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">📋</div>
+              <p className="text-xs text-white/80">Aktif İşler</p>
+              <p className="text-2xl font-black">{statsData.activeJobs}</p>
+            </button>
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">📝</div>
+              <p className="text-xs text-white/80">Aldığı Teklifler</p>
+              <p className="text-2xl font-black">{statsData.offers}</p>
+            </button>
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">✅</div>
+              <p className="text-xs text-white/80">Tamamlanan</p>
+              <p className="text-2xl font-black">{statsData.completedJobs}</p>
+            </button>
+            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">💰</div>
+              <p className="text-xs text-white/80">Toplam Harcama</p>
+              <p className="text-lg font-black">{Number(statsData.totalSpent).toLocaleString('tr-TR')} TL</p>
+            </button>
+            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">🎁</div>
+              <p className="text-xs text-white/80">Kuponlar</p>
+              <p className="text-2xl font-black">{statsData.coupons}</p>
+            </button>
+            <button onClick={() => navigate('/reviews')} className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">⭐</div>
+              <p className="text-xs text-white/80">Ortalama Puan</p>
+              <p className="text-2xl font-black">{statsData.averageRating}</p>
+            </button>
           </div>
-        </div>
+        )}
+
+        {user?.role === 'professional' && (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">✅</div>
+              <p className="text-xs text-white/80">Tamamlanan</p>
+              <p className="text-2xl font-black">{statsData.completedJobs}</p>
+            </button>
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">📋</div>
+              <p className="text-xs text-white/80">Aktif İşler</p>
+              <p className="text-2xl font-black">{statsData.activeJobs}</p>
+            </button>
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">📝</div>
+              <p className="text-xs text-white/80">Verilen Teklifler</p>
+              <p className="text-2xl font-black">{statsData.offers}</p>
+            </button>
+            <button onClick={() => navigate('/wallet')} className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">💰</div>
+              <p className="text-xs text-white/80">Bu Ay Kazanç</p>
+              <p className="text-lg font-black">{Number(statsData.thisMonthEarnings).toLocaleString('tr-TR')} TL</p>
+            </button>
+            <button onClick={() => navigate('/reviews')} className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">⭐</div>
+              <p className="text-xs text-white/80">Ortalama Puan</p>
+              <p className="text-2xl font-black">{statsData.rating}</p>
+            </button>
+            <button onClick={() => navigate('/jobs')} className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
+              <div className="text-2xl mb-2">📈</div>
+              <p className="text-xs text-white/80">Başarı Oranı</p>
+              <p className="text-2xl font-black">%{statsData.successRate}</p>
+            </button>
+          </div>
+        )}
 
         {/* Sadakat Programı */}
         {user?.role === 'customer' && (
