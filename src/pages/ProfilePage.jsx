@@ -244,7 +244,7 @@ function ProfilePage() {
               <div className="text-2xl mb-2">📋</div>
               <p className="text-xs text-white/80">Aktif İşler</p>
               <p className="text-2xl font-black">{statsData.activeJobs}</p>
-            <div>
+              </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">📝</div>
               <p className="text-xs text-white/80">Verilen Teklifler</p>
