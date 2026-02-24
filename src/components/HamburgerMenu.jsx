@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { X, Settings, HelpCircle, Info, LogOut } from 'lucide-react'
+import Logo from './Logo'
 
 function HamburgerMenu({ isOpen, onClose }) {
   const { user, logout } = useAuth()
@@ -34,7 +35,10 @@ function HamburgerMenu({ isOpen, onClose }) {
         {/* Header */}
         <div className="blue-gradient-bg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-white">Menu</h2>
+            <div className="flex items-center gap-2">
+              <Logo size="xs" />
+              <h2 className="text-2xl font-black text-white">Usta Go</h2>
+            </div>
             <button 
               onClick={onClose}
               className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"

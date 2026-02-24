@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
+import Logo from '../components/Logo'
 
 function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -121,9 +122,7 @@ function AdminDashboard() {
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <Logo size="sm" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Admin Paneli</h1>
               <p className="text-sm text-gray-500">Hos geldin, {user?.name}</p>
