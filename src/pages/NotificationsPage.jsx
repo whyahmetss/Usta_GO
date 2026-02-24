@@ -49,7 +49,7 @@ function NotificationsPage() {
           <div>
             <h1 className="text-2xl font-black text-white">Bildirimler</h1>
             {unreadCount > 0 && (
-              <p className="text-white/80 text-sm">{unreadCount} okunmamis bildirim</p>
+              <p className="text-white/80 text-sm">{unreadCount} Okunmamış Bildirimler</p>
             )}
           </div>
         </div>
@@ -60,8 +60,8 @@ function NotificationsPage() {
         {notifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔔</div>
-            <p className="text-gray-600 font-semibold">Henuz bildirim yok</p>
-            <p className="text-gray-400 text-sm mt-2">Is olusturulunca veya mesaj gelince bildirimler burada gorunur</p>
+            <p className="text-gray-600 font-semibold">Henüz bildirim yok</p>
+            <p className="text-gray-400 text-sm mt-2">İş oluşturulunca veya mesaj gelince bildirimler burada görünür</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -97,7 +97,7 @@ function NotificationsPage() {
             onClick={markAllNotificationsRead}
             className="w-full mt-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
           >
-            Tumunu Okundu Olarak Isaretle
+            Tümunü Okundu Olarak İşaretle
           </button>
         )}
       </div>
