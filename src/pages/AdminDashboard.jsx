@@ -73,7 +73,7 @@ function AdminDashboard() {
         }
       } catch (err) {
         console.error('Load dashboard error:', err)
-        setError(err.message || 'Veri yuklenirken hata olustu')
+        setError(err.message || 'Veri yüklenirken hata oluştu')
       } finally {
         setLoading(false)
       }
