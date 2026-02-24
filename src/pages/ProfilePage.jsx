@@ -197,28 +197,6 @@ function ProfilePage() {
           </div>
         )}
 
-// Buradan öncesinde muhtemelen bir if bloğu veya useEffect var.
-  // O bloğun kapandığından emin olmalısın:
-  } 
-
-  // Stats card definitions
-  const customerCards = [
-    { icon: '📋', label: 'Aktif İşler',      value: statsData.activeJobs,    link: '/jobs' },
-    { icon: '📝', label: 'Aldığı Teklifler', value: statsData.offers,         link: '/jobs' },
-    { icon: '✅', label: 'Tamamlanan',        value: statsData.completedJobs,  link: '/jobs' },
-    { icon: '💰', label: 'Toplam Harcama',   value: `${Number(statsData.totalSpent).toLocaleString('tr-TR')} TL`, link: '/wallet' },
-    { icon: '🎁', label: 'Kuponlar',          value: statsData.coupons,        link: '/wallet' },
-    { icon: '⭐', label: 'Ortalama Puan',      value: statsData.averageRating,  link: '/reviews' },
-  ];
-
-  const professionalCards = [
-    { icon: '✅', label: 'Tamamlanan İşler',  value: statsData.completedJobs,  link: '/jobs' },
-    { icon: '📋', label: 'Aktif İşler',        value: statsData.activeJobs,     link: '/jobs' },
-    { icon: '📝', label: 'Verilen Teklifler',  value: statsData.offers,          link: '/jobs' },
-    { icon: '💰', label: 'Bu Ay Kazanç',       value: `${Number(statsData.thisMonthEarnings).toLocaleString('tr-TR')} TL`, link: '/wallet' },
-    { icon: '⭐', label: 'Ortalama Puan',      value: statsData.rating,           link: '/reviews' },
-    { icon: '📈', label: 'Başarı Oranı',       value: `%${statsData.successRate}`, link: '/jobs' },
-  ];
         {/* Referral Section (Düzeltilmiş Halı) */}
         {user?.role === 'customer' && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-lg mb-4">
