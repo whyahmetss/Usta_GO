@@ -407,9 +407,11 @@ function WalletPage() {
                       }`}>
                         {job.complaint?.status === 'open' ? 'Açık' : job.complaint?.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
                       </span>
-                    </div>
+         </div>
                     {job.complaint?.details && (
-                   <p className="text-xs text-gray-500">
+                      <p className="text-sm text-gray-600 mb-2">{job.complaint.details}</p>
+                    )}
+                    <p className="text-xs text-gray-500">
                       {new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
@@ -418,6 +420,9 @@ function WalletPage() {
             )}
           </div>
         </div>
+      </div>
+    )
+  }
       </div>
     );
   }
