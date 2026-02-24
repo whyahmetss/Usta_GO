@@ -213,7 +213,7 @@ function AdminComplaintsPage() {
                             onClick={() => handleResolveComplaint(complaint.id, complaint.jobId)}
                             className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
                           >
-                            <CheckCircle size={16} /> Çöz
+                            <CheckCircle size={16} /> Çöz Bakalım Ahmet
                           </button>
                           <button
                             onClick={() => handleRejectComplaint(complaint.id, complaint.jobId)}
