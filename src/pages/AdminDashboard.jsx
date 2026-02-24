@@ -98,7 +98,7 @@ function AdminDashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Admin paneli yukleniyor...</p>
+          <p className="text-gray-600">Admin paneli yükleniyor...</p>
         </div>
       </div>
     )
@@ -125,11 +125,11 @@ function AdminDashboard() {
             <Logo size="sm" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Admin Paneli</h1>
-              <p className="text-sm text-gray-500">Hos geldin, {user?.name}</p>
+              <p className="text-sm text-gray-500">Hoş geldin, {user?.name}</p>
             </div>
           </div>
           <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition">
-            <LogOut size={18} /> Cikis
+            <LogOut size={18} /> Çıkış
           </button>
         </div>
       </div>
@@ -167,18 +167,18 @@ function AdminDashboard() {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div onClick={() => navigate('/admin/users')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
             <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">👥</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanici Yonetimi</h3>
-            <p className="text-gray-600 text-sm">Musteri ve usta hesaplarini yonet</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h3>
+            <p className="text-gray-600 text-sm">Müşteri ve Usta hesaplarını yönet</p>
           </div>
           <div onClick={() => navigate('/admin/jobs')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
             <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">📋</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Is Yonetimi</h3>
-            <p className="text-gray-600 text-sm">Tum isleri goruntule ve yonet</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">İş Yönetimi</h3>
+            <p className="text-gray-600 text-sm">Tüm işleri görüntüle ve yönet</p>
           </div>
           <div onClick={() => navigate('/admin/withdrawals')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
             <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">💰</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Para Cekme Talepleri</h3>
-            <p className="text-gray-600 text-sm">Usta odemelerini onayla</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Para Çekme Talepleri</h3>
+            <p className="text-gray-600 text-sm">Usta ödemelerini onayla</p>
             {pendingWithdrawals > 0 && (
               <div className="mt-3">
                 <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{pendingWithdrawals} Bekliyor</span>
@@ -203,9 +203,9 @@ function AdminDashboard() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Son Isler</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Son İşler</h3>
           {recentJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-6">Henuz is yok</p>
+            <p className="text-gray-500 text-center py-6">Henüz iş yok</p>
           ) : (
             <div className="space-y-3">
               {recentJobs.map(job => (
@@ -236,8 +236,8 @@ function AdminDashboard() {
                       {job.status === 'pending' ? 'Bekliyor' :
                        job.status === 'accepted' ? 'Kabul Edildi' :
                        job.status === 'in_progress' ? 'Devam Ediyor' :
-                       job.status === 'cancelled' ? 'Iptal' :
-                       job.status === 'rated' ? 'Degerlendirildi' : 'Tamamlandi'}
+                       job.status === 'cancelled' ? 'İptal' :
+                       job.status === 'rated' ? 'Değerlendirildi' : 'Tamamlandı'}
                     </span>
                   </div>
                 </div>
