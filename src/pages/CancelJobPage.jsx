@@ -28,7 +28,7 @@ function CancelJobPage() {
           // Get cancellation count from user data
           setCancellationCount(user?.cancellationCount || 0)
         } else {
-          setError('Is bulunamadi')
+          setError('İş bulunamadı')
         }
       } catch (err) {
         console.error('Load job error:', err)
@@ -47,7 +47,7 @@ function CancelJobPage() {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Is yukleniyor...</p>
+        <p className="text-gray-600">İş yükleniyor...</p>
       </div>
     </div>
   }
@@ -55,8 +55,8 @@ function CancelJobPage() {
   if (error || !job) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <p className="text-gray-600 mb-4">{error || 'Is bulunamadi'}</p>
-        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Geri Don</button>
+        <p className="text-gray-600 mb-4">{error || 'İş bulunamadı'}</p>
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Geri Dön</button>
       </div>
     </div>
   }
@@ -72,19 +72,19 @@ function CancelJobPage() {
   }
 
   const reasons = isProfessional
-    ? ['Musait degilim', 'Malzeme eksikligi', 'Konum cok uzak', 'Acil durum', 'Diger']
-    : ['Vazgectim', 'Yanlis adres girdim', 'Baska usta buldum', 'Fiyat yuksek', 'Diger']
+    ? ['Müsait değilim', 'Malzeme eksikliği', 'Konum çok uzak', 'Acil durum', 'Diğer']
+    : ['Vazgeçtim', 'Yanlış adres girdim', 'Başka bir usta buldum', 'Fiyat yüksek', 'Diğer']
 
  const handleCancel = async () => {
     const finalReason = reason === 'Diger' ? customReason : reason
     if (!finalReason) {
-      alert('Lutfen bir iptal nedeni secin')
+      alert('Lütfen bir iptal nedeni seçin')
       return
     }
 
     const warningMsg = penalty > 0
-      ? `Bu is iptal edilecek ve ${penalty} TL ceza kesilecek. Devam etmek istiyor musunuz?`
-      : 'Bu is iptal edilecek. Devam etmek istiyor musunuz?'
+      ? `Bu iş iptal edilecek ve ${penalty} TL Sadakatsizlik bedeli kesilecek. Devam etmek istiyor musunuz?`
+      : 'Bu iş iptal edilecek. Devam etmek istiyor musunuz?'
 
     if (confirm(warningMsg)) {
       setSubmitting(true)
@@ -132,9 +132,9 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
           <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex gap-3">
             <AlertTriangle size={24} className="text-red-600 flex-shrink-0" />
             <div>
-              <h3 className="font-bold text-red-900 mb-1">İptal Cezası</h3>
-              <p className="text-red-700 text-sm">Bu işi iptal ederseniz <span className="font-black">{penalty} TL</span> ceza kesilecektir.</p>
-              {job.status === 'in_progress' && <p className="text-red-600 text-xs mt-1">Devam eden işler icin ceza yüksektir.</p>}
+              <h3 className="font-bold text-red-900 mb-1">Sadakatsizlik Bedeli</h3>
+              <p className="text-red-700 text-sm">Bu işi iptal ederseniz <span className="font-black">{penalty} TL</span> sadakatsizlik bedeli kesilecektir.</p>
+              {job.status === 'in_progress' && <p className="text-red-600 text-xs mt-1">Devam eden işler için ceza yüksektir.</p>}
             </div>
           </div>
         )}
