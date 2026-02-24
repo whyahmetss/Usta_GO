@@ -413,10 +413,12 @@ function WalletPage() {
                     )}
                     <p className="text-xs text-gray-500">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
               </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
