@@ -20,7 +20,7 @@ function HelpPage() {
       a: 'Evet, işin statüsüne göre iptal etme seçeneği vardır. Tamamlanmışsa para iade edilmez.'
     },
     {
-      q: 'Referral sisteminde ne kazanırım?',
+      q: 'Referans sisteminde ne kazanırım?',
       a: 'Arkadaşınızı davet edin, kaydolunca her biriniz ₺50 kupon alırsınız.'
     },
     {
@@ -105,14 +105,14 @@ function HelpPage() {
               <Phone size={20} />
               <div>
                 <p className="text-sm font-semibold">Ara</p>
-                <p className="text-xs text-white/80">+90 532 444 5566</p>
+                <p className="text-xs text-white/80">+90 535 273 7638</p>
               </div>
             </a>
             <div className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur rounded-xl">
               <MessageCircle size={20} />
               <div>
                 <p className="text-sm font-semibold">Canlı Sohbet</p>
-                <p className="text-xs text-white/80">Pazartesi-Cuma, 09:00-18:00</p>
+                <p className="text-xs text-white/80">Pazartesi-Pazar, 09:00-23:00</p>
               </div>
             </div>
           </div>
