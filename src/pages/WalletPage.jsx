@@ -245,25 +245,39 @@ function WalletPage() {
           </div>
         </div>
 
-        <div className="px-4 py-6 space-y-6">
-          {/* Balance Card */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg text-white pointer-events-none">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
-                <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
-              </div>
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <DollarSign size={28} />
-              </div>
-            </div>
-            {customerEscrow > 0 && (
-              <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-                <p className="text-white/80 text-xs mb-1">Escrow'da Tutulan</p>
-                <p className="text-lg font-bold">{customerEscrow.toLocaleString('tr-TR')} TL</p>
-              </div>
-            )}
-          </div>
+{/* Balance Card - Modernize Edilmiş Versiyon */}
+<div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-7 shadow-2xl text-white relative overflow-hidden group">
+  <div className="relative z-10">
+    <div className="flex items-center justify-between mb-6">
+      <div>
+        <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Hesap Bakiyesi</p>
+        <h2 className="text-5xl font-black tracking-tight">
+          {customerBalance.toLocaleString('tr-TR')} <span className="text-2xl text-blue-200">TL</span>
+        </h2>
+      </div>
+      
+      {/* Tıklanabilir Yeni Buton */}
+      <button 
+        onClick={() => navigate('/odeme')}
+        className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-xl hover:bg-blue-50 transition-all active:scale-90 pointer-events-auto"
+      >
+        <Plus size={32} strokeWidth={3} />
+      </button>
+    </div>
+
+    {customerEscrow > 0 && (
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+        <p className="text-white/60 text-xs font-bold uppercase mb-1">Escrow'da Tutulan</p>
+        <p className="text-xl font-black">{customerEscrow.toLocaleString('tr-TR')} TL</p>
+      </div>
+    )}
+  </div>
+
+  {/* Arka Plan Süsü (O eski kaba dolar yerine) */}
+  <div className="absolute -right-4 -bottom-4 opacity-10 transform rotate-12 pointer-events-none">
+    <DollarSign size={120} />
+  </div>
+</div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
