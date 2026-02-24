@@ -1,4 +1,4 @@
-import { useState } from 'react'
+0import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { X, Settings, HelpCircle, Info, LogOut } from 'lucide-react'
@@ -101,7 +101,7 @@ function HamburgerMenu({ isOpen, onClose }) {
           <p className="text-center text-xs text-gray-500">
             Usta Go v3.0.0
             <br />
-            © 2025 Tüm hakları saklıdır
+            © 2026 Tüm hakları saklıdır
           </p>
         </div>
       </div>
