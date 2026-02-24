@@ -421,13 +421,13 @@ function WalletPage() {
           </div>
         </div>
       </div>
+</div>
+        </div>
+      </div>
     )
   }
-      </div>
-    );
-  }
 
-  return null;
+  return null
 }
 
-export default WalletPage;
+export default WalletPage
