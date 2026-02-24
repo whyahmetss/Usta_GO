@@ -167,7 +167,7 @@ function AuthPage() {
 />
                 <input
                   type="text"
-                  placeholder="Davet Kodu (Opsiyonel)"
+                  placeholder="Davet Kodu (İsteğe Bağlı)"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
                   className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
