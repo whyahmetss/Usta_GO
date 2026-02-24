@@ -25,7 +25,7 @@ export default function Logo({ size = 'md', className = '' }) {
     <img
       src={src}
       alt="Usta Go"
-      className={`${sizeMap[size] || sizeMap.md} rounded-xl object-contain ${className}`}
+      className={`${sizeMap[size]} object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]`}
     />
   )
 }
