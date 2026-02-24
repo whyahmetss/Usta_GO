@@ -282,7 +282,7 @@ const handleCopyReferral = () => {
               <Share2 size={20} className="text-blue-600" />
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon kazanın!</p>
             
             <div className="flex gap-2">
               {/* Kodun göründüğü alan */}
@@ -439,7 +439,7 @@ export default ProfilePage
               <Share2 size={20} className="text-blue-600" />
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon kazanın!</p>
             
             <div className="flex gap-2">
               {/* Kodun göründüğü alan */}
