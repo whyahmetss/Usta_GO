@@ -412,16 +412,17 @@ function WalletPage() {
                       <p className="text-sm text-gray-600 mb-2">{job.complaint.details}</p>
                     )}
                     <p className="text-xs text-gray-500">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
-</div>
-                  
+                  </div>
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    )
+  }
 
-export default WalletPage;
+  return null
+}
+
+export default WalletPage
