@@ -52,7 +52,7 @@ function RateJobPage() {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Is yukleniyor...</p>
+        <p className="text-gray-600">İş yükleniyor...</p>
       </div>
     </div>
   }
@@ -168,7 +168,7 @@ function RateJobPage() {
 
         {/* Review */}
         <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-          <h3 className="font-bold text-gray-900 mb-3">Yorumunuz (Opsiyonel)</h3>
+          <h3 className="font-bold text-gray-900 mb-3">Yorumunuz (İateğe bağlıs)</h3>
           <textarea
             value={review}
             onChange={(e) => setReview(e.target.value)}
