@@ -28,13 +28,23 @@ function MyJobsPage() {
           // Map jobs from backend format to frontend format
           const mappedJobs = mapJobsFromBackend(rawData)
 
-          // Filter jobs for current user
-          const filtered = mappedJobs.filter(j => {
-            // Check both customerId and customer.id for compatibility
-            const dbId = String(j.customerId || j.customer?.id || "").trim()
-            const userId = String(user?.id || "").trim()
-            return dbId === userId
-          })
+          // Filter jobs based on user role
+          let filtered
+          if (user?.role === 'professional') {
+            // For professionals: show jobs they're assigned to (professional?.id matches user.id)
+            filtered = mappedJobs.filter(j => {
+              const profId = String(j.professionalId || j.professional?.id || "").trim()
+              const userId = String(user?.id || "").trim()
+              return profId === userId
+            })
+          } else {
+            // For customers: show jobs they created (customer?.id matches user.id)
+            filtered = mappedJobs.filter(j => {
+              const custId = String(j.customerId || j.customer?.id || "").trim()
+              const userId = String(user?.id || "").trim()
+              return custId === userId
+            })
+          }
 
           setUserJobs(filtered)
         }
