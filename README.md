@@ -1,5 +1,4 @@
-# Usta Go - KOMPLE ÇALIŞIR VERSİYON 🏠⚡
-
+ammmmmmmmmmmmmmmmmm
 Profesyonel ev hizmetleri platformu - Tam özellikli, çalışır versiyon
 
 ## ✅ YAPILAN TÜM ÖZELLİKLER
