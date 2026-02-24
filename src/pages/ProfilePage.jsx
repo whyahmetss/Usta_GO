@@ -196,24 +196,6 @@ function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-12">
-        {/* İstatistik Kartları - 2x3 grid */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg mb-4">
-          <h3 className="font-bold text-gray-900 mb-4">İstatistikler</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {statCards.map((card, idx) => (
-              <button
-                key={idx}
-                onClick={() => navigate(card.link)}
-                className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-4 text-left hover:opacity-90 transition active:scale-95"
-              >
-                <div className="text-2xl mb-2">{card.icon}</div>
-                <div className="text-xl font-black text-white leading-tight">{card.value}</div>
-                <div className="text-xs text-white/80 mt-1">{card.label}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Wallet Button */}
         <button
           onClick={() => navigate('/wallet')}
@@ -247,6 +229,24 @@ function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* İstatistik Kartları - 3x2 grid (küçük) */}
+        <div className="bg-white rounded-2xl p-4 shadow-lg mb-4">
+          <h3 className="font-bold text-gray-900 mb-3 text-sm">İstatistikler</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {statCards.map((card, idx) => (
+              <button
+                key={idx}
+                onClick={() => navigate(card.link)}
+                className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-2.5 text-left hover:opacity-90 transition active:scale-95"
+              >
+                <div className="text-lg mb-1">{card.icon}</div>
+                <div className="text-sm font-black text-white leading-tight">{card.value}</div>
+                <div className="text-[10px] text-white/80 mt-0.5">{card.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Referral Section (Customers) */}
         {user?.role === 'customer' && (
