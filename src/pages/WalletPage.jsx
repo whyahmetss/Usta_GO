@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download, Plus } from 'lucide-react'
+import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download } from 'lucide-react'
 
 function WalletPage() {
   const { user } = useAuth()
@@ -13,15 +13,12 @@ function WalletPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Professional wallet data
-  const [walletData, setWalletData] = useState(null)
-  const [transactions, setTransactions] = useState([])
   const [balance, setBalance] = useState(0)
   const [pendingWithdrawal, setPendingWithdrawal] = useState(0)
   const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
   const [lastMonthEarnings, setLastMonthEarnings] = useState(0)
+  const [transactions, setTransactions] = useState([])
 
-  // Customer wallet data
   const [customerBalance, setCustomerBalance] = useState(0)
   const [customerEscrow, setCustomerEscrow] = useState(0)
   const [totalSpent, setTotalSpent] = useState(0)
@@ -29,31 +26,25 @@ function WalletPage() {
   const [customerJobs, setCustomerJobs] = useState([])
   const [completedJobs, setCompletedJobs] = useState([])
 
-  // Load wallet data based on user role
   useEffect(() => {
     const loadWalletData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // user.role is already mapped (professional/customer/admin) by AuthContext
         if (user?.role === 'professional') {
-          // Load professional wallet data
           const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
           if (walletResponse.data) {
-            setWalletData(walletResponse.data)
             setBalance(walletResponse.data.balance || 0)
             setPendingWithdrawal(walletResponse.data.pendingWithdrawal || 0)
             setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
             setLastMonthEarnings(walletResponse.data.lastMonthEarnings || 0)
           }
-
           const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
           if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
             setTransactions(transactionsResponse.data)
           }
         } else if (user?.role === 'customer') {
-          // Load customer wallet data
           const response = await fetchAPI(API_ENDPOINTS.AUTH.ME)
           if (response.data) {
             setCustomerBalance(response.data.balance || 0)
@@ -61,32 +52,26 @@ function WalletPage() {
             setTotalSpent(response.data.totalSpent || 0)
             setCoupons(response.data.coupons || [])
           }
-
-          // Load customer's jobs and map from backend format
           const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
           if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
             const mapped = mapJobsFromBackend(jobsResponse.data)
             const userJobs = mapped.filter(j => j.customer?.id === user?.id)
             setCustomerJobs(userJobs)
-            // After mapping, statuses are lowercase
             setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
           }
         }
       } catch (err) {
         console.error('Load wallet error:', err)
-        setError(err.message || 'Cüzdan verileri yüklenirken hata oluştu')
+        setError(err.message || 'Cuzdan verileri yuklenirken hata olustu')
       } finally {
         setLoading(false)
       }
     }
 
-    if (user) {
-      loadWalletData()
-    }
+    if (user) loadWalletData()
   }, [user])
 
   const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
-
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
     : thisMonthEarnings > 0 ? 100 : 0
@@ -107,10 +92,7 @@ function WalletPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-          >
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
             Yenile
           </button>
         </div>
@@ -118,16 +100,7 @@ function WalletPage() {
     )
   }
 
-  // user.role is already mapped by AuthContext (professional/customer/admin)
   if (user?.role === 'professional') {
-    return renderProfessionalWallet()
-  }
-
-  if (user?.role === 'customer') {
-    return renderCustomerWallet()
-  }
-
-  function renderProfessionalWallet() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -137,8 +110,8 @@ function WalletPage() {
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-xl font-black text-gray-900">Cüzdan (Usta)</h1>
-                <p className="text-xs text-gray-500">Kazançlarınızı yönetin</p>
+                <h1 className="text-xl font-black text-gray-900">Cuzdan (Usta)</h1>
+                <p className="text-xs text-gray-500">Kazanclarinizi yonetin</p>
               </div>
             </div>
           </div>
@@ -157,14 +130,14 @@ function WalletPage() {
             </div>
             {pendingWithdrawal > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3 mb-4">
-                <p className="text-white/80 text-xs mb-1">Bekleyen Çekim</p>
+                <p className="text-white/80 text-xs mb-1">Bekleyen Cekim</p>
                 <p className="text-xl font-bold">{pendingWithdrawal.toLocaleString('tr-TR')} TL</p>
               </div>
             )}
             <button
               onClick={() => navigate('/withdraw')}
-              className={`w-full py-3 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition ${balance <= 0 ? 'bg-white/50 text-green-800 cursor-not-allowed' : 'bg-white text-green-600 hover:bg-white/90'}`}
               disabled={balance <= 0}
+              className={`w-full py-3 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition ${balance <= 0 ? 'bg-white/50 text-green-800 cursor-not-allowed' : 'bg-white text-green-600 hover:bg-white/90'}`}
             >
               <Download size={20} /> Para Cek
             </button>
@@ -172,24 +145,22 @@ function WalletPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp size={16} className="text-green-600" />
-                </div>
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+                <TrendingUp size={16} className="text-green-600" />
               </div>
               <p className="text-2xl font-black text-gray-900">{thisMonthEarnings.toLocaleString('tr-TR')} TL</p>
               <p className="text-xs text-gray-600">Bu Ay</p>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-8 h-8 ${growthPercentage >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center`}>
-                  {growthPercentage >= 0 ? <TrendingUp size={16} className="text-green-600" /> : <TrendingDown size={16} className="text-red-600" />}
-                </div>
+              <div className={`w-8 h-8 ${growthPercentage >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center mb-2`}>
+                {growthPercentage >= 0
+                  ? <TrendingUp size={16} className="text-green-600" />
+                  : <TrendingDown size={16} className="text-red-600" />}
               </div>
               <p className={`text-2xl font-black ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {growthPercentage >= 0 ? '+' : ''}{growthPercentage}%
               </p>
-              <p className="text-xs text-gray-600">Büyüme</p>
+              <p className="text-xs text-gray-600">Buyume</p>
             </div>
           </div>
 
@@ -201,12 +172,12 @@ function WalletPage() {
           {transactions.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">💰</div>
-              <p className="text-gray-600 font-semibold">Henüz işlem yok</p>
-              <p className="text-gray-400 text-sm mt-2">İş tamamladığınızda kazançlarınız burada görünür</p>
+              <p className="text-gray-600 font-semibold">Henuz islem yok</p>
+              <p className="text-gray-400 text-sm mt-2">Is tamamladiginizda kazanclariniz burada gorunur</p>
             </div>
           ) : (
             <div className="space-y-2">
-              <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son İşlemler' : 'Tüm İşlemler'}</h3>
+              <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son Islemler' : 'Tum Islemler'}</h3>
               {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
                 <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
                   <div className={`w-12 h-12 ${tx.type === 'earning' ? 'bg-green-100' : tx.type === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -228,7 +199,7 @@ function WalletPage() {
     )
   }
 
-  function renderCustomerWallet() {
+  if (user?.role === 'customer') {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -245,41 +216,25 @@ function WalletPage() {
           </div>
         </div>
 
-{/* Balance Card - Modernize Edilmiş Versiyon */}
-<div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-7 shadow-2xl text-white relative overflow-hidden group">
-  <div className="relative z-10">
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Hesap Bakiyesi</p>
-        <h2 className="text-5xl font-black tracking-tight">
-          {customerBalance.toLocaleString('tr-TR')} <span className="text-2xl text-blue-200">TL</span>
-        </h2>
-      </div>
-      
-      {/* Tıklanabilir Yeni Buton */}
-      <button 
-        onClick={() => navigate('/odeme')}
-        className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-xl hover:bg-blue-50 transition-all active:scale-90 pointer-events-auto"
-      >
-        <Plus size={32} strokeWidth={3} />
-      </button>
-    </div>
+        <div className="px-4 py-6 space-y-6">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
+                <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
+              </div>
+              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                <DollarSign size={28} />
+              </div>
+            </div>
+            {customerEscrow > 0 && (
+              <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+                <p className="text-white/80 text-xs mb-1">Escrow'da Tutulan</p>
+                <p className="text-lg font-bold">{customerEscrow.toLocaleString('tr-TR')} TL</p>
+              </div>
+            )}
+          </div>
 
-    {customerEscrow > 0 && (
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-        <p className="text-white/60 text-xs font-bold uppercase mb-1">Escrow'da Tutulan</p>
-        <p className="text-xl font-black">{customerEscrow.toLocaleString('tr-TR')} TL</p>
-      </div>
-    )}
-  </div>
-
-  {/* Arka Plan Süsü (O eski kaba dolar yerine) */}
-  <div className="absolute -right-4 -bottom-4 opacity-10 transform rotate-12 pointer-events-none">
-    <DollarSign size={120} />
-  </div>
-</div>
-
-          {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
               <div className="text-2xl mb-1">💸</div>
@@ -289,13 +244,12 @@ function WalletPage() {
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
               <div className="text-2xl mb-1">✅</div>
               <p className="text-2xl font-black text-gray-900">{completedJobs.length}</p>
-              <p className="text-xs text-gray-600">Tamamlanan İş</p>
+              <p className="text-xs text-gray-600">Tamamlanan Is</p>
             </div>
           </div>
 
-          {/* Coupons */}
           <div>
-            <h3 className="font-bold text-gray-900 mb-3">Kuponlarım ({activeCoupons.length})</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Kuponlarim ({activeCoupons.length})</h3>
             {activeCoupons.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
                 <div className="text-4xl mb-2">🎟️</div>
@@ -306,8 +260,8 @@ function WalletPage() {
                 {activeCoupons.map(coupon => (
                   <div key={coupon.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-gray-900">{coupon.amount} TL İndirim</p>
-                      <p className="text-xs text-gray-500">Süresi: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</p>
+                      <p className="font-bold text-gray-900">{coupon.amount} TL Indirim</p>
+                      <p className="text-xs text-gray-500">Suresi: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</p>
                     </div>
                     <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition">
                       Kullan
@@ -318,13 +272,12 @@ function WalletPage() {
             )}
           </div>
 
-          {/* Recent Jobs */}
           <div>
-            <h3 className="font-bold text-gray-900 mb-3">Son İşler</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Son Isler</h3>
             {customerJobs.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
                 <div className="text-4xl mb-2">📋</div>
-                <p className="text-gray-600 text-sm">Henüz hiç iş oluşturmadınız</p>
+                <p className="text-gray-600 text-sm">Henuz hic is olusturmadiniz</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -337,10 +290,9 @@ function WalletPage() {
                         job.status === 'accepted' ? 'bg-blue-100 text-blue-700' :
                         'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {job.status === 'pending' ? 'Beklemede' : job.status === 'accepted' ? 'Kabul Edildi' : 'Tamamlandı'}
+                        {job.status === 'pending' ? 'Beklemede' : job.status === 'accepted' ? 'Kabul Edildi' : 'Tamamlandi'}
                       </span>
                     </div>
-                    {/* job.address is the mapped field; job.price is also mapped from budget */}
                     <p className="text-sm text-gray-600 mb-2">{job.address || job.location || ''}</p>
                     <p className="text-lg font-black text-gray-900">{job.price ?? job.budget ?? 0} TL</p>
                   </div>
@@ -349,47 +301,49 @@ function WalletPage() {
             )}
           </div>
 
-          {/* Değerlendirmelerim */}
           <div>
-            <h3 className="font-bold text-gray-900 mb-3">⭐ Değerlendirmelerim</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Degerlendirmelerim</h3>
             {!customerJobs.some(j => j.rating) ? (
               <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
                 <div className="text-4xl mb-2">⭐</div>
-                <p className="text-gray-600 text-sm">Henüz değerlendirme yapmadınız</p>
+                <p className="text-gray-600 text-sm">Henuz degerlendirme yapmadiniz</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {customerJobs.filter(j => j.rating && (j.rating?.customerRating || j.rating?.professionalRating)).map(job => (
-                  <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-bold text-gray-900">{job.professional?.name || 'Usta'}</p>
-                        <p className="text-xs text-gray-500">{job.title}</p>
+                {customerJobs
+                  .filter(j => j.rating && (j.rating.customerRating || j.rating.professionalRating))
+                  .map(job => {
+                    const stars = job.rating.customerRating || job.rating.professionalRating || 0
+                    return (
+                      <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-bold text-gray-900">{job.professional?.name || 'Usta'}</p>
+                            <p className="text-xs text-gray-500">{job.title}</p>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i}>{i < stars ? '⭐' : '☆'}</span>
+                            ))}
+                          </div>
+                        </div>
+                        {job.rating.review && (
+                          <p className="text-sm text-gray-600 mb-2">"{job.rating.review}"</p>
+                        )}
+                        <p className="text-xs text-gray-500">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
                       </div>
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => {
-                          const stars = job.rating?.customerRating || job.rating?.professionalRating || 0
-                          return <span key={i} className={i < stars ? '⭐' : '☆'} />
-                        })}
-                      </div>
-                    </div>
-                    {job.rating?.review && (
-                      <p className="text-sm text-gray-600 mb-2">"{job.rating.review}"</p>
-                    )}
-                    <p className="text-xs text-gray-500">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
-                  </div>
-                ))}
+                    )
+                  })}
               </div>
             )}
           </div>
 
-          {/* Şikayetlerim */}
           <div>
-            <h3 className="font-bold text-gray-900 mb-3">🚨 Şikayetlerim</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Sikayetlerim</h3>
             {!customerJobs.some(j => j.complaint) ? (
               <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
                 <div className="text-4xl mb-2">✅</div>
-                <p className="text-gray-600 text-sm">Şikayet göndermediniz</p>
+                <p className="text-gray-600 text-sm">Sikayet gondermediniz</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -405,23 +359,18 @@ function WalletPage() {
                         job.complaint?.status === 'open' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {job.complaint?.status === 'open' ? 'Açık' : job.complaint?.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                        {job.complaint?.status === 'open' ? 'Acik' : job.complaint?.status === 'resolved' ? 'Cozuldu' : 'Reddedildi'}
                       </span>
-         </div>
+                    </div>
                     {job.complaint?.details && (
                       <p className="text-sm text-gray-600 mb-2">{job.complaint.details}</p>
                     )}
-                    <p className="text-xs text-gray-500">
-                      {new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}
-                    </p>
+                    <p className="text-xs text-gray-500">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
-      </div>
-</div>
         </div>
       </div>
     )
