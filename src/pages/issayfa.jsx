@@ -87,7 +87,7 @@ function CreateJobPage() {
     if (isCreating) return
     
     if (description.trim().length < 10) {
-      alert('Lütfen en az 10 karakterlik bir açıklama yazın.')
+      alert('Lütfen en az 10 karakterlik bir açıklama yazınız.')
       return
     }
 
@@ -153,7 +153,7 @@ function CreateJobPage() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" id="photo-upload" />
               <label htmlFor="photo-upload" className="cursor-pointer block text-center">
-                {photoPreview ? <img src={photoPreview} className="w-full h-48 object-cover rounded-xl" /> : <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2"><Camera size={40} className="text-gray-400" /><p className="text-gray-500 font-medium">Sorunu fotoğrafla</p></div>}
+                {photoPreview ? <img src={photoPreview} className="w-full h-48 object-cover rounded-xl" /> : <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2"><Kamera size={40} className="text-gray-400" /><p className="text-gray-500 font-medium">Sorunu fotoğrafla</p></div>}
               </label>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-lg">
@@ -168,7 +168,7 @@ function CreateJobPage() {
           </div>
         )}
 
-        {step === 2 && <div className="bg-white rounded-2xl p-12 shadow-lg text-center font-bold text-blue-600">AI Analiz Ediyor...</div>}
+        {step === 2 && <div className="bg-white rounded-2xl p-12 shadow-lg text-center font-bold text-blue-600">AI Tam Performans Analiz Ediyor...</div>}
 
         {step === 3 && (
           <div className="space-y-4">
