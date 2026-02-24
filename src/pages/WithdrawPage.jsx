@@ -67,12 +67,12 @@ function WithdrawPage() {
       })
 
       if (response.data) {
-        alert(`${withdrawAmount} TL cekim talebi olusturuldu! Admin onayindan sonra hesabiniza yatirilacak.`)
+        alert(`${withdrawAmount} TL Çekim talebi oluşturuldu! Yetkili onayından sonra hesabınıza yatırılacak.`)
         navigate('/wallet')
       }
     } catch (err) {
       console.error('Withdrawal error:', err)
-      setError(err.message || 'Para cekme talebi olusturulamadi')
+      setError(err.message || 'Para çekme talebi oluşturulamadı')
     } finally {
       setSubmitting(false)
     }
@@ -83,7 +83,7 @@ function WithdrawPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cuzdan yukleniyor...</p>
+          <p className="text-gray-600">Cüzdan yükleniyor...</p>
         </div>
       </div>
     )
@@ -98,8 +98,8 @@ function WithdrawPage() {
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
             <div>
-              <h1 className="text-xl font-black text-gray-900">Para Cek</h1>
-              <p className="text-xs text-gray-500">Kazancinizi hesabiniza aktarin</p>
+              <h1 className="text-xl font-black text-gray-900">Para Çek</h1>
+              <p className="text-xs text-gray-500">Kazancınızı hesabınıza aktarın</p>
             </div>
           </div>
         </div>
@@ -107,13 +107,13 @@ function WithdrawPage() {
 
       <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
         <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
-          <p className="text-white/80 text-sm mb-1">Kullanilabilir Bakiye</p>
+          <p className="text-white/80 text-sm mb-1">Kullanılabilir Bakiye</p>
           <h2 className="text-4xl font-black mb-2">{availableBalance.toLocaleString('tr-TR')} TL</h2>
-          <p className="text-white/70 text-xs">Minimum cekim: {minWithdrawal} TL</p>
+          <p className="text-white/70 text-xs">Minimum çekim: {minWithdrawal} TL</p>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <label className="block text-sm font-bold text-gray-900 mb-3">Cekilecek Tutar</label>
+          <label className="block text-sm font-bold text-gray-900 mb-3">Çekilecek Tutar</label>
           <div className="relative mb-4">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-gray-400">TL</span>
             <input type="number" value={amount} onChange={(e) => { setAmount(e.target.value); setError('') }} placeholder="0"
@@ -133,8 +133,8 @@ function WithdrawPage() {
             <h3 className="font-bold text-gray-900">Banka Bilgileri</h3>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Banka Adi</label>
-            <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Orn: Ziraat Bankasi"
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Banka Adı</label>
+            <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Örneğin: Ziraat Bankasi"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" />
           </div>
           <div>
@@ -152,10 +152,10 @@ function WithdrawPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
           <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900">
-            <p className="font-semibold mb-1">Onemli Bilgiler:</p>
+            <p className="font-semibold mb-1">Önemli Bilgiler:</p>
             <ul className="space-y-1 text-xs">
-              <li>Para cekme talebiniz admin onayindan sonra isleme alinir</li>
-              <li>Islem suresi 1-3 is gunudur</li>
+              <li>Para çekme talebiniz Yönetici onayından sonra işleme alınır</li>
+              <li>İşlem süresi 1-3 iş günüdür</li>
             </ul>
           </div>
         </div>
@@ -172,7 +172,7 @@ function WithdrawPage() {
               Isleniyor...
             </>
           ) : (
-            'Para Cekme Talebi Olustur'
+            'Para Çekme Talebi Oluştur'
           )}
         </button>
       </form>
