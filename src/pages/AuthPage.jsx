@@ -88,7 +88,7 @@ return (
       <div className="w-full max-w-md">
         {/* Başlık ve Logo Bölümü */}
         <div className="flex flex-col items-center text-center mb-8">
-          <Logo size="md" className="mb-6 shadow-2xl mx-auto rounded-3xl" />
+          <Logo size="lg" className="mb-6 shadow-2xl mx-auto rounded-3xl" />
           <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
             Usta Go
           </h1>
