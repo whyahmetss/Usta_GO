@@ -83,26 +83,21 @@ function AuthPage() {
     }
   }
 
-  return (
-<div className="min-h-screen blue-gradient-bg flex items-center justify-center p-4">
-  <div className="w-full max-w-md">
-    {/* flex-col ve items-center ekleyerek her şeyi dikeyde tam hizalıyoruz */}
-    <div className="flex flex-col items-center text-center mb-8">
-      {/* mx-auto ekleyerek logonun kendi içinde de ortalanmasını garanti ediyoruz */}
-      <Logo size="xl" className="mb-6 shadow-2xl mx-auto rounded-3xl" />
-      
-      <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
-        Usta Go
-      </h1>
-      <p className="text-white/80 font-medium italic">
-        Profesyonel Ev Hizmetleri
-      </p>
-    </div>
-    
-    {/* Buradan sonra Inputlar/Form gelecek */}
-  </div>
-</div>
+return (
+    <div className="min-h-screen blue-gradient-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Başlık ve Logo Bölümü */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <Logo size="xl" className="mb-6 shadow-2xl mx-auto rounded-3xl" />
+          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
+            Usta Go
+          </h1>
+          <p className="text-white/80 font-medium italic">
+            Profesyonel Ev Hizmetleri
+          </p>
+        </div>
 
+    {/* Buradan sonra Inputlar/Form gelecek */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
           <div className="flex gap-2 mb-6">
             <button
