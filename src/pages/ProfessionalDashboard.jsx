@@ -3,6 +3,7 @@ import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, Tre
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu.jsx'
 import Logo from '../components/Logo'
@@ -26,8 +27,11 @@ function ProfessionalDashboard() {
         setLoading(true)
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          // Normalize location field - handle both string and object formats
-          const normalizedJobs = jobsResponse.data.map(job => ({
+          // Map jobs from backend format (normalizes status to lowercase, location -> address, etc.)
+          const mappedJobs = mapJobsFromBackend(jobsResponse.data)
+
+          // Ensure location field is always an object with address property
+          const normalizedJobs = mappedJobs.map(job => ({
             ...job,
             location: typeof job.location === 'string'
               ? { address: job.location }
