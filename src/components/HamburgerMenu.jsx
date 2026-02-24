@@ -101,7 +101,7 @@ function HamburgerMenu({ isOpen, onClose }) {
           <p className="text-center text-xs text-gray-500">
             Usta Go v3.0.0
             <br />
-            © 2026 Tüm hakları saklıdır
+            © 2025 Tüm hakları saklıdır
           </p>
         </div>
       </div>
