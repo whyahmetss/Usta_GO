@@ -108,25 +108,25 @@ function CameraModal({ isOpen, onClose, onCapture }) {
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center h-full px-6 text-center">
           <div className="text-6xl mb-4">📷</div>
-          <p className="text-white text-lg mb-6">Fotograf Cek veya Kütüphaneden Sec</p>
+          <p className="text-white text-lg mb-6">Fotograf Çek veya Galeriden Seç</p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button
               onClick={takePhoto}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold"
             >
-              Kamera ile Cek
+              Kamera ile Çek
             </button>
             <button
               onClick={handleGalleryPick}
               className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold"
             >
-              Galeriden Sec
+              Galeriden Seç
             </button>
             <button
               onClick={() => { onClose() }}
               className="px-6 py-3 bg-gray-600 text-white rounded-xl font-bold"
             >
-              Iptal
+              İptal
             </button>
           </div>
         </div>
@@ -145,7 +145,7 @@ function CameraModal({ isOpen, onClose, onCapture }) {
         >
           <X size={24} className="text-white" />
         </button>
-        <span className="text-white font-bold">Fotograf Cek</span>
+        <span className="text-white font-bold">Fotoğraf Çek</span>
         <button
           onClick={switchCamera}
           className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center"
@@ -159,7 +159,7 @@ function CameraModal({ isOpen, onClose, onCapture }) {
           <div className="text-6xl mb-4">📷</div>
           <p className="text-white text-lg mb-4">{error}</p>
           <label className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold cursor-pointer">
-            Dosyadan Sec
+            Dosyadan Seç
             <input
               type="file"
               accept="image/*"
@@ -239,11 +239,11 @@ function JobDetailPage() {
           setBeforePhotos(mapped.beforePhotos || [])
           setAfterPhotos(mapped.afterPhotos || [])
         } else {
-          setError('Is bulunamadi')
+          setError('İş bulunamadı')
         }
       } catch (err) {
         console.error('Fetch job error:', err)
-        setError(err.message || 'Is yüklenirken hata oluştu')
+        setError(err.message || 'İş yüklenirken hata oluştu')
       } finally {
         setLoading(false)
       }
@@ -259,7 +259,7 @@ function JobDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Is yukleniyor...</p>
+          <p className="text-gray-600">İs yükleniyor...</p>
         </div>
       </div>
     )
@@ -269,7 +269,7 @@ function JobDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">{error || 'Is bulunamadi'}</p>
+          <p className="text-gray-600 mb-4">{error || 'İş bulunamadı'}</p>
           <button
             onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg"
@@ -285,9 +285,9 @@ function JobDetailPage() {
   const isCustomer = user?.role === 'customer'
 
   const handleAccept = () => {
-    if (confirm('Bu isi kabul etmek istiyor musunuz?')) {
+    if (confirm('Bu işi kabul etmek istiyor musunuz?')) {
       acceptJob(job.id)
-      alert('Is kabul edildi! Musteri bilgilendirildi.')
+      alert('iş kabul edildi! Musteri bilgilendirildi.')
     }
   }
 
@@ -334,20 +334,20 @@ function JobDetailPage() {
 
   const handleStartJob = () => {
     if (beforePhotos.length === 0) {
-      alert('Lutfen ise baslamadan once fotograf cekin')
+      alert('Lütfen işe başlamadan önce fotoğraf çekiniz')
       return
     }
     startJob(job.id, beforePhotos)
-    alert('Is baslatildi! Iyi calismalar.')
+    alert('İş başlatıldı! İyi çalısmalar.')
   }
 
   const handleCompleteJob = () => {
     if (afterPhotos.length === 0) {
-      alert('Lutfen is bitim fotografi cekin')
+      alert('Lütfen iş bitim fotoğrafı çekiniz')
       return
     }
     completeJob(job.id, afterPhotos)
-    alert('Is tamamlandi! Musteri degerlendirme yapacak.')
+    alert('İş tamamlandı! Müsteri değerlendirme yapacak.')
     navigate('/professional')
   }
 
@@ -435,10 +435,10 @@ function JobDetailPage() {
 
         {/* Job Info */}
         <div className="bg-white rounded-2xl p-5 shadow-lg">
-          <h3 className="font-bold text-gray-900 mb-3">Is Detaylari</h3>
+          <h3 className="font-bold text-gray-900 mb-3">İş Detayları</h3>
           <p className="text-gray-700 mb-4">{job.description}</p>
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <span className="text-sm text-gray-600">Ucret</span>
+            <span className="text-sm text-gray-600">Ücret</span>
             {/* job.price is the mapped field (from backend 'budget') */}
             <span className="text-2xl font-black text-green-600">{job.price ?? job.budget ?? 0} TL</span>
           </div>
@@ -467,7 +467,7 @@ function JobDetailPage() {
                 onClick={() => navigate(`/professional-profile/${job.professional.id}`)}
                 className="w-full py-2 bg-blue-50 text-blue-600 rounded-xl font-semibold text-sm hover:bg-blue-100 transition"
               >
-                Profili Goruntule
+                Profili Görüntüle
               </button>
             )}
           </div>
@@ -482,19 +482,19 @@ function JobDetailPage() {
             <span className="absolute left-4 w-3 h-3 bg-green-400 rounded-full animate-ping" />
             <span className="absolute left-4 w-3 h-3 bg-green-400 rounded-full" />
             <Radio size={22} className="ml-4" />
-            Canli Takip
+            Canlı Takip
           </button>
         )}
 
         {/* Photos - Professional View */}
         {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed' || job.status === 'rated') && isProfessional && (
           <div className="bg-white rounded-2xl p-5 shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-3">Fotograflar</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Fotoğraflar</h3>
 
             {job.status === 'accepted' && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-700">Baslangic Fotograflari</p>
+                  <p className="text-sm font-semibold text-gray-700">Başlangıç Fotografları</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => openCamera('before')}
@@ -524,7 +524,7 @@ function JobDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 text-center py-4">Henuz fotograf eklenmedi</p>
+                  <p className="text-sm text-gray-400 text-center py-4">Henüz fotoğraf eklenmedi</p>
                 )}
               </div>
             )}
@@ -532,7 +532,7 @@ function JobDetailPage() {
             {job.status === 'in_progress' && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-700">Bitim Fotograflari</p>
+                  <p className="text-sm font-semibold text-gray-700">İş Bitim Fotografları</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => openCamera('after')}
@@ -562,7 +562,7 @@ function JobDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 text-center py-4">Henuz fotograf eklenmedi</p>
+                  <p className="text-sm text-gray-400 text-center py-4">Henüz fotoğraf eklenmedi</p>
                 )}
               </div>
             )}
@@ -571,7 +571,7 @@ function JobDetailPage() {
               <div className="space-y-4">
                 {job.beforePhotos?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Baslangic</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Başlangıç</p>
                     <div className="grid grid-cols-3 gap-2">
                       {job.beforePhotos.map((photo, idx) => (
                         <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
@@ -601,11 +601,11 @@ function JobDetailPage() {
         {/* Customer photo view */}
         {isCustomer && (job.status === 'completed' || job.status === 'rated') && (job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
           <div className="bg-white rounded-2xl p-5 shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-3">Is Fotograflari</h3>
+            <h3 className="font-bold text-gray-900 mb-3">İş Fotografları</h3>
             <div className="space-y-4">
               {job.beforePhotos?.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Baslangic</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Baslangıç</p>
                   <div className="grid grid-cols-3 gap-2">
                     {job.beforePhotos.map((photo, idx) => (
                       <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
@@ -639,7 +639,7 @@ function JobDetailPage() {
                 onClick={handleAccept}
                 className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
               >
-                Isi Kabul Et
+                İşi Kabul Et
               </button>
             )}
 
@@ -650,7 +650,7 @@ function JobDetailPage() {
                   className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2"
                 >
                   <Navigation size={20} />
-                  Yola Cik (Google Maps)
+                  Yola Çık (Google Maps)
                 </button>
                 <button
                   onClick={handleStartJob}
@@ -661,7 +661,7 @@ function JobDetailPage() {
                   }`}
                   disabled={beforePhotos.length === 0}
                 >
-                  Ise Basla ({beforePhotos.length} fotograf)
+                  İşe Başla ({beforePhotos.length} fotoğraf)
                 </button>
               </>
             )}
@@ -677,7 +677,7 @@ function JobDetailPage() {
                 disabled={afterPhotos.length === 0}
               >
                 <CheckCircle size={20} />
-                Isi Tamamla ({afterPhotos.length} fotograf)
+                İşi Tamamla ({afterPhotos.length} fotoğraf)
               </button>
             )}
           </div>
@@ -689,7 +689,7 @@ function JobDetailPage() {
             onClick={() => navigate(`/rate/${job.id}`)}
             className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
           >
-            Degerlendir
+            Değerlendir
           </button>
         )}
 
@@ -699,7 +699,7 @@ function JobDetailPage() {
             onClick={() => navigate(`/messages/${job.id}`)}
             className="w-full py-4 bg-white border-2 border-blue-600 text-blue-600 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
           >
-            Mesaj Gonder
+            Mesaj Gönder
           </button>
         )}
 
@@ -709,7 +709,7 @@ function JobDetailPage() {
             onClick={() => navigate(`/cancel-job/${job.id}`)}
             className="w-full py-3 bg-red-50 border border-red-200 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition"
           >
-            Isi Iptal Et
+            İşi İptal Et
           </button>
         )}
 
@@ -755,7 +755,7 @@ function JobDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">Detaylar (Opsiyonel)</label>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">Detaylar (İsteğe bağlı)</label>
                   <textarea
                     value={complaintDetails}
                     onChange={(e) => setComplaintDetails(e.target.value)}
@@ -777,7 +777,7 @@ function JobDetailPage() {
                   {isSubmitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Gonderiliyor...
+                      Gönderiliyor...
                     </>
                   ) : (
                     'Şikayeti Gönder'
