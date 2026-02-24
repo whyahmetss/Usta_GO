@@ -147,21 +147,19 @@ function ProfilePage() {
       navigate('/')
     }
   }
-const handleCopyReferral = () => {
-  // 1. Önce kodu oluşturuyoruz
-  const code = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
-  
-  if (code) {
-    // 2. İŞTE BURASI KRİTİK: Sadece kodu değil, linkin TAMAMINI hazırlıyoruz
-    const fullLink = `https://usta-go-app.onrender.com/auth?ref=${code}`;
+
+  const handleCopyReferral = () => {
+    // Ekranda hangi kod görünüyorsa onu belirle (Gerçek kod yoksa yedek kodu al)
+    const codeToCopy = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
     
-    // 3. Hafızaya sadece kodu değil, hazırladığımız bu linki yazıyoruz
-    navigator.clipboard.writeText(fullLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    if (codeToCopy) {
+      // Linkle beraber veya sadece kod olarak kopyala (Nasıl istersen)
+      // Kopyalanacak linki şuna çevir:
+const shareLink = `https://usta-go-app.onrender.com/auth?ref=${codeToCopy}`;
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
-}
 
   // --- HESAPLAMALAR ---
   const stats = [
@@ -282,7 +280,7 @@ const handleCopyReferral = () => {
               <Share2 size={20} className="text-blue-600" />
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon kazanın!</p>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
             
             <div className="flex gap-2">
               {/* Kodun göründüğü alan */}
@@ -439,7 +437,7 @@ export default ProfilePage
               <Share2 size={20} className="text-blue-600" />
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon kazanın!</p>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
             
             <div className="flex gap-2">
               {/* Kodun göründüğü alan */}
