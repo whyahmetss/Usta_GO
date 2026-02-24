@@ -145,8 +145,8 @@ function MessagesPage() {
   }
 
   const quickMessages = user?.role === 'professional'
-    ? ['Yoldayim, 10 dakikaya varirim', 'Malzeme almam gerekiyor', 'Is tamamlandi', 'Gecikecegim, ozur dilerim']
-    : ['Ne zaman geleceksiniz?', 'Tesekkurler', 'Adrese kolay ulasabilir misiniz?', 'Isi iptal etmek istiyorum']
+    ? ['Yoldayım, 10 dakikaya varırım', 'Malzeme almam gerekiyor', 'İş tamamlandı', 'Gecikeceğim, özür dilerim']
+    : ['Ne zaman geleceksiniz?', 'Teşekküler', 'Adrese kolay ulaşabilir misiniz?', 'İşi iptal etmek istiyorum']
 
   const formatTime = (ts) => {
     const d = new Date(ts)
@@ -169,7 +169,7 @@ function MessagesPage() {
           {loading ? (
             <div className="text-center py-12">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Isler yukleniyor...</p>
+              <p className="text-gray-600">İşler yükleniyor...</p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -181,8 +181,8 @@ function MessagesPage() {
           ) : userJobs.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">💬</div>
-              <p className="text-gray-600 font-semibold">Henuz mesaj yok</p>
-              <p className="text-gray-400 text-sm mt-2">Is kabul edildikten sonra mesajlasabilirsiniz</p>
+              <p className="text-gray-600 font-semibold">Henüz mesaj yok</p>
+              <p className="text-gray-400 text-sm mt-2">İş kabul edildikten sonra mesajlaşabilirsiniz</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -238,11 +238,11 @@ function MessagesPage() {
         {loadingMessages ? (
           <div className="text-center py-8">
             <div className="w-6 h-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-gray-400 text-sm">Mesajlar yukleniyor...</p>
+            <p className="text-gray-400 text-sm">Mesajlar yükleniyor...</p>
           </div>
         ) : jobMessages.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400 text-sm">Henuz mesaj yok. Ilk mesaji gonderin!</p>
+            <p className="text-gray-400 text-sm">Henüz mesaj yok. İlk mesaji gönderin!</p>
           </div>
         ) : (
           jobMessages.map(msg => {
