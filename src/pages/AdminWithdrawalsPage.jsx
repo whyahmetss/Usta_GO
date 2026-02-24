@@ -90,8 +90,8 @@ function AdminWithdrawalsPage() {
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
             <div>
-              <h1 className="text-xl font-black text-gray-900">Para Cekme Talepleri</h1>
-              <p className="text-xs text-gray-500">Usta odemelerini yonetin</p>
+              <h1 className="text-xl font-black text-gray-900">Para Çekme Talepleri</h1>
+              <p className="text-xs text-gray-500">Usta ödemelerini yönetin</p>
             </div>
           </div>
           <div className="flex gap-2 bg-gray-100 rounded-xl p-1">
