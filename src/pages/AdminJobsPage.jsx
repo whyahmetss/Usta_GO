@@ -211,7 +211,7 @@ const filteredJobs = filterStatus === 'all'
                     {/* Before Photos */}
                     {job.beforePhotos?.length > 0 && (
                       <div className="mb-4">
-                        <p className="text-sm font-bold text-gray-900 mb-3">BAŞLANGIC FOTOĞRAFLARI ({job.beforePhotos.length})</p>
+                        <p className="text-sm font-bold text-gray-900 mb-3">BAŞLANGIÇ FOTOĞRAFLARI ({job.beforePhotos.length})</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                           {job.beforePhotos.map((photo, idx) => (
                             <button
@@ -236,7 +236,7 @@ const filteredJobs = filterStatus === 'all'
                     {/* After Photos */}
                     {job.afterPhotos?.length > 0 && (
                       <div>
-                        <p className="text-sm font-bold text-gray-900 mb-3">BITIS FOTOĞRAFLARI ({job.afterPhotos.length})</p>
+                        <p className="text-sm font-bold text-gray-900 mb-3">BİTİŞ FOTOĞRAFLARI ({job.afterPhotos.length})</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                           {job.afterPhotos.map((photo, idx) => (
                             <button
