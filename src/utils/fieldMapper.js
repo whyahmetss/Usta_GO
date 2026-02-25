@@ -9,6 +9,7 @@
  * Maps a job object from backend format to frontend format.
  * - location  -> address
  * - budget    -> price
+ * - ustaId    -> professionalId
  * - PENDING   -> pending (status lowercased)
  */
 export const mapJobFromBackend = (job) => {
@@ -17,15 +18,17 @@ export const mapJobFromBackend = (job) => {
     ...job,
     address: job.location,
     price: job.budget,
+    professionalId: job.ustaId || job.professionalId,
     status: job.status?.toLowerCase(),
   }
 }
 
 /**
  * Maps a job object from frontend format to backend format.
- * - address -> location
- * - price   -> budget
- * - pending -> PENDING (status uppercased)
+ * - address       -> location
+ * - price         -> budget
+ * - professionalId -> ustaId
+ * - pending       -> PENDING (status uppercased)
  */
 export const mapJobToBackend = (job) => {
   if (!job) return job
@@ -33,6 +36,7 @@ export const mapJobToBackend = (job) => {
     ...job,
     location: job.address ?? job.location,
     budget: job.price ?? job.budget,
+    ustaId: job.professionalId ?? job.ustaId,
     status: job.status?.toUpperCase(),
   }
 }
