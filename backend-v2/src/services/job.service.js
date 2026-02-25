@@ -31,8 +31,8 @@ export const getJobs = async (filters = {}, skip = 0, take = 10) => {
       skip,
       take,
       include: {
-        customer: { select: { id: true, name: true, email: true, avatar: true } },
-        usta: { select: { id: true, name: true, email: true, avatar: true } },
+        customer: { select: { id: true, name: true, email: true, profileImage: true } },
+        usta: { select: { id: true, name: true, email: true, profileImage: true } },
         offers: { select: { id: true, ustaId: true, price: true, status: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -47,8 +47,8 @@ export const getJobById = async (jobId) => {
   const job = await prisma.job.findUnique({
     where: { id: jobId },
     include: {
-      customer: { select: { id: true, name: true, email: true } },
-      usta: { select: { id: true, name: true, email: true, avatar: true } },
+      customer: { select: { id: true, name: true, email: true, profileImage: true } },
+      usta: { select: { id: true, name: true, email: true, profileImage: true } },
       offers: {
         include: {
           usta: { select: { id: true, name: true, profileImage: true, ratings: true } },
@@ -118,8 +118,8 @@ export const getCustomerJobs = async (customerId, skip = 0, take = 10) => {
       skip,
       take,
       include: {
-        customer: { select: { id: true, name: true, email: true, avatar: true } },
-        usta: { select: { id: true, name: true, email: true, avatar: true } },
+        customer: { select: { id: true, name: true, email: true, profileImage: true } },
+        usta: { select: { id: true, name: true, email: true, profileImage: true } },
         offers: true,
       },
       orderBy: { createdAt: "desc" },
