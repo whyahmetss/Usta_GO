@@ -69,4 +69,15 @@ router.patch(
   jobController.updateJobStatus
 );
 
+/**
+ * @route PATCH /api/jobs/:id
+ * @desc Accept a job (USTA only)
+ */
+router.patch(
+  "/:id",
+  authMiddleware,
+  roleMiddleware("USTA", "ADMIN"),
+  jobController.acceptJob
+);
+
 export default router;

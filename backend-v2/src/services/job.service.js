@@ -146,3 +146,36 @@ export const updateJobStatus = async (jobId, customerId, status) => {
 
   return updatedJob;
 };
+
+export const acceptJob = async (jobId, ustaId) => {
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    include: { usta: true },
+  });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.status !== "PENDING") {
+    const error = new Error("Job is not available for acceptance");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "IN_PROGRESS",
+      ustaId,
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
