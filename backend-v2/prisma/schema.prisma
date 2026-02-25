@@ -72,6 +72,24 @@ model Job {
   // Job status
   status      JobStatus   @default(PENDING)
 
+  // Job photos
+  beforePhotos String[]    @default([])
+  afterPhotos  String[]    @default([])
+
+  // Job timeline
+  startedAt    DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  ratedAt      DateTime?
+
+  // Cancellation details
+  cancelReason String?
+  cancelPenalty Float?
+
+  // Rating details
+  rating       Float?
+  ratingReview String?     @db.Text
+
   // Relations
   customerId  String
   customer    User        @relation("jobsAsCustomer", fields: [customerId], references: [id], onDelete: Cascade)
@@ -94,8 +112,10 @@ model Job {
 
 enum JobStatus {
   PENDING       // Waiting for offers
-  IN_PROGRESS   // Accepted by USTA
+  ACCEPTED      // Accepted by professional
+  IN_PROGRESS   // Work in progress
   COMPLETED     // Work finished
+  RATED         // Job completed and rated
   CANCELLED     // Job cancelled
 }
 
