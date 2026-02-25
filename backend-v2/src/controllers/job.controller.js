@@ -77,3 +77,12 @@ export const updateJobStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const acceptJob = async (req, res, next) => {
+  try {
+    const job = await jobService.acceptJob(req.params.id, req.user.id);
+    successResponse(res, job, "Job accepted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
