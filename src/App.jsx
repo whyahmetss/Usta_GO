@@ -24,7 +24,7 @@ import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
 import AboutPage from './pages/AboutPage'
-import Odeme from './pages/Odeme' // Dosya adın tam olarak neyse o
+import Odeme from './pages/odeme' // Dosya adın tam olarak neyse o
 // Protected Route wrapper - Büyük/Küçük harf ve "USTA" kelimesi için esnetildi
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
