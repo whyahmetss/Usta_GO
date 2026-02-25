@@ -30,7 +30,7 @@ function MyJobsPage() {
 
           // Filter jobs based on user role
           let filtered
-         if (user?.role === 'professional' || user?.role === 'usta') { 
+         if (user?.role === 'professional' || user?.role === 'USTA') { 
   filtered = mappedJobs.filter(j => {
     const profId = String(j.professionalId || j.professional?.id || "").trim()
     const userId = String(user?.id || "").trim()
