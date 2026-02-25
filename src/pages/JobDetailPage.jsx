@@ -415,7 +415,7 @@ function JobDetailPage() {
     }
   }
 
-  const otherPerson = isProfessional ? job.customer : job.professional
+  const otherPerson = isProfessional ? job.customer : (job.professional || job.usta)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
@@ -482,7 +482,13 @@ function JobDetailPage() {
               {isProfessional ? 'Musteri Bilgileri' : 'Usta Bilgileri'}
             </h3>
             <div className="flex items-center gap-4 mb-3">
-              <div className="text-4xl">{otherPerson.avatar}</div>
+              <div className="text-4xl">
+                {otherPerson.profileImage ? (
+                  <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  '👤'
+                )}
+              </div>
               <div className="flex-1">
                 <p className="font-bold text-gray-900">{otherPerson.name}</p>
                 {otherPerson.phone && (
