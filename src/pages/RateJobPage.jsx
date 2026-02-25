@@ -67,7 +67,7 @@ function RateJobPage() {
   }
 
   const isProfessional = user?.role === 'professional'
-  const otherPerson = isProfessional ? job?.customer : job?.professional
+  const otherPerson = isProfessional ? job?.customer : (job?.professional || job?.usta)
 
   if (!otherPerson) {
     return <div className="min-h-screen flex items-center justify-center">

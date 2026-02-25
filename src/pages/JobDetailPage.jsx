@@ -415,7 +415,7 @@ function JobDetailPage() {
     }
   }
 
-  const otherPerson = isProfessional ? job.customer : job.professional
+  const otherPerson = isProfessional ? job.customer : (job.professional || job.usta)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">

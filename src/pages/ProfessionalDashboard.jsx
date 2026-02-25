@@ -64,8 +64,8 @@ function ProfessionalDashboard() {
   }, [user])
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
-  const myCompletedJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'completed' || j.status === 'rated'))
-  const myActiveJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'accepted' || j.status === 'in_progress'))
+  const myCompletedJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id) && (j.status === 'completed' || j.status === 'rated'))
+  const myActiveJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id) && (j.status === 'accepted' || j.status === 'in_progress'))
 
   const avgRating = myCompletedJobs.length > 0
     ? (myCompletedJobs.reduce((sum, j) => sum + (j.rating?.customerRating || 0), 0) / myCompletedJobs.filter(j => j.rating?.customerRating).length || 0).toFixed(1)

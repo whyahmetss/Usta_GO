@@ -33,7 +33,7 @@ function MyJobsPage() {
           if (user?.role === 'professional') {
             // For professionals: show jobs they're assigned to (professional?.id matches user.id)
             filtered = mappedJobs.filter(j => {
-              const profId = String(j.professionalId || j.professional?.id || "").trim()
+              const profId = String(j.professionalId || j.professional?.id || j.usta?.id || "").trim()
               const userId = String(user?.id || "").trim()
               return profId === userId
             })
