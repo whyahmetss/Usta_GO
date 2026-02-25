@@ -168,8 +168,162 @@ export const acceptJob = async (jobId, ustaId) => {
   const updatedJob = await prisma.job.update({
     where: { id: jobId },
     data: {
-      status: "IN_PROGRESS",
+      status: "ACCEPTED",
       ustaId,
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
+
+export const startJob = async (jobId, ustaId, beforePhotos = []) => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.ustaId !== ustaId) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status !== "ACCEPTED") {
+    const error = new Error("Job must be accepted before starting");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "IN_PROGRESS",
+      beforePhotos,
+      startedAt: new Date(),
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
+
+export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.ustaId !== ustaId) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status !== "IN_PROGRESS") {
+    const error = new Error("Job must be in progress to complete");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "COMPLETED",
+      afterPhotos,
+      completedAt: new Date(),
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
+
+export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  // Either customer or usta can cancel
+  const isCustomer = job.customerId === userId;
+  const isUsta = job.ustaId === userId;
+
+  if (!isCustomer && !isUsta) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status === "COMPLETED" || job.status === "CANCELLED") {
+    const error = new Error("Cannot cancel job in this status");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "CANCELLED",
+      cancelReason: reason,
+      cancelPenalty: penalty,
+      cancelledAt: new Date(),
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
+
+export const rateJob = async (jobId, customerId, ratingData, review = "") => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.customerId !== customerId) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status !== "COMPLETED") {
+    const error = new Error("Job must be completed before rating");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "RATED",
+      rating: ratingData.rating,
+      ratingReview: review,
+      ratedAt: new Date(),
     },
     include: {
       customer: { select: { id: true, name: true, email: true } },

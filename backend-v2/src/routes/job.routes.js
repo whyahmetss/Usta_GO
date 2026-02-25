@@ -80,4 +80,51 @@ router.patch(
   jobController.acceptJob
 );
 
+/**
+ * @route PUT /api/jobs/:id/start
+ * @desc Start a job (USTA only)
+ * @body {beforePhotos: []}
+ */
+router.put(
+  "/:id/start",
+  authMiddleware,
+  roleMiddleware("USTA", "ADMIN"),
+  jobController.startJob
+);
+
+/**
+ * @route PUT /api/jobs/:id/complete
+ * @desc Complete a job (USTA only)
+ * @body {afterPhotos: []}
+ */
+router.put(
+  "/:id/complete",
+  authMiddleware,
+  roleMiddleware("USTA", "ADMIN"),
+  jobController.completeJob
+);
+
+/**
+ * @route PUT /api/jobs/:id/cancel
+ * @desc Cancel a job
+ * @body {reason?: string, penalty?: number}
+ */
+router.put(
+  "/:id/cancel",
+  authMiddleware,
+  jobController.cancelJob
+);
+
+/**
+ * @route PUT /api/jobs/:id/rate
+ * @desc Rate a job (CUSTOMER only)
+ * @body {rating: {communication, quality, timeliness}, review?: string}
+ */
+router.put(
+  "/:id/rate",
+  authMiddleware,
+  roleMiddleware("CUSTOMER", "ADMIN"),
+  jobController.rateJob
+);
+
 export default router;
