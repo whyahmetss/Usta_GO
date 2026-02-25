@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     LIST: '/jobs',
     CREATE: '/jobs',
     GET: (id) => `/jobs/${id}`,
-    ACCEPT: (id) => `/jobs/${id}/accept`,
+    ACCEPT: (id) => `/jobs/${id}`,
     START: (id) => `/jobs/${id}/start`,
     COMPLETE: (id) => `/jobs/${id}/complete`,
     CANCEL: (id) => `/jobs/${id}/cancel`,
