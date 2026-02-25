@@ -32,7 +32,7 @@ function WalletPage() {
         setLoading(true)
         setError(null)
 
-        if (user?.role === 'professional') {
+        if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
           try {
             const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
             if (walletResponse.data) {
@@ -124,7 +124,7 @@ function WalletPage() {
     )
   }
 
-  if (user?.role === 'professional') {
+  if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
