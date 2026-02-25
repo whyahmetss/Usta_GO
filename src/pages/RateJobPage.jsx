@@ -126,7 +126,13 @@ function RateJobPage() {
       <div className="px-4 py-6">
         {/* Person Info */}
         <div className="bg-white rounded-2xl p-6 shadow-lg mb-6 text-center">
-          <div className="text-6xl mb-3">{otherPerson?.avatar}</div>
+          <div className="text-6xl mb-3">
+            {otherPerson?.profileImage ? (
+              <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
+            ) : (
+              '👤'
+            )}
+          </div>
           <h3 className="text-xl font-bold text-gray-900 mb-1">{otherPerson?.name}</h3>
           <p className="text-sm text-gray-600">
             {isProfessional ? 'Müşteriyi Değerlendir' : 'Ustayı Değerlendir'}
