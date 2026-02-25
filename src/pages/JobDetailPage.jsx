@@ -284,10 +284,24 @@ function JobDetailPage() {
   const isProfessional = user?.role === 'professional'
   const isCustomer = user?.role === 'customer'
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (confirm('Bu işi kabul etmek istiyor musunuz?')) {
-      acceptJob(job.id)
-      alert('iş kabul edildi! Musteri bilgilendirildi.')
+      try {
+        // Await the API call
+        await acceptJob(job.id)
+        alert('İş başarıyla kabul edildi! Müşteri bilgilendirildi.')
+        // Reload job details to show updated status
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(job.id))
+        if (response.data) {
+          const mapped = mapJobFromBackend(response.data)
+          setJob(mapped)
+        }
+        // Navigate back after successful acceptance
+        setTimeout(() => navigate('/my-jobs'), 1500)
+      } catch (err) {
+        console.error('Job acceptance error:', err)
+        alert('İş kabul edilirken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+      }
     }
   }
 
@@ -332,23 +346,40 @@ function JobDetailPage() {
     }
   }
 
-  const handleStartJob = () => {
+  const handleStartJob = async () => {
     if (beforePhotos.length === 0) {
       alert('Lütfen işe başlamadan önce fotoğraf çekiniz')
       return
     }
-    startJob(job.id, beforePhotos)
-    alert('İş başlatıldı! İyi çalısmalar.')
+    try {
+      await startJob(job.id, beforePhotos)
+      alert('İş başlatıldı! İyi çalışmalar.')
+      // Reload job details
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(job.id))
+      if (response.data) {
+        const mapped = mapJobFromBackend(response.data)
+        setJob(mapped)
+      }
+    } catch (err) {
+      console.error('Start job error:', err)
+      alert('İş başlatılırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+    }
   }
 
-  const handleCompleteJob = () => {
+  const handleCompleteJob = async () => {
     if (afterPhotos.length === 0) {
       alert('Lütfen iş bitim fotoğrafı çekiniz')
       return
     }
-    completeJob(job.id, afterPhotos)
-    alert('İş tamamlandı! Müsteri değerlendirme yapacak.')
-    navigate('/professional')
+    try {
+      await completeJob(job.id, afterPhotos)
+      alert('İş tamamlandı! Müşteri değerlendirme yapacak.')
+      // Navigate back to professional dashboard
+      setTimeout(() => navigate('/professional'), 1500)
+    } catch (err) {
+      console.error('Complete job error:', err)
+      alert('İş tamamlanırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+    }
   }
 
   const handleComplaint = async () => {
