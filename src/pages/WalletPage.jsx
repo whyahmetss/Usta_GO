@@ -32,7 +32,7 @@ function WalletPage() {
         setLoading(true)
         setError(null)
 
-        if (user?.role === 'professional') {
+        if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
           try {
             const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
             if (walletResponse.data) {
@@ -124,7 +124,7 @@ function WalletPage() {
     )
   }
 
-  if (user?.role === 'professional') {
+  if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -247,9 +247,13 @@ function WalletPage() {
                 <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
                 <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
               </div>
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <DollarSign size={28} />
-              </div>
+                           <button
+                onClick={() => navigate('/odeme')}
+                className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition cursor-pointer"
+              >
+                <span className="text-xs font-bold text-white text-center">Bakiye Yükle</span>
+              </button>
+
             </div>
             {customerEscrow > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3">

@@ -24,7 +24,7 @@ import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
 import AboutPage from './pages/AboutPage'
-
+import Odeme from './pages/odeme' // Dosya adın tam olarak neyse o
 // Protected Route wrapper - Büyük/Küçük harf ve "USTA" kelimesi için esnetildi
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
@@ -125,6 +125,7 @@ function AppRoutes() {
       <Route path="/professional-profile/:id" element={<ProtectedRoute><ProfessionalProfilePage /></ProtectedRoute>} />
       <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
       <Route path="/withdraw" element={<ProtectedRoute roleRequired="professional"><WithdrawPage /></ProtectedRoute>} />
+      <Route path="/odeme" element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<ProtectedRoute roleRequired="admin"><AdminDashboard /></ProtectedRoute>} />

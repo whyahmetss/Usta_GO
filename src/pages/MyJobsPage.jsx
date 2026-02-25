@@ -30,12 +30,13 @@ function MyJobsPage() {
 
           // Filter jobs based on user role
           let filtered
-          if (user?.role === 'professional') {
+          const userRole = user?.role?.toLowerCase()
+          if (userRole === 'professional' || userRole === 'usta') {
             // For professionals: show jobs they're assigned to (professional?.id matches user.id)
             filtered = mappedJobs.filter(j => {
               const profId = String(j.professionalId || j.professional?.id || j.usta?.id || "").trim()
               const userId = String(user?.id || "").trim()
-              return profId === userId
+              return profId === userId && profId !== ""
             })
           } else {
             // For customers: show jobs they created (customer?.id matches user.id)
@@ -46,8 +47,8 @@ function MyJobsPage() {
             })
           }
 
-          setUserJobs(filtered)
-        }
+  setUserJobs(filtered);
+}
       } catch (err) {
         console.error('Load jobs error:', err)
         setError('İşler yüklenirken bir sorun oluştu.')
