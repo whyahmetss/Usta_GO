@@ -86,3 +86,39 @@ export const acceptJob = async (req, res, next) => {
     next(error);
   }
 };
+
+export const startJob = async (req, res, next) => {
+  try {
+    const job = await jobService.startJob(req.params.id, req.user.id, req.body.beforePhotos || []);
+    successResponse(res, job, "Job started successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const completeJob = async (req, res, next) => {
+  try {
+    const job = await jobService.completeJob(req.params.id, req.user.id, req.body.afterPhotos || []);
+    successResponse(res, job, "Job completed successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelJob = async (req, res, next) => {
+  try {
+    const job = await jobService.cancelJob(req.params.id, req.user.id, req.body.reason || "", req.body.penalty || 0);
+    successResponse(res, job, "Job cancelled successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rateJob = async (req, res, next) => {
+  try {
+    const job = await jobService.rateJob(req.params.id, req.user.id, req.body.rating, req.body.review || "");
+    successResponse(res, job, "Job rated successfully");
+  } catch (error) {
+    next(error);
+  }
+};
