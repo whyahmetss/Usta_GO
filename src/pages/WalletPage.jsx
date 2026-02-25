@@ -247,18 +247,13 @@ function WalletPage() {
                 <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
                 <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
               </div>
-              // Butonun olduğu yer (ProfilePage)
-<button
-  type="button"
-  onClick={(e) => {
-    alert("Tıklandı!"); // Konsola bakma, direkt ekrana uyarı ver
-    navigate('/odeme');
-  }}
-  style={{ position: 'relative', zIndex: 9999, cursor: 'pointer' }} // En üste zorla
-  className="w-14 h-14 bg-blue-500 rounded-xl items-center justify-center flex"
->
-  Bakiye
-</button>
+                           <button
+                onClick={() => navigate('/odeme')}
+                className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition cursor-pointer"
+              >
+                <span className="text-xs font-bold text-white text-center">Bakiye Yükle</span>
+              </button>
+
             </div>
             {customerEscrow > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3">
