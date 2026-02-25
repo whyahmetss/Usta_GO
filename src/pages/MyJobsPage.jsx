@@ -30,24 +30,25 @@ function MyJobsPage() {
 
           // Filter jobs based on user role
           let filtered
-         if (user?.role === 'professional' || user?.role === 'USTA') { 
-  filtered = mappedJobs.filter(j => {
-    const profId = String(j.professionalId || j.professional?.id || "").trim()
-    const userId = String(user?.id || "").trim()
-    return profId === userId
-  })
-}
-         else {
+          const userRole = user?.role?.toUpperCase();
+        if (userRole === 'USTA' || userRole === 'PROFESSIONAL') {
+    filtered = mappedJobs.filter(j => {
+const jobProfId = String(j.professionalId || j.professional?.id || "").trim();
+      const currentUserId = String(user?.id || "").trim();
+      
+      return jobProfId === currentUserId && jobProfId !== "";
+    });
+  } else {
             // For customers: show jobs they created (customer?.id matches user.id)
-            filtered = mappedJobs.filter(j => {
-              const custId = String(j.customerId || j.customer?.id || "").trim()
-              const userId = String(user?.id || "").trim()
-              return custId === userId
-            })
-          }
+           filtered = mappedJobs.filter(j => {
+      const jobCustId = String(j.customerId || j.customer?.id || "").trim();
+      const currentUserId = String(user?.id || "").trim();
+      return jobCustId === currentUserId;
+    });
+  }
 
-          setUserJobs(filtered)
-        }
+  setUserJobs(filtered);
+}
       } catch (err) {
         console.error('Load jobs error:', err)
         setError('İşler yüklenirken bir sorun oluştu.')
