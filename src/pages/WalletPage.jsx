@@ -248,11 +248,16 @@ function WalletPage() {
                 <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
               </div>
               <button
-                onClick={() => navigate('/odeme')}
-                className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition cursor-pointer"
-              >
-                <span className="text-xs font-bold text-white text-center">Bakiye Yükle</span>
-              </button>
+  type="button" // Buton olduğunu garanti et
+  onClick={(e) => {
+    e.stopPropagation(); // Tıklamanın başka yere dağılmasını engelle
+    console.log("Butona tıklandı!"); // Konsolda bunu görüyor musun bak
+    navigate('/odeme');
+  }}
+  className="w-14 h-14 bg-blue-600/50 backdrop-blur rounded-xl flex items-center justify-center hover:bg-blue-700 transition cursor-pointer relative z-50"
+>
+  <span className="text-xs font-bold text-white text-center">Bakiye Yükle</span>
+</button>
             </div>
             {customerEscrow > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3">
