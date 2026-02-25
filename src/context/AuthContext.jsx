@@ -270,9 +270,13 @@ export function AuthProvider({ children }) {
         return
       }
 
+      // Try PATCH to update job status directly
       const response = await fetchAPI(API_ENDPOINTS.JOBS.ACCEPT(jobId), {
-        method: 'PUT',
-        body: { professionalId: user?.id }
+        method: 'PATCH',
+        body: {
+          status: 'ACCEPTED',
+          professionalId: user?.id
+        }
       })
 
       if (response.data) {
@@ -284,6 +288,7 @@ export function AuthProvider({ children }) {
           message: 'İş başarıyla kabul edildi',
           icon: '✅'
         })
+        return response.data
       }
     } catch (err) {
       const errorMsg = err.message || 'Job acceptance failed'
