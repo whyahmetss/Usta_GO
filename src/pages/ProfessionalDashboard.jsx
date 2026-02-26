@@ -24,7 +24,7 @@ function ProfessionalDashboard() {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        setLoading(true)
+       if (!allJobs.length) setLoading(true);
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
           // Map jobs from backend format (normalizes status to lowercase, location -> address, etc.)
