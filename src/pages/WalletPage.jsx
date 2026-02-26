@@ -36,15 +36,25 @@ function WalletPage() {
           try {
             const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
             if (walletResponse) {
-              setBalance(walletResponse.balance || 0)
+              // 1. Çekilebilir Bakiye (173 TL olan kısım)
+              setBalance(walletResponse.balance || walletResponse.availableBalance || 0)
+              
+              // 2. Bekleyen Çekim
               setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
-              setThisMonthEarnings(walletResponse.thisMonthEarnings || 0)
+              
+              // 3. Bu Ay Kazanç (0 TL görünen yer için alternatif isimleri tara)
+              // Profilde 1.038 TL göründüğü için backend muhtemelen 'totalEarnings' gönderiyor
+              const monthly = walletResponse.thisMonthEarnings || 
+                              walletResponse.totalEarnings || 
+                              walletResponse.earnings || 0
+              setThisMonthEarnings(monthly)
+              
+              // 4. Geçen Ay
               setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
             }
           } catch (walletErr) {
             console.warn('Wallet data failed:', walletErr)
           }
-
           try {
             const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
             if (transactionsResponse.data) {
