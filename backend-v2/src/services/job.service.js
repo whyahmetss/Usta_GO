@@ -125,7 +125,14 @@ export const getCustomerJobs = async (customerId, skip = 0, take = 10) => {
 };
 
 export const updateJobStatus = async (jobId, customerId, status) => {
-  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    include: {
+      offers: {
+        where: { status: "ACCEPTED" },
+      },
+    },
+  });
 
   if (!job) {
     const error = new Error("Job not found");
@@ -143,6 +150,33 @@ export const updateJobStatus = async (jobId, customerId, status) => {
     where: { id: jobId },
     data: { status },
   });
+
+  // When job is completed, transfer money to USTA
+  if (status === "COMPLETED" && job.offers.length > 0) {
+    const acceptedOffer = job.offers[0];
+
+    // Update USTA's balance
+    await prisma.user.update({
+      where: { id: acceptedOffer.ustaId },
+      data: {
+        balance: {
+          increment: job.budget,
+        },
+      },
+    });
+
+    // Create transaction record
+    await prisma.transaction.create({
+      data: {
+        userId: acceptedOffer.ustaId,
+        jobId,
+        amount: job.budget,
+        type: "EARNING",
+        status: "COMPLETED",
+        description: `İşi tamamlandı: ${job.title}`,
+      },
+    });
+  }
 
   return updatedJob;
 };

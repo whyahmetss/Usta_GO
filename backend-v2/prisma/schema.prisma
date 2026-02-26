@@ -29,12 +29,17 @@ model User {
   profileImage String?
   ratings   Float      @default(0)
 
+  // Wallet balance
+  balance   Float      @default(0)
+
   // Relations
   createdJobs Job[]
+  acceptedJobs Job[] @relation("acceptedBy")
   offeredOn   Offer[]
   reviews     Review[]
   sentMessages     Message[] @relation("sender")
   receivedMessages Message[] @relation("receiver")
+  transactions Transaction[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -74,13 +79,20 @@ model Job {
   // Relations
   customerId  String
   customer    User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Accepted by USTA
+  ustaId      String?
+  usta        User?       @relation("acceptedBy", fields: [ustaId], references: [id], onDelete: SetNull)
+
   offers      Offer[]
   reviews     Review[]
+  transactions Transaction[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   @@index([customerId])
+  @@index([ustaId])
   @@index([status])
   @@index([category])
   @@index([location])
@@ -179,4 +191,42 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([isRead])
+}
+
+// Transaction Model - For wallet and payment tracking
+model Transaction {
+  id          String            @id @default(cuid())
+
+  // Transaction details
+  amount      Float
+  type        TransactionType   // EARNING, PAYMENT, REFUND
+  status      TransactionStatus @default(PENDING)
+  description String?           @db.Text
+
+  // Relations
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  jobId       String?
+  job         Job?              @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([status])
+  @@index([type])
+}
+
+enum TransactionType {
+  EARNING   // Money earned from completed job
+  PAYMENT   // Money paid for a job
+  REFUND    // Refund
+}
+
+enum TransactionStatus {
+  PENDING    // Transaction pending
+  COMPLETED  // Transaction completed
+  FAILED     // Transaction failed
 }
