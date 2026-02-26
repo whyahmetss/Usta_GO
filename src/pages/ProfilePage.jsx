@@ -233,8 +233,8 @@ function ProfilePage() {
           </div>
         )}
 
-        {user?.role === 'professional' && (
-          <div className="grid grid-cols-2 gap-3 mb-6">
+       { (user?.role?.toLowerCase() === 'professional' || user?.role?.toUpperCase() === 'USTA') && (
+  <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">✅</div>
               <p className="text-xs text-white/80">Tamamlanan</p>
