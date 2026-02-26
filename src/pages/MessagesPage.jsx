@@ -90,6 +90,17 @@ function MessagesPage() {
   const handleSend = async () => {
     if (!messageText.trim() || !selectedJobId || isSending) return
 
+    // Determine recipient ID based on user role
+    let receiverId
+    if (selectedJob) {
+      receiverId = user?.role === 'customer' ? selectedJob.usta?.id : selectedJob.customer?.id
+    }
+
+    if (!receiverId) {
+      alert('Alıcı bulunamadı')
+      return
+    }
+
     const messageToSend = messageText.trim()
     setMessageText('')
     setIsSending(true)
@@ -99,8 +110,8 @@ function MessagesPage() {
         method: 'POST',
         body: {
           jobId: selectedJobId,
-         content: messageToSend, // 'text' yerine 'content'
-        receiverId: otherPersonId // Eksik olan receiverId
+          content: messageToSend,
+          receiverId: receiverId
         }
       })
 
@@ -124,15 +135,24 @@ function MessagesPage() {
   }
 
   const handleSendQuickMessage = async (qm) => {
-    if (isSending) return
+    if (isSending || !selectedJob) return
+
+    // Determine recipient ID based on user role
+    const receiverId = user?.role === 'customer' ? selectedJob.usta?.id : selectedJob.customer?.id
+
+    if (!receiverId) {
+      alert('Alıcı bulunamadı')
+      return
+    }
+
     setIsSending(true)
     try {
       const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
         method: 'POST',
         body: {
           jobId: selectedJobId,
-         content: qm, // 'text' yerine 'content'
-        receiverId: otherPersonId // Eksik olan receiverId
+          content: qm,
+          receiverId: receiverId
         }
       })
       if (response.data) {
