@@ -28,6 +28,7 @@ model User {
   // Profile info
   profileImage String?
   ratings   Float      @default(0)
+  balance   Float      @default(0)
 
   // Relations
   createdJobs Job[]       @relation("jobsAsCustomer")
@@ -36,6 +37,7 @@ model User {
   reviews     Review[]
   sentMessages     Message[] @relation("sender")
   receivedMessages Message[] @relation("receiver")
+  transactions Transaction[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -99,6 +101,7 @@ model Job {
 
   offers      Offer[]
   reviews     Review[]
+  transactions Transaction[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -205,4 +208,43 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([isRead])
+}
+
+// Transaction Model - For wallet transactions
+model Transaction {
+  id        String   @id @default(cuid())
+
+  // Transaction details
+  amount    Float
+  type      TransactionType  // EARNING, WITHDRAWAL, REFUND
+  status    TransactionStatus @default(COMPLETED)
+  description String?  @db.Text
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  jobId     String?
+  job       Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  EARNING
+  WITHDRAWAL
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
