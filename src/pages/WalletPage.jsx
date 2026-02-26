@@ -35,30 +35,23 @@ function WalletPage() {
         if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
           try {
             const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-         
-if (walletResponse) {
-  setBalance(walletResponse.balance || 0);
-  setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
-  setThisMonthEarnings(walletResponse.thisMonthEarnings || 0);
-  setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
-}
+            if (walletResponse) {
+              setBalance(walletResponse.balance || 0)
+              setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
+              setThisMonthEarnings(walletResponse.thisMonthEarnings || 0)
+              setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
+            }
           } catch (walletErr) {
-            console.warn('Wallet endpoint not available, using defaults:', walletErr)
-            // Use default values if wallet endpoint fails
-            setBalance(0)
-            setPendingWithdrawal(0)
-            setThisMonthEarnings(0)
-            setLastMonthEarnings(0)
+            console.warn('Wallet data failed:', walletErr)
           }
 
           try {
             const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
-            if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
+            if (transactionsResponse.data) {
               setTransactions(transactionsResponse.data)
             }
           } catch (txErr) {
-            console.warn('Transactions endpoint not available:', txErr)
-            setTransactions([])
+            console.warn('Transactions failed:', txErr)
           }
         } else if (user?.role === 'customer') {
           try {
@@ -70,24 +63,23 @@ if (walletResponse) {
               setCoupons(response.data.coupons || [])
             }
           } catch (userErr) {
-            console.warn('Could not load user data:', userErr)
+            console.warn('User data failed:', userErr)
           }
 
           try {
             const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-            if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+            if (jobsResponse.data) {
               const mapped = mapJobsFromBackend(jobsResponse.data)
               const userJobs = mapped.filter(j => j.customer?.id === user?.id)
               setCustomerJobs(userJobs)
               setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
             }
           } catch (jobsErr) {
-            console.warn('Could not load jobs:', jobsErr)
+            console.warn('Jobs failed:', jobsErr)
           }
         }
       } catch (err) {
-        console.error('Load wallet error:', err)
-        setError(err.message || 'Cuzdan verileri yuklenirken hata olustu')
+        setError('Veriler yüklenirken bir hata oluştu')
       } finally {
         setLoading(false)
       }
@@ -103,143 +95,24 @@ if (walletResponse) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cuzdan yukleniyor...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-            Yenile
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="px-4 pt-4 pb-4">
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition">
-                <ArrowLeft size={20} className="text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-xl font-black text-gray-900">Cuzdan (Usta)</h1>
-                <p className="text-xs text-gray-500">Kazanclarinizi yonetin</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-4 py-6 space-y-6">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 shadow-lg text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-white/80 text-sm mb-1">Toplam Bakiye</p>
-                <h2 className="text-4xl font-black">{balance.toLocaleString('tr-TR')} TL</h2>
-              </div>
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <DollarSign size={28} />
-              </div>
-            </div>
-            {pendingWithdrawal > 0 && (
-              <div className="bg-white/20 backdrop-blur rounded-xl p-3 mb-4">
-                <p className="text-white/80 text-xs mb-1">Bekleyen Cekim</p>
-                <p className="text-xl font-bold">{pendingWithdrawal.toLocaleString('tr-TR')} TL</p>
-              </div>
-            )}
-            <button
-              onClick={() => navigate('/withdraw')}
-              disabled={balance <= 0}
-              className={`w-full py-3 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition ${balance <= 0 ? 'bg-white/50 text-green-800 cursor-not-allowed' : 'bg-white text-green-600 hover:bg-white/90'}`}
-            >
-              <Download size={20} /> Para Cek
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mb-2">
-                <TrendingUp size={16} className="text-green-600" />
-              </div>
-              <p className="text-2xl font-black text-gray-900">{thisMonthEarnings.toLocaleString('tr-TR')} TL</p>
-              <p className="text-xs text-gray-600">Bu Ay</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className={`w-8 h-8 ${growthPercentage >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center mb-2`}>
-                {growthPercentage >= 0
-                  ? <TrendingUp size={16} className="text-green-600" />
-                  : <TrendingDown size={16} className="text-red-600" />}
-              </div>
-              <p className={`text-2xl font-black ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {growthPercentage >= 0 ? '+' : ''}{growthPercentage}%
-              </p>
-              <p className="text-xs text-gray-600">Buyume</p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 bg-white border border-gray-200 rounded-xl p-1">
-            <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'overview' ? 'bg-green-600 text-white' : 'text-gray-600'}`}>Ozet</button>
-            <button onClick={() => setActiveTab('transactions')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'transactions' ? 'bg-green-600 text-white' : 'text-gray-600'}`}>Islem Gecmisi</button>
-          </div>
-
-         {transactions.length === 0 ? (
-  <div className="text-center py-12">
-    <div className="text-6xl mb-4">💰</div>
-    <p className="text-gray-600 font-semibold">Henuz islem yok</p>
-    <p className="text-gray-400 text-sm mt-2">Is tamamladiginizda kazanclariniz burada gorunur</p>
-  </div>
-) : (
-  <div className="space-y-2">
-    <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son Islemler' : 'Tum Islemler'}</h3>
-    {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
-      <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-        {/* İkon Kutusu */}
-        <div className={`w-12 h-12 ${tx.type?.toLowerCase() === 'earning' ? 'bg-green-100' : tx.type?.toLowerCase() === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
-          <span className="text-2xl">
-            {tx.type?.toLowerCase() === 'earning' ? '💰' : tx.type?.toLowerCase() === 'penalty' ? '⚠️' : '📤'}
-          </span>
-        </div> {/* <--- BURASI EKSİKTİ, KAPATTIK! */}
-
-        {/* Metin İçeriği */}
-        <div className="flex-1">
-          <p className="font-bold text-gray-900 text-sm">{tx.title}</p>
-          <p className="text-xs text-gray-500">{new Date(tx.date).toLocaleDateString('tr-TR')}</p>
-        </div>
-
-        {/* Tutar */}
-        <p className={`font-black ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {tx.amount > 0 ? '+' : ''}{tx.amount} TL
-        </p>
-      </div>
-    ))}
-  </div>
-)}
-
+  // --- MÜŞTERİ GÖRÜNÜMÜ ---
   if (user?.role === 'customer') {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="px-4 pt-4 pb-4">
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition">
-                <ArrowLeft size={20} className="text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-xl font-black text-gray-900">Cuzdan</h1>
-                <p className="text-xs text-gray-500">Bakiye ve kuponlariniz</p>
-              </div>
+          <div className="px-4 py-4 flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-xl font-black text-gray-900">Cüzdan</h1>
+              <p className="text-xs text-gray-500">Bakiye ve kuponlarınız</p>
             </div>
           </div>
         </div>
@@ -251,153 +124,41 @@ if (walletResponse) {
                 <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
                 <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
               </div>
-                           <button
-                onClick={() => navigate('/odeme')}
-                className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition cursor-pointer"
-              >
-                <span className="text-xs font-bold text-white text-center">Bakiye Yükle</span>
+              <button onClick={() => navigate('/odeme')} className="px-4 py-2 bg-white/20 backdrop-blur rounded-xl text-xs font-bold">
+                Bakiye Yükle
               </button>
-
             </div>
             {customerEscrow > 0 && (
               <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-                <p className="text-white/80 text-xs mb-1">Escrow'da Tutulan</p>
+                <p className="text-white/80 text-xs mb-1">Bloke Edilen Tutar</p>
                 <p className="text-lg font-bold">{customerEscrow.toLocaleString('tr-TR')} TL</p>
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="text-2xl mb-1">💸</div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
               <p className="text-2xl font-black text-gray-900">{totalSpent.toLocaleString('tr-TR')} TL</p>
               <p className="text-xs text-gray-600">Toplam Harcama</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="text-2xl mb-1">✅</div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
               <p className="text-2xl font-black text-gray-900">{completedJobs.length}</p>
-              <p className="text-xs text-gray-600">Tamamlanan Is</p>
+              <p className="text-xs text-gray-600">Tamamlanan İş</p>
             </div>
           </div>
 
           <div>
-            <h3 className="font-bold text-gray-900 mb-3">Kuponlarim ({activeCoupons.length})</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Aktif Kuponlar ({activeCoupons.length})</h3>
             {activeCoupons.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-2">🎟️</div>
-                <p className="text-gray-600 text-sm">Aktif kupon yok</p>
-              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-500">Kuponunuz bulunmuyor.</div>
             ) : (
               <div className="space-y-2">
                 {activeCoupons.map(coupon => (
-                  <div key={coupon.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 flex items-center justify-between">
+                  <div key={coupon.id} className="bg-white border border-purple-200 rounded-xl p-4 flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-gray-900">{coupon.amount} TL Indirim</p>
-                      <p className="text-xs text-gray-500">Suresi: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</p>
+                      <p className="font-bold text-purple-700">{coupon.amount} TL İndirim</p>
+                      <p className="text-xs text-gray-400">Kod: {coupon.code}</p>
                     </div>
-                    <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition">
-                      Kullan
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Son Isler</h3>
-            {customerJobs.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-2">📋</div>
-                <p className="text-gray-600 text-sm">Henuz hic is olusturmadiniz</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {customerJobs.slice(0, 5).map(job => (
-                  <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold text-gray-900">{job.title}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                        job.status === 'completed' || job.status === 'rated' ? 'bg-green-100 text-green-700' :
-                        job.status === 'accepted' ? 'bg-blue-100 text-blue-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {job.status === 'pending' ? 'Beklemede' : job.status === 'accepted' ? 'Kabul Edildi' : 'Tamamlandi'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{job.address || job.location || ''}</p>
-                    <p className="text-lg font-black text-gray-900">{job.price ?? job.budget ?? 0} TL</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Degerlendirmelerim</h3>
-            {!customerJobs.some(j => j.rating) ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-2">⭐</div>
-                <p className="text-gray-600 text-sm">Henuz degerlendirme yapmadiniz</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {customerJobs
-                  .filter(j => j.rating && (j.rating.customerRating || j.rating.professionalRating))
-                  .map(job => {
-                    const stars = job.rating.customerRating || job.rating.professionalRating || 0
-                    return (
-                      <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-bold text-gray-900">{job.professional?.name || 'Usta'}</p>
-                            <p className="text-xs text-gray-500">{job.title}</p>
-                          </div>
-                          <div className="flex gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i}>{i < stars ? '⭐' : '☆'}</span>
-                            ))}
-                          </div>
-                        </div>
-                        {job.rating.review && (
-                          <p className="text-sm text-gray-600 mb-2">"{job.rating.review}"</p>
-                        )}
-                        <p className="text-xs text-gray-500">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
-                      </div>
-                    )
-                  })}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Sikayetlerim</h3>
-            {!customerJobs.some(j => j.complaint) ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-2">✅</div>
-                <p className="text-gray-600 text-sm">Sikayet gondermediniz</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {customerJobs.filter(j => j.complaint).map(job => (
-                  <div key={job.id} className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-bold text-gray-900">{job.title}</p>
-                        <p className="text-xs text-gray-500">{job.complaint?.reason}</p>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                        job.complaint?.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                        job.complaint?.status === 'open' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {job.complaint?.status === 'open' ? 'Acik' : job.complaint?.status === 'resolved' ? 'Cozuldu' : 'Reddedildi'}
-                      </span>
-                    </div>
-                    {job.complaint?.details && (
-                      <p className="text-sm text-gray-600 mb-2">{job.complaint.details}</p>
-                    )}
-                    <p className="text-xs text-gray-500">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
                   </div>
                 ))}
               </div>
@@ -408,7 +169,79 @@ if (walletResponse) {
     )
   }
 
-  return null
+  // --- USTA / PROFESYONEL GÖRÜNÜMÜ ---
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="px-4 py-4 flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-gray-900">Usta Cüzdanı</h1>
+            <p className="text-xs text-gray-500">Kazançlarınızı yönetin</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-6 space-y-6">
+        <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+          <p className="text-white/80 text-sm mb-1">Çekilebilir Bakiye</p>
+          <h2 className="text-4xl font-black mb-4">{balance.toLocaleString('tr-TR')} TL</h2>
+          <button 
+            onClick={() => navigate('/withdraw')}
+            disabled={balance < 100}
+            className="w-full py-3 bg-white text-green-600 rounded-xl font-bold disabled:opacity-50"
+          >
+            Para Çek (Min. 100 TL)
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <TrendingUp size={16} className="text-green-600 mb-1" />
+            <p className="text-xl font-bold text-gray-900">{thisMonthEarnings} TL</p>
+            <p className="text-xs text-gray-500">Bu Ay</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center gap-1">
+              {growthPercentage >= 0 ? <TrendingUp size={16} className="text-green-600" /> : <TrendingDown size={16} className="text-red-600" />}
+              <span className={`text-xl font-bold ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>{growthPercentage}%</span>
+            </div>
+            <p className="text-xs text-gray-500">Büyüme</p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-1 flex">
+          <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 rounded-lg font-bold text-sm ${activeTab === 'overview' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>Özet</button>
+          <button onClick={() => setActiveTab('transactions')} className={`flex-1 py-2 rounded-lg font-bold text-sm ${activeTab === 'transactions' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>İşlemler</button>
+        </div>
+
+        <div className="space-y-3">
+          {transactions.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 text-sm">İşlem geçmişi bulunamadı.</div>
+          ) : (
+            (activeTab === 'overview' ? transactions.slice(0, 5) : transactions).map(tx => (
+              <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tx.type === 'earning' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                    {tx.type === 'earning' ? '💰' : '⚠️'}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">{tx.description || tx.title || 'İşlem'}</p>
+                    <p className="text-xs text-gray-500">{new Date(tx.createdAt || tx.date).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                </div>
+                <p className={`font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {tx.amount > 0 ? '+' : ''}{tx.amount} TL
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default WalletPage
