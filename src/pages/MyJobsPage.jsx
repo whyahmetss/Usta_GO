@@ -77,6 +77,13 @@ function MyJobsPage() {
     return () => clearInterval(interval)
   }, [user])
 
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    if (user) {
+      await loadUserJobs(true)
+    }
+  }
+
   // Pull-to-refresh handlers
   useEffect(() => {
     const handleTouchStart = (e) => {
@@ -93,7 +100,7 @@ function MyJobsPage() {
       }
     }
 
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd = () => {
       if (pullDistance > 80) {
         handleRefresh()
       }
@@ -110,14 +117,7 @@ function MyJobsPage() {
       element?.removeEventListener('touchmove', handleTouchMove)
       element?.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [pullDistance])
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    if (user) {
-      await loadUserJobs(true)
-    }
-  }
+  }, [pullDistance, handleRefresh])
 
   // Filter jobs by status (after mapping, all statuses are lowercase)
   const activeJobs = userJobs.filter(j =>
