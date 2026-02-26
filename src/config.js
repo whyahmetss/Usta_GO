@@ -37,15 +37,16 @@ export const API_ENDPOINTS = {
     BY_USER: (userId) => `/jobs/user/${userId}`,
   },
 
-  // Messages
-  MESSAGES: {
-    SEND: '/messages',
-    GET_CONVERSATION: (userId) => `/messages/${userId}`,
-    GET_JOB_MESSAGES: (jobId) => `/messages/job/${jobId}`,
-    GET_CONVERSATIONS: '/messages/conversations',
-    MARK_READ: (id) => `/messages/${id}/read`,
-    DELETE: (id) => `/messages/${id}`,
-  },
+// Messages
+MESSAGES: {
+  SEND: '/messages',
+  GET_CONVERSATION: (userId) => `/messages/${userId}`,
+  // '/job' kısmını kaldırıp dene:
+  GET_JOB_MESSAGES: (jobId) => `/messages/${jobId}`, 
+  GET_CONVERSATIONS: '/messages/conversations',
+  MARK_READ: (id) => `/messages/${id}/read`,
+  DELETE: (id) => `/messages/${id}`,
+}
 
   // Wallet
   WALLET: {
