@@ -51,81 +51,40 @@ function MessagesPage() {
   }, [user])
 
   // Load messages for selected job
-  useEffect(() => {
-    const loadJobMessages = async () => {
-      if (!selectedJobId) {
-        setJobMessages([])
-        setSelectedJob(null)
-        return
-      }
+ useEffect(() => {
+  const loadJobMessages = async () => {
+    if (!selectedJobId || userJobs.length === 0) { // userJobs yüklenmeden işlem yapma
+      setJobMessages([])
+      setSelectedJob(null)
+      return
+    }
 
-      try {
-        setLoadingMessages(true)
-        const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_JOB_MESSAGES(selectedJobId))
+    try {
+      setLoadingMessages(true)
+      
+      // 1. Önce listeden seçili işi bul
+      const job = userJobs.find(j => j.id === selectedJobId)
+      if (!job) return
+      setSelectedJob(job)
+
+      // 2. Mesajlaşacağın kişinin ID'sini belirle (Backend bunu bekliyor)
+      const otherPersonId = user?.role === 'customer' ? job.professional?.id : job.customer?.id
+
+      if (otherPersonId) {
+        // 3. API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId) kullanıyoruz!
+        // Çünkü backend rotan: GET /api/messages/:userId
+        const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId))
+        
         if (response.data && Array.isArray(response.data)) {
           setJobMessages(response.data)
         }
-
-        // Find selected job from userJobs
-        const job = userJobs.find(j => j.id === selectedJobId)
-        setSelectedJob(job)
-      } catch (err) {
-        console.error('Load messages error:', err)
-      } finally {
-        setLoadingMessages(false)
       }
+    } catch (err) {
+      console.error('Load messages error:', err)
+    } finally {
+      setLoadingMessages(false)
     }
-
-    loadJobMessages()
-  }, [selectedJobId, userJobs])
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [jobMessages.length])
-
-  const handleSend = async () => {
-  if (!messageText.trim() || !selectedJobId || isSending) return
-
-  // 1. Alıcıyı (receiverId) belirle - Bu satırı eklemelisin!
-  const otherPersonId = user?.role === 'customer' 
-    ? selectedJob?.professional?.id 
-    : selectedJob?.customer?.id
-
-  // Alıcı yoksa işlemi durdur (Güvenlik önlemi)
-  if (!otherPersonId) {
-    alert("Alıcı bilgisi (receiverId) bulunamadı!")
-    return
-  }
-
-  const messageToSend = messageText.trim()
-  setMessageText('')
-  setIsSending(true)
-
-  try {
-    const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
-      method: 'POST',
-      body: {
-        jobId: selectedJobId,
-        content: messageToSend,  // Prisma'nın beklediği 'content'
-        receiverId: otherPersonId // Backend'e giden alıcı ID'si
-      }
-    })
-
-    if (response.data) {
-      setJobMessages(prev => [...prev, response.data])
-    }s
-  } catch (err) {
-    console.error('Send message error:', err)
-    setMessageText(messageToSend)
-    alert(`Mesaj gonderilemedi: ${err.message}`)
-  } finally {
-    setIsSending(false)
-  }
-}
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -135,27 +94,38 @@ function MessagesPage() {
   }
 
   const handleSendQuickMessage = async (qm) => {
-    if (isSending) return
-    setIsSending(true)
-    try {
-      const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
-        method: 'POST',
-        body: {
-          jobId: selectedJobId,
-         content: qm, // 'text' yerine 'content'
-        receiverId: otherPersonId // Eksik olan receiverId
-        }
-      })
-      if (response.data) {
-        setJobMessages(prev => [...prev, response.data])
-      }
-    } catch (err) {
-      console.error('Send quick message error:', err)
-      alert(`Mesaj gonderilemedi: ${err.message}`)
-    } finally {
-      setIsSending(false)
-    }
+  if (isSending || !selectedJobId) return;
+  
+  // Alıcıyı burada da belirlemelisin
+  const otherPersonId = user?.role === 'customer' 
+    ? selectedJob?.professional?.id 
+    : selectedJob?.customer?.id;
+
+  if (!otherPersonId) {
+    alert("Alıcı bulunamadı!");
+    return;
   }
+
+  setIsSending(true);
+  try {
+    const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+      method: 'POST',
+      body: {
+        jobId: selectedJobId,
+        content: qm, // 'text' yerine 'content'
+        receiverId: otherPersonId // Eksik olan receiverId
+      }
+    });
+    if (response.data) {
+      setJobMessages(prev => [...prev, response.data]);
+    }
+  } catch (err) {
+    console.error('Send quick message error:', err);
+    alert(`Mesaj gonderilemedi: ${err.message}`);
+  } finally {
+    setIsSending(false);
+  }
+};
 
   const quickMessages = user?.role === 'professional'
     ? ['Yoldayım, 10 dakikaya varırım', 'Malzeme almam gerekiyor', 'İş tamamlandı', 'Gecikeceğim, özür dilerim']
