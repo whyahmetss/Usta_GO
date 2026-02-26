@@ -25,94 +25,41 @@ function WalletPage() {
   const [coupons, setCoupons] = useState([])
   const [customerJobs, setCustomerJobs] = useState([])
   const [completedJobs, setCompletedJobs] = useState([])
-
- useEffect(() => {
-    const loadWalletData = async () => { // <--- BURANIN async OLDUĞUNDAN EMİN OL
+useEffect(() => {
+    // 1. Fonksiyonu ASYNC olarak tanımlıyoruz
+    const loadWalletData = async () => {
       try {
-        setLoading(true)
-        setError(null)
-
-        if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
-          // Cüzdan Özeti Çekme
-          try {
-            const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-            if (walletResponse) {
-              setBalance(walletResponse.balance || walletResponse.availableBalance || 0)
-              setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
-              // Profildeki 1.038 TL'yi yakalamak için alternatif alanları kontrol et
-              setThisMonthEarnings(walletResponse.thisMonthEarnings || walletResponse.totalEarnings || 0)
-              setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
-            }
-          } catch (walletErr) {
-            console.warn('Wallet data failed:', walletErr)
-          }
-
-          // İşlem Geçmişi Çekme (HATA BURADAYDI)
-          try {
-            const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
-            if (transactionsResponse && transactionsResponse.data) {
-              setTransactions(transactionsResponse.data)
-            }
-          } catch (txErr) {
-            console.warn('Transactions failed:', txErr)
-          }
-        } else if (user?.role === 'customer') {
-          // Müşteri verilerini çekme mantığı buraya...
-          // Buradaki fetchAPI işlemlerinin de await ile yapıldığından emin ol
+        setLoading(true);
+        
+        // Cüzdan genel verilerini çek
+        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
+        if (walletResponse) {
+          setBalance(walletResponse.balance || 0);
+          setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
+          // Profildeki 1.038 TL'yi yakalamak için alternatif isimler
+          setThisMonthEarnings(walletResponse.thisMonthEarnings || walletResponse.totalEarnings || 0);
+          setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
         }
-      } catch (err) {
-        console.error('Load wallet error:', err)
-        setError('Cüzdan verileri yüklenirken hata oluştu')
-      } finally {
-        setLoading(false)
-      }
-    }
 
-    if (user) loadWalletData()
-  }, [user])
-          try {
-            const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
-            if (transactionsResponse.data) {
-              setTransactions(transactionsResponse.data)
-            }
-          } catch (txErr) {
-            console.warn('Transactions failed:', txErr)
-          }
-        } else if (user?.role === 'customer') {
-          try {
-            const response = await fetchAPI(API_ENDPOINTS.AUTH.ME)
-            if (response.data) {
-              setCustomerBalance(response.data.balance || 0)
-              setCustomerEscrow(response.data.escrowBalance || 0)
-              setTotalSpent(response.data.totalSpent || 0)
-              setCoupons(response.data.coupons || [])
-            }
-          } catch (userErr) {
-            console.warn('User data failed:', userErr)
-          }
-
-          try {
-            const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-            if (jobsResponse.data) {
-              const mapped = mapJobsFromBackend(jobsResponse.data)
-              const userJobs = mapped.filter(j => j.customer?.id === user?.id)
-              setCustomerJobs(userJobs)
-              setCompletedJobs(userJobs.filter(j => j.status === 'completed' || j.status === 'rated'))
-            }
-          } catch (jobsErr) {
-            console.warn('Jobs failed:', jobsErr)
-          }
+        // 2. İşlem geçmişini çek (Hata buradaydı, artık async fonksiyonun içinde)
+        const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
+        if (transactionsResponse && transactionsResponse.data) {
+          setTransactions(transactionsResponse.data);
         }
+
       } catch (err) {
-        setError('Veriler yüklenirken bir hata oluştu')
+        console.error('Cüzdan yükleme hatası:', err);
+        setError('Veriler yüklenemedi');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+
+    // 3. Sadece kullanıcı varsa fonksiyonu çalıştır
+    if (user) {
+      loadWalletData();
     }
-
-    if (user) loadWalletData()
-  }, [user])
-
+  }, [user]);
   const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
