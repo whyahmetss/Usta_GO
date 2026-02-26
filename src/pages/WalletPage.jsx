@@ -68,9 +68,6 @@ function WalletPage() {
     if (user) loadWalletData();
   }, [user]);
 
-    if (user) loadWalletData();
-  }, [user]);
-
   // Büyüme hesaplama
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
