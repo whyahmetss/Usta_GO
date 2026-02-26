@@ -99,7 +99,8 @@ function MessagesPage() {
         method: 'POST',
         body: {
           jobId: selectedJobId,
-          text: messageToSend
+         content: messageToSend, // 'text' yerine 'content'
+        receiverId: otherPersonId // Eksik olan receiverId
         }
       })
 
@@ -130,7 +131,8 @@ function MessagesPage() {
         method: 'POST',
         body: {
           jobId: selectedJobId,
-          text: qm
+         content: qm, // 'text' yerine 'content'
+        receiverId: otherPersonId // Eksik olan receiverId
         }
       })
       if (response.data) {
