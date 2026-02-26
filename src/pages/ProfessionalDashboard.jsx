@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
+import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp, RotateCcw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -12,40 +12,64 @@ function ProfessionalDashboard() {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [allJobs, setAllJobs] = useState([])
   const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
   const [balance, setBalance] = useState(0)
+  const [lastRefreshTime, setLastRefreshTime] = useState(null)
 
   const unreadNotifs = getUnreadNotificationCount()
   const unreadMessages = getUnreadMessageCount()
 
   // Load professional dashboard data
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true)
-        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          setAllJobs(jobsResponse.data)
-        }
-
-        // Load wallet data
-        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-        if (walletResponse.data) {
-          setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
-          setBalance(walletResponse.data.balance || 0)
-        }
-      } catch (err) {
-        console.error('Load dashboard error:', err)
-      } finally {
-        setLoading(false)
+  const loadDashboardData = async (isRefresh = false) => {
+    try {
+      if (!isRefresh) setLoading(true)
+      setIsRefreshing(true)
+      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+      if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+        setAllJobs(jobsResponse.data)
       }
-    }
 
+      // Load wallet data
+      const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+      if (walletResponse.data) {
+        setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
+        setBalance(walletResponse.data.balance || 0)
+      }
+
+      setLastRefreshTime(new Date())
+    } catch (err) {
+      console.error('Load dashboard error:', err)
+    } finally {
+      setLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
     if (user?.role === 'professional') {
       loadDashboardData()
+
+      // Auto-refresh every 30 seconds
+      const interval = setInterval(() => {
+        loadDashboardData(true)
+      }, 30000)
+
+      return () => clearInterval(interval)
     }
   }, [user])
+
+  const formatRefreshTime = () => {
+    if (!lastRefreshTime) return 'Henüz yenilenmedi'
+
+    const now = new Date()
+    const diff = Math.floor((now - lastRefreshTime) / 1000)
+
+    if (diff < 60) return `${diff}s önce`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m önce`
+    return lastRefreshTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+  }
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   const myCompletedJobs = allJobs.filter(j => j.professional?.id === user?.id && (j.status === 'completed' || j.status === 'rated'))
@@ -66,14 +90,22 @@ function ProfessionalDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 pb-24">
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 pb-6 pt-4 px-4">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <Logo size="md" />
             <div>
               <h1 className="text-2xl font-black text-white">Usta Paneli</h1>
               <p className="text-white/70 text-xs">Hoş geldin, {user?.name}</p>
+              <p className="text-white/60 text-xs mt-1">Son yenileme: {formatRefreshTime()}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => loadDashboardData(true)}
+              disabled={isRefreshing}
+              className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition disabled:opacity-50"
+            >
+              <RotateCcw size={20} className={`text-white ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
             <button onClick={() => navigate('/notifications')} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center relative">
               <Bell size={20} className="text-white" />
               {unreadNotifs > 0 && (
