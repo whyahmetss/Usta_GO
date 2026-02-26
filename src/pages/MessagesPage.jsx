@@ -237,7 +237,7 @@ function MessagesPage() {
                     ? 'bg-blue-600 text-white rounded-br-md'
                     : 'bg-white text-gray-900 rounded-bl-md shadow-sm'
                 }`}>
-                  <p className="text-sm">{msg.text}</p>
+                  <p className="text-sm">{msg.content || msg.text}</p>
                   <p className={`text-[10px] mt-1 ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
                     {formatTime(msg.createdAt || msg.timestamp)}
                   </p>
