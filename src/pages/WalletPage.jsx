@@ -23,51 +23,51 @@ function WalletPage() {
   const [customerBalance, setCustomerBalance] = useState(0)
 
 
- useEffect(() => {
-    const loadWalletData = async () => {
-      try {
-        setLoading(true);
-        
-        // 1. Profil sayfasındaki 1.038 TL'yi yakalamak için İŞLERİ çekiyoruz
-        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST);
-        let manuelKazanc = 0;
-        
-        if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
-          // Senin profil sayfasındaki mantığın aynısı: Tamamlanan işleri bul ve topla
-          const ustaIsleri = jobsResponse.data.filter(j => 
-            (j.ustaId === user?.id || j.professional?.id === user?.id) && 
-            (j.status === 'completed' || j.status === 'rated')
-          );
-          manuelKazanc = ustaIsleri.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
-        }
-
-        // 2. Cüzdan genel verilerini çek (173 TL bakiye buradan geliyor)
-        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
-        if (walletResponse) {
-          setBalance(walletResponse.balance || 173); // Network'teki 173 TL'yi garantiye alıyoruz
-          setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
-          
-          // EĞER API'den kazanç gelmiyorsa, hesapladığımız 1.038 TL'yi yazdırıyoruz
-          setThisMonthEarnings(walletResponse.thisMonthEarnings || manuelKazanc);
-          setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
-        }
-
-        // 3. İşlem geçmişini çek (Alttaki listede görünen +173 TL'lik işlem)
-        const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
-        if (transactionsResponse?.data) {
-          setTransactions(transactionsResponse.data);
-        }
-
-      } catch (err) {
-        console.error('Cüzdan yükleme hatası:', err);
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const loadWalletData = async () => {
+    try {
+      setLoading(true);
+      
+      // 1. İşleri çek ve toplam kazancı hesapla
+      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST);
+      let manuelKazanc = 0;
+      
+      if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
+        const ustaIsleri = jobsResponse.data.filter(j => 
+          (j.ustaId === user?.id || j.professional?.id === user?.id) && 
+          (j.status === 'COMPLETED' || j.status === 'completed' || j.status === 'rated')
+        );
+        manuelKazanc = ustaIsleri.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
       }
-    };
 
-    if (user) loadWalletData();
-  }, [user]);
+      // 2. Wallet API çağır
+      const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
+      if (walletResponse) {
+        setBalance(walletResponse.balance || manuelKazanc);  // ← DÜZELT!
+        setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
+        setThisMonthEarnings(walletResponse.thisMonthEarnings || manuelKazanc);
+        setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
+      } else {
+        // API yanıt vermediyse manuel hesaplananı kullan
+        setBalance(manuelKazanc);
+        setThisMonthEarnings(manuelKazanc);
+      }
 
+      // 3. Transactions
+      const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
+      if (transactionsResponse?.data) {
+        setTransactions(transactionsResponse.data);
+      }
+
+    } catch (err) {
+      console.error('Cüzdan yükleme hatası:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (user) loadWalletData();
+}, [user]);
   // Büyüme hesaplama
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
