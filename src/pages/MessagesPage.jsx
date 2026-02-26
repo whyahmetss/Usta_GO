@@ -88,33 +88,44 @@ function MessagesPage() {
   }, [jobMessages.length])
 
   const handleSend = async () => {
-    if (!messageText.trim() || !selectedJobId || isSending) return
+  if (!messageText.trim() || !selectedJobId || isSending) return
 
-    const messageToSend = messageText.trim()
-    setMessageText('')
-    setIsSending(true)
+  // 1. Alıcıyı (receiverId) belirle - Bu satırı eklemelisin!
+  const otherPersonId = user?.role === 'customer' 
+    ? selectedJob?.professional?.id 
+    : selectedJob?.customer?.id
 
-    try {
-      const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
-        method: 'POST',
-        body: {
-          jobId: selectedJobId,
-         content: messageToSend, // 'text' yerine 'content'
-        receiverId: otherPersonId // Eksik olan receiverId
-        }
-      })
-
-      if (response.data) {
-        setJobMessages(prev => [...prev, response.data])
-      }
-    } catch (err) {
-      console.error('Send message error:', err)
-      setMessageText(messageToSend)
-      alert(`Mesaj gonderilemedi: ${err.message}`)
-    } finally {
-      setIsSending(false)
-    }
+  // Alıcı yoksa işlemi durdur (Güvenlik önlemi)
+  if (!otherPersonId) {
+    alert("Alıcı bilgisi (receiverId) bulunamadı!")
+    return
   }
+
+  const messageToSend = messageText.trim()
+  setMessageText('')
+  setIsSending(true)
+
+  try {
+    const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+      method: 'POST',
+      body: {
+        jobId: selectedJobId,
+        content: messageToSend,  // Prisma'nın beklediği 'content'
+        receiverId: otherPersonId // Backend'e giden alıcı ID'si
+      }
+    })
+
+    if (response.data) {
+      setJobMessages(prev => [...prev, response.data])
+    }s
+  } catch (err) {
+    console.error('Send message error:', err)
+    setMessageText(messageToSend)
+    alert(`Mesaj gonderilemedi: ${err.message}`)
+  } finally {
+    setIsSending(false)
+  }
+}
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
