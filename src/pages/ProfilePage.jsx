@@ -37,7 +37,7 @@ function ProfilePage() {
         const mapped = mapJobsFromBackend(jobsResponse.data)
 
         if (user?.role === 'customer') {
-          const userJobs = mapped.filter(j => j.ustaId === user?.id || j.professional?.id === user?.id)
+         const userJobs = mapped.filter(j => j.customer?.id === user?.id)
           const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
           const activeCount = userJobs.filter(j => j.status === 'pending' || j.status === 'in_progress').length
           const offersCount = userJobs.reduce((sum, job) => sum + (job.offers?.length || 0), 0)
@@ -58,7 +58,7 @@ function ProfilePage() {
           })
         } else {
           // Professional
-          const userJobs = mapped.filter(j => j.professional?.id === user?.id)
+         const userJobs = mapped.filter(j => j.ustaId === user?.id)
           const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
           const activeCount = userJobs.filter(j => j.status === 'in_progress' || j.status === 'pending').length
           const offersCount = userJobs.filter(j => j.professional?.id === user?.id).length
