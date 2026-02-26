@@ -52,37 +52,80 @@ function MessagesPage() {
 
   // Load messages for selected job
  useEffect(() => {
-  const loadJobMessages = async () => {
-    if (!selectedJobId || userJobs.length === 0) { // userJobs yüklenmeden işlem yapma
-      setJobMessages([])
-      setSelectedJob(null)
+    const loadJobMessages = async () => {
+      if (!selectedJobId || userJobs.length === 0) {
+        setJobMessages([])
+        setSelectedJob(null)
+        return
+      }
+
+      try {
+        setLoadingMessages(true)
+        const job = userJobs.find(j => j.id === selectedJobId)
+        if (!job) return
+        setSelectedJob(job)
+
+        const otherPersonId = user?.role === 'customer' ? job.professional?.id : job.customer?.id
+
+        if (otherPersonId) {
+          const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId))
+          if (response.data && Array.isArray(response.data)) {
+            setJobMessages(response.data)
+          }
+        }
+      } catch (err) {
+        console.error('Load messages error:', err)
+      } finally {
+        setLoadingMessages(false)
+      }
+    }
+
+    loadJobMessages()
+  }, [selectedJobId, userJobs, user])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [jobMessages.length])
+
+  const handleSend = async () => {
+    if (!messageText.trim() || !selectedJobId || isSending) return
+
+    const otherPersonId = user?.role === 'customer' 
+      ? selectedJob?.professional?.id 
+      : selectedJob?.customer?.id
+
+    if (!otherPersonId) {
+      alert("Alıcı bilgisi bulunamadı!")
       return
     }
 
+    const messageToSend = messageText.trim()
+    setMessageText('')
+    setIsSending(true)
+
     try {
-      setLoadingMessages(true)
-      
-      // 1. Önce listeden seçili işi bul
-      const job = userJobs.find(j => j.id === selectedJobId)
-      if (!job) return
-      setSelectedJob(job)
-
-      // 2. Mesajlaşacağın kişinin ID'sini belirle (Backend bunu bekliyor)
-      const otherPersonId = user?.role === 'customer' ? job.professional?.id : job.customer?.id
-
-      if (otherPersonId) {
-        // 3. API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId) kullanıyoruz!
-        // Çünkü backend rotan: GET /api/messages/:userId
-        const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId))
-        
-        if (response.data && Array.isArray(response.data)) {
-          setJobMessages(response.data)
+      const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+        method: 'POST',
+        body: {
+          jobId: selectedJobId,
+          content: messageToSend,
+          receiverId: otherPersonId
         }
+      })
+
+      if (response.data) {
+        setJobMessages(prev => [...prev, response.data])
       }
     } catch (err) {
-      console.error('Load messages error:', err)
+      console.error('Send message error:', err)
+      setMessageText(messageToSend)
+      alert(`Mesaj gonderilemedi: ${err.message}`)
     } finally {
-      setLoadingMessages(false)
+      setIsSending(false)
     }
   }
 
