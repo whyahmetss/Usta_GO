@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Download } from 'lucide-react'
+import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
 
 function WalletPage() {
   const { user } = useAuth()
@@ -13,54 +12,63 @@ function WalletPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Usta State'leri
   const [balance, setBalance] = useState(0)
   const [pendingWithdrawal, setPendingWithdrawal] = useState(0)
   const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
   const [lastMonthEarnings, setLastMonthEarnings] = useState(0)
   const [transactions, setTransactions] = useState([])
 
+  // Müşteri State'leri
   const [customerBalance, setCustomerBalance] = useState(0)
-  const [customerEscrow, setCustomerEscrow] = useState(0)
-  const [totalSpent, setTotalSpent] = useState(0)
-  const [coupons, setCoupons] = useState([])
-  const [customerJobs, setCustomerJobs] = useState([])
-  const [completedJobs, setCompletedJobs] = useState([])
-useEffect(() => {
-    // 1. Fonksiyonu ASYNC olarak tanımlıyoruz
+
+  useEffect(() => {
     const loadWalletData = async () => {
       try {
-        setLoading(true);
+        setLoading(true)
+        setError(null)
+
+        // 1. Cüzdan Özet Verilerini Çek
+        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
         
-        // Cüzdan genel verilerini çek
-        const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
         if (walletResponse) {
-          setBalance(walletResponse.balance || 0);
-          setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
-          // Profildeki 1.038 TL'yi yakalamak için alternatif isimler
-          setThisMonthEarnings(walletResponse.thisMonthEarnings || walletResponse.totalEarnings || 0);
-          setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
+          // Usta verilerini eşitle (Profildeki mantığı buraya yedirdik)
+          setBalance(walletResponse.balance || walletResponse.availableBalance || 0)
+          setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
+          
+          // Profil sayfasındaki rakamı (1.038 TL) yakalamak için tüm ihtimaller:
+          const earnings = walletResponse.thisMonthEarnings || 
+                           walletResponse.totalEarnings || 
+                           walletResponse.earnings || 0
+          setThisMonthEarnings(earnings)
+          setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
+
+          // Müşteri bakiyesi
+          setCustomerBalance(walletResponse.customerBalance || walletResponse.balance || 0)
         }
 
-        // 2. İşlem geçmişini çek (Hata buradaydı, artık async fonksiyonun içinde)
-        const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
+        // 2. İşlem Geçmişini Çek (Hata buradaydı, artık async fonksiyonun içinde!)
+        const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
         if (transactionsResponse && transactionsResponse.data) {
-          setTransactions(transactionsResponse.data);
+          setTransactions(transactionsResponse.data)
+        } else if (Array.isArray(transactionsResponse)) {
+          setTransactions(transactionsResponse)
         }
 
       } catch (err) {
-        console.error('Cüzdan yükleme hatası:', err);
-        setError('Veriler yüklenemedi');
+        console.error('Cüzdan yükleme hatası:', err)
+        setError('Veriler yüklenemedi')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    // 3. Sadece kullanıcı varsa fonksiyonu çalıştır
-    if (user) {
-      loadWalletData();
     }
-  }, [user]);
-  const activeCoupons = coupons.filter(c => !c.used && new Date(c.expiresAt) > new Date())
+
+    if (user) {
+      loadWalletData()
+    }
+  }, [user]) // useEffect burada tertemiz kapanıyor
+
+  // Büyüme hesaplama
   const growthPercentage = lastMonthEarnings > 0
     ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1)
     : thisMonthEarnings > 0 ? 100 : 0
@@ -84,64 +92,26 @@ useEffect(() => {
             </button>
             <div>
               <h1 className="text-xl font-black text-gray-900">Cüzdan</h1>
-              <p className="text-xs text-gray-500">Bakiye ve kuponlarınız</p>
+              <p className="text-xs text-gray-500">Bakiye ve işlemleriniz</p>
             </div>
           </div>
         </div>
 
         <div className="px-4 py-6 space-y-6">
           <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
-                <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
-              </div>
-              <button onClick={() => navigate('/odeme')} className="px-4 py-2 bg-white/20 backdrop-blur rounded-xl text-xs font-bold">
-                Bakiye Yükle
-              </button>
-            </div>
-            {customerEscrow > 0 && (
-              <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-                <p className="text-white/80 text-xs mb-1">Bloke Edilen Tutar</p>
-                <p className="text-lg font-bold">{customerEscrow.toLocaleString('tr-TR')} TL</p>
-              </div>
-            )}
+            <p className="text-white/80 text-sm mb-1">Hesap Bakiyesi</p>
+            <h2 className="text-4xl font-black">{customerBalance.toLocaleString('tr-TR')} TL</h2>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <p className="text-2xl font-black text-gray-900">{totalSpent.toLocaleString('tr-TR')} TL</p>
-              <p className="text-xs text-gray-600">Toplam Harcama</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <p className="text-2xl font-black text-gray-900">{completedJobs.length}</p>
-              <p className="text-xs text-gray-600">Tamamlanan İş</p>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Aktif Kuponlar ({activeCoupons.length})</h3>
-            {activeCoupons.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-500">Kuponunuz bulunmuyor.</div>
-            ) : (
-              <div className="space-y-2">
-                {activeCoupons.map(coupon => (
-                  <div key={coupon.id} className="bg-white border border-purple-200 rounded-xl p-4 flex justify-between items-center">
-                    <div>
-                      <p className="font-bold text-purple-700">{coupon.amount} TL İndirim</p>
-                      <p className="text-xs text-gray-400">Kod: {coupon.code}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          
+          <div className="text-center py-10 text-gray-400">
+             <p className="text-sm">İşlem geçmişi yakında burada görünecek.</p>
           </div>
         </div>
       </div>
     )
   }
 
-  // --- USTA / PROFESYONEL GÖRÜNÜMÜ ---
+  // --- USTA GÖRÜNÜMÜ ---
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -162,23 +132,21 @@ useEffect(() => {
           <h2 className="text-4xl font-black mb-4">{balance.toLocaleString('tr-TR')} TL</h2>
           <button 
             onClick={() => navigate('/withdraw')}
-            disabled={balance < 100}
-            className="w-full py-3 bg-white text-green-600 rounded-xl font-bold disabled:opacity-50"
+            className="w-full py-3 bg-white text-green-600 rounded-xl font-bold"
           >
-            Para Çek (Min. 100 TL)
+            Para Çek
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <TrendingUp size={16} className="text-green-600 mb-1" />
-            <p className="text-xl font-bold text-gray-900">{thisMonthEarnings} TL</p>
-            <p className="text-xs text-gray-500">Bu Ay</p>
+            <p className="text-xl font-bold text-gray-900">{thisMonthEarnings.toLocaleString('tr-TR')} TL</p>
+            <p className="text-xs text-gray-500">Bu Ay Kazanç</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-1">
-              {growthPercentage >= 0 ? <TrendingUp size={16} className="text-green-600" /> : <TrendingDown size={16} className="text-red-600" />}
-              <span className={`text-xl font-bold ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>{growthPercentage}%</span>
+              <span className={`text-xl font-bold ${Number(growthPercentage) >= 0 ? 'text-green-600' : 'text-red-600'}`}>%{growthPercentage}</span>
             </div>
             <p className="text-xs text-gray-500">Büyüme</p>
           </div>
@@ -193,15 +161,15 @@ useEffect(() => {
           {transactions.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-sm">İşlem geçmişi bulunamadı.</div>
           ) : (
-            (activeTab === 'overview' ? transactions.slice(0, 5) : transactions).map(tx => (
-              <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+            (activeTab === 'overview' ? transactions.slice(0, 5) : transactions).map((tx, idx) => (
+              <div key={tx.id || idx} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tx.type === 'earning' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                    {tx.type === 'earning' ? '💰' : '⚠️'}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                    {tx.amount > 0 ? '💰' : '⚠️'}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 text-sm">{tx.description || tx.title || 'İşlem'}</p>
-                    <p className="text-xs text-gray-500">{new Date(tx.createdAt || tx.date).toLocaleDateString('tr-TR')}</p>
+                    <p className="font-bold text-gray-900 text-sm">{tx.description || 'İşlem'}</p>
+                    <p className="text-xs text-gray-500">{tx.date ? new Date(tx.date).toLocaleDateString('tr-TR') : 'Süresiz'}</p>
                   </div>
                 </div>
                 <p className={`font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
