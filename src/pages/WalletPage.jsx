@@ -33,28 +33,31 @@ function WalletPage() {
         setError(null)
 
         if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
-          try {
-            const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-            if (walletResponse) {
-              // 1. Çekilebilir Bakiye (173 TL olan kısım)
-              setBalance(walletResponse.balance || walletResponse.availableBalance || 0)
-              
-              // 2. Bekleyen Çekim
-              setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
-              
-              // 3. Bu Ay Kazanç (0 TL görünen yer için alternatif isimleri tara)
-              // Profilde 1.038 TL göründüğü için backend muhtemelen 'totalEarnings' gönderiyor
-              const monthly = walletResponse.thisMonthEarnings || 
-                              walletResponse.totalEarnings || 
-                              walletResponse.earnings || 0
-              setThisMonthEarnings(monthly)
-              
-              // 4. Geçen Ay
-              setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
-            }
-          } catch (walletErr) {
-            console.warn('Wallet data failed:', walletErr)
-          }
+         try {
+  const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
+  console.log("Gelen Cüzdan Verisi:", walletResponse); // Tarayıcı konsoluna bak, ne geldiğini görelim!
+
+  if (walletResponse) {
+    // 1. Çekilebilir Bakiye (173 TL olan yer)
+    // Backend'den 'balance' veya 'available_balance' olarak gelebilir
+    const bakiye = walletResponse.balance ?? walletResponse.available_balance ?? walletResponse.data?.balance ?? 0;
+    setBalance(bakiye);
+
+    // 2. Toplam Kazanç (Profilde 1.038 TL olan yer)
+    // Profil sayfası muhtemelen 'totalEarnings' okuyor. Hepsine bakalım:
+    const kazanc = walletResponse.thisMonthEarnings ?? 
+                   walletResponse.totalEarnings ?? 
+                   walletResponse.earnings ?? 
+                   walletResponse.data?.totalEarnings ?? 0;
+    
+    // Eğer hala 0 geliyorsa, profil sayfasındaki 1.038 TL'yi yakalamak için 'user' objesine de bakabiliriz
+    setThisMonthEarnings(kazanc === 0 && user?.totalEarnings ? user.totalEarnings : kazanc);
+
+    setPendingWithdrawal(walletResponse.pendingWithdrawal ?? walletResponse.data?.pendingWithdrawal ?? 0);
+  }
+} catch (walletErr) {
+  console.warn('Cüzdan verisi çekilemedi:', walletErr);
+}
           try {
             const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
             if (transactionsResponse.data) {
