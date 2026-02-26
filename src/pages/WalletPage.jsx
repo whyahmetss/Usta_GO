@@ -194,36 +194,38 @@ if (walletResponse) {
             <button onClick={() => setActiveTab('transactions')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'transactions' ? 'bg-green-600 text-white' : 'text-gray-600'}`}>Islem Gecmisi</button>
           </div>
 
-          {transactions.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">💰</div>
-              <p className="text-gray-600 font-semibold">Henuz islem yok</p>
-              <p className="text-gray-400 text-sm mt-2">Is tamamladiginizda kazanclariniz burada gorunur</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son Islemler' : 'Tum Islemler'}</h3>
-              {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
-                <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-                  <div className={`w-12 h-12 ${tx.type === 'earning' ? 'bg-green-100' : tx.type === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                   <span className="text-2xl">
-        {tx.type?.toLowerCase() === 'earning' ? '💰' : tx.type?.toLowerCase() === 'penalty' ? '⚠️' : '📤'}
-      </span>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900 text-sm">{tx.title}</p>
-                    <p className="text-xs text-gray-500">{new Date(tx.date).toLocaleDateString('tr-TR')}</p>
-                  </div>
-                  <p className={`font-black ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount} TL
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+         {transactions.length === 0 ? (
+  <div className="text-center py-12">
+    <div className="text-6xl mb-4">💰</div>
+    <p className="text-gray-600 font-semibold">Henuz islem yok</p>
+    <p className="text-gray-400 text-sm mt-2">Is tamamladiginizda kazanclariniz burada gorunur</p>
+  </div>
+) : (
+  <div className="space-y-2">
+    <h3 className="font-bold text-gray-900">{activeTab === 'overview' ? 'Son Islemler' : 'Tum Islemler'}</h3>
+    {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
+      <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+        {/* İkon Kutusu */}
+        <div className={`w-12 h-12 ${tx.type?.toLowerCase() === 'earning' ? 'bg-green-100' : tx.type?.toLowerCase() === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
+          <span className="text-2xl">
+            {tx.type?.toLowerCase() === 'earning' ? '💰' : tx.type?.toLowerCase() === 'penalty' ? '⚠️' : '📤'}
+          </span>
+        </div> {/* <--- BURASI EKSİKTİ, KAPATTIK! */}
+
+        {/* Metin İçeriği */}
+        <div className="flex-1">
+          <p className="font-bold text-gray-900 text-sm">{tx.title}</p>
+          <p className="text-xs text-gray-500">{new Date(tx.date).toLocaleDateString('tr-TR')}</p>
         </div>
+
+        {/* Tutar */}
+        <p className={`font-black ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {tx.amount > 0 ? '+' : ''}{tx.amount} TL
+        </p>
       </div>
-    )
-  }
+    ))}
+  </div>
+)}
 
   if (user?.role === 'customer') {
     return (
