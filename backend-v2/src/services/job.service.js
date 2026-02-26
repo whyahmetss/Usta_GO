@@ -244,17 +244,45 @@ export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
     throw error;
   }
 
-  const updatedJob = await prisma.job.update({
-    where: { id: jobId },
-    data: {
-      status: "COMPLETED",
-      afterPhotos,
-      completedAt: new Date(),
-    },
-    include: {
-      customer: { select: { id: true, name: true, email: true } },
-      usta: { select: { id: true, name: true, email: true } },
-    },
+  // Use transaction to ensure atomicity
+  const updatedJob = await prisma.$transaction(async (tx) => {
+    // 1. Update job status
+    const jobData = await tx.job.update({
+      where: { id: jobId },
+      data: {
+        status: "COMPLETED",
+        afterPhotos,
+        completedAt: new Date(),
+      },
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+        usta: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // 2. Add payment to usta's balance
+    await tx.user.update({
+      where: { id: ustaId },
+      data: {
+        balance: {
+          increment: job.budget,
+        },
+      },
+    });
+
+    // 3. Create transaction record
+    await tx.transaction.create({
+      data: {
+        userId: ustaId,
+        jobId: jobId,
+        amount: job.budget,
+        type: "EARNING",
+        status: "COMPLETED",
+        description: `${job.title} işi tamamlandı`,
+      },
+    });
+
+    return jobData;
   });
 
   return updatedJob;
