@@ -3,19 +3,256 @@ import { jobService } from '../services/job.service.js';
 export const walletController = {
   getWalletBalance: async (req, res) => {
     try {
-      // Sadece giriş yapan ustanın (req.user.id) bitmiş işlerini çekiyoruz
-      // Veritabanındaki ustaId ve büyük harf COMPLETED/RATED durumlarına dikkat
+      // Ustanın tüm işlerini çek
       const jobs = await jobService.getJobsByUstaId(req.user.id);
       
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
       const completedJobs = jobs.filter(j => 
-        ['COMPLETED', 'RATED'].includes(j.status)
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
       );
 
-      const balance = completedJobs.reduce((sum, job) => sum + (job.budget || 0), 0);
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
 
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
       res.json({
         success: true,
-        balance: balance,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
+        completedCount: completedJobs.length
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+};import { jobService } from '../services/job.service.js';
+
+export const walletController = {
+  getWalletBalance: async (req, res) => {
+    try {
+      // Ustanın tüm işlerini çek
+      const jobs = await jobService.getJobsByUstaId(req.user.id);
+      
+      // Tamamlananları filtrele (Büyük harf uyumuna dikkat!)
+      const completedJobs = jobs.filter(j => 
+        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
+      );
+
+      // Toplam Kazanç (1.038 TL'yi burası oluşturacak)
+      const totalEarnings = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+
+      // Şimdilik çekilebilir bakiye ile toplam kazancı aynı gönderiyoruz
+      // İleride komisyon keseceksen balance kısmını ona göre güncellersin
+      res.json({
+        success: true,
+        balance: totalEarnings, // Cüzdandaki "Çekilebilir Bakiye" kısmı
+        thisMonthEarnings: totalEarnings, // Cüzdandaki "Bu Ay Kazanç" kısmı
+        totalEarnings: totalEarnings,
         completedCount: completedJobs.length
       });
     } catch (error) {
@@ -23,26 +260,3 @@ export const walletController = {
     }
   }
 };
-2. Adım: Route Tanımla
-src/routes/ içine wallet.routes.js oluştur.
-
-JavaScript
-// src/routes/wallet.routes.js
-import express from 'express';
-import { walletController } from '../controllers/wallet.controller.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
-
-const router = express.Router();
-
-// Giriş yapmamış adam cüzdan göremez
-router.get('/', authMiddleware, walletController.getWalletBalance);
-
-export default router;
-3. Adım: Ana Sunucuya (index.js) Bağla
-src/index.js dosyasını aç ve diğer rotaların yanına bunu da ekle:
-
-JavaScript
-import walletRoutes from './routes/wallet.routes.js';
-
-// ... diğer app.use satırlarının altına
-app.use('/api/wallet', walletRoutes);
