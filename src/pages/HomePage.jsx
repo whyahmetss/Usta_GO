@@ -20,13 +20,26 @@ function HomePage() {
   const unreadMessages = getUnreadMessageCount()
 
   // Auto-refresh every 30 seconds
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      // Trigger a re-render by updating lastRefreshed
+      setLastRefreshed(new Date())
+      // Simulate refresh delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+    } finally {
+      setRefreshing(false)
+      setPullDistance(0)
+    }
+  }
+
   useEffect(() => {
     const interval = setInterval(() => {
       handleRefresh()
     }, 30000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [handleRefresh])
 
   // Pull-to-refresh handlers
   useEffect(() => {
@@ -44,7 +57,7 @@ function HomePage() {
       }
     }
 
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd = () => {
       if (pullDistance > 80) {
         handleRefresh()
       }
@@ -61,20 +74,7 @@ function HomePage() {
       element?.removeEventListener('touchmove', handleTouchMove)
       element?.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [pullDistance])
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    try {
-      // Trigger a re-render by updating lastRefreshed
-      setLastRefreshed(new Date())
-      // Simulate refresh delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-    } finally {
-      setRefreshing(false)
-      setPullDistance(0)
-    }
-  }
+  }, [pullDistance, handleRefresh])
 
   const categories = [
     {
