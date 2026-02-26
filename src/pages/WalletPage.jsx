@@ -35,12 +35,13 @@ function WalletPage() {
         if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
           try {
             const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-            if (walletResponse.data) {
-              setBalance(walletResponse.data.balance || 0)
-              setPendingWithdrawal(walletResponse.data.pendingWithdrawal || 0)
-              setThisMonthEarnings(walletResponse.data.thisMonthEarnings || 0)
-              setLastMonthEarnings(walletResponse.data.lastMonthEarnings || 0)
-            }
+         
+if (walletResponse) {
+  setBalance(walletResponse.balance || 0);
+  setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
+  setThisMonthEarnings(walletResponse.thisMonthEarnings || 0);
+  setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
+}
           } catch (walletErr) {
             console.warn('Wallet endpoint not available, using defaults:', walletErr)
             // Use default values if wallet endpoint fails
@@ -205,8 +206,9 @@ function WalletPage() {
               {(activeTab === 'overview' ? transactions.slice(0, 3) : transactions).map(tx => (
                 <div key={tx.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
                   <div className={`w-12 h-12 ${tx.type === 'earning' ? 'bg-green-100' : tx.type === 'penalty' ? 'bg-red-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-2xl">{tx.type === 'earning' ? '💰' : tx.type === 'penalty' ? '⚠️' : '📤'}</span>
-                  </div>
+                   <span className="text-2xl">
+        {tx.type?.toLowerCase() === 'earning' ? '💰' : tx.type?.toLowerCase() === 'penalty' ? '⚠️' : '📤'}
+      </span>
                   <div className="flex-1">
                     <p className="font-bold text-gray-900 text-sm">{tx.title}</p>
                     <p className="text-xs text-gray-500">{new Date(tx.date).toLocaleDateString('tr-TR')}</p>
