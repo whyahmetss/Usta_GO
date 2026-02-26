@@ -26,42 +26,50 @@ function WalletPage() {
   const [customerJobs, setCustomerJobs] = useState([])
   const [completedJobs, setCompletedJobs] = useState([])
 
-  const loadWalletData = async () => {
-  try {
-    setLoading(true);
-    console.log("1. Veri çekme işlemi başladı..."); // Bu mutlaka görünmeli
+ useEffect(() => {
+    const loadWalletData = async () => { // <--- BURANIN async OLDUĞUNDAN EMİN OL
+      try {
+        setLoading(true)
+        setError(null)
 
-    // AuthContext'ten gelen user'ı kontrol et
-    if (!user) {
-      console.log("2. Kullanıcı oturumu bulunamadı!");
-      return;
+        if (user?.role?.toUpperCase() === 'USTA' || user?.role === 'professional') {
+          // Cüzdan Özeti Çekme
+          try {
+            const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+            if (walletResponse) {
+              setBalance(walletResponse.balance || walletResponse.availableBalance || 0)
+              setPendingWithdrawal(walletResponse.pendingWithdrawal || 0)
+              // Profildeki 1.038 TL'yi yakalamak için alternatif alanları kontrol et
+              setThisMonthEarnings(walletResponse.thisMonthEarnings || walletResponse.totalEarnings || 0)
+              setLastMonthEarnings(walletResponse.lastMonthEarnings || 0)
+            }
+          } catch (walletErr) {
+            console.warn('Wallet data failed:', walletErr)
+          }
+
+          // İşlem Geçmişi Çekme (HATA BURADAYDI)
+          try {
+            const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
+            if (transactionsResponse && transactionsResponse.data) {
+              setTransactions(transactionsResponse.data)
+            }
+          } catch (txErr) {
+            console.warn('Transactions failed:', txErr)
+          }
+        } else if (user?.role === 'customer') {
+          // Müşteri verilerini çekme mantığı buraya...
+          // Buradaki fetchAPI işlemlerinin de await ile yapıldığından emin ol
+        }
+      } catch (err) {
+        console.error('Load wallet error:', err)
+        setError('Cüzdan verileri yüklenirken hata oluştu')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    console.log("3. API isteği atılıyor:", API_ENDPOINTS.WALLET.GET);
-    const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
-    
-    console.log("4. API'den gelen ham yanıt:", walletResponse); // İşte burası kritik
-
-    if (walletResponse) {
-      // Bakiye eşitleme (Görsellerdeki 173 TL ve 1.038 TL için)
-      const bakiye = walletResponse.balance ?? walletResponse.availableBalance ?? 0;
-      const kazanc = walletResponse.thisMonthEarnings ?? walletResponse.totalEarnings ?? 1038; 
-
-      setBalance(bakiye);
-      setThisMonthEarnings(kazanc);
-      setPendingWithdrawal(walletResponse.pendingWithdrawal ?? 0);
-      console.log("5. State'ler güncellendi:", { bakiye, kazanc });
-    } else {
-      console.log("4. API yanıt döndü ama içi boş!");
-    }
-
-  } catch (err) {
-    console.error("!!! VERİ ÇEKERKEN HATA OLUŞTU:", err); // Hata varsa buraya düşer
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (user) loadWalletData()
+  }, [user])
           try {
             const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
             if (transactionsResponse.data) {
