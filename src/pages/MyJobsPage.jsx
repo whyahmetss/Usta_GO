@@ -1,47 +1,97 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, Star } from 'lucide-react'
+import { ArrowLeft, Star, RotateCcw } from 'lucide-react'
 
 function MyJobsPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('active')
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [userJobs, setUserJobs] = useState([])
+  const [lastRefreshTime, setLastRefreshTime] = useState(null)
+  const [pullRefresh, setPullRefresh] = useState(0)
+  const touchStartY = useRef(0)
 
+  const loadUserJobs = async (isRefresh = false) => {
+    try {
+      if (!isRefresh) setLoading(true)
+      setIsRefreshing(true)
+      setError(null)
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+
+      // Veriyi güvenli bir şekilde alalım
+      const rawData = response?.data || response || []
+
+      if (Array.isArray(rawData)) {
+        const filtered = rawData.filter(j => {
+          // JSON'da hem customerId hem de customer.id var
+          const dbId = String(j.customerId || j.customer?.id || "").trim();
+          const userId = String(user?.id || "").trim();
+          return dbId === userId;
+        });
+        setUserJobs(filtered)
+      }
+
+      setLastRefreshTime(new Date())
+    } catch (err) {
+      console.error('Load jobs error:', err)
+      setError('İşler yüklenirken bir sorun oluştu.')
+    } finally {
+      setLoading(false)
+      setIsRefreshing(false)
+      setPullRefresh(0)
+    }
+  }
+
+  // Auto-refresh her 30 saniyede bir
   useEffect(() => {
-    const loadUserJobs = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-        
-        // Veriyi güvenli bir şekilde alalım
-        const rawData = response?.data || response || []
-        
-        if (Array.isArray(rawData)) {
- const filtered = rawData.filter(j => {
-  // JSON'da hem customerId hem de customer.id var
-  const dbId = String(j.customerId || j.customer?.id || "").trim();
-  const userId = String(user?.id || "").trim();
-  return dbId === userId;
-});
-          setUserJobs(filtered)
-        }
-      } catch (err) {
-        console.error('Load jobs error:', err)
-        setError('İşler yüklenirken bir sorun oluştu.')
-      } finally {
-        setLoading(false)
+    if (user) loadUserJobs()
+
+    const interval = setInterval(() => {
+      loadUserJobs(true)
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [user])
+
+  // Pull-to-refresh işleme
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isRefreshing) {
+      const currentY = e.touches[0].clientY
+      const diff = currentY - touchStartY.current
+      if (diff > 0 && diff < 150) {
+        setPullRefresh(Math.min(diff / 50, 1))
       }
     }
+  }
 
-    if (user) loadUserJobs()
-  }, [user])
+  const handleTouchEnd = (e) => {
+    if (pullRefresh > 0.7 && !isRefreshing) {
+      loadUserJobs(true)
+    } else {
+      setPullRefresh(0)
+    }
+  }
+
+  const formatRefreshTime = () => {
+    if (!lastRefreshTime) return 'Henüz yenilenmedi'
+
+    const now = new Date()
+    const diff = Math.floor((now - lastRefreshTime) / 1000) // saniye cinsinden
+
+    if (diff < 60) return `${diff}s önce`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m önce`
+    return lastRefreshTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+  }
 
  // MyJobsPage.jsx içinde bu satırları güncelle:
 const activeJobs = userJobs.filter(j => 
@@ -69,16 +119,45 @@ const cancelledJobs = userJobs.filter(j =>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen bg-gray-50"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {pullRefresh > 0 && (
+        <div
+          className="fixed top-0 left-0 right-0 bg-blue-500/20 backdrop-blur z-40 transition-all"
+          style={{ height: `${pullRefresh * 100}px` }}
+        >
+          <div className="flex items-center justify-center h-full">
+            <RotateCcw
+              size={24}
+              className="text-blue-600 animate-spin"
+              style={{ opacity: pullRefresh }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="blue-gradient-bg pb-6 pt-4 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
             <ArrowLeft size={20} className="text-white" />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-black text-white">İşlerim</h1>
             <p className="text-white/70 text-sm">{activeJobs.length} aktif, {completedJobs.length} tamamlanmış</p>
+            <p className="text-white/60 text-xs mt-1">Son yenileme: {formatRefreshTime()}</p>
           </div>
+          <button
+            onClick={() => loadUserJobs(true)}
+            disabled={isRefreshing}
+            className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition disabled:opacity-50"
+          >
+            <RotateCcw size={20} className={`text-white ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setActiveTab('active')}
@@ -93,7 +172,7 @@ const cancelledJobs = userJobs.filter(j =>
       </div>
 
       <div className="px-4 py-6">
-        {loading ? (
+        {loading && userJobs.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Yükleniyor...</p>
