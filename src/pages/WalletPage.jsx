@@ -22,56 +22,59 @@ function WalletPage() {
   // Müşteri State'leri
   const [customerBalance, setCustomerBalance] = useState(0)
 
+
   useEffect(() => {
-   const loadWalletData = async () => {
+    const loadWalletData = async () => {
       try {
         setLoading(true);
         
-        // 1. Önce işleri çek (Profil sayfasındaki gibi)
+        // 1. ÖNCE İŞLERİ ÇEK (Profil sayfasındaki 1.038 TL'yi bulmak için)
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST);
-        let calculatedEarnings = 0;
-
-        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          // Ustanın tamamlanan işlerini filtrele ve bütçeleri topla
-          const userJobs = jobsResponse.data.filter(j => j.ustaId === user?.id || j.professional?.id === user?.id);
-          const completedJobs = userJobs.filter(j => j.status === 'completed' || j.status === 'rated');
-          calculatedEarnings = completedJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+        let calculatedTotal = 0;
+        
+        if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
+          // Senin profil sayfasındaki mantık: Ustanın biten işlerini topla
+          const myCompletedJobs = jobsResponse.data.filter(j => 
+            (j.ustaId === user?.id || j.professional?.id === user?.id) && 
+            (j.status === 'completed' || j.status === 'rated')
+          );
+          calculatedTotal = myCompletedJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
         }
 
-        // 2. Cüzdan API'sine git (Asıl bakiye için)
+        // 2. CÜZDAN VERİSİNİ ÇEK (173 TL bakiye buradan geliyor)
         const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
         
         if (walletResponse) {
-          setBalance(walletResponse.balance || 0);
+          // Çekilebilir bakiye (image_537d57.png'deki 173 TL)
+          setBalance(walletResponse.balance || walletResponse.availableBalance || 0);
           setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
           
-          // EĞER API'den kazanç gelmiyorsa, yukarıda hesapladığımız rakamı (1.038 TL) bas
-          const finalEarnings = walletResponse.thisMonthEarnings || walletResponse.totalEarnings || calculatedEarnings;
-          setThisMonthEarnings(finalEarnings);
+          // KAZANÇ: API'den gelmiyorsa bizim hesapladığımız 1.038 TL'yi bas
+          const earnings = walletResponse.thisMonthEarnings || walletResponse.totalEarnings || calculatedTotal;
+          setThisMonthEarnings(earnings);
           
           setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
         } else {
-          // API komple boş dönse bile hesapladığımız rakamı göster
-          setThisMonthEarnings(calculatedEarnings);
+          setThisMonthEarnings(calculatedTotal);
         }
 
-        // 3. İşlemleri çek
+        // 3. İŞLEMLERİ ÇEK
         const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
         if (transactionsResponse?.data) {
           setTransactions(transactionsResponse.data);
+        } else if (Array.isArray(transactionsResponse)) {
+          setTransactions(transactionsResponse);
         }
 
       } catch (err) {
-        console.error('Veri çekme hatası:', err);
+        console.error('Cüzdan yüklenemedi:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
-      loadWalletData()
-    }
-  }, [user]) // useEffect burada tertemiz kapanıyor
+    if (user) loadWalletData();
+  }, [user]);
 
   // Büyüme hesaplama
   const growthPercentage = lastMonthEarnings > 0
