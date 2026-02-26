@@ -23,7 +23,7 @@ function HomePage() {
   useEffect(() => {
     const interval = setInterval(() => {
       handleRefresh()
-    }, 30000)
+    }, 1000)
 
     return () => clearInterval(interval)
   }, [])
