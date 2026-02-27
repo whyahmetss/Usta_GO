@@ -83,6 +83,43 @@ io.on("connection", (socket) => {
     io.to(`user_${receiverId}`).emit("receive_message", message);
   });
 
+  // New job created - notify all professionals
+  socket.on("new_job", (jobData) => {
+    socket.broadcast.emit("new_job_available", jobData);
+  });
+
+  // Job status changed - notify relevant users
+  socket.on("job_status_changed", (data) => {
+    const { jobId, status, customerId, professionalId } = data;
+    if (customerId) {
+      io.to(`user_${customerId}`).emit("job_updated", { jobId, status });
+    }
+    if (professionalId) {
+      io.to(`user_${professionalId}`).emit("job_updated", { jobId, status });
+    }
+  });
+
+  // Job accepted - notify customer
+  socket.on("job_accepted", (data) => {
+    const { customerId, jobId, professionalName } = data;
+    io.to(`user_${customerId}`).emit("job_updated", {
+      jobId,
+      status: "accepted",
+      message: `${professionalName} işinizi kabul etti!`
+    });
+  });
+
+  // Typing indicator
+  socket.on("typing", (data) => {
+    const { receiverId, userId } = data;
+    io.to(`user_${receiverId}`).emit("user_typing", { userId });
+  });
+
+  socket.on("stop_typing", (data) => {
+    const { receiverId, userId } = data;
+    io.to(`user_${receiverId}`).emit("user_stop_typing", { userId });
+  });
+
   // Online status
   socket.on("user_online", (userId) => {
     io.emit("user_status_changed", { userId, status: "online" });

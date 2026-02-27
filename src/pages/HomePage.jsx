@@ -4,9 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
 import Logo from '../components/Logo'
+import { getSocket } from '../utils/socket'
 
 function HomePage() {
-  const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
+  const { user, getUnreadNotificationCount, getUnreadMessageCount, addNotification } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('home')
   const [showMenu, setShowMenu] = useState(false)
@@ -40,6 +41,28 @@ function HomePage() {
 
     return () => clearInterval(interval)
   }, [handleRefresh])
+
+  // Socket.IO: Listen for real-time updates
+  useEffect(() => {
+    const socket = getSocket()
+    if (!socket) return
+
+    const handleNewJob = (jobData) => {
+      handleRefresh()
+    }
+
+    const handleJobUpdated = (data) => {
+      handleRefresh()
+    }
+
+    socket.on('new_job_available', handleNewJob)
+    socket.on('job_updated', handleJobUpdated)
+
+    return () => {
+      socket.off('new_job_available', handleNewJob)
+      socket.off('job_updated', handleJobUpdated)
+    }
+  }, [])
 
   // Pull-to-refresh handlers
   useEffect(() => {

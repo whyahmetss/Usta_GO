@@ -5,6 +5,7 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Send } from 'lucide-react'
+import { getSocket, emitEvent } from '../utils/socket'
 
 function MessagesPage() {
   const { jobId: paramJobId } = useParams()
@@ -91,11 +92,34 @@ function MessagesPage() {
     scrollToBottom()
   }, [jobMessages.length])
 
+  // Socket.IO: Listen for real-time messages
+  useEffect(() => {
+    const socket = getSocket()
+    if (!socket) return
+
+    const handleReceiveMessage = (message) => {
+      // Only add if we're viewing this conversation
+      if (selectedJobId) {
+        setJobMessages(prev => {
+          // Avoid duplicates
+          if (prev.some(m => m.id === message.id)) return prev
+          return [...prev, message]
+        })
+      }
+    }
+
+    socket.on('receive_message', handleReceiveMessage)
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage)
+    }
+  }, [selectedJobId])
+
   const handleSend = async () => {
     if (!messageText.trim() || !selectedJobId || isSending) return
 
-    const otherPersonId = user?.role === 'customer' 
-      ? selectedJob?.professional?.id 
+    const otherPersonId = user?.role === 'customer'
+      ? selectedJob?.professional?.id
       : selectedJob?.customer?.id
 
     if (!otherPersonId) {
@@ -119,6 +143,11 @@ function MessagesPage() {
 
       if (response.data) {
         setJobMessages(prev => [...prev, response.data])
+        // Emit via socket for real-time delivery
+        emitEvent('send_message', {
+          receiverId: otherPersonId,
+          message: response.data
+        })
       }
     } catch (err) {
       console.error('Send message error:', err)
@@ -160,6 +189,11 @@ function MessagesPage() {
       })
       if (response.data) {
         setJobMessages(prev => [...prev, response.data])
+        // Emit via socket for real-time delivery
+        emitEvent('send_message', {
+          receiverId: otherPersonId,
+          message: response.data
+        })
       }
     } catch (err) {
       console.error('Send quick message error:', err)

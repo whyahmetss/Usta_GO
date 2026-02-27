@@ -5,6 +5,7 @@ import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
+import { emitEvent } from '../utils/socket'
 
 function CreateJobPage() {
   const { user, createJob } = useAuth()
@@ -134,6 +135,15 @@ function CreateJobPage() {
 
       const result = await createJob(jobData)
       if (result) {
+        // Notify professionals via socket
+        emitEvent('new_job', {
+          id: result.id,
+          title: result.title || jobData.title,
+          category: jobData.category,
+          address: jobData.address,
+          price: jobData.price,
+        })
+
         alert('İş talebi başarıyla oluşturuldu!')
         navigate('/my-jobs')
       }
