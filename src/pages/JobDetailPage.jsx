@@ -8,6 +8,7 @@ import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
 import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { CameraSource } from '@capacitor/camera'
+import { getSocket, emitEvent } from '../utils/socket'
 
 function CameraModal({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null)
@@ -254,6 +255,35 @@ function JobDetailPage() {
     }
   }, [id])
 
+  // Socket.IO: Listen for real-time job status updates
+  useEffect(() => {
+    const socket = getSocket()
+    if (!socket || !id) return
+
+    const handleJobUpdated = async (data) => {
+      if (data.jobId === id) {
+        // Refetch job details when status changes
+        try {
+          const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
+          if (response.data) {
+            const mapped = mapJobFromBackend(response.data)
+            setJob(mapped)
+            setBeforePhotos(mapped.beforePhotos || [])
+            setAfterPhotos(mapped.afterPhotos || [])
+          }
+        } catch (err) {
+          console.error('Refetch job error:', err)
+        }
+      }
+    }
+
+    socket.on('job_updated', handleJobUpdated)
+
+    return () => {
+      socket.off('job_updated', handleJobUpdated)
+    }
+  }, [id])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -290,6 +320,20 @@ function JobDetailPage() {
         // Await the API call
         await acceptJob(job.id)
         alert('İş başarıyla kabul edildi! Müşteri bilgilendirildi.')
+
+        // Notify customer via socket
+        emitEvent('job_accepted', {
+          customerId: job.customer?.id,
+          jobId: job.id,
+          professionalName: user?.name
+        })
+        emitEvent('job_status_changed', {
+          jobId: job.id,
+          status: 'accepted',
+          customerId: job.customer?.id,
+          professionalId: user?.id
+        })
+
         // Reload job details to show updated status
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(job.id))
         if (response.data) {
@@ -354,6 +398,15 @@ function JobDetailPage() {
     try {
       await startJob(job.id, beforePhotos)
       alert('İş başlatıldı! İyi çalışmalar.')
+
+      // Notify via socket
+      emitEvent('job_status_changed', {
+        jobId: job.id,
+        status: 'in_progress',
+        customerId: job.customer?.id,
+        professionalId: user?.id
+      })
+
       // Reload job details
       const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(job.id))
       if (response.data) {
@@ -374,6 +427,15 @@ function JobDetailPage() {
     try {
       await completeJob(job.id, afterPhotos)
       alert('İş tamamlandı! Müşteri değerlendirme yapacak.')
+
+      // Notify via socket
+      emitEvent('job_status_changed', {
+        jobId: job.id,
+        status: 'completed',
+        customerId: job.customer?.id,
+        professionalId: user?.id
+      })
+
       // Navigate back to professional dashboard
       setTimeout(() => navigate('/professional'), 1500)
     } catch (err) {

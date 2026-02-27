@@ -16,6 +16,7 @@ import {
   mapJobsFromBackend,
   mapJobToBackend,
 } from '../utils/fieldMapper'
+import { connectSocket, disconnectSocket, getSocket } from '../utils/socket'
 
 const AuthContext = createContext()
 
@@ -74,6 +75,64 @@ export function AuthProvider({ children }) {
 
     initializeAuth()
   }, [])
+
+  // Socket.IO: Connect when user is authenticated, disconnect on logout
+  useEffect(() => {
+    if (user && !useLocalStorage) {
+      const socket = connectSocket(user.id)
+
+      // Listen for real-time message notifications
+      socket.on('receive_message', (message) => {
+        setMessages(prev => [...prev, message])
+        addNotification({
+          type: 'message',
+          title: 'Yeni Mesaj',
+          message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+          icon: '💬',
+          targetUserId: user.id,
+        })
+      })
+
+      // Listen for job updates
+      socket.on('job_updated', (data) => {
+        setJobs(prev => prev.map(job =>
+          job.id === data.jobId ? { ...job, status: data.status } : job
+        ))
+        if (data.message) {
+          addNotification({
+            type: 'job',
+            title: 'İş Güncellendi',
+            message: data.message,
+            icon: '🔔',
+            targetUserId: user.id,
+          })
+        }
+      })
+
+      // Listen for new jobs (for professionals)
+      socket.on('new_job_available', (jobData) => {
+        if (user.role === 'professional') {
+          addNotification({
+            type: 'job',
+            title: 'Yeni İş!',
+            message: `${jobData.title || 'Yeni bir iş'} oluşturuldu`,
+            icon: '🆕',
+            targetUserId: user.id,
+          })
+        }
+      })
+
+      // Emit online status
+      socket.emit('user_online', user.id)
+
+      return () => {
+        socket.off('receive_message')
+        socket.off('job_updated')
+        socket.off('new_job_available')
+        socket.emit('user_offline', user.id)
+      }
+    }
+  }, [user?.id, useLocalStorage])
 
   // --- AUTH ---
   const login = useCallback(async (email, password) => {
@@ -152,6 +211,9 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
+      // Disconnect socket
+      disconnectSocket()
+
       // Call logout endpoint if user is authenticated
       if (user && getToken()) {
         await fetchAPI(API_ENDPOINTS.AUTH.LOGOUT, { method: 'POST' }).catch(err => {
