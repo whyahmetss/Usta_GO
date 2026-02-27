@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
 import Logo from '../components/Logo'
 
@@ -42,8 +43,14 @@ function AdminDashboard() {
         // Fetch all jobs
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          setAllJobs(jobsResponse.data)
-          const recent = [...jobsResponse.data]
+          const mapped = mapJobsFromBackend(jobsResponse.data).map(job => ({
+            ...job,
+            location: typeof job.location === 'string'
+              ? { address: job.location }
+              : (job.location || { address: 'Adres belirtilmedi' }),
+          }))
+          setAllJobs(mapped)
+          const recent = [...mapped]
             .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
             .slice(0, 5)
           setRecentJobs(recent)

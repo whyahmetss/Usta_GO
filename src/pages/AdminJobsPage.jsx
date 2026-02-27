@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, X, ZoomIn, AlertCircle, Loader } from 'lucide-react'
 
@@ -21,10 +22,22 @@ function AdminJobsPage() {
     try {
       setLoading(true);
       setError(null);
-      // Backend'e status parametresi göndermeyi bırakıyoruz
-      const res = await fetchAPI('/jobs', { method: 'GET' });
-      const raw = Array.isArray(res) ? res : res.data || []
-      setJobs(mapJobsFromBackend(raw));
+      const [jobsRes, usersRes] = await Promise.all([
+        fetchAPI('/jobs', { method: 'GET' }),
+        fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS, { method: 'GET' }).catch(() => ({ data: [] })),
+      ]);
+      const raw = Array.isArray(jobsRes) ? jobsRes : jobsRes.data || []
+      const usersRaw = Array.isArray(usersRes) ? usersRes : usersRes.data || []
+      // Build a phone lookup map keyed by user id
+      const phoneMap = {}
+      usersRaw.forEach(u => { if (u.id) phoneMap[u.id] = u.phone || u.phoneNumber || '' })
+      // Map jobs and inject phone into nested customer/professional
+      const mapped = mapJobsFromBackend(raw).map(job => ({
+        ...job,
+        customer: job.customer ? { ...job.customer, phone: job.customer.phone || phoneMap[job.customer.id] || '' } : job.customer,
+        professional: job.professional ? { ...job.professional, phone: job.professional.phone || phoneMap[job.professional.id] || '' } : job.professional,
+      }))
+      setJobs(mapped);
     } catch (err) {
       setError(err.message);
       setJobs([]);

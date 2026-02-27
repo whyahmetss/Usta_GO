@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { mapUsersFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, LogOut, Trash2, Shield, AlertCircle, Loader } from 'lucide-react'
 
@@ -21,9 +22,7 @@ function AdminUsersPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with actual admin endpoint when available
-      // For now, trying GET /api/users as placeholder
-      const res = await fetchAPI('/users', {
+      const res = await fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS, {
         method: 'GET'
       })
       const raw = Array.isArray(res) ? res : res.data || []
