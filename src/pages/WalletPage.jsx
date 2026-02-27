@@ -67,18 +67,22 @@ useEffect(() => {
             date: j.completedAt || null,
           }));
 
-        // Çekim işlemlerini al ve bakiyeden düş
+        // Bekleyen çekim tutarını GET /wallet'tan al
+        try {
+          const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET);
+          const pending = walletRes?.data?.pendingWithdrawal || 0;
+          setPendingWithdrawal(pending);
+        } catch {
+          // pendingWithdrawal 0 kalır
+        }
+
+        // Çekim geçmişini işlem listesine ekle
         try {
           const txRes = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
           const txList = Array.isArray(txRes) ? txRes : txRes?.data || [];
           const withdrawalTxs = txList.filter(t =>
-            t.type === 'WITHDRAWAL' || t.type === 'withdrawal'
+            (t.type || '').toUpperCase() === 'WITHDRAWAL'
           );
-          const pendingTotal = withdrawalTxs
-            .filter(t => t.status === 'PENDING' || t.status === 'pending')
-            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-          setPendingWithdrawal(pendingTotal);
-
           const withdrawalHistory = withdrawalTxs.map(t => ({
             id: t.id,
             description: `Para Çekme${t.bankName ? ` - ${t.bankName}` : ''}`,
