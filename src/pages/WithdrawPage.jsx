@@ -27,6 +27,8 @@ function WithdrawPage() {
     const loadWalletData = async () => {
       try {
         setLoading(true)
+
+        // İşlerden toplam kazanç
         const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
         if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
           const mapped = mapJobsFromBackend(jobsResponse.data)
@@ -36,6 +38,14 @@ function WithdrawPage() {
           )
           const totalBalance = myJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
           setBalance(totalBalance)
+        }
+
+        // Bekleyen çekim miktarını backend'den al
+        try {
+          const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+          setPendingAmount(walletRes?.data?.pendingWithdrawal || 0)
+        } catch {
+          // pendingAmount 0 kalır
         }
       } catch (err) {
         console.error('Load wallet error:', err)
