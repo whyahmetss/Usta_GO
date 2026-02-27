@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
+import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -14,6 +14,8 @@ function ProfessionalDashboard() {
   const [showMenu, setShowMenu] = useState(false)
   const [loading, setLoading] = useState(true)
   const [allJobs, setAllJobs] = useState([])
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastRefreshed, setLastRefreshed] = useState(null)
 
   const unreadNotifs = getUnreadNotificationCount()
   const unreadMessages = getUnreadMessageCount()
@@ -50,6 +52,27 @@ function ProfessionalDashboard() {
     }
   }, [user])
 
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+      if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
+        const mappedJobs = mapJobsFromBackend(jobsResponse.data)
+        setAllJobs(mappedJobs.map(job => ({
+          ...job,
+          location: typeof job.location === 'string'
+            ? { address: job.location }
+            : (job.location || { address: 'Adres belirtilmedi' })
+        })))
+      }
+      setLastRefreshed(new Date())
+    } catch (err) {
+      console.error('Refresh error:', err)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   const myCompletedJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id || j.ustaId === user?.id) && (j.status === 'completed' || j.status === 'rated'))
   const myActiveJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id || j.ustaId === user?.id) && (j.status === 'accepted' || j.status === 'in_progress'))
@@ -82,9 +105,21 @@ function ProfessionalDashboard() {
             <div>
               <h1 className="text-2xl font-black text-white">Usta Paneli</h1>
               <p className="text-white/70 text-xs">Hoş geldin, {user?.name}</p>
+              {lastRefreshed && (
+                <p className="text-white/50 text-[10px]">
+                  Son yenileme: {lastRefreshed.toLocaleTimeString('tr-TR')}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition"
+            >
+              <RefreshCw size={20} className={`text-white ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
             <button onClick={() => navigate('/notifications')} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center relative">
               <Bell size={20} className="text-white" />
               {unreadNotifs > 0 && (
