@@ -30,54 +30,51 @@ function AdminDashboard() {
         setLoading(true)
         setError(null)
 
-        // Fetch users
-        try {
-          const usersResponse = await fetchAPI('/admin/users')
-          if (usersResponse.data && Array.isArray(usersResponse.data)) {
-            setSavedUsers(usersResponse.data)
-          }
-        } catch (err) {
-          console.warn('Failed to load users:', err)
-        }
+        // Fetch users, jobs, transactions in parallel
+        const [usersResponse, jobsResponse, transactionsResponse] = await Promise.allSettled([
+          fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
+          fetchAPI(API_ENDPOINTS.JOBS.LIST),
+          fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS).catch(() =>
+            fetchAPI(API_ENDPOINTS.WALLET.GET_EARNINGS)
+          ),
+        ])
 
-        // Fetch all jobs
-        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          const mapped = mapJobsFromBackend(jobsResponse.data).map(job => ({
-            ...job,
-            location: typeof job.location === 'string'
-              ? { address: job.location }
-              : (job.location || { address: 'Adres belirtilmedi' }),
-          }))
-          setAllJobs(mapped)
-          const recent = [...mapped]
-            .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
-            .slice(0, 5)
-          setRecentJobs(recent)
-        }
+        // Users
+        const usersData = usersResponse.status === 'fulfilled' && Array.isArray(usersResponse.value?.data)
+          ? usersResponse.value.data : []
+        setSavedUsers(usersData)
 
-        // Fetch transactions for revenue
-        try {
-          const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS)
-          if (transactionsResponse.data && Array.isArray(transactionsResponse.data)) {
-            const totalRevenue = transactionsResponse.data
-              .filter(t => t.type === 'earning')
-              .reduce((sum, t) => sum + t.amount, 0)
+        // Jobs
+        const jobsRaw = jobsResponse.status === 'fulfilled' && Array.isArray(jobsResponse.value?.data)
+          ? jobsResponse.value.data : []
+        const mappedJobs = mapJobsFromBackend(jobsRaw).map(job => ({
+          ...job,
+          location: typeof job.location === 'string'
+            ? { address: job.location }
+            : (job.location || { address: 'Adres belirtilmedi' }),
+        }))
+        setAllJobs(mappedJobs)
+        setRecentJobs([...mappedJobs]
+          .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+          .slice(0, 5))
 
-            const activeJobsCount = jobsResponse.data.filter(
-              j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated'
-            ).length
+        // Revenue — tolerate different type casing (earning / EARNING / credit)
+        const txData = transactionsResponse.status === 'fulfilled' && Array.isArray(transactionsResponse.value?.data)
+          ? transactionsResponse.value.data : []
+        const totalRevenue = txData
+          .filter(t => ['earning', 'EARNING', 'credit', 'CREDIT'].includes(t.type))
+          .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
 
-            setStats({
-              totalUsers: savedUsers.length,
-              activeJobs: activeJobsCount,
-              totalRevenue: totalRevenue,
-              totalJobs: jobsResponse.data.length
-            })
-          }
-        } catch (err) {
-          console.warn('Failed to load transactions:', err)
-        }
+        const activeJobsCount = mappedJobs.filter(
+          j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated'
+        ).length
+
+        setStats({
+          totalUsers: usersData.length,
+          activeJobs: activeJobsCount,
+          totalRevenue,
+          totalJobs: jobsRaw.length,
+        })
       } catch (err) {
         console.error('Load dashboard error:', err)
         setError(err.message || 'Veri yüklenirken hata oluştu')
