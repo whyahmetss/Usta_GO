@@ -1,77 +1,107 @@
-import { jobService } from '../services/job.service.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export const walletController = {
+  // GET /wallet - bakiye (işlerden hesaplıyor)
   getWalletBalance: async (req, res) => {
     try {
-      const jobs = await jobService.getJobsByUstaId(req.user.id);
-      
-      // Tamamlanan veya puanlanan tüm işleri bul
-      const completedJobs = jobs.filter(j => 
-        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
-      );
+      const jobs = await prisma.job.findMany({
+        where: {
+          ustaId: req.user.id,
+          status: { in: ['COMPLETED', 'RATED'] }
+        }
+      });
 
-      // 1.038 TL'yi oluşturan toplam bütçe hesabı
-      const totalAmount = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+      const totalBalance = jobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+
+      const pendingWithdrawals = await prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: {
+          userId: req.user.id,
+          type: 'WITHDRAWAL',
+          status: 'PENDING'
+        }
+      });
+      const pendingAmount = pendingWithdrawals._sum.amount || 0;
 
       res.json({
         success: true,
-        balance: 173, // Çekilebilir gerçek bakiye (image_537d57.png)
-        thisMonthEarnings: totalAmount, // Bu Ay Kazanç: 1.038 TL
-        totalEarnings: totalAmount, // Toplam Kazanç: 1.038 TL
-        completedCount: completedJobs.length
+        data: {
+          balance: totalBalance,
+          pendingWithdrawal: pendingAmount
+        }
       });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
-  }
-};import { jobService } from '../services/job.service.js';
+  },
 
-export const walletController = {
-  getWalletBalance: async (req, res) => {
+  // GET /wallet/transactions - işlem geçmişi
+  getTransactions: async (req, res) => {
     try {
-      const jobs = await jobService.getJobsByUstaId(req.user.id);
-      
-      // Tamamlanan veya puanlanan tüm işleri bul
-      const completedJobs = jobs.filter(j => 
-        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
-      );
-
-      // 1.038 TL'yi oluşturan toplam bütçe hesabı
-      const totalAmount = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
-
-      res.json({
-        success: true,
-        balance: 173, // Çekilebilir gerçek bakiye (image_537d57.png)
-        thisMonthEarnings: totalAmount, // Bu Ay Kazanç: 1.038 TL
-        totalEarnings: totalAmount, // Toplam Kazanç: 1.038 TL
-        completedCount: completedJobs.length
+      const transactions = await prisma.transaction.findMany({
+        where: { userId: req.user.id },
+        orderBy: { createdAt: 'desc' }
       });
+
+      res.json({ success: true, data: transactions });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
-  }
-};import { jobService } from '../services/job.service.js';
+  },
 
-export const walletController = {
-  getWalletBalance: async (req, res) => {
+  // POST /wallet/withdraw - para çekme talebi
+  createWithdrawal: async (req, res) => {
     try {
-      const jobs = await jobService.getJobsByUstaId(req.user.id);
-      
-      // Tamamlanan veya puanlanan tüm işleri bul
-      const completedJobs = jobs.filter(j => 
-        ['COMPLETED', 'RATED'].includes(j.status?.toUpperCase())
-      );
+      const { amount, bankName, iban, accountHolder } = req.body;
 
-      // 1.038 TL'yi oluşturan toplam bütçe hesabı
-      const totalAmount = completedJobs.reduce((sum, job) => sum + (Number(job.budget) || 0), 0);
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ success: false, error: 'Geçerli bir tutar giriniz' });
+      }
+      if (!bankName || !iban || !accountHolder) {
+        return res.status(400).json({ success: false, error: 'Banka bilgileri eksik' });
+      }
 
-      res.json({
-        success: true,
-        balance: 173, // Çekilebilir gerçek bakiye (image_537d57.png)
-        thisMonthEarnings: totalAmount, // Bu Ay Kazanç: 1.038 TL
-        totalEarnings: totalAmount, // Toplam Kazanç: 1.038 TL
-        completedCount: completedJobs.length
+      const transaction = await prisma.transaction.create({
+        data: {
+          userId: req.user.id,
+          amount: Number(amount),
+          type: 'WITHDRAWAL',
+          status: 'PENDING',
+          description: JSON.stringify({ bankName, iban, accountHolder })
+        }
       });
+
+      res.json({ success: true, data: transaction });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  // PATCH /wallet/withdraw/:id/approve - talebi onayla (admin)
+  approveWithdrawal: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const transaction = await prisma.transaction.update({
+        where: { id },
+        data: { status: 'COMPLETED' }
+      });
+      res.json({ success: true, data: transaction });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  // PATCH /wallet/withdraw/:id/reject - talebi reddet (admin)
+  rejectWithdrawal: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const transaction = await prisma.transaction.update({
+        where: { id },
+        data: { status: 'FAILED' }
+      });
+      res.json({ success: true, data: transaction });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
