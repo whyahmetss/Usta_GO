@@ -12,17 +12,17 @@ const router = Router();
 router.post("/", authMiddleware, messageController.sendMessage);
 
 /**
+ * @route GET /api/messages
+ * @desc Get all conversations
+ */
+router.get("/", authMiddleware, messageController.getConversations);
+
+/**
  * @route GET /api/messages/:userId
  * @desc Get messages with a specific user
  * @query {page?, limit?}
  */
 router.get("/:userId", authMiddleware, messageController.getMessages);
-
-/**
- * @route GET /api/messages
- * @desc Get all conversations
- */
-router.get("/", authMiddleware, messageController.getConversations);
 
 /**
  * @route PATCH /api/messages/:messageId/read

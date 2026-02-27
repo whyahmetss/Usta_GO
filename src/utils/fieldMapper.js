@@ -19,6 +19,7 @@ export const mapJobFromBackend = (job) => {
     address: job.location,
     price: job.budget,
     professionalId: job.ustaId || job.professionalId,
+    professional: job.usta || job.professional,
     status: job.status?.toLowerCase(),
   }
 }
