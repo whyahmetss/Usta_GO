@@ -1,23 +1,13 @@
-// src/routes/wallet.routes.js
 import express from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { walletController } from '../controllers/wallet.controller.js';
 
 const router = express.Router();
 
-// Ana bakiye rotası
-router.get('/', authMiddleware, (req, res) => {
-  res.json({ success: true, balance: 173 }); // Şimdilik elle yazdık
-});
-
-// EKSİK OLAN KISIM BURASIYDI:
-router.get('/transactions', authMiddleware, (req, res) => {
-  // Burası frontend'deki "İşlem Geçmişi" kısmını dolduracak
-  res.json({ 
-    success: true, 
-    data: [
-      { id: 1, title: 'Genel Elektrik', amount: 173, type: 'EARNING', date: new Date() }
-    ] 
-  });
-});
+router.get('/', authMiddleware, walletController.getWalletBalance);
+router.get('/transactions', authMiddleware, walletController.getTransactions);
+router.post('/withdraw', authMiddleware, walletController.createWithdrawal);
+router.patch('/withdraw/:id/approve', authMiddleware, walletController.approveWithdrawal);
+router.patch('/withdraw/:id/reject', authMiddleware, walletController.rejectWithdrawal);
 
 export default router;
