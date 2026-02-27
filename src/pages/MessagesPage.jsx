@@ -137,6 +137,38 @@ function MessagesPage() {
   }
 
 
+  const handleSendQuickMessage = async (text) => {
+    if (!text.trim() || !selectedJobId || isSending) return
+
+    const otherPersonId = user?.role === 'customer'
+      ? selectedJob?.professional?.id
+      : selectedJob?.customer?.id
+
+    if (!otherPersonId) {
+      alert("Alıcı bilgisi bulunamadı!")
+      return
+    }
+
+    setIsSending(true)
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+        method: 'POST',
+        body: {
+          content: text.trim(),
+          receiverId: otherPersonId
+        }
+      })
+      if (response.data) {
+        setJobMessages(prev => [...prev, response.data])
+      }
+    } catch (err) {
+      console.error('Send quick message error:', err)
+      alert(`Mesaj gonderilemedi: ${err.message}`)
+    } finally {
+      setIsSending(false)
+    }
+  }
+
   const quickMessages = user?.role === 'professional'
     ? ['Yoldayım, 10 dakikaya varırım', 'Malzeme almam gerekiyor', 'İş tamamlandı', 'Gecikeceğim, özür dilerim']
     : ['Ne zaman geleceksiniz?', 'Teşekküler', 'Adrese kolay ulaşabilir misiniz?', 'İşi iptal etmek istiyorum']
