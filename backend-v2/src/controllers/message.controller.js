@@ -38,6 +38,15 @@ export const markAsRead = async (req, res, next) => {
   }
 };
 
+export const getUnreadMessages = async (req, res, next) => {
+  try {
+    const messages = await messageService.getUnreadMessages(req.user.id);
+    successResponse(res, messages, "Unread messages fetched successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getConversations = async (req, res, next) => {
   try {
     const conversations = await messageService.getConversations(req.user.id);

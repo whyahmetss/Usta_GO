@@ -68,6 +68,20 @@ export const markMessageAsRead = async (messageId, userId) => {
   return updatedMessage;
 };
 
+export const getUnreadMessages = async (userId) => {
+  const messages = await prisma.message.findMany({
+    where: {
+      receiverId: userId,
+      isRead: false,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      sender: { select: { id: true, name: true } },
+    },
+  });
+  return messages;
+};
+
 export const getConversations = async (userId) => {
   const conversations = await prisma.message.findMany({
     where: {
