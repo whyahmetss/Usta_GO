@@ -62,7 +62,7 @@ function AdminJobsPage() {
     if (!window.confirm('Bu işi silmek istediğinizden emin misiniz?')) return
     try {
       setDeletingId(jobId)
-      await fetchAPI(API_ENDPOINTS.JOBS.DELETE(jobId), { method: 'DELETE' })
+      await fetchAPI(API_ENDPOINTS.ADMIN.DELETE_JOB(jobId), { method: 'DELETE' })
       setJobs(prev => prev.filter(j => j.id !== jobId))
     } catch (err) {
       alert('Silme başarısız: ' + err.message)
