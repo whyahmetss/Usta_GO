@@ -81,7 +81,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
         window.location.href = '/auth';
       }
 
-      throw new Error(data.message || 'API Error');
+      throw new Error(data.message || data.error || 'API Error');
     }
 
     return data;
