@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
 // Admin
   ADMIN: {
     GET_USERS: '/admin/users?limit=500',
+    DELETE_JOB: (id) => `/admin/jobs/${id}`,
+    DELETE_USER: (id) => `/admin/users/${id}`,
   },
 
 // Messages
