@@ -167,12 +167,7 @@ export function AuthProvider({ children }) {
       try {
         const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_UNREAD)
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          const notifs = response.data
-            .filter(msg => {
-              const senderRole = msg.sender?.role?.toLowerCase()
-              return senderRole === 'admin'
-            })
-            .map(msg => ({
+           const notifs = response.data.map(msg => ({
             id: 'msg_' + msg.id,
             type: 'message',
             title: `${msg.sender?.name || 'Yeni Mesaj'}`,
