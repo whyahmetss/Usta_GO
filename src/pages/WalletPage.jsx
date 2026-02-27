@@ -67,13 +67,15 @@ useEffect(() => {
             date: j.completedAt || null,
           }));
 
-        // Bekleyen çekim tutarını GET /wallet'tan al
+        // Bakiye ve bekleyen çekimi GET /wallet'tan al (backend doğru hesaplıyor)
         try {
           const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET);
-          const pending = walletRes?.data?.pendingWithdrawal || 0;
-          setPendingWithdrawal(pending);
+          if (walletRes?.data) {
+            setBalance(walletRes.data.balance ?? totalBalance);
+            setPendingWithdrawal(walletRes.data.pendingWithdrawal || 0);
+          }
         } catch {
-          // pendingWithdrawal 0 kalır
+          // jobs'tan hesaplanan totalBalance kalır
         }
 
         // Çekim geçmişini işlem listesine ekle
@@ -166,7 +168,7 @@ useEffect(() => {
       <div className="px-4 py-6 space-y-6">
         <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
           <p className="text-white/80 text-sm mb-1">Çekilebilir Bakiye</p>
-          <h2 className="text-4xl font-black mb-2">{(balance - pendingWithdrawal).toLocaleString('tr-TR')} TL</h2>
+          <h2 className="text-4xl font-black mb-2">{balance.toLocaleString('tr-TR')} TL</h2>
           {pendingWithdrawal > 0 && (
             <p className="text-white/70 text-xs mb-2">Bekleyen çekim: -{pendingWithdrawal.toLocaleString('tr-TR')} TL</p>
           )}

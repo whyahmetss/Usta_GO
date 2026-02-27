@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const walletController = {
-  // GET /wallet - bakiye (işlerden hesaplıyor)
+  // GET /wallet - bakiye (işlerden hesaplıyor, çekimler düşülüyor)
   getWalletBalance: async (req, res) => {
     try {
       const jobs = await prisma.job.findMany({
@@ -13,23 +13,31 @@ export const walletController = {
         }
       });
 
-      const totalBalance = jobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+      const totalEarnings = jobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
 
-      const pendingWithdrawals = await prisma.transaction.aggregate({
+      // Bekleyen çekim (PENDING)
+      const pendingAgg = await prisma.transaction.aggregate({
         _sum: { amount: true },
-        where: {
-          userId: req.user.id,
-          type: 'WITHDRAWAL',
-          status: 'PENDING'
-        }
+        where: { userId: req.user.id, type: 'WITHDRAWAL', status: 'PENDING' }
       });
-      const pendingAmount = pendingWithdrawals._sum.amount || 0;
+      const pendingWithdrawal = pendingAgg._sum.amount || 0;
+
+      // Onaylanmış çekim (COMPLETED) - bunlar da bakiyeden düşülmeli
+      const approvedAgg = await prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { userId: req.user.id, type: 'WITHDRAWAL', status: 'COMPLETED' }
+      });
+      const approvedWithdrawal = approvedAgg._sum.amount || 0;
+
+      // Gerçek kullanılabilir bakiye = kazanç - bekleyen - onaylanmış
+      const balance = totalEarnings - pendingWithdrawal - approvedWithdrawal;
 
       res.json({
         success: true,
         data: {
-          balance: totalBalance,
-          pendingWithdrawal: pendingAmount
+          balance,
+          pendingWithdrawal,
+          totalEarnings
         }
       });
     } catch (error) {
