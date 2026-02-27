@@ -66,7 +66,30 @@ useEffect(() => {
             amount: Number(j.budget) || 0,
             date: j.completedAt || null,
           }));
-        setTransactions(jobTransactions);
+
+        // Çekim işlemlerini al ve bakiyeden düş
+        try {
+          const txRes = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
+          const txList = Array.isArray(txRes) ? txRes : txRes?.data || [];
+          const withdrawalTxs = txList.filter(t =>
+            t.type === 'WITHDRAWAL' || t.type === 'withdrawal'
+          );
+          const pendingTotal = withdrawalTxs
+            .filter(t => t.status === 'PENDING' || t.status === 'pending')
+            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+          setPendingWithdrawal(pendingTotal);
+
+          const withdrawalHistory = withdrawalTxs.map(t => ({
+            id: t.id,
+            description: `Para Çekme${t.bankName ? ` - ${t.bankName}` : ''}`,
+            amount: -(Number(t.amount) || 0),
+            date: t.createdAt || null,
+          }));
+          setTransactions([...jobTransactions, ...withdrawalHistory]
+            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)));
+        } catch {
+          setTransactions(jobTransactions);
+        }
       }
 
     } catch (err) {
@@ -139,7 +162,10 @@ useEffect(() => {
       <div className="px-4 py-6 space-y-6">
         <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
           <p className="text-white/80 text-sm mb-1">Çekilebilir Bakiye</p>
-          <h2 className="text-4xl font-black mb-4">{balance.toLocaleString('tr-TR')} TL</h2>
+          <h2 className="text-4xl font-black mb-2">{(balance - pendingWithdrawal).toLocaleString('tr-TR')} TL</h2>
+          {pendingWithdrawal > 0 && (
+            <p className="text-white/70 text-xs mb-2">Bekleyen çekim: -{pendingWithdrawal.toLocaleString('tr-TR')} TL</p>
+          )}
           <button 
             onClick={() => navigate('/withdraw')}
             className="w-full py-3 bg-white text-green-600 rounded-xl font-bold"
