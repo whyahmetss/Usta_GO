@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, X, ZoomIn, AlertCircle, Loader } from 'lucide-react'
+import { ArrowLeft, X, ZoomIn, AlertCircle, Loader, Trash2 } from 'lucide-react'
 
 function AdminJobsPage() {
   const navigate = useNavigate()
@@ -12,6 +12,7 @@ function AdminJobsPage() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     fetchJobs()
@@ -28,14 +29,25 @@ function AdminJobsPage() {
       ]);
       const raw = Array.isArray(jobsRes) ? jobsRes : jobsRes.data || []
       const usersRaw = Array.isArray(usersRes) ? usersRes : usersRes.data || []
-      // Build a phone lookup map keyed by user id
+      // Build a phone lookup map keyed by user id (handle both id and _id)
       const phoneMap = {}
-      usersRaw.forEach(u => { if (u.id) phoneMap[u.id] = u.phone || u.phoneNumber || '' })
+      usersRaw.forEach(u => {
+        const uid = u.id || u._id
+        if (uid) phoneMap[String(uid)] = u.phone || u.phoneNumber || u.tel || ''
+      })
       // Map jobs and inject phone into nested customer/professional
       const mapped = mapJobsFromBackend(raw).map(job => ({
         ...job,
-        customer: job.customer ? { ...job.customer, phone: job.customer.phone || phoneMap[job.customer.id] || '' } : job.customer,
-        professional: job.professional ? { ...job.professional, phone: job.professional.phone || phoneMap[job.professional.id] || '' } : job.professional,
+        customer: job.customer ? {
+          ...job.customer,
+          phone: job.customer.phone || job.customer.phoneNumber ||
+            phoneMap[String(job.customer.id || job.customer._id)] || ''
+        } : job.customer,
+        professional: job.professional ? {
+          ...job.professional,
+          phone: job.professional.phone || job.professional.phoneNumber ||
+            phoneMap[String(job.professional.id || job.professional._id)] || ''
+        } : job.professional,
       }))
       setJobs(mapped);
     } catch (err) {
@@ -45,6 +57,19 @@ function AdminJobsPage() {
       setLoading(false);
     }
   };
+
+  const deleteJob = async (jobId) => {
+    if (!window.confirm('Bu işi silmek istediğinizden emin misiniz?')) return
+    try {
+      setDeletingId(jobId)
+      await fetchAPI(API_ENDPOINTS.JOBS.DELETE(jobId), { method: 'DELETE' })
+      setJobs(prev => prev.filter(j => j.id !== jobId))
+    } catch (err) {
+      alert('Silme başarısız: ' + err.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   useEffect(() => {
     // Refetch when filter changes
@@ -151,9 +176,21 @@ const filteredJobs = filterStatus === 'all'
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{job.title}</h3>
                       <p className="text-sm text-gray-600 mb-3">{job.location || job.address || 'Adres belirtilmedi'}</p>
                     </div>
-                    <span className={`px-4 py-2 rounded-lg font-bold text-sm ${statusColors[job.status]}`}>
-                      {statusLabels[job.status]}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-4 py-2 rounded-lg font-bold text-sm ${statusColors[job.status]}`}>
+                        {statusLabels[job.status]}
+                      </span>
+                      <button
+                        onClick={() => deleteJob(job.id)}
+                        disabled={deletingId === job.id}
+                        className="w-9 h-9 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg flex items-center justify-center transition"
+                        title="İşi Sil"
+                      >
+                        {deletingId === job.id
+                          ? <Loader size={16} className="animate-spin" />
+                          : <Trash2 size={16} />}
+                      </button>
+                    </div>
                   </div>
 
                  <div className="grid grid-cols-4 gap-4 mb-4">
@@ -194,7 +231,7 @@ const filteredJobs = filterStatus === 'all'
                         <div>
                           <p className="font-bold text-gray-900">{job.customer?.name}</p>
                           <p className="text-sm text-gray-600">{job.customer?.email}</p>
-                          <p className="text-sm text-gray-600">{job.customer?.phone}</p>
+                          {job.customer?.phone && <p className="text-sm text-gray-600">{job.customer.phone}</p>}
                         </div>
                       </div>
                     </div>
@@ -208,7 +245,7 @@ const filteredJobs = filterStatus === 'all'
                           <div>
                             <p className="font-bold text-gray-900">{job.professional?.name}</p>
                             <p className="text-sm text-gray-600">{job.professional?.email}</p>
-                            <p className="text-sm text-gray-600">{job.professional?.phone}</p>
+                            {job.professional?.phone && <p className="text-sm text-gray-600">{job.professional.phone}</p>}
                           </div>
                         </div>
                       ) : (
