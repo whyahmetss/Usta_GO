@@ -37,7 +37,7 @@ export const walletController = {
     }
   },
 
-  // GET /wallet/transactions - işlem geçmişi
+  // GET /wallet/transactions - kullanıcının kendi işlem geçmişi
   getTransactions: async (req, res) => {
     try {
       const transactions = await prisma.transaction.findMany({
@@ -45,7 +45,39 @@ export const walletController = {
         orderBy: { createdAt: 'desc' }
       });
 
-      res.json({ success: true, data: transactions });
+      const parsed = transactions.map(t => {
+        let bankInfo = {};
+        try { bankInfo = t.description ? JSON.parse(t.description) : {}; } catch {}
+        return { ...t, ...bankInfo };
+      });
+
+      res.json({ success: true, data: parsed });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  // GET /wallet/admin/withdrawals - tüm kullanıcıların çekim talepleri (admin)
+  getAllWithdrawals: async (req, res) => {
+    try {
+      const transactions = await prisma.transaction.findMany({
+        where: { type: 'WITHDRAWAL' },
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { id: true, name: true, email: true } } }
+      });
+
+      const parsed = transactions.map(t => {
+        let bankInfo = {};
+        try { bankInfo = t.description ? JSON.parse(t.description) : {}; } catch {}
+        return {
+          ...t,
+          status: t.status.toLowerCase(),
+          professional: { name: t.user?.name, email: t.user?.email },
+          ...bankInfo
+        };
+      });
+
+      res.json({ success: true, data: parsed });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
