@@ -125,6 +125,19 @@ export function AuthProvider({ children }) {
         setStoredUser(mappedUser)
         setUser(mappedUser)
         setUseLocalStorage(false)
+
+        // Referral kodu varsa kayıt sonrası kupon olarak da uygula
+        if (referralCode) {
+          try {
+            await fetchAPI(API_ENDPOINTS.WALLET.ADD_COUPON, {
+              method: 'POST',
+              body: { code: referralCode }
+            })
+          } catch {
+            // Sessizce devam et
+          }
+        }
+
         return { success: true, role: mappedUser.role }
       }
 
@@ -159,25 +172,34 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
-  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup) ---
+  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup + polling every 30s) ---
   useEffect(() => {
     if (!user || useLocalStorage) return
 
     const loadUnreadNotifications = async () => {
       try {
         const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_UNREAD)
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-           const notifs = response.data.map(msg => ({
-            id: 'msg_' + msg.id,
-            type: 'message',
-            title: `${msg.sender?.name || 'Yeni Mesaj'}`,
-            message: msg.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
-            icon: '💬',
-            targetUserId: user.id,
-            read: false,
-            time: msg.createdAt || new Date().toISOString(),
-          }))
-          setNotifications(notifs)
+        if (response.data && Array.isArray(response.data)) {
+          const msgNotifs = response.data
+            .filter(msg => {
+              const senderRole = msg.sender?.role?.toLowerCase()
+              return senderRole === 'admin'
+            })
+            .map(msg => ({
+              id: 'msg_' + msg.id,
+              type: 'message',
+              title: `${msg.sender?.name || 'Yeni Mesaj'}`,
+              message: msg.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+              icon: '💬',
+              targetUserId: user.id,
+              read: false,
+              time: msg.createdAt || new Date().toISOString(),
+            }))
+          // Merge: keep non-message notifications, replace message notifications with fresh ones
+          setNotifications(prev => [
+            ...prev.filter(n => n.type !== 'message'),
+            ...msgNotifs,
+          ])
         }
       } catch (err) {
         console.warn('Could not load unread messages:', err)
@@ -185,6 +207,8 @@ export function AuthProvider({ children }) {
     }
 
     loadUnreadNotifications()
+    const interval = setInterval(loadUnreadNotifications, 30000)
+    return () => clearInterval(interval)
   }, [user?.id, useLocalStorage])
 
   // --- NOTIFICATIONS ---
