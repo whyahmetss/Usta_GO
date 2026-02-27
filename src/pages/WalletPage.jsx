@@ -56,12 +56,17 @@ useEffect(() => {
           return d && d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
         });
         setLastMonthEarnings(lastMonthJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0));
-      }
 
-      // Transactions
-      const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
-      if (transactionsResponse?.data) {
-        setTransactions(transactionsResponse.data);
+        // Tamamlanan işleri işlem geçmişi olarak göster
+        const jobTransactions = myJobs
+          .sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0))
+          .map(j => ({
+            id: j.id,
+            description: j.title || 'Tamamlanan İş',
+            amount: Number(j.budget) || 0,
+            date: j.completedAt || null,
+          }));
+        setTransactions(jobTransactions);
       }
 
     } catch (err) {
