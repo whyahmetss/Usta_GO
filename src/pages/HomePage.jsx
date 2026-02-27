@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User, RefreshCw } from 'lucide-react'
+import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
@@ -156,24 +156,9 @@ function HomePage() {
               <div>
                 <h1 className="text-2xl font-black text-white">Usta Go</h1>
                 <p className="text-white/70 text-xs">Merhaba, {user?.name}</p>
-                {lastRefreshed && (
-                  <p className="text-white/50 text-[10px]">
-                    Son yenileme: {lastRefreshed.toLocaleTimeString('tr-TR')}
-                  </p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition"
-              >
-                <RefreshCw
-                  size={20}
-                  className={`text-white ${refreshing ? 'animate-spin' : ''}`}
-                />
-              </button>
               <button
                 onClick={() => navigate('/notifications')}
                 className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center relative"
