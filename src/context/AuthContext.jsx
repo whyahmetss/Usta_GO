@@ -18,6 +18,19 @@ import {
 } from '../utils/fieldMapper'
 import { connectSocket, disconnectSocket, getSocket } from '../utils/socket'
 
+// Convert data URL to File object for upload
+function dataURLtoFile(dataUrl, filename) {
+  const arr = dataUrl.split(',')
+  const mime = arr[0].match(/:(.*?);/)[1]
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new File([u8arr], filename, { type: mime })
+}
+
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
@@ -234,7 +247,7 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
-  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup + polling every 30s) ---
+  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup only) ---
   useEffect(() => {
     if (!user || useLocalStorage) return
 
@@ -257,7 +270,6 @@ export function AuthProvider({ children }) {
               read: false,
               time: msg.createdAt || new Date().toISOString(),
             }))
-          // Merge: keep non-message notifications, replace message notifications with fresh ones
           setNotifications(prev => [
             ...prev.filter(n => n.type !== 'message'),
             ...msgNotifs,
@@ -269,8 +281,6 @@ export function AuthProvider({ children }) {
     }
 
     loadUnreadNotifications()
-    const interval = setInterval(loadUnreadNotifications, 30000)
-    return () => clearInterval(interval)
   }, [user?.id, useLocalStorage])
 
   // --- NOTIFICATIONS ---
@@ -426,10 +436,16 @@ export function AuthProvider({ children }) {
         return
       }
 
-      // Upload photos if provided
+      // Upload photos if provided - convert data URLs to File objects
       let photoUrls = []
       if (beforePhotos && beforePhotos.length > 0) {
-        const uploadResponse = await uploadFiles(API_ENDPOINTS.UPLOAD.MULTIPLE, beforePhotos, 'photos')
+        const files = beforePhotos.map((photo, i) => {
+          if (typeof photo === 'string' && photo.startsWith('data:')) {
+            return dataURLtoFile(photo, `before_${Date.now()}_${i}.jpg`)
+          }
+          return photo
+        })
+        const uploadResponse = await uploadFiles(API_ENDPOINTS.UPLOAD.MULTIPLE, files, 'photos')
         photoUrls = uploadResponse.data?.urls || []
       }
 
@@ -470,10 +486,16 @@ export function AuthProvider({ children }) {
         return
       }
 
-      // Upload photos if provided
+      // Upload photos if provided - convert data URLs to File objects
       let photoUrls = []
       if (afterPhotos && afterPhotos.length > 0) {
-        const uploadResponse = await uploadFiles(API_ENDPOINTS.UPLOAD.MULTIPLE, afterPhotos, 'photos')
+        const files = afterPhotos.map((photo, i) => {
+          if (typeof photo === 'string' && photo.startsWith('data:')) {
+            return dataURLtoFile(photo, `after_${Date.now()}_${i}.jpg`)
+          }
+          return photo
+        })
+        const uploadResponse = await uploadFiles(API_ENDPOINTS.UPLOAD.MULTIPLE, files, 'photos')
         photoUrls = uploadResponse.data?.urls || []
       }
 

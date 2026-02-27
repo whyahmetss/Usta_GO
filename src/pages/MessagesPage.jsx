@@ -115,6 +115,30 @@ function MessagesPage() {
     }
   }, [selectedJobId])
 
+  // Refetch messages when tab becomes visible (handles missed socket messages)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && selectedJobId && userJobs.length > 0) {
+        const job = userJobs.find(j => j.id === selectedJobId)
+        if (!job) return
+        const otherPersonId = user?.role === 'customer' ? job.professional?.id : job.customer?.id
+        if (otherPersonId) {
+          try {
+            const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId))
+            if (response.data && Array.isArray(response.data)) {
+              setJobMessages(response.data)
+            }
+          } catch (err) {
+            console.error('Refetch messages error:', err)
+          }
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [selectedJobId, userJobs, user])
+
   const handleSend = async () => {
     if (!messageText.trim() || !selectedJobId || isSending) return
 
