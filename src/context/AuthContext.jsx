@@ -161,6 +161,34 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup) ---
+  useEffect(() => {
+    if (!user || useLocalStorage) return
+
+    const loadUnreadNotifications = async () => {
+      try {
+        const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_UNREAD)
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          const notifs = response.data.map(msg => ({
+            id: 'msg_' + msg.id,
+            type: 'message',
+            title: `${msg.sender?.name || 'Yeni Mesaj'}`,
+            message: msg.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+            icon: '💬',
+            targetUserId: user.id,
+            read: false,
+            time: msg.createdAt || new Date().toISOString(),
+          }))
+          setNotifications(notifs)
+        }
+      } catch (err) {
+        console.warn('Could not load unread messages:', err)
+      }
+    }
+
+    loadUnreadNotifications()
+  }, [user?.id, useLocalStorage])
+
   // --- SOCKET.IO ---
   useEffect(() => {
     if (!user) {

@@ -18,6 +18,12 @@ router.post("/", authMiddleware, messageController.sendMessage);
 router.get("/", authMiddleware, messageController.getConversations);
 
 /**
+ * @route GET /api/messages/unread
+ * @desc Get all unread messages for current user
+ */
+router.get("/unread", authMiddleware, messageController.getUnreadMessages);
+
+/**
  * @route GET /api/messages/:userId
  * @desc Get messages with a specific user
  * @query {page?, limit?}

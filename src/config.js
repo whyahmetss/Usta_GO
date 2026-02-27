@@ -45,8 +45,9 @@ export const API_ENDPOINTS = {
 // Messages
   MESSAGES: {
     SEND: '/messages',
+    GET_UNREAD: '/messages/unread',
     GET_CONVERSATION: (userId) => `/messages/${userId}`,
-    GET_JOB_MESSAGES: (jobId) => `/messages/${jobId}`, 
+    GET_JOB_MESSAGES: (jobId) => `/messages/${jobId}`,
     GET_CONVERSATIONS: '/messages/conversations',
     MARK_READ: (id) => `/messages/${id}/read`,
     DELETE: (id) => `/messages/${id}`,
