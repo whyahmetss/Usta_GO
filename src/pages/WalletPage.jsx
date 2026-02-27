@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
 
 function WalletPage() {
@@ -27,33 +28,37 @@ useEffect(() => {
   const loadWalletData = async () => {
     try {
       setLoading(true);
-      
-      // 1. İşleri çek ve toplam kazancı hesapla
+
       const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST);
-      let manuelKazanc = 0;
-      
       if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
-        const ustaIsleri = jobsResponse.data.filter(j => 
-          (j.ustaId === user?.id || j.professional?.id === user?.id) && 
-          (j.status === 'COMPLETED' || j.status === 'completed' || j.status === 'rated')
+        const mapped = mapJobsFromBackend(jobsResponse.data);
+        const myJobs = mapped.filter(j =>
+          j.ustaId === user?.id &&
+          (j.status === 'completed' || j.status === 'rated')
         );
-        manuelKazanc = ustaIsleri.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+
+        // Toplam bakiye
+        const totalBalance = myJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+        setBalance(totalBalance);
+
+        // Bu ay kazanç
+        const now = new Date();
+        const thisMonthJobs = myJobs.filter(j => {
+          const d = j.completedAt ? new Date(j.completedAt) : null;
+          return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+        setThisMonthEarnings(thisMonthJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0));
+
+        // Geçen ay kazanç
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthJobs = myJobs.filter(j => {
+          const d = j.completedAt ? new Date(j.completedAt) : null;
+          return d && d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+        });
+        setLastMonthEarnings(lastMonthJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0));
       }
 
-      // 2. Wallet API çağır
-      const walletResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET);
-      if (walletResponse) {
-        setBalance(walletResponse.balance || manuelKazanc);  // ← DÜZELT!
-        setPendingWithdrawal(walletResponse.pendingWithdrawal || 0);
-        setThisMonthEarnings(walletResponse.thisMonthEarnings || manuelKazanc);
-        setLastMonthEarnings(walletResponse.lastMonthEarnings || 0);
-      } else {
-        // API yanıt vermediyse manuel hesaplananı kullan
-        setBalance(manuelKazanc);
-        setThisMonthEarnings(manuelKazanc);
-      }
-
-      // 3. Transactions
+      // Transactions
       const transactionsResponse = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
       if (transactionsResponse?.data) {
         setTransactions(transactionsResponse.data);
