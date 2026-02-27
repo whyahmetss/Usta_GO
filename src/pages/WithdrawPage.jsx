@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Building, AlertCircle } from 'lucide-react'
 
 function WithdrawPage() {
@@ -26,10 +27,15 @@ function WithdrawPage() {
     const loadWalletData = async () => {
       try {
         setLoading(true)
-        const response = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-        if (response.data) {
-          setBalance(response.data.balance || 0)
-          setPendingAmount(response.data.pendingWithdrawal || 0)
+        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+        if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
+          const mapped = mapJobsFromBackend(jobsResponse.data)
+          const myJobs = mapped.filter(j =>
+            j.ustaId === user?.id &&
+            (j.status === 'completed' || j.status === 'rated')
+          )
+          const totalBalance = myJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
+          setBalance(totalBalance)
         }
       } catch (err) {
         console.error('Load wallet error:', err)
@@ -39,8 +45,8 @@ function WithdrawPage() {
       }
     }
 
-    loadWalletData()
-  }, [])
+    if (user) loadWalletData()
+  }, [user])
 
   const availableBalance = balance - pendingAmount
 
