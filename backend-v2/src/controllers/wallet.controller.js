@@ -69,9 +69,12 @@ export const walletController = {
       const parsed = transactions.map(t => {
         let bankInfo = {};
         try { bankInfo = t.description ? JSON.parse(t.description) : {}; } catch {}
+
+        // Frontend 'pending'/'approved'/'rejected' bekliyor
+        const statusMap = { PENDING: 'pending', COMPLETED: 'approved', FAILED: 'rejected' };
         return {
           ...t,
-          status: t.status.toLowerCase(),
+          status: statusMap[t.status] || t.status.toLowerCase(),
           professional: { name: t.user?.name, email: t.user?.email },
           ...bankInfo
         };
