@@ -19,13 +19,9 @@ function AdminWithdrawalsPage() {
     try {
       setLoading(true)
       setError(null)
-      // Fetch withdrawal transactions from wallet endpoint
-      const res = await fetchAPI('/wallet/transactions', {
-        method: 'GET'
-      })
+      const res = await fetchAPI('/wallet/admin/withdrawals', { method: 'GET' })
       const transactions = Array.isArray(res) ? res : res.data || []
-      // Filter for withdrawal requests
-      setWithdrawals(transactions.filter(t => t.type === 'withdrawal'))
+      setWithdrawals(transactions)
     } catch (err) {
       setError(err.message)
       setWithdrawals([])
