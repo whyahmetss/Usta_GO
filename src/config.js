@@ -37,6 +37,11 @@ export const API_ENDPOINTS = {
     BY_USER: (userId) => `/jobs/user/${userId}`,
   },
 
+// Admin
+  ADMIN: {
+    GET_USERS: '/admin/users?limit=500',
+  },
+
 // Messages
   MESSAGES: {
     SEND: '/messages',
