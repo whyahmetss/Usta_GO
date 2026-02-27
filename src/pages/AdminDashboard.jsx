@@ -30,13 +30,10 @@ function AdminDashboard() {
         setLoading(true)
         setError(null)
 
-        // Fetch users, jobs, transactions in parallel
-        const [usersResponse, jobsResponse, transactionsResponse] = await Promise.allSettled([
+        // Fetch users and jobs in parallel
+        const [usersResponse, jobsResponse] = await Promise.allSettled([
           fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
           fetchAPI(API_ENDPOINTS.JOBS.LIST),
-          fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS).catch(() =>
-            fetchAPI(API_ENDPOINTS.WALLET.GET_EARNINGS)
-          ),
         ])
 
         // Users
@@ -58,12 +55,10 @@ function AdminDashboard() {
           .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
           .slice(0, 5))
 
-        // Revenue — tolerate different type casing (earning / EARNING / credit)
-        const txData = transactionsResponse.status === 'fulfilled' && Array.isArray(transactionsResponse.value?.data)
-          ? transactionsResponse.value.data : []
-        const totalRevenue = txData
-          .filter(t => ['earning', 'EARNING', 'credit', 'CREDIT'].includes(t.type))
-          .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+        // Revenue = sum of budget for all completed/rated jobs
+        const totalRevenue = mappedJobs
+          .filter(j => j.status === 'completed' || j.status === 'rated')
+          .reduce((sum, j) => sum + (Number(j.budget) || Number(j.price) || 0), 0)
 
         const activeJobsCount = mappedJobs.filter(
           j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated'
