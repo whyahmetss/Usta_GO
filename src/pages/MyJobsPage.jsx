@@ -64,17 +64,9 @@ function MyJobsPage() {
     }
   }
 
-  // Initial load and auto-refresh every 30 seconds
+  // Initial load
   useEffect(() => {
     if (user) loadUserJobs()
-  }, [user])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (user) loadUserJobs(true)
-    }, 30000)
-
-    return () => clearInterval(interval)
   }, [user])
 
   const handleRefresh = async () => {

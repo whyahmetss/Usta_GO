@@ -20,27 +20,16 @@ function HomePage() {
   const unreadNotifs = getUnreadNotificationCount()
   const unreadMessages = getUnreadMessageCount()
 
-  // Auto-refresh every 30 seconds
   const handleRefresh = async () => {
     setRefreshing(true)
     try {
-      // Trigger a re-render by updating lastRefreshed
       setLastRefreshed(new Date())
-      // Simulate refresh delay
       await new Promise(resolve => setTimeout(resolve, 500))
     } finally {
       setRefreshing(false)
       setPullDistance(0)
     }
   }
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleRefresh()
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [handleRefresh])
 
   // Socket.IO: Listen for real-time updates
   useEffect(() => {

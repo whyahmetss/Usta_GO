@@ -2,22 +2,36 @@ import { io } from 'socket.io-client'
 import { SOCKET_URL } from '../config'
 
 let socket = null
+let currentUserId = null
 
 export const connectSocket = (userId) => {
-  if (socket?.connected) return socket
+  currentUserId = userId
+
+  if (socket?.connected) {
+    // Already connected, just re-join room
+    socket.emit('join_room', userId)
+    return socket
+  }
+
+  // Disconnect old socket if exists but not connected
+  if (socket) {
+    socket.disconnect()
+    socket = null
+  }
 
   socket = io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 2000,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 10000,
   })
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id)
-    if (userId) {
-      socket.emit('join_room', userId)
+    if (currentUserId) {
+      socket.emit('join_room', currentUserId)
     }
   })
 
