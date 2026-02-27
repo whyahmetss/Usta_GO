@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { io as socketIO } from 'socket.io-client'
 import {
   fetchAPI,
   getToken,
@@ -9,7 +10,7 @@ import {
   removeStoredUser,
   uploadFiles
 } from '../utils/api'
-import { API_ENDPOINTS, STORAGE_KEYS } from '../config'
+import { API_ENDPOINTS, SOCKET_URL } from '../config'
 import {
   mapUserFromBackend,
   mapJobFromBackend,
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
   const [withdrawals, setWithdrawals] = useState([])
   const [error, setError] = useState(null)
   const [useLocalStorage, setUseLocalStorage] = useState(false) // Transition flag
+  const socketRef = useRef(null)
 
   // Initialize: Load from token and fetch user data
   useEffect(() => {
@@ -158,6 +160,42 @@ export function AuthProvider({ children }) {
       setWithdrawals([])
     }
   }, [user])
+
+  // --- SOCKET.IO ---
+  useEffect(() => {
+    if (!user) {
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+        socketRef.current = null
+      }
+      return
+    }
+
+    const socket = socketIO(SOCKET_URL, { transports: ['websocket', 'polling'] })
+    socketRef.current = socket
+
+    socket.on('connect', () => {
+      socket.emit('join_room', user.id)
+    })
+
+    socket.on('receive_message', (message) => {
+      setNotifications(prev => [{
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        type: 'message',
+        title: 'Yeni Mesaj',
+        message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+        icon: '💬',
+        targetUserId: user.id,
+        read: false,
+        time: new Date().toISOString(),
+      }, ...prev])
+    })
+
+    return () => {
+      socket.disconnect()
+      socketRef.current = null
+    }
+  }, [user?.id])
 
   // --- NOTIFICATIONS ---
   const addNotification = useCallback((notif) => {

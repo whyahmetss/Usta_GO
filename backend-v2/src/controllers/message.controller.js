@@ -1,10 +1,13 @@
 import * as messageService from "../services/message.service.js";
 import { successResponse } from "../utils/response.js";
+import { io } from "../index.js";
 
 export const sendMessage = async (req, res, next) => {
   try {
     const { receiverId, content } = req.body;
     const message = await messageService.sendMessage(req.user.id, receiverId, content);
+    // Notify recipient in real-time
+    io.to(`user_${receiverId}`).emit("receive_message", message);
     successResponse(res, message, "Message sent successfully", 201);
   } catch (error) {
     next(error);
