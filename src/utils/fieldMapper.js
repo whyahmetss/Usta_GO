@@ -33,13 +33,17 @@ export const mapJobFromBackend = (job) => {
  */
 export const mapJobToBackend = (job) => {
   if (!job) return job
-  return {
-    ...job,
-    location: job.address ?? job.location,
-    budget: job.price ?? job.budget,
-    ustaId: job.professionalId ?? job.ustaId,
-    status: job.status?.toUpperCase(),
+  // Strip frontend-only fields so backend validation doesn't reject them
+  const { address, price, professionalId, ...rest } = job
+  const result = {
+    ...rest,
+    location: address ?? job.location,
+    budget: price ?? job.budget,
   }
+  if (professionalId ?? job.ustaId) result.ustaId = professionalId ?? job.ustaId
+  if (result.status) result.status = result.status.toUpperCase()
+  else delete result.status
+  return result
 }
 
 /**
