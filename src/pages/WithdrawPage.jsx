@@ -40,12 +40,15 @@ function WithdrawPage() {
           setBalance(totalBalance)
         }
 
-        // Bekleyen çekim miktarını backend'den al
+        // Gerçek kullanılabilir bakiyeyi backend'den al (onaylanan çekimler dahil düşülmüş)
         try {
           const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
-          setPendingAmount(walletRes?.data?.pendingWithdrawal || 0)
+          if (walletRes?.data) {
+            setBalance(walletRes.data.balance || 0)
+            setPendingAmount(walletRes.data.pendingWithdrawal || 0)
+          }
         } catch {
-          // pendingAmount 0 kalır
+          // jobs'tan set edilen balance kalır
         }
       } catch (err) {
         console.error('Load wallet error:', err)
@@ -58,7 +61,8 @@ function WithdrawPage() {
     if (user) loadWalletData()
   }, [user])
 
-  const availableBalance = balance - pendingAmount
+  // balance backend'den geliyor (onaylanan + bekleyen çekimler zaten düşülmüş)
+  const availableBalance = balance
 
   const handleSubmit = async (e) => {
     e.preventDefault()
