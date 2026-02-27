@@ -46,9 +46,8 @@ function AdminUsersPage() {
       try {
         setDeletingId(userId)
         setError(null)
-        // TODO: Use DELETE /api/users/:id when admin endpoint is available
-        // For now, placeholder implementation
-        alert('Kullanıcı silme özelliği yakında etkinleştirilecektir.')
+        await fetchAPI(API_ENDPOINTS.ADMIN.DELETE_USER(userId), { method: 'DELETE' })
+        setUsers(prev => prev.filter(u => u.id !== userId))
         setDeletingId(null)
       } catch (err) {
         setError(err.message)
