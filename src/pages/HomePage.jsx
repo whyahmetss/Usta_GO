@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User } from 'lucide-react'
+import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
