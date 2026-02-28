@@ -585,6 +585,20 @@ function JobDetailPage() {
           </button>
         )}
 
+        {/* Customer uploaded photos */}
+        {job.photos?.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-lg">
+            <h3 className="font-bold text-gray-900 mb-3">Müşteri Fotoğrafları</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {job.photos.map((photo, idx) => (
+                <div key={idx} className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                  <img src={photo} alt="Müşteri fotoğrafı" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Photos - Professional View */}
         {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed' || job.status === 'rated') && isProfessional && (
           <div className="bg-white rounded-2xl p-5 shadow-lg">
