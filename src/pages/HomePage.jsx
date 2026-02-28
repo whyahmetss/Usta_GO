@@ -1,92 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
-import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User, RefreshCw } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Bell, Menu, Home, Briefcase, MessageSquare, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import HamburgerMenu from '../components/HamburgerMenu'
 import Logo from '../components/Logo'
-import { getSocket } from '../utils/socket'
 
 function HomePage() {
-  const { user, getUnreadNotificationCount, getUnreadMessageCount, addNotification } = useAuth()
+  const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('home')
   const [showMenu, setShowMenu] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [lastRefreshed, setLastRefreshed] = useState(null)
-  const [pullDistance, setPullDistance] = useState(0)
-  const touchStartY = useRef(0)
-  const scrollableRef = useRef(null)
 
   const unreadNotifs = getUnreadNotificationCount()
   const unreadMessages = getUnreadMessageCount()
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    try {
-      setLastRefreshed(new Date())
-      await new Promise(resolve => setTimeout(resolve, 500))
-    } finally {
-      setRefreshing(false)
-      setPullDistance(0)
-    }
-  }
-
-  // Socket.IO: Listen for real-time updates
-  useEffect(() => {
-    const socket = getSocket()
-    if (!socket) return
-
-    const handleNewJob = (jobData) => {
-      handleRefresh()
-    }
-
-    const handleJobUpdated = (data) => {
-      handleRefresh()
-    }
-
-    socket.on('new_job_available', handleNewJob)
-    socket.on('job_updated', handleJobUpdated)
-
-    return () => {
-      socket.off('new_job_available', handleNewJob)
-      socket.off('job_updated', handleJobUpdated)
-    }
-  }, [])
-
-  // Pull-to-refresh handlers
-  useEffect(() => {
-    const handleTouchStart = (e) => {
-      touchStartY.current = e.touches[0].clientY
-    }
-
-    const handleTouchMove = (e) => {
-      const scrollTop = scrollableRef.current?.scrollTop || 0
-      if (scrollTop === 0) {
-        const distance = e.touches[0].clientY - touchStartY.current
-        if (distance > 0) {
-          setPullDistance(Math.min(distance, 120))
-        }
-      }
-    }
-
-    const handleTouchEnd = () => {
-      if (pullDistance > 80) {
-        handleRefresh()
-      }
-      setPullDistance(0)
-    }
-
-    const element = scrollableRef.current
-    element?.addEventListener('touchstart', handleTouchStart)
-    element?.addEventListener('touchmove', handleTouchMove)
-    element?.addEventListener('touchend', handleTouchEnd)
-
-    return () => {
-      element?.removeEventListener('touchstart', handleTouchStart)
-      element?.removeEventListener('touchmove', handleTouchMove)
-      element?.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [pullDistance, handleRefresh])
 
   const categories = [
     {
@@ -141,23 +67,7 @@ function HomePage() {
   }
 
   return (
-    <div ref={scrollableRef} className="min-h-screen bg-gray-50 pb-24 overflow-y-auto" style={{ touchAction: 'none' }}>
-      {/* Pull-to-refresh indicator */}
-      {pullDistance > 0 && (
-        <div className="px-4 pt-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <RefreshCw
-              size={20}
-              className={`text-blue-600 transition-transform ${pullDistance > 80 ? 'scale-110' : ''}`}
-              style={{ transform: `rotate(${(pullDistance / 120) * 180}deg)` }}
-            />
-            <span className="text-sm font-medium text-gray-600">
-              {pullDistance > 80 ? 'Yenile' : 'Aşağı çekin...'}
-            </span>
-          </div>
-        </div>
-      )}
-
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header - Mavi Gradient */}
       <div className="blue-gradient-bg pb-6">
         <div className="px-4 pt-4">
