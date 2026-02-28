@@ -23,7 +23,7 @@ function MyJobsPage() {
     try {
       if (!isRefresh) setLoading(true)
       setError(null)
-      const response = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS)
 
       // Get raw data from response
       const rawData = response?.data || response || []
@@ -31,27 +31,7 @@ function MyJobsPage() {
       if (Array.isArray(rawData)) {
         // Map jobs from backend format to frontend format
         const mappedJobs = mapJobsFromBackend(rawData)
-
-        // Filter jobs based on user role
-        let filtered
-        const userRole = user?.role?.toLowerCase()
-        if (userRole === 'professional' || userRole === 'usta') {
-          // For professionals: show jobs they're assigned to (professional?.id matches user.id)
-          filtered = mappedJobs.filter(j => {
-            const profId = String(j.professionalId || j.professional?.id || j.usta?.id || "").trim()
-            const userId = String(user?.id || "").trim()
-            return profId === userId && profId !== ""
-          })
-        } else {
-          // For customers: show jobs they created (customer?.id matches user.id)
-          filtered = mappedJobs.filter(j => {
-            const custId = String(j.customerId || j.customer?.id || "").trim()
-            const userId = String(user?.id || "").trim()
-            return custId === userId
-          })
-        }
-
-        setUserJobs(filtered)
+        setUserJobs(mappedJobs)
         if (isRefresh) setLastRefreshed(new Date())
       }
     } catch (err) {

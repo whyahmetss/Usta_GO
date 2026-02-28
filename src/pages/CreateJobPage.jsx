@@ -189,7 +189,7 @@ function CreateJobPage() {
                 {photoPreview ? (
                   <div className="relative inline-block w-full">
                     <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border-2 border-blue-500" />
-                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg"><Kamera size={18} /></div>
+                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg"><Camera size={18} /></div>
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-blue-500 transition-colors">

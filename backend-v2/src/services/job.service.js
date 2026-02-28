@@ -130,6 +130,30 @@ export const getCustomerJobs = async (customerId, skip = 0, take = 10) => {
   return { jobs, total };
 };
 
+export const getMyJobs = async (userId, role, skip = 0, take = 50) => {
+  const where =
+    role === "USTA"
+      ? { ustaId: userId }
+      : { customerId: userId };
+
+  const [jobs, total] = await Promise.all([
+    prisma.job.findMany({
+      where,
+      skip,
+      take,
+      include: {
+        customer: { select: { id: true, name: true, email: true, profileImage: true } },
+        usta: { select: { id: true, name: true, email: true, profileImage: true } },
+        offers: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.job.count({ where }),
+  ]);
+
+  return { jobs, total };
+};
+
 export const updateJobStatus = async (jobId, customerId, status) => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
 

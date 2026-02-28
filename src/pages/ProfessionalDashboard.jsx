@@ -24,22 +24,30 @@ function ProfessionalDashboard() {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-       if (!allJobs.length) setLoading(true);
-        const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-        if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-          // Map jobs from backend format (normalizes status to lowercase, location -> address, etc.)
-          const mappedJobs = mapJobsFromBackend(jobsResponse.data)
+        if (!allJobs.length) setLoading(true);
+        // Fetch pending job requests and my own jobs in parallel
+        const [pendingResponse, myJobsResponse] = await Promise.all([
+          fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
+          fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
+        ])
 
-          // Ensure location field is always an object with address property
-          const normalizedJobs = mappedJobs.map(job => ({
-            ...job,
-            location: typeof job.location === 'string'
-              ? { address: job.location }
-              : (job.location || { address: 'Adres belirtilmedi' })
-          }))
-          setAllJobs(normalizedJobs)
-        }
+        const pendingRaw = pendingResponse?.data || []
+        const myJobsRaw = myJobsResponse?.data || []
 
+        // Combine and deduplicate
+        const allRaw = [...pendingRaw, ...myJobsRaw]
+        const uniqueMap = new Map()
+        allRaw.forEach(j => uniqueMap.set(j.id, j))
+        const uniqueJobs = Array.from(uniqueMap.values())
+
+        const mappedJobs = mapJobsFromBackend(uniqueJobs)
+        const normalizedJobs = mappedJobs.map(job => ({
+          ...job,
+          location: typeof job.location === 'string'
+            ? { address: job.location }
+            : (job.location || { address: 'Adres belirtilmedi' })
+        }))
+        setAllJobs(normalizedJobs)
       } catch (err) {
         console.error('Load dashboard error:', err)
       } finally {
@@ -55,16 +63,26 @@ function ProfessionalDashboard() {
   const handleRefresh = async () => {
     setRefreshing(true)
     try {
-      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST)
-      if (jobsResponse.data && Array.isArray(jobsResponse.data)) {
-        const mappedJobs = mapJobsFromBackend(jobsResponse.data)
-        setAllJobs(mappedJobs.map(job => ({
-          ...job,
-          location: typeof job.location === 'string'
-            ? { address: job.location }
-            : (job.location || { address: 'Adres belirtilmedi' })
-        })))
-      }
+      const [pendingResponse, myJobsResponse] = await Promise.all([
+        fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
+        fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
+      ])
+
+      const pendingRaw = pendingResponse?.data || []
+      const myJobsRaw = myJobsResponse?.data || []
+
+      const allRaw = [...pendingRaw, ...myJobsRaw]
+      const uniqueMap = new Map()
+      allRaw.forEach(j => uniqueMap.set(j.id, j))
+      const uniqueJobs = Array.from(uniqueMap.values())
+
+      const mappedJobs = mapJobsFromBackend(uniqueJobs)
+      setAllJobs(mappedJobs.map(job => ({
+        ...job,
+        location: typeof job.location === 'string'
+          ? { address: job.location }
+          : (job.location || { address: 'Adres belirtilmedi' })
+      })))
       setLastRefreshed(new Date())
     } catch (err) {
       console.error('Refresh error:', err)
@@ -74,8 +92,8 @@ function ProfessionalDashboard() {
   }
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
-  const myCompletedJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id || j.ustaId === user?.id) && (j.status === 'completed' || j.status === 'rated'))
-  const myActiveJobs = allJobs.filter(j => (j.professional?.id === user?.id || j.usta?.id === user?.id || j.ustaId === user?.id) && (j.status === 'accepted' || j.status === 'in_progress'))
+  const myCompletedJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'completed' || j.status === 'rated'))
+  const myActiveJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'accepted' || j.status === 'in_progress'))
 
   const now = new Date()
   const thisMonthEarnings = myCompletedJobs

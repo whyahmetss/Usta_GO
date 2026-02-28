@@ -1,9 +1,18 @@
 import * as jobService from "../services/job.service.js";
 import { successResponse, paginatedResponse } from "../utils/response.js";
+import { io } from "../index.js";
 
 export const createJob = async (req, res, next) => {
   try {
     const job = await jobService.createJob(req.user.id, req.body);
+    // Notify all connected professionals about the new job
+    io.emit("new_job_available", {
+      id: job.id,
+      title: job.title,
+      category: job.category,
+      location: job.location,
+      budget: job.budget,
+    });
     successResponse(res, job, "Job created successfully", 201);
   } catch (error) {
     next(error);
@@ -59,10 +68,10 @@ export const deleteJob = async (req, res, next) => {
 export const getMyJobs = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
-    const { jobs, total } = await jobService.getCustomerJobs(req.user.id, skip, limit);
+    const { jobs, total } = await jobService.getMyJobs(req.user.id, req.user.role, skip, limit);
     paginatedResponse(res, jobs, page, limit, total);
   } catch (error) {
     next(error);
