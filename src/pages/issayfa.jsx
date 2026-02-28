@@ -111,7 +111,7 @@ function CreateJobPage() {
         description: description.trim(),
         budget: Number(currentFinalPrice),
         location: address.trim(), 
-        photo: photoUrl || "",
+        photos: photoUrl ? [photoUrl] : [],
         category: 'Elektrikci',
         urgent: aiAnalysis?.urgency === 'Yüksek'
       }

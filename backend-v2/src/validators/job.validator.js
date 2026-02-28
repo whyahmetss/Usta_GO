@@ -6,7 +6,9 @@ export const createJobSchema = z.object({
   category: z.string().min(2, "Category is required"),
   location: z.string().min(2, "Location is required"),
   budget: z.number().positive("Budget must be positive"),
-});
+  photos: z.array(z.string()).optional(),
+  status: z.string().optional(),
+}).passthrough();
 
 export const updateJobSchema = z.object({
   title: z.string().min(3).optional(),

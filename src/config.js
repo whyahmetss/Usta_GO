@@ -18,7 +18,7 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register',
     LOGIN: '/auth/login',
     ME: '/auth/me',
-    UPDATE_PROFILE: '/auth/update-profile',
+    UPDATE_PROFILE: '/auth/profile',
     CHANGE_PASSWORD: '/auth/change-password',
     LOGOUT: '/auth/logout',
   },
