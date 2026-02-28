@@ -3,9 +3,18 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createJob = async (customerId, data) => {
+  // Only extract fields that exist in the Prisma schema
+  const { title, description, category, location, budget, status, photos } = data;
+
   const job = await prisma.job.create({
     data: {
-      ...data,
+      title,
+      description,
+      category,
+      location,
+      budget,
+      status,
+      photos: photos || [],
       customerId,
     },
     include: {
