@@ -19,7 +19,6 @@ import AdminUsersPage from './pages/AdminUsersPage'
 import AdminJobsPage from './pages/AdminJobsPage'
 import AdminComplaintsPage from './pages/AdminComplaintsPage'
 import AdminMessagesPage from './pages/AdminMessagesPage'
-import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
@@ -122,8 +121,7 @@ function AppRoutes() {
       <Route path="/job/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
       <Route path="/rate/:id" element={<ProtectedRoute><RateJobPage /></ProtectedRoute>} />
       <Route path="/create-job" element={<ProtectedRoute roleRequired="customer"><CreateJobPage /></ProtectedRoute>} />
-      <Route path="/professional-profile/:id" element={<ProtectedRoute><ProfessionalProfilePage /></ProtectedRoute>} />
-      <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+<Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
       <Route path="/withdraw" element={<ProtectedRoute roleRequired="professional"><WithdrawPage /></ProtectedRoute>} />
       <Route path="/odeme" element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
 

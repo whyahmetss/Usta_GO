@@ -561,14 +561,6 @@ function JobDetailPage() {
                 )}
               </div>
             </div>
-            {!isProfessional && job.professional && (
-              <button
-                onClick={() => navigate(`/professional-profile/${job.professional.id}`)}
-                className="w-full py-2 bg-blue-50 text-blue-600 rounded-xl font-semibold text-sm hover:bg-blue-100 transition"
-              >
-                Profili Görüntüle
-              </button>
-            )}
           </div>
         )}
 
