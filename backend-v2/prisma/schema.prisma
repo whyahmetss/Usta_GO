@@ -38,6 +38,7 @@ model User {
   sentMessages     Message[] @relation("sender")
   receivedMessages Message[] @relation("receiver")
   transactions Transaction[]
+  complaints   Complaint[]    @relation("complaintsFiled")
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -105,6 +106,7 @@ model Job {
   offers      Offer[]
   reviews     Review[]
   transactions Transaction[]
+  complaints  Complaint[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -250,4 +252,34 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+// Complaint Model - For customer/usta complaints
+model Complaint {
+  id        String          @id @default(cuid())
+
+  // Complaint details
+  reason    String          // e.g. "Geç kaldı", "İşi yapmıyor", "Terbiyesiz", "Farklı bir sorun"
+  details   String?         @db.Text
+  status    ComplaintStatus @default(OPEN)
+
+  // Relations
+  jobId     String
+  job       Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  filedById String
+  filedBy   User            @relation("complaintsFiled", fields: [filedById], references: [id], onDelete: Cascade)
+
+  filedAt   DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([jobId])
+  @@index([filedById])
+  @@index([status])
+}
+
+enum ComplaintStatus {
+  OPEN
+  RESOLVED
+  REJECTED
 }
