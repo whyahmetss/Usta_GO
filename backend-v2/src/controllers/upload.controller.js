@@ -1,5 +1,15 @@
 import cloudinary from '../config/cloudinary.js'
-import fs from 'fs'
+
+// Helper: upload buffer to Cloudinary via stream
+function uploadToCloudinary(buffer, options = {}) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error)
+      resolve(result)
+    })
+    stream.end(buffer)
+  })
+}
 
 export const uploadPhoto = async (req, res) => {
   try {
@@ -7,7 +17,7 @@ export const uploadPhoto = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' })
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'usta-go/profile-photos',
       resource_type: 'image',
       transformation: [
@@ -15,9 +25,6 @@ export const uploadPhoto = async (req, res) => {
         { quality: 'auto' }
       ]
     })
-
-    // Clean up temp file
-    fs.unlink(req.file.path, () => {})
 
     res.json({
       success: true,
@@ -27,10 +34,6 @@ export const uploadPhoto = async (req, res) => {
       }
     })
   } catch (err) {
-    // Clean up temp file on error
-    if (req.file?.path) {
-      fs.unlink(req.file.path, () => {})
-    }
     console.error('Upload photo error:', err)
     res.status(500).json({ error: err.message })
   }
@@ -44,7 +47,7 @@ export const uploadPhotos = async (req, res) => {
 
     const uploads = await Promise.all(
       req.files.map(file =>
-        cloudinary.uploader.upload(file.path, {
+        uploadToCloudinary(file.buffer, {
           folder: 'usta-go/job-photos',
           resource_type: 'image',
           transformation: [
@@ -55,11 +58,6 @@ export const uploadPhotos = async (req, res) => {
       )
     )
 
-    // Clean up temp files
-    req.files.forEach(file => {
-      fs.unlink(file.path, () => {})
-    })
-
     res.json({
       success: true,
       data: {
@@ -67,12 +65,6 @@ export const uploadPhotos = async (req, res) => {
       }
     })
   } catch (err) {
-    // Clean up temp files on error
-    if (req.files) {
-      req.files.forEach(file => {
-        fs.unlink(file.path, () => {})
-      })
-    }
     console.error('Upload photos error:', err)
     res.status(500).json({ error: err.message })
   }

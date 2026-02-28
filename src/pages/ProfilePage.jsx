@@ -108,14 +108,20 @@ function ProfilePage() {
     if (file) {
       setUploading(true)
       try {
-        const uploadResponse = await uploadFile('/users/upload/photo', file, 'photo')
+        const uploadResponse = await uploadFile('/upload/photo', file, 'photo')
         const photoUrl = uploadResponse.data?.url || uploadResponse.url || uploadResponse.data
         if (photoUrl) {
+          // Save photo URL to user profile in DB
+          await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
+            method: 'PUT',
+            body: { profileImage: photoUrl }
+          })
           setProfilePhoto(photoUrl)
           alert('Profil fotoğrafı güncellendi!')
         }
       } catch (err) {
         console.error('Yükleme hatası:', err)
+        alert('Fotoğraf yüklenirken hata oluştu')
       } finally {
         setUploading(false)
       }

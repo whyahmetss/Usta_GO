@@ -83,8 +83,8 @@ function SettingsPage() {
       try {
         setCertificateLoading(true)
         setError(null)
-        const res = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'certificate')
-        setCertificateFile(res.url)
+        const res = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+        setCertificateFile(res.data?.url || res.url)
         setSuccess('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
         setTimeout(() => setSuccess(null), 3000)
       } catch (err) {
