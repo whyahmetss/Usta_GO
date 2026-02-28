@@ -131,6 +131,7 @@ function CreateJobPage() {
         category: 'Elektrikci',
         urgent: aiAnalysis?.urgency === 'Yüksek' || false,
         status: 'pending',
+        photos: photoUrl ? [photoUrl] : [],
       };
 
       const result = await createJob(jobData)

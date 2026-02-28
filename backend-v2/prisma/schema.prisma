@@ -74,7 +74,10 @@ model Job {
   // Job status
   status      JobStatus   @default(PENDING)
 
-  // Job photos
+  // Customer photos (uploaded during job creation)
+  photos       String[]    @default([])
+
+  // Job photos (before/after by professional)
   beforePhotos String[]    @default([])
   afterPhotos  String[]    @default([])
 
