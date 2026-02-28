@@ -68,10 +68,10 @@ export const deleteJob = async (req, res, next) => {
 export const getMyJobs = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
-    const { jobs, total } = await jobService.getCustomerJobs(req.user.id, skip, limit);
+    const { jobs, total } = await jobService.getMyJobs(req.user.id, req.user.role, skip, limit);
     paginatedResponse(res, jobs, page, limit, total);
   } catch (error) {
     next(error);
