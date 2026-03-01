@@ -22,6 +22,7 @@ function AdminDashboard() {
   const [savedUsers, setSavedUsers] = useState([])
   const [allJobs, setAllJobs] = useState([])
   const [recentJobs, setRecentJobs] = useState([])
+  const [allComplaints, setAllComplaints] = useState([])
 
   // Load dashboard data from API
   useEffect(() => {
@@ -30,16 +31,22 @@ function AdminDashboard() {
         setLoading(true)
         setError(null)
 
-        // Fetch users and jobs in parallel
-        const [usersResponse, jobsResponse] = await Promise.allSettled([
+        // Fetch users, jobs and complaints in parallel
+        const [usersResponse, jobsResponse, complaintsResponse] = await Promise.allSettled([
           fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
-          fetchAPI(API_ENDPOINTS.JOBS.LIST),
+          fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?limit=500`),
+          fetchAPI(API_ENDPOINTS.COMPLAINTS.LIST),
         ])
 
         // Users
         const usersData = usersResponse.status === 'fulfilled' && Array.isArray(usersResponse.value?.data)
           ? usersResponse.value.data : []
         setSavedUsers(usersData)
+
+        // Complaints
+        const complaintsData = complaintsResponse.status === 'fulfilled' && Array.isArray(complaintsResponse.value?.data)
+          ? complaintsResponse.value.data : []
+        setAllComplaints(complaintsData)
 
         // Jobs
         const jobsRaw = jobsResponse.status === 'fulfilled' && Array.isArray(jobsResponse.value?.data)
@@ -84,6 +91,7 @@ function AdminDashboard() {
   const handleLogout = () => { logout(); navigate('/') }
 
   const pendingWithdrawals = allJobs.filter(j => j.withdrawalRequest?.status === 'pending').length
+  const openComplaints = allComplaints.filter(c => c.status === 'open').length
 
   const statsList = [
     { label: 'Toplam Kullanici', value: stats.totalUsers.toString(), icon: Users, color: 'blue' },
@@ -188,9 +196,9 @@ function AdminDashboard() {
             <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">🚨</span></div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Şikayet Yönetimi</h3>
             <p className="text-gray-600 text-sm">Müşteri şikayetlerini yönet</p>
-            {allJobs.filter(j => j.complaint?.status === 'open').length > 0 && (
+            {openComplaints > 0 && (
               <div className="mt-3">
-                <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{allJobs.filter(j => j.complaint?.status === 'open').length} Açık</span>
+                <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{openComplaints} Açık</span>
               </div>
             )}
           </div>
@@ -278,41 +286,53 @@ function AdminDashboard() {
         {/* Şikayetler */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
           <h3 className="text-xl font-bold text-gray-900 mb-4">🚨 Tüm Şikayetler</h3>
-          {allJobs.filter(j => j.complaint).length === 0 ? (
+          {allComplaints.length === 0 ? (
             <p className="text-gray-500 text-center py-6">Henüz şikayet yok</p>
           ) : (
             <div className="space-y-3">
-              {allJobs.filter(j => j.complaint).map(job => (
-                <div key={job.id} className={`p-4 rounded-xl border-2 ${
-                  job.complaint?.status === 'resolved' ? 'bg-green-50 border-green-300' :
-                  job.complaint?.status === 'rejected' ? 'bg-red-50 border-red-300' :
+              {allComplaints.map(complaint => (
+                <div key={complaint.id} className={`p-4 rounded-xl border-2 ${
+                  complaint.status === 'resolved' ? 'bg-green-50 border-green-300' :
+                  complaint.status === 'rejected' ? 'bg-red-50 border-red-300' :
                   'bg-orange-50 border-orange-300'
                 }`}>
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-bold text-gray-900">{job.customer.name}</p>
-                      <p className="text-sm text-gray-600">{job.title} - Neden: {job.complaint?.reason}</p>
+                      <p className="font-bold text-gray-900">{complaint.customerName}</p>
+                      <p className="text-sm text-gray-600">{complaint.jobTitle} - Neden: {complaint.reason}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                      job.complaint?.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                      job.complaint?.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                      complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {job.complaint?.status === 'open' ? 'Açık' : job.complaint?.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                      {complaint.status === 'open' ? 'Açık' : complaint.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
                     </span>
                   </div>
-                  {job.complaint?.details && (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded mb-2">{job.complaint.details}</p>
+                  {complaint.details && (
+                    <p className="text-sm text-gray-700 bg-white p-2 rounded mb-2">{complaint.details}</p>
                   )}
                   <div className="flex gap-2">
-                    {job.complaint?.status === 'open' && (
+                    {complaint.status === 'open' && (
                       <>
-                        <button className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Çöz</button>
-                        <button className="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Reddet</button>
+                        <button
+                          onClick={async () => {
+                            await fetchAPI(API_ENDPOINTS.COMPLAINTS.RESOLVE(complaint.id), { method: 'PUT' })
+                            setAllComplaints(prev => prev.map(c => c.id === complaint.id ? { ...c, status: 'resolved' } : c))
+                          }}
+                          className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                        >Çöz</button>
+                        <button
+                          onClick={async () => {
+                            await fetchAPI(API_ENDPOINTS.COMPLAINTS.REJECT(complaint.id), { method: 'PUT' })
+                            setAllComplaints(prev => prev.map(c => c.id === complaint.id ? { ...c, status: 'rejected' } : c))
+                          }}
+                          className="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                        >Reddet</button>
                       </>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">{new Date(job.complaint?.filedAt).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-xs text-gray-500 mt-2">{new Date(complaint.filedAt).toLocaleDateString('tr-TR')}</p>
                 </div>
               ))}
             </div>
