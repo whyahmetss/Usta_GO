@@ -23,6 +23,7 @@ function AdminDashboard() {
   const [allJobs, setAllJobs] = useState([])
   const [recentJobs, setRecentJobs] = useState([])
   const [allComplaints, setAllComplaints] = useState([])
+  const [complaintFilter, setComplaintFilter] = useState('all')
 
   // Load dashboard data from API
   useEffect(() => {
@@ -285,12 +286,32 @@ function AdminDashboard() {
 
         {/* Şikayetler */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">🚨 Tüm Şikayetler</h3>
-          {allComplaints.length === 0 ? (
-            <p className="text-gray-500 text-center py-6">Henüz şikayet yok</p>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">🚨 Tüm Şikayetler</h3>
+            <div className="flex gap-2">
+              {[
+                { key: 'all', label: 'Tümü' },
+                { key: 'open', label: 'Bekleyen' },
+                { key: 'resolved', label: 'Çözüldü' },
+                { key: 'rejected', label: 'Reddedildi' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setComplaintFilter(tab.key)}
+                  className={`text-xs px-3 py-1 rounded-full font-bold transition ${
+                    complaintFilter === tab.key
+                      ? 'bg-gray-800 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >{tab.label}</button>
+              ))}
+            </div>
+          </div>
+          {allComplaints.filter(c => complaintFilter === 'all' || c.status === complaintFilter).length === 0 ? (
+            <p className="text-gray-500 text-center py-6">Bu kategoride şikayet yok</p>
           ) : (
             <div className="space-y-3">
-              {allComplaints.map(complaint => (
+              {allComplaints.filter(c => complaintFilter === 'all' || c.status === complaintFilter).map(complaint => (
                 <div key={complaint.id} className={`p-4 rounded-xl border-2 ${
                   complaint.status === 'resolved' ? 'bg-green-50 border-green-300' :
                   complaint.status === 'rejected' ? 'bg-red-50 border-red-300' :
@@ -299,40 +320,20 @@ function AdminDashboard() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-bold text-gray-900">{complaint.customerName}</p>
-                      <p className="text-sm text-gray-600">{complaint.jobTitle} - Neden: {complaint.reason}</p>
+                      <p className="text-sm text-gray-600">{complaint.jobTitle} — {complaint.reason}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-bold ${
                       complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
                       complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {complaint.status === 'open' ? 'Açık' : complaint.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                      {complaint.status === 'open' ? 'Bekliyor' : complaint.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
                     </span>
                   </div>
                   {complaint.details && (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded mb-2">{complaint.details}</p>
+                    <p className="text-sm text-gray-700 bg-white p-2 rounded">{complaint.details}</p>
                   )}
-                  <div className="flex gap-2">
-                    {complaint.status === 'open' && (
-                      <>
-                        <button
-                          onClick={async () => {
-                            await fetchAPI(API_ENDPOINTS.COMPLAINTS.RESOLVE(complaint.id), { method: 'PUT' })
-                            setAllComplaints(prev => prev.map(c => c.id === complaint.id ? { ...c, status: 'resolved' } : c))
-                          }}
-                          className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                        >Çöz</button>
-                        <button
-                          onClick={async () => {
-                            await fetchAPI(API_ENDPOINTS.COMPLAINTS.REJECT(complaint.id), { method: 'PUT' })
-                            setAllComplaints(prev => prev.map(c => c.id === complaint.id ? { ...c, status: 'rejected' } : c))
-                          }}
-                          className="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                        >Reddet</button>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">{new Date(complaint.filedAt).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-xs text-gray-400 mt-2">{new Date(complaint.filedAt).toLocaleDateString('tr-TR')}</p>
                 </div>
               ))}
             </div>
