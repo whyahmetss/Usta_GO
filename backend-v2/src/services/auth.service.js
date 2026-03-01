@@ -4,24 +4,36 @@ import { generateToken } from "../utils/jwt.js";
 
 const prisma = new PrismaClient();
 
+// Generate a unique referral code like "USTA-AB12CD"
+const generateReferralCode = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "USTA-";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+};
+
 export const registerUser = async (data) => {
-  const { name, email, password, role, phone } = data;
+  const { name, email, password, role, phone, referralCode } = data;
 
-  // Check if user exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
+  const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     const error = new Error("User already exists");
     error.status = 409;
     throw error;
   }
 
-  // Hash password
   const hashedPassword = await hashPassword(password);
 
-  // Create user
+  // Generate unique referral code for this new user
+  let newReferralCode;
+  let attempts = 0;
+  do {
+    newReferralCode = generateReferralCode();
+    const exists = await prisma.user.findUnique({ where: { referralCode: newReferralCode } });
+    if (!exists) break;
+    attempts++;
+  } while (attempts < 10);
+
   const user = await prisma.user.create({
     data: {
       name,
@@ -29,32 +41,39 @@ export const registerUser = async (data) => {
       password: hashedPassword,
       role: role || "CUSTOMER",
       phone,
+      referralCode: newReferralCode,
     },
   });
 
-  // Generate token
-  const token = generateToken({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
+  // Handle referral bonus: give 50 TL to referrer and new user
+  if (referralCode) {
+    const referrer = await prisma.user.findUnique({ where: { referralCode: referralCode.toUpperCase() } });
+    if (referrer && referrer.id !== user.id) {
+      await prisma.$transaction([
+        // Give 50 TL to referrer
+        prisma.user.update({ where: { id: referrer.id }, data: { balance: { increment: 50 } } }),
+        prisma.transaction.create({
+          data: { userId: referrer.id, amount: 50, type: "REFERRAL", status: "COMPLETED", description: `Davet bonusu: ${user.name} kayıt oldu` },
+        }),
+        // Give 50 TL to new user
+        prisma.user.update({ where: { id: user.id }, data: { balance: { increment: 50 } } }),
+        prisma.transaction.create({
+          data: { userId: user.id, amount: 50, type: "REFERRAL", status: "COMPLETED", description: `Hoş geldin bonusu: davet kodu kullanıldı` },
+        }),
+      ]);
+    }
+  }
+
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-    },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode },
     token,
   };
 };
 
 export const loginUser = async (email, password) => {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     const error = new Error("User not found");
@@ -62,37 +81,23 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 
-  // Check password
   const isPasswordValid = await comparePassword(password, user.password);
-
   if (!isPasswordValid) {
     const error = new Error("Invalid password");
     error.status = 401;
     throw error;
   }
 
-  // Check if user is banned
   if (user.status === "BANNED") {
     const error = new Error("User is banned");
     error.status = 403;
     throw error;
   }
 
-  // Generate token
-  const token = generateToken({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-    },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode },
     token,
   };
 };
@@ -101,16 +106,9 @@ export const getUserProfile = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      phone: true,
-      bio: true,
-      profileImage: true,
-      ratings: true,
-      createdAt: true,
-      updatedAt: true,
+      id: true, name: true, email: true, role: true, phone: true,
+      bio: true, profileImage: true, ratings: true, balance: true,
+      referralCode: true, createdAt: true, updatedAt: true,
     },
   });
 
@@ -126,19 +124,11 @@ export const getUserProfile = async (userId) => {
 export const updateUserProfile = async (userId, data) => {
   const user = await prisma.user.update({
     where: { id: userId },
-    data: {
-      ...data,
-    },
+    data: { ...data },
     select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      phone: true,
-      bio: true,
-      profileImage: true,
+      id: true, name: true, email: true, role: true, phone: true,
+      bio: true, profileImage: true, referralCode: true,
     },
   });
-
   return user;
 };

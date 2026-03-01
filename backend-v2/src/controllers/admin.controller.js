@@ -81,3 +81,51 @@ export const getSystemHealth = async (req, res, next) => {
     next(error);
   }
 };
+
+import { PrismaClient } from "@prisma/client";
+const _prisma = new PrismaClient();
+
+export const getCoupons = async (req, res, next) => {
+  try {
+    const coupons = await _prisma.coupon.findMany({
+      include: { _count: { select: { usages: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: coupons });
+  } catch (error) { next(error); }
+};
+
+export const createCoupon = async (req, res, next) => {
+  try {
+    const { code, amount, description, maxUses, expiresAt } = req.body;
+    if (!code?.trim() || !amount) return res.status(400).json({ success: false, error: 'Kod ve tutar zorunlu' });
+    const existing = await _prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
+    if (existing) return res.status(409).json({ success: false, error: 'Bu kupon kodu zaten mevcut' });
+    const coupon = await _prisma.coupon.create({
+      data: {
+        code: code.trim().toUpperCase(),
+        amount: Number(amount),
+        description: description || null,
+        maxUses: maxUses ? Number(maxUses) : null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      },
+    });
+    res.status(201).json({ success: true, data: coupon });
+  } catch (error) { next(error); }
+};
+
+export const deleteCoupon = async (req, res, next) => {
+  try {
+    await _prisma.coupon.delete({ where: { id: req.params.couponId } });
+    res.json({ success: true, message: 'Kupon silindi' });
+  } catch (error) { next(error); }
+};
+
+export const toggleCoupon = async (req, res, next) => {
+  try {
+    const coupon = await _prisma.coupon.findUnique({ where: { id: req.params.couponId } });
+    if (!coupon) return res.status(404).json({ success: false, error: 'Kupon bulunamadı' });
+    const updated = await _prisma.coupon.update({ where: { id: req.params.couponId }, data: { isActive: !coupon.isActive } });
+    res.json({ success: true, data: updated });
+  } catch (error) { next(error); }
+};

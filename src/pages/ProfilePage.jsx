@@ -137,12 +137,9 @@ function ProfilePage() {
   }
 
   const handleCopyReferral = () => {
-    // Ekranda hangi kod görünüyorsa onu belirle (Gerçek kod yoksa yedek kodu al)
-    const codeToCopy = user?.referralCode || (user?.id ? `USTAGO-${user.id.slice(-6).toUpperCase()}` : '');
-    
+    const codeToCopy = user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : '');
     if (codeToCopy) {
-      // Linkle beraber veya sadece kod olarak kopyala (Nasıl istersen)
-      navigator.clipboard.writeText(`https://app.ustagochannel.com/?ref=${codeToCopy}`)
+      navigator.clipboard.writeText(codeToCopy)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -298,30 +295,23 @@ function ProfilePage() {
               <Share2 size={20} className="text-blue-600" />
               <h3 className="font-bold text-gray-900">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Arkadaşını davet et, her biriniz ₺50 kupon al</p>
-            
-            <div className="flex gap-2">
-              {/* Kodun göründüğü alan */}
-              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2">
-                <code className="text-xs text-gray-600 font-mono truncate">
-  {user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : 'Kod Hazırlanıyor...')}
-</code>
+            <p className="text-sm text-gray-600 mb-3">Arkadaşına davet kodunu ver, her ikiniz de <strong>50 TL</strong> bakiye kazanın!</p>
+
+            <div className="flex gap-2 mb-2">
+              <div className="flex-1 flex items-center bg-white border-2 border-blue-200 rounded-xl px-3 py-2">
+                <code className="text-sm text-blue-700 font-black font-mono tracking-wider">
+                  {user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : 'Yükleniyor...')}
+                </code>
               </div>
-              
-              {/* Kopyala butonu */}
               <button
                 onClick={handleCopyReferral}
-                className="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2"
               >
                 <Copy size={16} />
-                {copied ? 'Kopyalandı' : 'Kopyala'}
+                {copied ? '✓ Kopyalandı!' : 'Kopyala'}
               </button>
             </div>
-
-            <div className="mt-2 text-xs text-gray-600">
-              <Gift size={14} className="inline mr-1" />
-              <strong>{user?.referralCount || 0}</strong> kişi davet edildi
-            </div>
+            <p className="text-xs text-gray-500">Arkadaşın kayıt olurken bu kodu girsin → ikinize de 50 TL yüklenir</p>
           </div>
         )}
 

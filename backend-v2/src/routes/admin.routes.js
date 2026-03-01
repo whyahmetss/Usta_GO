@@ -56,4 +56,10 @@ router.get("/statistics", adminController.getStatistics);
  */
 router.get("/health", adminController.getSystemHealth);
 
+// Coupon management
+router.get("/coupons", adminController.getCoupons);
+router.post("/coupons", adminController.createCoupon);
+router.delete("/coupons/:couponId", adminController.deleteCoupon);
+router.patch("/coupons/:couponId/toggle", adminController.toggleCoupon);
+
 export default router;
