@@ -62,7 +62,7 @@ function ProfilePage() {
           const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
           const activeCount = userJobs.filter(j => j.status === 'in_progress' || j.status === 'pending').length
           const offersCount = userJobs.filter(j => j.professional?.id === user?.id).length
-          const ratings = userJobs.filter(j => j.professionalRating).map(j => j.professionalRating)
+          const ratings = userJobs.filter(j => j.rating).map(j => j.rating)
           const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b) / ratings.length).toFixed(1) : 0
           const successRate = userJobs.length > 0 ? Math.round((completedCount / userJobs.length) * 100) : 0
 
@@ -83,7 +83,7 @@ function ProfilePage() {
             completedJobs: completedCount,
             totalSpent: 0,
             coupons: 0,
-            averageRating: 0,
+            averageRating: avgRating,
             thisMonthEarnings: thisMonthEarnings,
             rating: avgRating,
             successRate: successRate

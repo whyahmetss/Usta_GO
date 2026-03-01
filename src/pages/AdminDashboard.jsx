@@ -261,12 +261,12 @@ function AdminDashboard() {
                     </div>
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <span key={i} className={i < (job.rating?.customerRating || job.rating?.professionalRating || 0) ? '⭐' : '☆'} />
+                        <span key={i}>{i < (job.rating || 0) ? '⭐' : '☆'}</span>
                       ))}
                     </div>
                   </div>
-                  {job.rating?.review && (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded">"{job.rating.review}"</p>
+                  {job.ratingReview && (
+                    <p className="text-sm text-gray-700 bg-white p-2 rounded">"{job.ratingReview}"</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
                 </div>

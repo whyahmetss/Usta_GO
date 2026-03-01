@@ -363,7 +363,7 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
   return updatedJob;
 };
 
-export const rateJob = async (jobId, customerId, ratingData, review = "") => {
+export const rateJob = async (jobId, customerId, rating, review = "") => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
 
   if (!job) {
@@ -384,18 +384,36 @@ export const rateJob = async (jobId, customerId, ratingData, review = "") => {
     throw error;
   }
 
-  const updatedJob = await prisma.job.update({
-    where: { id: jobId },
-    data: {
-      status: "RATED",
-      rating: ratingData.rating,
-      ratingReview: review,
-      ratedAt: new Date(),
-    },
-    include: {
-      customer: { select: { id: true, name: true, email: true } },
-      usta: { select: { id: true, name: true, email: true } },
-    },
+  const updatedJob = await prisma.$transaction(async (tx) => {
+    const rated = await tx.job.update({
+      where: { id: jobId },
+      data: {
+        status: "RATED",
+        rating: rating,
+        ratingReview: review,
+        ratedAt: new Date(),
+      },
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+        usta: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // Usta'nın ortalama puanını güncelle
+    if (rated.ustaId) {
+      const ratedJobs = await tx.job.findMany({
+        where: { ustaId: rated.ustaId, rating: { not: null } },
+        select: { rating: true },
+      });
+      const avgRating =
+        ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length;
+      await tx.user.update({
+        where: { id: rated.ustaId },
+        data: { ratings: avgRating },
+      });
+    }
+
+    return rated;
   });
 
   return updatedJob;
