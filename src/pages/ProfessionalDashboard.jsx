@@ -63,6 +63,7 @@ function ProfessionalDashboard() {
   useEffect(() => {
     if (user?.role !== 'professional') return
 
+    // Ensure socket is connected
     const socket = connectSocket(user?.id)
 
     const handleNewJob = (jobData) => {
@@ -81,11 +82,20 @@ function ProfessionalDashboard() {
             ? { address: mappedJob.location }
             : (mappedJob.location || { address: 'Adres belirtilmedi' })
         }
+        console.log('Adding new job to dashboard:', normalizedJob)
         return [normalizedJob, ...prevJobs]
       })
     }
 
-    socket.on('new_job_available', handleNewJob)
+    // Wait for socket to connect before listening
+    if (socket.connected) {
+      socket.on('new_job_available', handleNewJob)
+    } else {
+      socket.once('connect', () => {
+        console.log('Socket connected, setting up new_job_available listener')
+        socket.on('new_job_available', handleNewJob)
+      })
+    }
 
     return () => {
       socket.off('new_job_available', handleNewJob)

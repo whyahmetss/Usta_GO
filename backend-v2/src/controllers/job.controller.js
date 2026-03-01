@@ -6,13 +6,7 @@ export const createJob = async (req, res, next) => {
   try {
     const job = await jobService.createJob(req.user.id, req.body);
     // Notify all connected professionals about the new job
-    io.emit("new_job_available", {
-      id: job.id,
-      title: job.title,
-      category: job.category,
-      location: job.location,
-      budget: job.budget,
-    });
+    io.sockets.emit("new_job_available", job);
     successResponse(res, job, "Job created successfully", 201);
   } catch (error) {
     next(error);
