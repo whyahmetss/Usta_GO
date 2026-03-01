@@ -5,6 +5,7 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { useNavigate } from 'react-router-dom'
+import { connectSocket, getSocket } from '../utils/socket'
 import HamburgerMenu from '../components/HamburgerMenu.jsx'
 import Logo from '../components/Logo'
 
@@ -57,6 +58,39 @@ function ProfessionalDashboard() {
       loadDashboardData()
     }
   }, [user])
+
+  // Listen for real-time new job updates
+  useEffect(() => {
+    if (user?.role !== 'professional') return
+
+    const socket = connectSocket(user?.id)
+
+    const handleNewJob = (jobData) => {
+      console.log('New job received via socket:', jobData)
+
+      setAllJobs(prevJobs => {
+        // Check if job already exists
+        const jobExists = prevJobs.some(j => j.id === jobData.id)
+        if (jobExists) return prevJobs
+
+        // Normalize and add new job
+        const mappedJob = mapJobsFromBackend([jobData])[0]
+        const normalizedJob = {
+          ...mappedJob,
+          location: typeof mappedJob.location === 'string'
+            ? { address: mappedJob.location }
+            : (mappedJob.location || { address: 'Adres belirtilmedi' })
+        }
+        return [normalizedJob, ...prevJobs]
+      })
+    }
+
+    socket.on('new_job_available', handleNewJob)
+
+    return () => {
+      socket.off('new_job_available', handleNewJob)
+    }
+  }, [user?.id, user?.role])
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   const myCompletedJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'completed' || j.status === 'rated'))
