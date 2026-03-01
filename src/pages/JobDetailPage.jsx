@@ -1,14 +1,71 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFiles } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
 import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
-import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2 } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { CameraSource } from '@capacitor/camera'
 import { getSocket, emitEvent } from '../utils/socket'
+
+// Usta location sharer component
+function UstaLocationSharer({ jobId }) {
+  const [sharing, setSharing] = useState(false)
+  const watchIdRef = useRef(null)
+
+  const startSharing = useCallback(() => {
+    if (!navigator.geolocation) return
+    setSharing(true)
+    const socket = getSocket()
+    if (socket) socket.emit('join_job_room', jobId)
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng, heading } = pos.coords
+        emitEvent('usta_location_update', { jobId, lat, lng, heading: heading || 0 })
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    )
+  }, [jobId])
+
+  const stopSharing = useCallback(() => {
+    setSharing(false)
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
+    const socket = getSocket()
+    if (socket) socket.emit('leave_job_room', jobId)
+  }, [jobId])
+
+  useEffect(() => () => stopSharing(), [stopSharing])
+
+  return (
+    <button
+      onClick={sharing ? stopSharing : startSharing}
+      className={`w-full py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-3 transition ${
+        sharing
+          ? 'bg-red-500 text-white'
+          : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
+      }`}
+    >
+      {sharing ? (
+        <>
+          <span className="w-3 h-3 bg-white rounded-full animate-ping" />
+          Konum Paylaşımını Durdur
+        </>
+      ) : (
+        <>
+          <Navigation2 size={20} />
+          Konumumu Paylaş (Müşteri Görsün)
+        </>
+      )}
+    </button>
+  )
+}
 
 function CameraModal({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null)
@@ -575,6 +632,11 @@ function JobDetailPage() {
             <Radio size={22} className="ml-4" />
             Canlı Takip
           </button>
+        )}
+
+        {/* Location Share Button - for usta when job is accepted or in_progress */}
+        {!isCustomer && (job.status === 'accepted' || job.status === 'in_progress') && (
+          <UstaLocationSharer jobId={job.id} />
         )}
 
         {/* Customer uploaded photos */}
