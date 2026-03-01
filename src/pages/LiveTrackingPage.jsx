@@ -25,8 +25,8 @@ const MAP_OPTIONS = {
   styles: MAP_STYLES,
 }
 
-// Default Istanbul center
-const DEFAULT_CENTER = { lat: 41.0082, lng: 28.9784 }
+// Taksim - iş adresi bilinmediğinde harita buraya odaklanır
+const DEFAULT_CENTER = { lat: 41.0370, lng: 28.9850 }
 
 // Smooth linear interpolation between two coords
 function lerp(a, b, t) {
@@ -43,19 +43,28 @@ function calcBearing(from, to) {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
 }
 
-// Simulated route points (fallback when no real GPS)
-const SIM_ROUTE = [
-  { lat: 41.0420, lng: 28.9860 },
-  { lat: 41.0380, lng: 28.9880 },
-  { lat: 41.0340, lng: 28.9900 },
-  { lat: 41.0300, lng: 28.9930 },
-  { lat: 41.0260, lng: 28.9950 },
-  { lat: 41.0220, lng: 28.9970 },
-  { lat: 41.0180, lng: 28.9990 },
-  { lat: 41.0140, lng: 29.0010 },
-  { lat: 41.0100, lng: 29.0030 },
-  { lat: 41.0082, lng: 28.9784 },
-]
+// Simülasyon için iş adresinden ~3 km kuzey-batısında başlayıp
+// doğrudan iş adresine gelen bir rota üret.
+// Yatay hareketi minimumda tut: boğaz yok, deniz yok.
+function buildSimRoute(destination) {
+  // Başlangıç noktası: hedefin ~3 km kuzeyinde, aynı lng bandında
+  const startLat = destination.lat + 0.027  // ~3 km kuzey
+  const startLng = destination.lng - 0.006  // hafif batıya offset (cadde etkisi)
+
+  const STEPS = 12
+  const points = []
+  for (let i = 0; i <= STEPS; i++) {
+    const t = i / STEPS
+    // Hafif S-eğrisi — gerçek sokak izlenimi verir, ama çizgiyi
+    // doğu yönüne (Boğaz'a) taşımaz
+    const curve = Math.sin(t * Math.PI) * 0.002
+    points.push({
+      lat: startLat + (destination.lat - startLat) * t,
+      lng: startLng + (destination.lng - startLng) * t + curve,
+    })
+  }
+  return points
+}
 
 const STATUS_STEPS = [
   { key: 'accepted', label: 'Kabul', icon: '✅' },
@@ -75,9 +84,9 @@ function LiveTrackingPage() {
 
   // Tracking state
   const [trackingStatus, setTrackingStatus] = useState('accepted')
-  const [markerPos, setMarkerPos] = useState(SIM_ROUTE[0])       // animated position
-  const [targetPos, setTargetPos] = useState(SIM_ROUTE[0])       // target to animate toward
-  const [routePath, setRoutePath] = useState([SIM_ROUTE[0]])     // traveled path
+  const [markerPos, setMarkerPos] = useState(DEFAULT_CENTER)
+  const [targetPos, setTargetPos] = useState(DEFAULT_CENTER)
+  const [routePath, setRoutePath] = useState([DEFAULT_CENTER])
   const [bearing, setBearing] = useState(0)
   const [eta, setEta] = useState(15)
   const [distance, setDistance] = useState(3.2)
@@ -87,9 +96,10 @@ function LiveTrackingPage() {
   const mapRef = useRef(null)
   const animFrameRef = useRef(null)
   const animStartRef = useRef(null)
-  const animFromRef = useRef(SIM_ROUTE[0])
-  const animToRef = useRef(SIM_ROUTE[0])
+  const animFromRef = useRef(DEFAULT_CENTER)
+  const animToRef = useRef(DEFAULT_CENTER)
   const simIndexRef = useRef(0)
+  const simRouteRef = useRef(buildSimRoute(DEFAULT_CENTER)) // dinamik rota
   const notifiedRef = useRef({ arrived: false, fiveMin: false, onWay: false })
 
   // ── Google Maps loader ──────────────────────────────────────────────
@@ -127,13 +137,19 @@ function LiveTrackingPage() {
       setDistance(0)
     }
 
-    // Set destination on map from job location
+    // İş adresine göre harita merkezini ve simülasyon rotasını ayarla
     if (job.location) {
       const loc = job.location
       if (typeof loc === 'object' && loc.lat && loc.lng) {
-        setMapCenter({ lat: Number(loc.lat), lng: Number(loc.lng) })
-        // Update last sim route point to actual destination
-        SIM_ROUTE[SIM_ROUTE.length - 1] = { lat: Number(loc.lat), lng: Number(loc.lng) }
+        const dest = { lat: Number(loc.lat), lng: Number(loc.lng) }
+        setMapCenter(dest)
+        // Destinasyona göre yeni rota üret — Boğaz geçilmez
+        const route = buildSimRoute(dest)
+        simRouteRef.current = route
+        simIndexRef.current = 0
+        setMarkerPos(route[0])
+        setTargetPos(route[0])
+        setRoutePath([route[0]])
       }
     }
   }, [job])
@@ -206,8 +222,9 @@ function LiveTrackingPage() {
     if (trackingStatus === 'completed' || trackingStatus === 'in_progress' || trackingStatus === 'arrived') return
 
     const interval = setInterval(() => {
+      const route = simRouteRef.current
       const idx = simIndexRef.current
-      if (idx >= SIM_ROUTE.length - 1) {
+      if (idx >= route.length - 1) {
         setTrackingStatus('arrived')
         setEta(0)
         setDistance(0)
@@ -218,7 +235,7 @@ function LiveTrackingPage() {
         return
       }
       simIndexRef.current = idx + 1
-      const next = SIM_ROUTE[idx + 1]
+      const next = route[idx + 1]
       setTargetPos(next)
 
       // Update ETA & distance
@@ -411,9 +428,9 @@ function LiveTrackingPage() {
             )}
 
             {/* Remaining route (simulated dashed) */}
-            {!isRealGps && simIndexRef.current < SIM_ROUTE.length - 1 && (
+            {!isRealGps && simIndexRef.current < simRouteRef.current.length - 1 && (
               <Polyline
-                path={SIM_ROUTE.slice(simIndexRef.current)}
+                path={simRouteRef.current.slice(simIndexRef.current)}
                 options={{
                   strokeColor: '#94a3b8',
                   strokeOpacity: 0.5,
