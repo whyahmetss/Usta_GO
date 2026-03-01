@@ -30,6 +30,9 @@ model User {
   ratings   Float      @default(0)
   balance   Float      @default(0)
 
+  // Referral
+  referralCode   String?  @unique
+
   // Relations
   createdJobs Job[]       @relation("jobsAsCustomer")
   acceptedJobs Job[]      @relation("jobsAsUsta")
@@ -39,6 +42,7 @@ model User {
   receivedMessages Message[] @relation("receiver")
   transactions Transaction[]
   complaints   Complaint[]    @relation("complaintsFiled")
+  couponUsages CouponUsage[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -246,6 +250,8 @@ enum TransactionType {
   EARNING
   WITHDRAWAL
   REFUND
+  COUPON
+  REFERRAL
 }
 
 enum TransactionStatus {
@@ -282,4 +288,35 @@ enum ComplaintStatus {
   OPEN
   RESOLVED
   REJECTED
+}
+
+// Coupon Model - Admin creates, customers redeem
+model Coupon {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  amount      Float
+  description String?
+  isActive    Boolean       @default(true)
+  maxUses     Int?
+  usedCount   Int           @default(0)
+  expiresAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  usages      CouponUsage[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usedAt    DateTime @default(now())
+
+  @@unique([couponId, userId])
+  @@index([userId])
+  @@index([couponId])
 }

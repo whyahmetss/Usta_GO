@@ -198,18 +198,6 @@ export function AuthProvider({ children }) {
         setUser(mappedUser)
         setUseLocalStorage(false)
 
-        // Referral kodu varsa kayıt sonrası kupon olarak da uygula
-        if (referralCode) {
-          try {
-            await fetchAPI(API_ENDPOINTS.WALLET.ADD_COUPON, {
-              method: 'POST',
-              body: { code: referralCode }
-            })
-          } catch {
-            // Sessizce devam et
-          }
-        }
-
         return { success: true, role: mappedUser.role }
       }
 

@@ -8,6 +8,7 @@ router.get('/', authMiddleware, walletController.getWalletBalance);
 router.get('/transactions', authMiddleware, walletController.getTransactions);
 router.get('/admin/withdrawals', authMiddleware, walletController.getAllWithdrawals);
 router.post('/withdraw', authMiddleware, walletController.createWithdrawal);
+router.post('/coupon', authMiddleware, walletController.redeemCoupon);
 router.patch('/withdraw/:id/approve', authMiddleware, walletController.approveWithdrawal);
 router.patch('/withdraw/:id/reject', authMiddleware, walletController.rejectWithdrawal);
 
