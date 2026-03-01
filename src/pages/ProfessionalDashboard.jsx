@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
@@ -20,44 +20,42 @@ function ProfessionalDashboard() {
   const unreadMessages = getUnreadMessageCount()
 
   // Load professional dashboard data
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        if (!allJobs.length) setLoading(true);
-        // Fetch pending job requests and my own jobs in parallel
-        const [pendingResponse, myJobsResponse] = await Promise.all([
-          fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
-          fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
-        ])
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const [pendingResponse, myJobsResponse] = await Promise.all([
+        fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
+        fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
+      ])
 
-        const pendingRaw = pendingResponse?.data || []
-        const myJobsRaw = myJobsResponse?.data || []
+      const pendingRaw = pendingResponse?.data || []
+      const myJobsRaw = myJobsResponse?.data || []
 
-        // Combine and deduplicate
-        const allRaw = [...pendingRaw, ...myJobsRaw]
-        const uniqueMap = new Map()
-        allRaw.forEach(j => uniqueMap.set(j.id, j))
-        const uniqueJobs = Array.from(uniqueMap.values())
+      const allRaw = [...pendingRaw, ...myJobsRaw]
+      const uniqueMap = new Map()
+      allRaw.forEach(j => uniqueMap.set(j.id, j))
+      const uniqueJobs = Array.from(uniqueMap.values())
 
-        const mappedJobs = mapJobsFromBackend(uniqueJobs)
-        const normalizedJobs = mappedJobs.map(job => ({
-          ...job,
-          location: typeof job.location === 'string'
-            ? { address: job.location }
-            : (job.location || { address: 'Adres belirtilmedi' })
-        }))
-        setAllJobs(normalizedJobs)
-      } catch (err) {
-        console.error('Load dashboard error:', err)
-      } finally {
-        setLoading(false)
-      }
+      const mappedJobs = mapJobsFromBackend(uniqueJobs)
+      const normalizedJobs = mappedJobs.map(job => ({
+        ...job,
+        location: typeof job.location === 'string'
+          ? { address: job.location }
+          : (job.location || { address: 'Adres belirtilmedi' })
+      }))
+      setAllJobs(normalizedJobs)
+    } catch (err) {
+      console.error('Load dashboard error:', err)
+    } finally {
+      setLoading(false)
     }
+  }, [user?.id])
 
+  useEffect(() => {
     if (user?.role === 'professional') {
       loadDashboardData()
     }
-  }, [user])
+  }, [user?.role, loadDashboardData])
 
   // Listen for real-time new job updates
   useEffect(() => {
@@ -65,32 +63,43 @@ function ProfessionalDashboard() {
 
     const socket = connectSocket(user?.id)
 
-    const handleNewJob = (jobData) => {
+    const handleNewJob = async (jobData) => {
       console.log('New job received via socket:', jobData)
+      try {
+        // Fetch full job from API — socket payload may be incomplete (deployed backend)
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(jobData.id))
+        const fullJob = response?.data
+        if (!fullJob) return
 
-      setAllJobs(prevJobs => {
-        // Check if job already exists
-        const jobExists = prevJobs.some(j => j.id === jobData.id)
-        if (jobExists) return prevJobs
+        setAllJobs(prevJobs => {
+          if (prevJobs.some(j => j.id === fullJob.id)) return prevJobs
+          const mappedJob = mapJobsFromBackend([fullJob])[0]
+          const normalizedJob = {
+            ...mappedJob,
+            location: typeof mappedJob.location === 'string'
+              ? { address: mappedJob.location }
+              : (mappedJob.location || { address: 'Adres belirtilmedi' })
+          }
+          return [normalizedJob, ...prevJobs]
+        })
+      } catch (err) {
+        console.error('Fetch new job error:', err)
+      }
+    }
 
-        // Normalize and add new job
-        const mappedJob = mapJobsFromBackend([jobData])[0]
-        const normalizedJob = {
-          ...mappedJob,
-          location: typeof mappedJob.location === 'string'
-            ? { address: mappedJob.location }
-            : (mappedJob.location || { address: 'Adres belirtilmedi' })
-        }
-        return [normalizedJob, ...prevJobs]
-      })
+    // Reload on reconnect — Render.com restarts drop all socket connections
+    const handleConnect = () => {
+      loadDashboardData()
     }
 
     socket.on('new_job_available', handleNewJob)
+    socket.on('connect', handleConnect)
 
     return () => {
       socket.off('new_job_available', handleNewJob)
+      socket.off('connect', handleConnect)
     }
-  }, [user?.id, user?.role])
+  }, [user?.id, user?.role, loadDashboardData])
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   const myCompletedJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'completed' || j.status === 'rated'))
