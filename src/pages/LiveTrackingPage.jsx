@@ -40,21 +40,6 @@ function calcBearing(from, to) {
 }
 
 // Simülasyon rotası — gerçek GPS yoksa kullanılır
-function buildSimRoute(destination) {
-  const startLat = destination.lat + 0.027
-  const startLng = destination.lng - 0.006
-  const STEPS = 12
-  const points = []
-  for (let i = 0; i <= STEPS; i++) {
-    const t = i / STEPS
-    const curve = Math.sin(t * Math.PI) * 0.002
-    points.push({
-      lat: startLat + (destination.lat - startLat) * t,
-      lng: startLng + (destination.lng - startLng) * t + curve,
-    })
-  }
-  return points
-}
 
 const STATUS_STEPS = [
   { key: 'accepted', label: 'Kabul', icon: '✅' },
@@ -434,18 +419,6 @@ function LiveTrackingPage() {
               />
             )}
 
-            {/* GPS yoksa → simülasyon rotası (gri kesikli) */}
-            {!isRealGps && simIndexRef.current < simRouteRef.current.length - 1 && (
-              <Polyline
-                path={simRouteRef.current.slice(simIndexRef.current)}
-                options={{
-                  strokeColor: '#94a3b8',
-                  strokeOpacity: 0.5,
-                  strokeWeight: 3,
-                  geodesic: true,
-                }}
-              />
-            )}
 
             {/* Usta marker — sadece pozisyon hazırsa göster */}
             {ustaIcon && markerPos && (
