@@ -90,6 +90,9 @@ function LiveTrackingPage() {
   // Directions API'den gelen gerçek sokak rotası
   const [realRoutePoints, setRealRoutePoints] = useState([])
 
+  // Geocoding sonrası gerçek hedef koordinatı
+  const [destination, setDestination] = useState(DEFAULT_CENTER)
+
   const mapRef = useRef(null)
   const animFrameRef = useRef(null)
   const animFromRef = useRef(INITIAL_POS)
@@ -136,11 +139,35 @@ function LiveTrackingPage() {
       setDistance(0)
     }
 
-    if (job.location) {
-      const loc = job.location
-      if (typeof loc === 'object' && loc.lat && loc.lng) {
-        const dest = { lat: Number(loc.lat), lng: Number(loc.lng) }
+    // Sadece object {lat,lng} konumlar için; string adresler aşağıda geocode edilir
+    if (job.location && typeof job.location === 'object' && job.location.lat && job.location.lng) {
+      const dest = { lat: Number(job.location.lat), lng: Number(job.location.lng) }
+      destinationRef.current = dest
+      setDestination(dest)
+      setMapCenter(dest)
+      const route = buildSimRoute(dest)
+      simRouteRef.current = route
+      simIndexRef.current = 0
+      setMarkerPos(route[0])
+      setTargetPos(route[0])
+      setRoutePath([route[0]])
+    }
+  }, [job])
+
+  // ── Geocoding: string adres → gerçek koordinat ────────────────────
+  useEffect(() => {
+    if (!isLoaded || !job) return
+    const loc = job.location
+    // Sadece string adres varsa geocode et
+    if (!loc || typeof loc !== 'string' || !loc.trim()) return
+
+    const geocoder = new window.google.maps.Geocoder()
+    geocoder.geocode({ address: loc }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        const pos = results[0].geometry.location
+        const dest = { lat: pos.lat(), lng: pos.lng() }
         destinationRef.current = dest
+        setDestination(dest)
         setMapCenter(dest)
         const route = buildSimRoute(dest)
         simRouteRef.current = route
@@ -149,8 +176,8 @@ function LiveTrackingPage() {
         setTargetPos(route[0])
         setRoutePath([route[0]])
       }
-    }
-  }, [job])
+    })
+  }, [isLoaded, job])
 
   // ── Directions API: gerçek sokak rotası ───────────────────────────
   const fetchDirectionsRoute = useCallback((origin, dest) => {
@@ -332,13 +359,7 @@ function LiveTrackingPage() {
     anchor: new window.google.maps.Point(18, 44),
   } : null
 
-  const destination = (() => {
-    if (!job?.location) return DEFAULT_CENTER
-    if (typeof job.location === 'object' && job.location.lat) {
-      return { lat: Number(job.location.lat), lng: Number(job.location.lng) }
-    }
-    return DEFAULT_CENTER
-  })()
+  // destination artık state'te tutuluyor (geocoding sonrası güncellenir)
 
   const currentStep = STATUS_STEPS.findIndex(s => s.key === trackingStatus)
 
