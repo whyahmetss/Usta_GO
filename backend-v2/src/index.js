@@ -122,6 +122,23 @@ io.on("connection", (socket) => {
     io.to(`user_${receiverId}`).emit("user_stop_typing", { userId });
   });
 
+  // Usta real-time location update → broadcast to job room
+  socket.on("usta_location_update", (data) => {
+    const { jobId, lat, lng, heading } = data;
+    if (jobId && lat && lng) {
+      io.to(`job_${jobId}`).emit("location_updated", { lat, lng, heading: heading || 0 });
+    }
+  });
+
+  // Join job room (for live tracking)
+  socket.on("join_job_room", (jobId) => {
+    socket.join(`job_${jobId}`);
+  });
+
+  socket.on("leave_job_room", (jobId) => {
+    socket.leave(`job_${jobId}`);
+  });
+
   // Online status
   socket.on("user_online", (userId) => {
     io.emit("user_status_changed", { userId, status: "online" });
