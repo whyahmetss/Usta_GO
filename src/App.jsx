@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { MapsProvider } from './context/MapsContext'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
 import ProfessionalDashboard from './pages/ProfessionalDashboard'
@@ -146,7 +147,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <MapsProvider>
+          <AppRoutes />
+        </MapsProvider>
       </AuthProvider>
     </BrowserRouter>
   )

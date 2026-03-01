@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
 import { emitEvent } from '../utils/socket'
+import { useMaps } from '../context/MapsContext'
 
 function CreateJobPage() {
   const { user, createJob } = useAuth()
@@ -22,6 +23,35 @@ function CreateJobPage() {
   const [activeCoupons, setActiveCoupons] = useState([])
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState(null)
+
+  // Google Places Autocomplete
+  const addressInputRef = useRef(null)
+  const autocompleteRef = useRef(null)
+  const { isLoaded } = useMaps()
+
+  useEffect(() => {
+    if (!isLoaded || !addressInputRef.current) return
+    const autocomplete = new window.google.maps.places.Autocomplete(
+      addressInputRef.current,
+      {
+        componentRestrictions: { country: 'tr' },
+        fields: ['formatted_address'],
+        types: ['address'],
+      }
+    )
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace()
+      if (place.formatted_address) {
+        setAddress(place.formatted_address)
+      }
+    })
+    autocompleteRef.current = autocomplete
+    return () => {
+      if (window.google?.maps?.event) {
+        window.google.maps.event.clearInstanceListeners(autocomplete)
+      }
+    }
+  }, [isLoaded])
 
   // Bölgeye göre fiyat çarpanı
   const getRegionMultiplier = (addr) => {
@@ -201,7 +231,15 @@ function CreateJobPage() {
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <h3 className="font-bold mb-3 text-gray-900 text-left text-red-600"><MapPin size={18} className="inline mr-1" />Tam Adres *</h3>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500" placeholder="Örn: Kadıköy, Caferağa Mah. Moda Cad. No:5" />
+              <input
+                ref={addressInputRef}
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500"
+                placeholder="Örn: Kadıköy, Caferağa Mah. Moda Cad. No:5"
+                autoComplete="off"
+              />
             </div>
 
             <button 
