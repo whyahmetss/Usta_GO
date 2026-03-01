@@ -25,15 +25,12 @@ const MAP_OPTIONS = {
   styles: MAP_STYLES,
 }
 
-// Taksim - iş adresi bilinmediğinde harita buraya odaklanır
 const DEFAULT_CENTER = { lat: 41.0370, lng: 28.9850 }
 
-// Smooth linear interpolation between two coords
 function lerp(a, b, t) {
   return { lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t }
 }
 
-// Calculate bearing between two points (for icon rotation)
 function calcBearing(from, to) {
   const dLng = (to.lng - from.lng) * (Math.PI / 180)
   const lat1 = from.lat * (Math.PI / 180)
@@ -43,20 +40,14 @@ function calcBearing(from, to) {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
 }
 
-// Simülasyon için iş adresinden ~3 km kuzey-batısında başlayıp
-// doğrudan iş adresine gelen bir rota üret.
-// Yatay hareketi minimumda tut: boğaz yok, deniz yok.
+// Simülasyon rotası — gerçek GPS yoksa kullanılır
 function buildSimRoute(destination) {
-  // Başlangıç noktası: hedefin ~3 km kuzeyinde, aynı lng bandında
-  const startLat = destination.lat + 0.027  // ~3 km kuzey
-  const startLng = destination.lng - 0.006  // hafif batıya offset (cadde etkisi)
-
+  const startLat = destination.lat + 0.027
+  const startLng = destination.lng - 0.006
   const STEPS = 12
   const points = []
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS
-    // Hafif S-eğrisi — gerçek sokak izlenimi verir, ama çizgiyi
-    // doğu yönüne (Boğaz'a) taşımaz
     const curve = Math.sin(t * Math.PI) * 0.002
     points.push({
       lat: startLat + (destination.lat - startLat) * t,
@@ -74,6 +65,10 @@ const STATUS_STEPS = [
   { key: 'completed', label: 'Bitti', icon: '🎉' },
 ]
 
+// Simülasyon başlangıç pozisyonu (harita yüklenince marker buradan başlar)
+const INITIAL_SIM_ROUTE = buildSimRoute(DEFAULT_CENTER)
+const INITIAL_POS = INITIAL_SIM_ROUTE[0]
+
 function LiveTrackingPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -82,33 +77,37 @@ function LiveTrackingPage() {
   const [job, setJob] = useState(() => jobs.find(j => j.id === id) || null)
   const [jobLoading, setJobLoading] = useState(!job)
 
-  // Tracking state
   const [trackingStatus, setTrackingStatus] = useState('accepted')
-  const [markerPos, setMarkerPos] = useState(DEFAULT_CENTER)
-  const [targetPos, setTargetPos] = useState(DEFAULT_CENTER)
-  const [routePath, setRoutePath] = useState([DEFAULT_CENTER])
+  const [markerPos, setMarkerPos] = useState(INITIAL_POS)
+  const [targetPos, setTargetPos] = useState(INITIAL_POS)
+  const [routePath, setRoutePath] = useState([INITIAL_POS])
   const [bearing, setBearing] = useState(0)
   const [eta, setEta] = useState(15)
   const [distance, setDistance] = useState(3.2)
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER)
   const [isRealGps, setIsRealGps] = useState(false)
 
+  // Directions API'den gelen gerçek sokak rotası
+  const [realRoutePoints, setRealRoutePoints] = useState([])
+
   const mapRef = useRef(null)
   const animFrameRef = useRef(null)
+  const animFromRef = useRef(INITIAL_POS)
+  const animToRef = useRef(INITIAL_POS)
   const animStartRef = useRef(null)
-  const animFromRef = useRef(DEFAULT_CENTER)
-  const animToRef = useRef(DEFAULT_CENTER)
   const simIndexRef = useRef(0)
-  const simRouteRef = useRef(buildSimRoute(DEFAULT_CENTER)) // dinamik rota
+  const simRouteRef = useRef(INITIAL_SIM_ROUTE)
   const notifiedRef = useRef({ arrived: false, fiveMin: false, onWay: false })
+  const directionsServiceRef = useRef(null)
+  const lastDirectionsFetchRef = useRef(0)
+  const destinationRef = useRef(DEFAULT_CENTER)
 
-  // ── Google Maps loader ──────────────────────────────────────────────
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     id: 'google-map-script',
   })
 
-  // ── Fetch job if not in state ───────────────────────────────────────
+  // ── Fetch job ─────────────────────────────────────────────────────
   useEffect(() => {
     if (job) return
     const load = async () => {
@@ -124,7 +123,7 @@ function LiveTrackingPage() {
     load()
   }, [id, job])
 
-  // ── Map job status to tracking status ──────────────────────────────
+  // ── Job durum → tracking status ───────────────────────────────────
   useEffect(() => {
     if (!job) return
     if (job.status === 'completed' || job.status === 'rated') {
@@ -137,13 +136,12 @@ function LiveTrackingPage() {
       setDistance(0)
     }
 
-    // İş adresine göre harita merkezini ve simülasyon rotasını ayarla
     if (job.location) {
       const loc = job.location
       if (typeof loc === 'object' && loc.lat && loc.lng) {
         const dest = { lat: Number(loc.lat), lng: Number(loc.lng) }
+        destinationRef.current = dest
         setMapCenter(dest)
-        // Destinasyona göre yeni rota üret — Boğaz geçilmez
         const route = buildSimRoute(dest)
         simRouteRef.current = route
         simIndexRef.current = 0
@@ -154,57 +152,90 @@ function LiveTrackingPage() {
     }
   }, [job])
 
-  // ── Smooth animation engine ─────────────────────────────────────────
-  // Called when targetPos changes → smoothly slides markerPos toward it
+  // ── Directions API: gerçek sokak rotası ───────────────────────────
+  const fetchDirectionsRoute = useCallback((origin, dest) => {
+    if (!window.google?.maps?.DirectionsService) return
+    const now = Date.now()
+    if (now - lastDirectionsFetchRef.current < 20000) return // 20 saniyede bir yenile
+    lastDirectionsFetchRef.current = now
+
+    if (!directionsServiceRef.current) {
+      directionsServiceRef.current = new window.google.maps.DirectionsService()
+    }
+
+    directionsServiceRef.current.route(
+      {
+        origin: { lat: origin.lat, lng: origin.lng },
+        destination: { lat: dest.lat, lng: dest.lng },
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === 'OK' && result.routes[0]) {
+          const route = result.routes[0]
+          const leg = route.legs[0]
+          // Genel rota noktalarını al
+          const points = route.overview_path.map(p => ({ lat: p.lat(), lng: p.lng() }))
+          setRealRoutePoints(points)
+          // ETA ve mesafeyi API'den al
+          setEta(Math.ceil(leg.duration.value / 60))
+          setDistance(Math.round(leg.distance.value / 100) / 10)
+        }
+      }
+    )
+  }, [])
+
+  // ── Smooth animation engine ─────────────────────────────────────
   const animateTo = useCallback((newTarget) => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
     const from = { ...markerPos }
     animFromRef.current = from
     animToRef.current = newTarget
     animStartRef.current = performance.now()
-    const DURATION = 2000 // ms - adjust for faster/slower slide
+    const DURATION = 2000
 
     const step = (now) => {
       const elapsed = now - animStartRef.current
       const t = Math.min(elapsed / DURATION, 1)
-      // Ease-out curve for natural deceleration
       const eased = 1 - Math.pow(1 - t, 3)
       const pos = lerp(animFromRef.current, animToRef.current, eased)
       setMarkerPos(pos)
-      setRoutePath(prev => [...prev.slice(-50), pos]) // keep last 50 pts
+      setRoutePath(prev => [...prev.slice(-50), pos])
       if (t < 1) {
         animFrameRef.current = requestAnimationFrame(step)
       }
     }
     animFrameRef.current = requestAnimationFrame(step)
-
-    // Update bearing for icon rotation
     setBearing(calcBearing(from, newTarget))
   }, [markerPos])
 
-  // Update animation when target changes
   useEffect(() => {
     animateTo(targetPos)
     return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetPos])
 
-  // ── Socket.IO: listen for real GPS from usta ────────────────────────
+  // ── Gerçek GPS gelince Directions API çek ────────────────────────
+  useEffect(() => {
+    if (!isRealGps || !isLoaded) return
+    fetchDirectionsRoute(targetPos, destinationRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetPos, isRealGps, isLoaded])
+
+  // ── Socket.IO: usta'dan gerçek GPS al ────────────────────────────
   useEffect(() => {
     const socket = getSocket()
     if (!socket) return
 
-    // Join job room for location updates
     socket.emit('join_job_room', id)
 
     const onLocation = (data) => {
       if (data.lat && data.lng) {
         setIsRealGps(true)
-        setTargetPos({ lat: data.lat, lng: data.lng })
+        const newPos = { lat: data.lat, lng: data.lng }
+        setTargetPos(newPos)
         if (data.heading !== undefined) setBearing(data.heading)
-        // Pan map to follow usta
         if (mapRef.current) {
-          mapRef.current.panTo({ lat: data.lat, lng: data.lng })
+          mapRef.current.panTo(newPos)
         }
       }
     }
@@ -216,7 +247,7 @@ function LiveTrackingPage() {
     }
   }, [id])
 
-  // ── Simulated movement (fallback when no real GPS) ──────────────────
+  // ── Simülasyon (gerçek GPS yoksa) ────────────────────────────────
   useEffect(() => {
     if (isRealGps) return
     if (trackingStatus === 'completed' || trackingStatus === 'in_progress' || trackingStatus === 'arrived') return
@@ -238,7 +269,6 @@ function LiveTrackingPage() {
       const next = route[idx + 1]
       setTargetPos(next)
 
-      // Update ETA & distance
       setEta(prev => {
         const next = Math.max(0, Math.round((prev - 1.5) * 10) / 10)
         if (!notifiedRef.current.fiveMin && next <= 5 && next > 3.5) {
@@ -249,11 +279,9 @@ function LiveTrackingPage() {
       })
       setDistance(prev => Math.max(0, Math.round((prev - 0.32) * 100) / 100))
 
-      // Pan map
       if (mapRef.current) mapRef.current.panTo(next)
-    }, 4000) // move every 4s
+    }, 4000)
 
-    // Initial status after 2s
     const timer = setTimeout(() => {
       if (trackingStatus === 'accepted') {
         setTrackingStatus('on_the_way')
@@ -267,7 +295,7 @@ function LiveTrackingPage() {
     return () => { clearInterval(interval); clearTimeout(timer) }
   }, [isRealGps, trackingStatus, addNotification, user?.id])
 
-  // ── Usta icon SVG (rotates with bearing) ───────────────────────────
+  // ── Usta ikonu ──────────────────────────────────────────────────
   const ustaIconSvg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
       <defs>
@@ -279,12 +307,9 @@ function LiveTrackingPage() {
         <circle cx="24" cy="24" r="20" fill="#2563eb" opacity="0.15"/>
         <circle cx="24" cy="24" r="14" fill="#2563eb"/>
         <circle cx="24" cy="24" r="12" fill="#1d4ed8"/>
-        <!-- Arrow pointing up (direction of travel) -->
         <path d="M24 10 L30 22 L24 19 L18 22 Z" fill="white"/>
-        <!-- Wrench icon -->
         <text x="24" y="30" text-anchor="middle" font-size="10" fill="white">🔧</text>
       </g>
-      <!-- Pulsing ring -->
       <circle cx="24" cy="24" r="22" fill="none" stroke="#2563eb" stroke-width="2" opacity="0.4"/>
     </svg>
   `
@@ -307,7 +332,6 @@ function LiveTrackingPage() {
     anchor: new window.google.maps.Point(18, 44),
   } : null
 
-  // ── Job destination coords ──────────────────────────────────────────
   const destination = (() => {
     if (!job?.location) return DEFAULT_CENTER
     if (typeof job.location === 'object' && job.location.lat) {
@@ -324,7 +348,6 @@ function LiveTrackingPage() {
     return `${Math.ceil(m)} dk`
   }
 
-  // ── Loading/error states ─────────────────────────────────────────────
   if (jobLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -366,7 +389,6 @@ function LiveTrackingPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ── MAP ─────────────────────────────────────────────────────── */}
       <div className="relative" style={{ height: '55vh' }}>
-        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-4 left-4 z-20 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center"
@@ -374,15 +396,15 @@ function LiveTrackingPage() {
           <ArrowLeft size={20} className="text-gray-700" />
         </button>
 
-        {/* GPS live badge */}
+        {/* GPS canlı rozeti */}
         {isRealGps && (
           <div className="absolute top-4 left-16 z-20 flex items-center gap-1.5 bg-white rounded-full shadow-md px-3 py-1.5">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs font-bold text-green-600">Canlı</span>
+            <span className="text-xs font-bold text-green-600">Canlı GPS</span>
           </div>
         )}
 
-        {/* ETA badge */}
+        {/* ETA rozeti */}
         {trackingStatus !== 'completed' && trackingStatus !== 'in_progress' && (
           <div className="absolute top-4 right-4 z-20 bg-white rounded-2xl shadow-lg px-4 py-2">
             <div className="flex items-center gap-2">
@@ -395,7 +417,6 @@ function LiveTrackingPage() {
           </div>
         )}
 
-        {/* Arrived overlay */}
         {trackingStatus === 'arrived' && (
           <div className="absolute inset-0 z-20 bg-green-500/20 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white rounded-3xl shadow-2xl px-8 py-6 text-center mx-4">
@@ -414,7 +435,7 @@ function LiveTrackingPage() {
             options={MAP_OPTIONS}
             onLoad={(map) => { mapRef.current = map }}
           >
-            {/* Traveled route line */}
+            {/* Geçilen yol (mavi solid) */}
             {routePath.length > 1 && (
               <Polyline
                 path={routePath}
@@ -427,7 +448,20 @@ function LiveTrackingPage() {
               />
             )}
 
-            {/* Remaining route (simulated dashed) */}
+            {/* Gerçek GPS varsa → Directions API sokak rotası (gri kesikli) */}
+            {isRealGps && realRoutePoints.length > 1 && (
+              <Polyline
+                path={realRoutePoints}
+                options={{
+                  strokeColor: '#64748b',
+                  strokeOpacity: 0.6,
+                  strokeWeight: 4,
+                  geodesic: true,
+                }}
+              />
+            )}
+
+            {/* GPS yoksa → simülasyon rotası (gri kesikli) */}
             {!isRealGps && simIndexRef.current < simRouteRef.current.length - 1 && (
               <Polyline
                 path={simRouteRef.current.slice(simIndexRef.current)}
@@ -435,13 +469,12 @@ function LiveTrackingPage() {
                   strokeColor: '#94a3b8',
                   strokeOpacity: 0.5,
                   strokeWeight: 3,
-                  strokeDashArray: '8 6',
                   geodesic: true,
                 }}
               />
             )}
 
-            {/* Usta marker (moving) */}
+            {/* Usta marker */}
             {ustaIcon && (
               <Marker
                 position={markerPos}
@@ -450,7 +483,7 @@ function LiveTrackingPage() {
               />
             )}
 
-            {/* Destination marker */}
+            {/* Hedef marker */}
             {destIcon && destination && (
               <Marker
                 position={destination}
@@ -459,7 +492,7 @@ function LiveTrackingPage() {
               />
             )}
 
-            {/* Pulse ring around usta via OverlayView */}
+            {/* Pulse ring */}
             <OverlayView
               position={markerPos}
               mapPaneName={OverlayView.OVERLAY_LAYER}
@@ -480,10 +513,9 @@ function LiveTrackingPage() {
       {/* ── BOTTOM SHEET ────────────────────────────────────────────── */}
       <div className="flex-1 bg-white rounded-t-3xl -mt-4 relative z-10 shadow-2xl overflow-auto">
         <div className="px-5 pt-4 pb-8 space-y-4">
-          {/* Handle */}
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto" />
 
-          {/* Status steps */}
+          {/* Status adımları */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               {STATUS_STEPS.map((step, i) => (
@@ -509,7 +541,7 @@ function LiveTrackingPage() {
             </div>
           </div>
 
-          {/* ETA cards */}
+          {/* ETA kartları */}
           {trackingStatus !== 'completed' && (
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-3 text-center text-white shadow-lg">
@@ -530,7 +562,7 @@ function LiveTrackingPage() {
             </div>
           )}
 
-          {/* Professional info */}
+          {/* Usta bilgisi */}
           {professional && (
             <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center gap-4">
@@ -564,7 +596,7 @@ function LiveTrackingPage() {
             </div>
           )}
 
-          {/* Job address */}
+          {/* İş adresi */}
           <div className="bg-gray-50 rounded-2xl p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
@@ -579,7 +611,7 @@ function LiveTrackingPage() {
             </div>
           </div>
 
-          {/* Completed */}
+          {/* Tamamlandı */}
           {trackingStatus === 'completed' && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 text-center">
               <CheckCircle size={40} className="text-green-500 mx-auto mb-2" />
@@ -594,7 +626,7 @@ function LiveTrackingPage() {
             </div>
           )}
 
-          {/* Actions */}
+          {/* Aksiyonlar */}
           <div className="space-y-3 pb-2">
             <button onClick={() => navigate(`/job/${job.id}`)}
               className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
