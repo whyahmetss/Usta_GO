@@ -64,10 +64,6 @@ const STATUS_STEPS = [
   { key: 'completed', label: 'Bitti', icon: '🎉' },
 ]
 
-// Simülasyon başlangıç pozisyonu (harita yüklenince marker buradan başlar)
-const INITIAL_SIM_ROUTE = buildSimRoute(DEFAULT_CENTER)
-const INITIAL_POS = INITIAL_SIM_ROUTE[0]
-
 function LiveTrackingPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -77,28 +73,28 @@ function LiveTrackingPage() {
   const [jobLoading, setJobLoading] = useState(!job)
 
   const [trackingStatus, setTrackingStatus] = useState('accepted')
-  const [markerPos, setMarkerPos] = useState(INITIAL_POS)
-  const [targetPos, setTargetPos] = useState(INITIAL_POS)
-  const [routePath, setRoutePath] = useState([INITIAL_POS])
+  // null = usta GPS paylaşmadı, marker gösterilmez
+  const [markerPos, setMarkerPos] = useState(null)
+  const [targetPos, setTargetPos] = useState(null)
+  const [routePath, setRoutePath] = useState([])
   const [bearing, setBearing] = useState(0)
-  const [eta, setEta] = useState(15)
-  const [distance, setDistance] = useState(3.2)
+  const [eta, setEta] = useState(null)
+  const [distance, setDistance] = useState(null)
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER)
   const [isRealGps, setIsRealGps] = useState(false)
+  const [destinationReady, setDestinationReady] = useState(false)
 
-  // Directions API'den gelen gerçek sokak rotası
+  // Directions API sokak rotası
   const [realRoutePoints, setRealRoutePoints] = useState([])
 
-  // Geocoding sonrası gerçek hedef koordinatı
+  // Geocoding sonrası müşteri adresinin koordinatı
   const [destination, setDestination] = useState(DEFAULT_CENTER)
 
   const mapRef = useRef(null)
   const animFrameRef = useRef(null)
-  const animFromRef = useRef(INITIAL_POS)
-  const animToRef = useRef(INITIAL_POS)
+  const animFromRef = useRef(null)
+  const animToRef = useRef(null)
   const animStartRef = useRef(null)
-  const simIndexRef = useRef(0)
-  const simRouteRef = useRef(INITIAL_SIM_ROUTE)
   const notifiedRef = useRef({ arrived: false, fiveMin: false, onWay: false })
   const directionsServiceRef = useRef(null)
   const lastDirectionsFetchRef = useRef(0)
@@ -135,20 +131,20 @@ function LiveTrackingPage() {
       setDistance(0)
     }
 
-    // Sadece object {lat,lng} konumlar için; string adresler aşağıda geocode edilir
+    // Object {lat,lng} konumlar için
     if (job.location && typeof job.location === 'object' && job.location.lat && job.location.lng) {
       const dest = { lat: Number(job.location.lat), lng: Number(job.location.lng) }
-      destinationRef.current = dest
-      setDestination(dest)
-      setMapCenter(dest)
-      const route = buildSimRoute(dest)
-      simRouteRef.current = route
-      simIndexRef.current = 0
-      setMarkerPos(route[0])
-      setTargetPos(route[0])
-      setRoutePath([route[0]])
+      applyDestination(dest)
     }
   }, [job])
+
+  // Sadece müşteri adresini/haritayı ayarlar — usta marker'ı DOKUNMAZ
+  const applyDestination = useCallback((dest) => {
+    destinationRef.current = dest
+    setDestination(dest)
+    setMapCenter(dest)
+    setDestinationReady(true)
+  }, [])
 
   // ── Geocoding: string adres → gerçek koordinat ────────────────────
   useEffect(() => {
@@ -161,19 +157,13 @@ function LiveTrackingPage() {
     geocoder.geocode({ address: loc }, (results, status) => {
       if (status === 'OK' && results[0]) {
         const pos = results[0].geometry.location
-        const dest = { lat: pos.lat(), lng: pos.lng() }
-        destinationRef.current = dest
-        setDestination(dest)
-        setMapCenter(dest)
-        const route = buildSimRoute(dest)
-        simRouteRef.current = route
-        simIndexRef.current = 0
-        setMarkerPos(route[0])
-        setTargetPos(route[0])
-        setRoutePath([route[0]])
+        applyDestination({ lat: pos.lat(), lng: pos.lng() })
+      } else {
+        // Geocoding başarısız → DEFAULT_CENTER ile başla
+        applyDestination(DEFAULT_CENTER)
       }
     })
-  }, [isLoaded, job])
+  }, [isLoaded, job, applyDestination])
 
   // ── Directions API: gerçek sokak rotası ───────────────────────────
   const fetchDirectionsRoute = useCallback((origin, dest) => {
@@ -209,8 +199,9 @@ function LiveTrackingPage() {
 
   // ── Smooth animation engine ─────────────────────────────────────
   const animateTo = useCallback((newTarget) => {
+    if (!newTarget) return
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
-    const from = { ...markerPos }
+    const from = animFromRef.current ?? newTarget
     animFromRef.current = from
     animToRef.current = newTarget
     animStartRef.current = performance.now()
@@ -232,6 +223,7 @@ function LiveTrackingPage() {
   }, [markerPos])
 
   useEffect(() => {
+    if (!targetPos) return
     animateTo(targetPos)
     return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,12 +245,21 @@ function LiveTrackingPage() {
 
     const onLocation = (data) => {
       if (data.lat && data.lng) {
-        setIsRealGps(true)
         const newPos = { lat: data.lat, lng: data.lng }
+        // İlk GPS gelişinde animFrom'u aynı noktaya set et (zıplama olmasın)
+        if (!isRealGps) {
+          animFromRef.current = newPos
+          setMarkerPos(newPos)
+          setIsRealGps(true)
+        }
         setTargetPos(newPos)
         if (data.heading !== undefined) setBearing(data.heading)
-        if (mapRef.current) {
-          mapRef.current.panTo(newPos)
+        // Haritayı usta + müşteri adresini birlikte gösterecek şekilde ayarla
+        if (mapRef.current && destinationRef.current) {
+          const bounds = new window.google.maps.LatLngBounds()
+          bounds.extend(newPos)
+          bounds.extend(destinationRef.current)
+          mapRef.current.fitBounds(bounds, { top: 80, bottom: 200, left: 40, right: 40 })
         }
       }
     }
@@ -270,53 +271,7 @@ function LiveTrackingPage() {
     }
   }, [id])
 
-  // ── Simülasyon (gerçek GPS yoksa) ────────────────────────────────
-  useEffect(() => {
-    if (isRealGps) return
-    if (trackingStatus === 'completed' || trackingStatus === 'in_progress' || trackingStatus === 'arrived') return
-
-    const interval = setInterval(() => {
-      const route = simRouteRef.current
-      const idx = simIndexRef.current
-      if (idx >= route.length - 1) {
-        setTrackingStatus('arrived')
-        setEta(0)
-        setDistance(0)
-        if (!notifiedRef.current.arrived) {
-          notifiedRef.current.arrived = true
-          addNotification({ type: 'tracking', title: '🎉 Usta Geldi!', message: 'Ustanız kapınızda', targetUserId: user?.id })
-        }
-        return
-      }
-      simIndexRef.current = idx + 1
-      const next = route[idx + 1]
-      setTargetPos(next)
-
-      setEta(prev => {
-        const next = Math.max(0, Math.round((prev - 1.5) * 10) / 10)
-        if (!notifiedRef.current.fiveMin && next <= 5 && next > 3.5) {
-          notifiedRef.current.fiveMin = true
-          addNotification({ type: 'tracking', title: '⏰ 5 Dakika', message: 'Usta 5 dakika içinde kapınızda', targetUserId: user?.id })
-        }
-        return next
-      })
-      setDistance(prev => Math.max(0, Math.round((prev - 0.32) * 100) / 100))
-
-      if (mapRef.current) mapRef.current.panTo(next)
-    }, 4000)
-
-    const timer = setTimeout(() => {
-      if (trackingStatus === 'accepted') {
-        setTrackingStatus('on_the_way')
-        if (!notifiedRef.current.onWay) {
-          notifiedRef.current.onWay = true
-          addNotification({ type: 'tracking', title: '🚗 Usta Yola Çıktı', message: 'Tahmini 15 dakika içinde varış', targetUserId: user?.id })
-        }
-      }
-    }, 2000)
-
-    return () => { clearInterval(interval); clearTimeout(timer) }
-  }, [isRealGps, trackingStatus, addNotification, user?.id])
+  // Simülasyon kaldırıldı — usta marker'ı sadece gerçek GPS ile gösterilir
 
   // ── Usta ikonu ──────────────────────────────────────────────────
   const ustaIconSvg = `
@@ -331,7 +286,7 @@ function LiveTrackingPage() {
         <circle cx="24" cy="24" r="14" fill="#2563eb"/>
         <circle cx="24" cy="24" r="12" fill="#1d4ed8"/>
         <path d="M24 10 L30 22 L24 19 L18 22 Z" fill="white"/>
-        <text x="24" y="30" text-anchor="middle" font-size="10" fill="white">🔧</text>
+        <text x="24" y="30" text-anchor="middle" font-size="10" fill="white">👷</text>
       </g>
       <circle cx="24" cy="24" r="22" fill="none" stroke="#2563eb" stroke-width="2" opacity="0.4"/>
     </svg>
@@ -360,6 +315,7 @@ function LiveTrackingPage() {
   const currentStep = STATUS_STEPS.findIndex(s => s.key === trackingStatus)
 
   const formatEta = (m) => {
+    if (m === null) return '...'
     if (m <= 0) return 'Geldi!'
     if (m < 1) return '< 1 dk'
     return `${Math.ceil(m)} dk`
@@ -428,7 +384,7 @@ function LiveTrackingPage() {
               <Clock size={16} className="text-blue-600" />
               <span className="text-lg font-black text-blue-600">{formatEta(eta)}</span>
             </div>
-            {distance > 0 && (
+            {distance !== null && distance > 0 && (
               <p className="text-xs text-gray-500 text-center mt-0.5">{distance.toFixed(1)} km</p>
             )}
           </div>
@@ -491,8 +447,8 @@ function LiveTrackingPage() {
               />
             )}
 
-            {/* Usta marker */}
-            {ustaIcon && (
+            {/* Usta marker — sadece pozisyon hazırsa göster */}
+            {ustaIcon && markerPos && (
               <Marker
                 position={markerPos}
                 icon={ustaIcon}
@@ -501,7 +457,7 @@ function LiveTrackingPage() {
             )}
 
             {/* Hedef marker */}
-            {destIcon && destination && (
+            {destIcon && destinationReady && (
               <Marker
                 position={destination}
                 icon={destIcon}
@@ -510,15 +466,17 @@ function LiveTrackingPage() {
             )}
 
             {/* Pulse ring */}
-            <OverlayView
-              position={markerPos}
-              mapPaneName={OverlayView.OVERLAY_LAYER}
-            >
-              <div
-                className="rounded-full border-4 border-blue-400 animate-ping opacity-40 pointer-events-none"
-                style={{ width: 56, height: 56, marginLeft: -28, marginTop: -28 }}
-              />
-            </OverlayView>
+            {markerPos && (
+              <OverlayView
+                position={markerPos}
+                mapPaneName={OverlayView.OVERLAY_LAYER}
+              >
+                <div
+                  className="rounded-full border-4 border-blue-400 animate-ping opacity-40 pointer-events-none"
+                  style={{ width: 56, height: 56, marginLeft: -28, marginTop: -28 }}
+                />
+              </OverlayView>
+            )}
           </GoogleMap>
         ) : (
           <div className="w-full h-full bg-blue-50 flex items-center justify-center">
@@ -568,7 +526,7 @@ function LiveTrackingPage() {
               </div>
               <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-3 text-center text-white shadow-lg">
                 <Navigation size={18} className="mx-auto mb-1 opacity-80" />
-                <p className="text-lg font-black">{distance > 0 ? distance.toFixed(1) : '0'} km</p>
+                <p className="text-lg font-black">{distance !== null && distance > 0 ? distance.toFixed(1) : '...'} km</p>
                 <p className="text-[10px] opacity-75">Mesafe</p>
               </div>
               <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-3 text-center text-white shadow-lg">
