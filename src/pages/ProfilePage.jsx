@@ -137,7 +137,7 @@ function ProfilePage() {
   }
 
   const handleCopyReferral = () => {
-    const codeToCopy = user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : '');
+    const codeToCopy = user?.referralCode || '';
     if (codeToCopy) {
       navigator.clipboard.writeText(codeToCopy)
       setCopied(true)
@@ -300,7 +300,7 @@ function ProfilePage() {
             <div className="flex gap-2 mb-2">
               <div className="flex-1 flex items-center bg-white border-2 border-blue-200 rounded-xl px-3 py-2">
                 <code className="text-sm text-blue-700 font-black font-mono tracking-wider">
-                  {user?.referralCode || (user?.id ? `USTA-${user.id.slice(-6).toUpperCase()}` : 'Yükleniyor...')}
+                  {user?.referralCode || 'Yükleniyor...'}
                 </code>
               </div>
               <button

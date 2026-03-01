@@ -103,7 +103,7 @@ export const loginUser = async (email, password) => {
 };
 
 export const getUserProfile = async (userId) => {
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true, name: true, email: true, role: true, phone: true,
@@ -116,6 +116,28 @@ export const getUserProfile = async (userId) => {
     const error = new Error("User not found");
     error.status = 404;
     throw error;
+  }
+
+  // Auto-generate referral code for users who don't have one yet
+  if (!user.referralCode) {
+    let newReferralCode;
+    let attempts = 0;
+    do {
+      newReferralCode = generateReferralCode();
+      const exists = await prisma.user.findUnique({ where: { referralCode: newReferralCode } });
+      if (!exists) break;
+      attempts++;
+    } while (attempts < 10);
+
+    user = await prisma.user.update({
+      where: { id: userId },
+      data: { referralCode: newReferralCode },
+      select: {
+        id: true, name: true, email: true, role: true, phone: true,
+        bio: true, profileImage: true, ratings: true, balance: true,
+        referralCode: true, createdAt: true, updatedAt: true,
+      },
+    });
   }
 
   return user;
