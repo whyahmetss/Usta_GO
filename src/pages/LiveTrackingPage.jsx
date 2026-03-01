@@ -128,14 +128,25 @@ function LiveTrackingPage() {
   const applyDestination = useCallback((dest) => {
     destinationRef.current = dest
     setDestination(dest)
-    setMapCenter(dest)
     setDestinationReady(true)
+    // Usta GPS'i zaten geldiyse fitBounds; yoksa haritayı müşteri adresine odakla
+    if (mapRef.current) {
+      if (animFromRef.current) {
+        const bounds = new window.google.maps.LatLngBounds()
+        bounds.extend(animFromRef.current)
+        bounds.extend(dest)
+        mapRef.current.fitBounds(bounds, { top: 80, bottom: 200, left: 40, right: 40 })
+      } else {
+        setMapCenter(dest)
+      }
+    } else {
+      setMapCenter(dest)
+    }
   }, [])
 
-  // ── Geocoding: string adres → gerçek koordinat ────────────────────
+  // ── Geocoding: Google → başarısız olursa Nominatim fallback ──────
   useEffect(() => {
     if (!isLoaded || !job) return
-    // job.address (mapped) veya job.location (raw backend) hangisi string ise kullan
     const loc = (typeof job.address === 'string' && job.address.trim())
       ? job.address
       : (typeof job.location === 'string' && job.location.trim())
@@ -143,13 +154,27 @@ function LiveTrackingPage() {
         : null
     if (!loc) return
 
+    // Önce Google Geocoding dene
     const geocoder = new window.google.maps.Geocoder()
-    geocoder.geocode({ address: loc }, (results, status) => {
+    geocoder.geocode({ address: loc }, async (results, status) => {
       if (status === 'OK' && results[0]) {
         const pos = results[0].geometry.location
         applyDestination({ lat: pos.lat(), lng: pos.lng() })
+      } else {
+        // Google başarısız → OpenStreetMap Nominatim ile dene (API key gerekmez)
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc)}&format=json&limit=1&countrycodes=tr`,
+            { headers: { 'Accept-Language': 'tr' } }
+          )
+          const data = await res.json()
+          if (data[0]) {
+            applyDestination({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) })
+          }
+        } catch {
+          // Her iki geocoding da başarısız → destinationReady false kalır
+        }
       }
-      // Geocoding başarısız → yanlış konumu gösterme, destinationReady false kalır
     })
   }, [isLoaded, job, applyDestination])
 
@@ -239,16 +264,21 @@ function LiveTrackingPage() {
           animFromRef.current = newPos
           setMarkerPos(newPos)
           setIsRealGps(true)
+          // Haritayı usta + müşteri adresini birlikte göster; sadece usta biliniyor ise ona odaklan
+          if (mapRef.current) {
+            if (destinationRef.current) {
+              const bounds = new window.google.maps.LatLngBounds()
+              bounds.extend(newPos)
+              bounds.extend(destinationRef.current)
+              mapRef.current.fitBounds(bounds, { top: 80, bottom: 200, left: 40, right: 40 })
+            } else {
+              mapRef.current.panTo(newPos)
+              mapRef.current.setZoom(15)
+            }
+          }
         }
         setTargetPos(newPos)
         if (data.heading !== undefined) setBearing(data.heading)
-        // Haritayı usta + müşteri adresini birlikte gösterecek şekilde ayarla
-        if (mapRef.current && destinationRef.current) {
-          const bounds = new window.google.maps.LatLngBounds()
-          bounds.extend(newPos)
-          bounds.extend(destinationRef.current)
-          mapRef.current.fitBounds(bounds, { top: 80, bottom: 200, left: 40, right: 40 })
-        }
       }
     }
     socket.on('location_updated', onLocation)
