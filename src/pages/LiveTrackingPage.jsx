@@ -181,6 +181,7 @@ function LiveTrackingPage() {
   // ── Directions API: gerçek sokak rotası ───────────────────────────
   const fetchDirectionsRoute = useCallback((origin, dest) => {
     if (!window.google?.maps?.DirectionsService) return
+    if (!origin || !dest) return  // koordinat hazır değilse throttle'ı yakma
     const now = Date.now()
     if (now - lastDirectionsFetchRef.current < 20000) return // 20 saniyede bir yenile
     lastDirectionsFetchRef.current = now
@@ -244,10 +245,12 @@ function LiveTrackingPage() {
 
   // ── Gerçek GPS gelince Directions API çek ────────────────────────
   useEffect(() => {
-    if (!isRealGps || !isLoaded) return
+    if (!isRealGps || !isLoaded || !destinationReady) return
+    // destination hazır olunca throttle'ı sıfırla (ilk çekim garantilenir)
+    lastDirectionsFetchRef.current = 0
     fetchDirectionsRoute(targetPos, destinationRef.current)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetPos, isRealGps, isLoaded])
+  }, [targetPos, isRealGps, isLoaded, destinationReady])
 
   // ── Socket.IO: usta'dan gerçek GPS al ────────────────────────────
   useEffect(() => {
@@ -297,27 +300,27 @@ function LiveTrackingPage() {
 
   // ── Usta ikonu ──────────────────────────────────────────────────
   const ustaIconSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
       <defs>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+        <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.28"/>
         </filter>
       </defs>
-      <g transform="rotate(${bearing}, 24, 24)" filter="url(#shadow)">
-        <circle cx="24" cy="24" r="20" fill="#2563eb" opacity="0.15"/>
-        <circle cx="24" cy="24" r="14" fill="#2563eb"/>
-        <circle cx="24" cy="24" r="12" fill="#1d4ed8"/>
-        <path d="M24 10 L30 22 L24 19 L18 22 Z" fill="white"/>
-        <text x="24" y="30" text-anchor="middle" font-size="10" fill="white">👷</text>
-      </g>
-      <circle cx="24" cy="24" r="22" fill="none" stroke="#2563eb" stroke-width="2" opacity="0.4"/>
+      <circle cx="24" cy="24" r="22" fill="#f97316" filter="url(#sh)"/>
+      <circle cx="24" cy="24" r="19" fill="#ea580c"/>
+      <!-- hard hat dome -->
+      <path d="M13 26 Q13 15 24 14 Q35 15 35 26Z" fill="white"/>
+      <!-- hard hat brim -->
+      <rect x="11" y="26" width="26" height="4" rx="2" fill="white"/>
+      <!-- direction arrow -->
+      <path d="M24 5 L28 13 L24 11 L20 13 Z" fill="white" opacity="0.9" transform="rotate(${bearing},24,24)"/>
     </svg>
   `
 
   const ustaIcon = isLoaded ? {
     url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(ustaIconSvg)}`,
-    scaledSize: new window.google.maps.Size(48, 48),
-    anchor: new window.google.maps.Point(24, 24),
+    scaledSize: new window.google.maps.Size(52, 52),
+    anchor: new window.google.maps.Point(26, 26),
   } : null
 
   const destIcon = isLoaded ? {
