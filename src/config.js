@@ -72,6 +72,13 @@ export const API_ENDPOINTS = {
     SINGLE: '/upload/photo',
     MULTIPLE: '/upload/photos',
   },
+
+  // Complaints
+  COMPLAINTS: {
+    LIST: '/complaints',
+    RESOLVE: (id) => `/complaints/${id}/resolve`,
+    REJECT: (id) => `/complaints/${id}/reject`,
+  },
 };
 
 // Request timeout
