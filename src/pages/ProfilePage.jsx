@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 
 function ProfilePage() {
-  const { user, logout } = useAuth()
+  const { user, logout, setUser } = useAuth()
   const navigate = useNavigate()
 
   // --- DURUM DEĞİŞKENLERİ ---
@@ -23,7 +23,7 @@ function ProfilePage() {
     rating: 0,
     successRate: 0
   })
-  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null)
+  const [profilePhoto, setProfilePhoto] = useState(user?.profileImage || null)
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
 
@@ -99,7 +99,7 @@ function ProfilePage() {
   useEffect(() => {
     if (user?.id) {
       fetchStats()
-      setProfilePhoto(user?.profilePhoto || null)
+      setProfilePhoto(user?.profileImage || null)
     }
   }, [user])
 
@@ -117,6 +117,7 @@ function ProfilePage() {
             body: { profileImage: photoUrl }
           })
           setProfilePhoto(photoUrl)
+          setUser(prev => ({ ...prev, profileImage: photoUrl }))
           alert('Profil fotoğrafı güncellendi!')
         }
       } catch (err) {

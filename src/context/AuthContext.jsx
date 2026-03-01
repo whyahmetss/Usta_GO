@@ -1016,6 +1016,7 @@ export function AuthProvider({ children }) {
       rejectWithdrawal,
       // Cancellation
       getCancellationCount,
+      setUser,
     }}>
       {children}
     </AuthContext.Provider>
