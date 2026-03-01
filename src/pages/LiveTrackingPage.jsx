@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { GoogleMap, useJsApiLoader, Marker, Polyline, OverlayView } from '@react-google-maps/api'
+import { GoogleMap, Marker, Polyline, OverlayView } from '@react-google-maps/api'
 import { useAuth } from '../context/AuthContext'
+import { useMaps } from '../context/MapsContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { getSocket } from '../utils/socket'
 import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
-const MAPS_LIBRARIES = ['places']
 
 const MAP_STYLES = [
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
@@ -106,11 +104,7 @@ function LiveTrackingPage() {
   const lastDirectionsFetchRef = useRef(0)
   const destinationRef = useRef(DEFAULT_CENTER)
 
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    id: 'google-map-script',
-    libraries: MAPS_LIBRARIES,
-  })
+  const { isLoaded, loadError } = useMaps()
 
   // ── Fetch job ─────────────────────────────────────────────────────
   useEffect(() => {

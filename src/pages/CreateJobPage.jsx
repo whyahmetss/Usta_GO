@@ -6,11 +6,7 @@ import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
 import { emitEvent } from '../utils/socket'
-import { useJsApiLoader } from '@react-google-maps/api'
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
-// Modül seviyesinde sabit — her render'da yeni dizi oluşmaması için
-const MAPS_LIBRARIES = ['places']
+import { useMaps } from '../context/MapsContext'
 
 function CreateJobPage() {
   const { user, createJob } = useAuth()
@@ -31,11 +27,7 @@ function CreateJobPage() {
   // Google Places Autocomplete
   const addressInputRef = useRef(null)
   const autocompleteRef = useRef(null)
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    id: 'google-map-script',
-    libraries: MAPS_LIBRARIES,
-  })
+  const { isLoaded } = useMaps()
 
   useEffect(() => {
     if (!isLoaded || !addressInputRef.current) return
