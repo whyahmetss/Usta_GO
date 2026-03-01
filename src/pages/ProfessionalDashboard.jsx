@@ -113,8 +113,9 @@ function ProfessionalDashboard() {
     })
     .reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
 
-  const avgRating = myCompletedJobs.length > 0
-    ? (myCompletedJobs.reduce((sum, j) => sum + (j.rating?.customerRating || 0), 0) / myCompletedJobs.filter(j => j.rating?.customerRating).length || 0).toFixed(1)
+  const ratedJobs = myCompletedJobs.filter(j => j.rating)
+  const avgRating = ratedJobs.length > 0
+    ? (ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length).toFixed(1)
     : '0.0'
 
   const stats = [
@@ -219,10 +220,10 @@ function ProfessionalDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="font-black text-green-600">{job.price} TL</p>
-                  {job.rating?.customerRating && (
+                  {job.rating && (
                     <div className="flex items-center gap-1 text-xs">
                       <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                      <span className="font-bold">{job.rating.customerRating}</span>
+                      <span className="font-bold">{job.rating}</span>
                     </div>
                   )}
                 </div>
