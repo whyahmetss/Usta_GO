@@ -8,6 +8,7 @@ import { getSocket } from '../utils/socket'
 import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+const MAPS_LIBRARIES = ['places']
 
 const MAP_STYLES = [
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
@@ -108,6 +109,7 @@ function LiveTrackingPage() {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     id: 'google-map-script',
+    libraries: MAPS_LIBRARIES,
   })
 
   // ── Fetch job ─────────────────────────────────────────────────────
