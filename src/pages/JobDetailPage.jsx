@@ -10,17 +10,21 @@ import { Capacitor } from '@capacitor/core'
 import { CameraSource } from '@capacitor/camera'
 import { getSocket, emitEvent } from '../utils/socket'
 
+const STORAGE_KEY = (jobId) => `usta_sharing_${jobId}`
+
 // Usta location sharer component
 function UstaLocationSharer({ jobId }) {
   const [sharing, setSharing] = useState(false)
   const watchIdRef = useRef(null)
 
-  const startSharing = useCallback(() => {
+  const startGps = useCallback(() => {
     if (!navigator.geolocation) return
-    setSharing(true)
     const socket = getSocket()
     if (socket) socket.emit('join_job_room', jobId)
 
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+    }
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude: lat, longitude: lng, heading } = pos.coords
@@ -31,8 +35,15 @@ function UstaLocationSharer({ jobId }) {
     )
   }, [jobId])
 
+  const startSharing = useCallback(() => {
+    setSharing(true)
+    sessionStorage.setItem(STORAGE_KEY(jobId), 'true')
+    startGps()
+  }, [jobId, startGps])
+
   const stopSharing = useCallback(() => {
     setSharing(false)
+    sessionStorage.removeItem(STORAGE_KEY(jobId))
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current)
       watchIdRef.current = null
@@ -41,7 +52,21 @@ function UstaLocationSharer({ jobId }) {
     if (socket) socket.emit('leave_job_room', jobId)
   }, [jobId])
 
-  useEffect(() => () => stopSharing(), [stopSharing])
+  // F5 sonrası otomatik başlat
+  useEffect(() => {
+    if (sessionStorage.getItem(STORAGE_KEY(jobId)) === 'true') {
+      setSharing(true)
+      startGps()
+    }
+    // Sadece unmount'ta GPS'i durdur (storage'ı silme — F5 restore için)
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current)
+        watchIdRef.current = null
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <button

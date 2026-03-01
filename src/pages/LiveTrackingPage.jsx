@@ -254,7 +254,10 @@ function LiveTrackingPage() {
     const socket = getSocket()
     if (!socket) return
 
-    socket.emit('join_job_room', id)
+    const joinRoom = () => socket.emit('join_job_room', id)
+    joinRoom()
+    // Socket yeniden bağlanınca (F5 sonrası vb.) odayı tekrar join et
+    socket.on('connect', joinRoom)
 
     const onLocation = (data) => {
       if (data.lat && data.lng) {
@@ -285,6 +288,7 @@ function LiveTrackingPage() {
 
     return () => {
       socket.off('location_updated', onLocation)
+      socket.off('connect', joinRoom)
       socket.emit('leave_job_room', id)
     }
   }, [id])
