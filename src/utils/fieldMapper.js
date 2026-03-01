@@ -18,6 +18,7 @@ export const mapJobFromBackend = (job) => {
     ...job,
     address: job.location,
     price: job.budget,
+    date: job.createdAt || job.date,
     professionalId: job.ustaId || job.professionalId,
     professional: job.usta || job.professional,
     status: job.status?.toLowerCase(),
