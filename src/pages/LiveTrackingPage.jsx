@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useMaps } from '../context/MapsContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { mapJobFromBackend } from '../utils/fieldMapper'
 import { getSocket } from '../utils/socket'
 import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
 
@@ -24,7 +25,7 @@ const MAP_OPTIONS = {
   styles: MAP_STYLES,
 }
 
-const DEFAULT_CENTER = { lat: 41.0370, lng: 28.9850 }
+const DEFAULT_CENTER = { lat: 41.0082, lng: 28.9784 } // İstanbul genel merkez
 
 function lerp(a, b, t) {
   return { lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t }
@@ -72,8 +73,8 @@ function LiveTrackingPage() {
   // Directions API sokak rotası
   const [realRoutePoints, setRealRoutePoints] = useState([])
 
-  // Geocoding sonrası müşteri adresinin koordinatı
-  const [destination, setDestination] = useState(DEFAULT_CENTER)
+  // Geocoding sonrası müşteri adresinin koordinatı (null = henüz bilinmiyor)
+  const [destination, setDestination] = useState(null)
 
   const mapRef = useRef(null)
   const animFrameRef = useRef(null)
@@ -83,7 +84,7 @@ function LiveTrackingPage() {
   const notifiedRef = useRef({ arrived: false, fiveMin: false, onWay: false })
   const directionsServiceRef = useRef(null)
   const lastDirectionsFetchRef = useRef(0)
-  const destinationRef = useRef(DEFAULT_CENTER)
+  const destinationRef = useRef(null)
 
   const { isLoaded, loadError } = useMaps()
 
@@ -93,7 +94,7 @@ function LiveTrackingPage() {
     const load = async () => {
       try {
         const res = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
-        if (res?.data) setJob(res.data)
+        if (res?.data) setJob(mapJobFromBackend(res.data))
       } catch {
         // job stays null
       } finally {
@@ -134,19 +135,21 @@ function LiveTrackingPage() {
   // ── Geocoding: string adres → gerçek koordinat ────────────────────
   useEffect(() => {
     if (!isLoaded || !job) return
-    const loc = job.location
-    // Sadece string adres varsa geocode et
-    if (!loc || typeof loc !== 'string' || !loc.trim()) return
+    // job.address (mapped) veya job.location (raw backend) hangisi string ise kullan
+    const loc = (typeof job.address === 'string' && job.address.trim())
+      ? job.address
+      : (typeof job.location === 'string' && job.location.trim())
+        ? job.location
+        : null
+    if (!loc) return
 
     const geocoder = new window.google.maps.Geocoder()
     geocoder.geocode({ address: loc }, (results, status) => {
       if (status === 'OK' && results[0]) {
         const pos = results[0].geometry.location
         applyDestination({ lat: pos.lat(), lng: pos.lng() })
-      } else {
-        // Geocoding başarısız → DEFAULT_CENTER ile başla
-        applyDestination(DEFAULT_CENTER)
       }
+      // Geocoding başarısız → yanlış konumu gösterme, destinationReady false kalır
     })
   }, [isLoaded, job, applyDestination])
 
