@@ -108,6 +108,7 @@ function LiveTrackingPage() {
   const animStartRef      = useRef(null)
   const destinationRef    = useRef(null)
   const lastRouteFetchRef = useRef(0)
+  const isRealGpsRef      = useRef(false)  // stale closure önlemek için
 
   // ── Job yükle ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -249,8 +250,10 @@ function LiveTrackingPage() {
       if (!data.lat || !data.lng) return
       const newPos = { lat: data.lat, lng: data.lng }
 
-      if (!isRealGps) {
-        animFromRef.current = newPos
+      // Ref kullan — state'e bağlı closure stale olurdu
+      if (!isRealGpsRef.current) {
+        isRealGpsRef.current = true
+        animFromRef.current  = newPos
         setMarkerPos(newPos)
         setIsRealGps(true)
         const map = mapRef.current
