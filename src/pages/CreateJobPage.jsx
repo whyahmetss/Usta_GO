@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Camera, Sparkles, MapPin } from 'lucide-react'
+import { ArrowLeft, Camera, Sparkles, MapPin, ChevronRight } from 'lucide-react'
 import { emitEvent } from '../utils/socket'
-import { useMaps } from '../context/MapsContext'
+import MapPickerModal from '../components/MapPickerModal'
 
 function CreateJobPage() {
   const { user, createJob } = useAuth()
@@ -19,39 +19,13 @@ function CreateJobPage() {
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [address, setAddress] = useState('')
+  const [lat, setLat] = useState(null)
+  const [lng, setLng] = useState(null)
+  const [showMapPicker, setShowMapPicker] = useState(false)
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [activeCoupons, setActiveCoupons] = useState([])
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState(null)
-
-  // Google Places Autocomplete
-  const addressInputRef = useRef(null)
-  const autocompleteRef = useRef(null)
-  const { isLoaded } = useMaps()
-
-  useEffect(() => {
-    if (!isLoaded || !addressInputRef.current) return
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      addressInputRef.current,
-      {
-        componentRestrictions: { country: 'tr' },
-        fields: ['formatted_address'],
-        types: ['address'],
-      }
-    )
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace()
-      if (place.formatted_address) {
-        setAddress(place.formatted_address)
-      }
-    })
-    autocompleteRef.current = autocomplete
-    return () => {
-      if (window.google?.maps?.event) {
-        window.google.maps.event.clearInstanceListeners(autocomplete)
-      }
-    }
-  }, [isLoaded])
 
   // Bölgeye göre fiyat çarpanı
   const getRegionMultiplier = (addr) => {
@@ -158,6 +132,7 @@ function CreateJobPage() {
         description: description.trim(),
         price: Number(finalPrice),
         address: address.trim(),
+        ...(lat && lng ? { lat, lng } : {}),
         category: 'Elektrikci',
         urgent: aiAnalysis?.urgency === 'Yüksek' || false,
         status: 'pending',
@@ -230,16 +205,30 @@ function CreateJobPage() {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold mb-3 text-gray-900 text-left text-red-600"><MapPin size={18} className="inline mr-1" />Tam Adres *</h3>
-              <input
-                ref={addressInputRef}
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500"
-                placeholder="Örn: Kadıköy, Caferağa Mah. Moda Cad. No:5"
-                autoComplete="off"
-              />
+              <h3 className="font-bold mb-3 text-gray-900 text-left text-red-600">
+                <MapPin size={18} className="inline mr-1" />Tam Adres *
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowMapPicker(true)}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-colors ${
+                  address
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'bg-gray-50 border-gray-200 border-dashed'
+                }`}
+              >
+                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
+                  address ? 'bg-blue-600' : 'bg-gray-200'
+                }`}>
+                  <MapPin size={15} className={address ? 'text-white' : 'text-gray-400'} />
+                </div>
+                <span className={`flex-1 text-sm leading-snug line-clamp-2 ${
+                  address ? 'font-medium text-gray-900' : 'text-gray-400'
+                }`}>
+                  {address || 'Haritadan konum seçin…'}
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-gray-400" />
+              </button>
             </div>
 
             <button 
@@ -301,6 +290,19 @@ function CreateJobPage() {
           </div>
         )}
       </div>
+
+      <MapPickerModal
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        onConfirm={({ lat: pickedLat, lng: pickedLng, address: pickedAddress }) => {
+          setAddress(pickedAddress)
+          setLat(pickedLat)
+          setLng(pickedLng)
+        }}
+        initialLat={lat}
+        initialLng={lng}
+        initialAddress={address}
+      />
     </div>
   )
 }
