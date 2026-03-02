@@ -8,18 +8,21 @@ import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
 import { ArrowLeft, MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2 } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { CameraSource } from '@capacitor/camera'
-import { getSocket, emitEvent } from '../utils/socket'
+import { connectSocket, getSocket, emitEvent } from '../utils/socket'
 
 const STORAGE_KEY = (jobId) => `usta_sharing_${jobId}`
 
 // Usta location sharer component
-function UstaLocationSharer({ jobId }) {
+function UstaLocationSharer({ jobId, userId }) {
   const [sharing, setSharing] = useState(false)
+  const [gpsError, setGpsError] = useState(null)
   const watchIdRef = useRef(null)
 
   const startGps = useCallback(() => {
     if (!navigator.geolocation) return
-    const socket = getSocket()
+    setGpsError(null)
+    // connectSocket: socket henüz yoksa oluştur (bağlanmamış olsa bile)
+    const socket = userId ? connectSocket(userId) : getSocket()
     if (socket) socket.emit('join_job_room', jobId)
 
     if (watchIdRef.current !== null) {
@@ -28,12 +31,18 @@ function UstaLocationSharer({ jobId }) {
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude: lat, longitude: lng, heading } = pos.coords
-        emitEvent('usta_location_update', { jobId, lat, lng, heading: heading || 0 })
+        // getSocket()?.emit → socket.io buffer'ı kullanır, emitEvent gibi sessizce düşürmez
+        const sock = getSocket()
+        if (sock) sock.emit('usta_location_update', { jobId, lat, lng, heading: heading || 0 })
       },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      (err) => {
+        console.warn('GPS error:', err.code, err.message)
+        if (err.code === 1) setGpsError('Konum izni verilmedi. Tarayıcı ayarlarından izin verin.')
+        else if (err.code === 2) setGpsError('Konum alınamadı. GPS sinyali zayıf.')
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
     )
-  }, [jobId])
+  }, [jobId, userId])
 
   const startSharing = useCallback(() => {
     setSharing(true)
@@ -69,26 +78,31 @@ function UstaLocationSharer({ jobId }) {
   }, [])
 
   return (
-    <button
-      onClick={sharing ? stopSharing : startSharing}
-      className={`w-full py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-3 transition ${
-        sharing
-          ? 'bg-red-500 text-white'
-          : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
-      }`}
-    >
-      {sharing ? (
-        <>
-          <span className="w-3 h-3 bg-white rounded-full animate-ping" />
-          Konum Paylaşımını Durdur
-        </>
-      ) : (
-        <>
-          <Navigation2 size={20} />
-          Konumumu Paylaş (Müşteri Görsün)
-        </>
+    <div className="space-y-2">
+      <button
+        onClick={sharing ? stopSharing : startSharing}
+        className={`w-full py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-3 transition ${
+          sharing
+            ? 'bg-red-500 text-white'
+            : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
+        }`}
+      >
+        {sharing ? (
+          <>
+            <span className="w-3 h-3 bg-white rounded-full animate-ping" />
+            Konum Paylaşımını Durdur
+          </>
+        ) : (
+          <>
+            <Navigation2 size={20} />
+            Konumumu Paylaş (Müşteri Görsün)
+          </>
+        )}
+      </button>
+      {gpsError && (
+        <p className="text-xs text-red-600 text-center px-2">{gpsError}</p>
       )}
-    </button>
+    </div>
   )
 }
 
@@ -661,7 +675,7 @@ function JobDetailPage() {
 
         {/* Location Share Button - for usta when job is accepted or in_progress */}
         {!isCustomer && (job.status === 'accepted' || job.status === 'in_progress') && (
-          <UstaLocationSharer jobId={job.id} />
+          <UstaLocationSharer jobId={job.id} userId={user?.id} />
         )}
 
         {/* Customer uploaded photos */}
