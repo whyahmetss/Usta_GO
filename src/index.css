@@ -15,6 +15,17 @@ body {
   overflow-x: hidden;
 }
 
+/* Usta marker ping animasyonu (Leaflet DivIcon içinde kullanılır) */
+@keyframes usta-ping {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  70%  { transform: scale(1.9); opacity: 0;   }
+  100% { transform: scale(1.9); opacity: 0;   }
+}
+
+/* Leaflet z-index düzeltmesi — uygulama headerının altında kalmasın */
+.leaflet-pane { z-index: 1 !important; }
+.leaflet-top, .leaflet-bottom { z-index: 2 !important; }
+
 .blue-gradient-bg {
   background: linear-gradient(180deg, #4169E1 0%, #1E3A8A 100%);
 }
