@@ -7,16 +7,14 @@ let currentUserId = null
 export const connectSocket = (userId) => {
   currentUserId = userId
 
-  if (socket?.connected) {
-    // Already connected, just re-join room
-    socket.emit('join_room', userId)
-    return socket
-  }
-
-  // Disconnect old socket if exists but not connected
   if (socket) {
-    socket.disconnect()
-    socket = null
+    // Socket already exists (connected or still connecting) — reuse it
+    if (socket.connected) {
+      socket.emit('join_room', userId)
+    }
+    // If not yet connected, socket.io will reconnect automatically and
+    // the 'connect' handler below will emit join_room when ready.
+    return socket
   }
 
   socket = io(SOCKET_URL, {

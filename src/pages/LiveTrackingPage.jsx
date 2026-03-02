@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
-import { getSocket } from '../utils/socket'
+import { connectSocket, getSocket } from '../utils/socket'
 import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
 
 const DEFAULT_CENTER = [41.0082, 28.9784]
@@ -239,7 +239,9 @@ function LiveTrackingPage() {
 
   // ── Socket.IO: usta GPS ───────────────────────────────────────────
   useEffect(() => {
-    const socket = getSocket()
+    // connectSocket yerine getSocket() kullanırsak parent (AuthContext) henüz
+    // socket'i başlatmamış olabilir (child effect parent'tan önce çalışır).
+    const socket = user?.id ? connectSocket(user.id) : getSocket()
     if (!socket) return
 
     const joinRoom = () => socket.emit('join_job_room', id)
