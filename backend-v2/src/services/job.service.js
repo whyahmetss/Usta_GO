@@ -382,11 +382,12 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
   let finalPenalty = penalty
   if (finalPenalty === 0 && job.budget > 0) {
     if (job.status === "IN_PROGRESS") {
-      finalPenalty = Math.round(job.budget * 0.3)   // %30 ceza
+      finalPenalty = Math.round(job.budget * 0.5)   // %50 ceza
     } else if (job.status === "ACCEPTED") {
-      finalPenalty = Math.round(job.budget * 0.15)  // %15 ceza
+      finalPenalty = Math.round(job.budget * 0.25)  // %25 ceza
+    } else if (job.status === "PENDING") {
+      finalPenalty = Math.round(job.budget * 0.05)  // %5 ceza
     }
-    // PENDING ise ceza yok
   }
 
   const refundAmount = Math.max(0, (job.budget || 0) - finalPenalty)
