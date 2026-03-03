@@ -93,6 +93,13 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/services/${id}`,
     DELETE: (id) => `/services/${id}`,
   },
+
+  // Bakım Paketleri
+  PACKAGES: {
+    MY:               '/packages/my',
+    BUY:              '/packages/buy',
+    TOGGLE_AUTO_RENEW: '/packages/auto-renew',
+  },
 };
 
 // Request timeout

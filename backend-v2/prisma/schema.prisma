@@ -43,6 +43,7 @@ model User {
   transactions Transaction[]
   complaints   Complaint[]    @relation("complaintsFiled")
   couponUsages CouponUsage[]
+  packages     UserPackage[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -333,4 +334,33 @@ model Service {
 
   @@index([category])
   @@index([isActive])
+}
+
+// Bakım Paketi — Müşteri satın alır, aylık otomatik yenilenir
+model UserPackage {
+  id          String        @id @default(cuid())
+  packageId   String        // klasik | pro | plus
+  packageName String
+  price       Float
+
+  autoRenew   Boolean       @default(true)
+  status      PackageStatus @default(ACTIVE)
+
+  startDate   DateTime      @default(now())
+  nextRenewal DateTime
+
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum PackageStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
 }

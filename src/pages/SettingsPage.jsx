@@ -18,10 +18,6 @@ function SettingsPage() {
   const [certificateLoading, setCertificateLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
-  const [reminderSettings, setReminderSettings] = useState({
-    electricalCheck: user?.reminderSettings?.electricalCheck ?? true,
-    plumbingMaintenance: user?.reminderSettings?.plumbingMaintenance ?? true
-  })
 
   const handlePasswordChange = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -92,26 +88,6 @@ function SettingsPage() {
       } finally {
         setCertificateLoading(false)
       }
-    }
-  }
-
-  const handleReminderToggle = async (key) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const newSettings = { ...reminderSettings, [key]: !reminderSettings[key] }
-      const res = await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
-        method: 'PUT',
-        body: { reminderSettings: newSettings }
-      })
-      setReminderSettings(newSettings)
-      setUser(res.data || res)
-      setSuccess('Ayarlarınız güncellendi!')
-      setTimeout(() => setSuccess(null), 2000)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -216,47 +192,6 @@ function SettingsPage() {
           </div>
         )}
 
-        {/* Hatırlatıcı Ayarları (Müşteriler için) */}
-        {user?.role === 'customer' && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-4">📬 Hatırlatıcı Ayarları</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">Elektrik Bakımı</p>
-                  <p className="text-xs text-gray-500">Her 6 ayda bir hatırlat</p>
-                </div>
-                <button
-                  onClick={() => handleReminderToggle('electricalCheck')}
-                  className={`relative w-12 h-6 rounded-full transition ${
-                    reminderSettings.electricalCheck ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                    reminderSettings.electricalCheck ? 'translate-x-6' : 'translate-x-0.5'
-                  }`}></div>
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">Su Tesisatı Bakımı</p>
-                  <p className="text-xs text-gray-500">Her 12 ayda bir hatırlat</p>
-                </div>
-                <button
-                  onClick={() => handleReminderToggle('plumbingMaintenance')}
-                  className={`relative w-12 h-6 rounded-full transition ${
-                    reminderSettings.plumbingMaintenance ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                    reminderSettings.plumbingMaintenance ? 'translate-x-6' : 'translate-x-0.5'
-                  }`}></div>
-                </button>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-4">Hatırlatıcıları etkinleştirerek önemli bakım işleriyle ilgili bildirim alırsınız.</p>
-          </div>
-        )}
 
         {/* Doğrulama (Usta için) */}
         {user?.role === 'professional' && (
