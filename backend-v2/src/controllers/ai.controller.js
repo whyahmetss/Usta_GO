@@ -35,6 +35,22 @@ const getRegionMultiplier = (address = '') => {
   return 1.15
 }
 
+// ── Kategori → Türkçe anahtar kelimeler (Gemini bağlamı için) ─────
+const CATEGORY_HINTS = {
+  ELECTRICAL_SOCKET:          'priz, soket, elektrik prizi, fiş takılmıyor, akım yok, topraklama, çıkmıyor',
+  ELECTRICAL_CIRCUIT_BREAKER: 'sigorta, sigorta attı, kaçak akım, devre kesici, enerjim kesiliyor',
+  ELECTRICAL_LIGHTING:        'lamba, avize, aydınlatma, spot, led, ampul, neon, ışık yanmıyor',
+  ELECTRICAL_PANEL:           'elektrik panosu, dağıtım kutusu, sayaç, ana sigorta kutusu',
+  ELECTRICAL_WIRING:          'kablo, tesisat, kısa devre, duvar içi kablo, kablolama',
+  PLUMBING_LEAK:              'su sızıntısı, damlıyor, boru patladı, rutubet, sızıyor, ıslaklık',
+  PLUMBING_DRAIN:             'tıkanıklık, tıkalı, gider tıkalı, lavabo, wc, tuvalet, banyo akmıyor',
+  PLUMBING_INSTALLATION:      'musluk, batarya, rezervuar, tesisat montajı, armatür, duş',
+  HVAC_AC:                    'klima, ısıtma, soğutma, split klima, ısı pompası, kombi',
+  PAINTING:                   'boya, badana, duvar boyama, iç cephe, renk değişikliği, sıva',
+  CARPENTRY:                  'kapı, pencere, dolap, ahşap iş, kilit, menteşe, pervaz, parke',
+  GENERAL:                    'genel tamir, karma sorun, diğer, belirsiz',
+}
+
 // ── Gemini çağrısı ─────────────────────────────────────────────────
 const classifyWithGemini = async (description) => {
   const apiKey = process.env.GEMINI_API_KEY
@@ -43,16 +59,19 @@ const classifyWithGemini = async (description) => {
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-  const categoryList = CATEGORY_WHITELIST.join(', ')
+  const categoryBlock = Object.entries(CATEGORY_HINTS)
+    .map(([k, v]) => `  ${k}: ${v}`)
+    .join('\n')
 
   const prompt = `Sen bir ev tamiri servis sınıflandırma motorusun.
 Görevin YALNIZCA aşağıdaki kategorilerden seçim yapıp JSON döndürmektir.
 KESİNLİKLE: fiyat üretme, teşhis koyma, öneri verme, açıklama yapma.
 Sadece JSON döndür, başka hiçbir şey yazma.
 
-Geçerli kategoriler: ${categoryList}
+Geçerli kategoriler ve Türkçe anahtar kelimeler:
+${categoryBlock}
 
-Kullanıcı açıklaması: "${description}"
+Kullanıcı açıklaması: ${description}
 
 Döndüreceğin JSON formatı (kesinlikle bu formattan çıkma):
 {
@@ -63,19 +82,25 @@ Döndüreceğin JSON formatı (kesinlikle bu formattan çıkma):
 }
 
 Kurallar:
-- En fazla 3 kategori seç
+- Anahtar kelimelerle eşleşen en uygun kategoriyi seç (en fazla 3)
 - confidence 0.4 altındaki kategorileri dahil etme
-- possibleCauses en fazla 3 madde, teknik olmayan dilde
-- isUrgent: yangın, duman, su baskını, elektrik çarpması gibi acil durumlar için true`
+- possibleCauses en fazla 3 madde, teknik olmayan Türkçe ile
+- isUrgent: yangın, duman, su baskını, elektrik çarpması gibi acil durumlar için true
+- Emin olamıyorsan GENERAL seç, ama "priz/lamba/musluk/boya" gibi net kelimelerde doğru kategoriyi seç`
 
   const result = await model.generateContent(prompt)
   const text = result.response.text().trim()
+  console.log('[AI] Gemini raw response:', text.slice(0, 300))
 
-  // JSON bloğu varsa temizle
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  // Markdown kod bloğunu temizle (```json ... ```)
+  const cleaned = text.replace(/```(?:json)?\s*/g, '').replace(/```/g, '').trim()
+
+  // JSON bloğu yakala
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error('Gemini geçerli JSON döndürmedi')
 
   const parsed = JSON.parse(jsonMatch[0])
+  console.log('[AI] Parsed categories:', parsed.categories?.map(c => `${c.category}(${c.confidence})`).join(', '))
   return parsed
 }
 
