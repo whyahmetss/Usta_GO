@@ -309,6 +309,10 @@ export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
     throw error;
   }
 
+  const COMMISSION_RATE = 0.12  // %12 platform komisyonu
+  const commission = Math.round(job.budget * COMMISSION_RATE)
+  const ustaEarning = job.budget - commission
+
   // Use transaction to ensure atomicity
   const updatedJob = await prisma.$transaction(async (tx) => {
     // 1. Update job status
@@ -325,22 +329,18 @@ export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
       },
     });
 
-    // 2. Add payment to usta's balance
+    // 2. Usta'ya komisyon düşülmüş ödeme yap
     await tx.user.update({
       where: { id: ustaId },
-      data: {
-        balance: {
-          increment: job.budget,
-        },
-      },
+      data: { balance: { increment: ustaEarning } },
     });
 
-    // 3. Create transaction record
+    // 3. Usta kazanç kaydı (komisyon düşülmüş gerçek miktar)
     await tx.transaction.create({
       data: {
         userId: ustaId,
         jobId: jobId,
-        amount: job.budget,
+        amount: ustaEarning,
         type: "EARNING",
         status: "COMPLETED",
         description: `${job.title} işi tamamlandı`,
