@@ -80,6 +80,19 @@ export const API_ENDPOINTS = {
     RESOLVE: (id) => `/complaints/${id}/resolve`,
     REJECT: (id) => `/complaints/${id}/reject`,
   },
+
+  // AI Fiyat Analizi
+  AI: {
+    ANALYZE: '/ai/analyze',
+  },
+
+  // Servis Fiyat Listesi (Admin CRUD)
+  SERVICES: {
+    LIST:   '/services',
+    CREATE: '/services',
+    UPDATE: (id) => `/services/${id}`,
+    DELETE: (id) => `/services/${id}`,
+  },
 };
 
 // Request timeout

@@ -213,6 +213,11 @@ function AdminDashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-2">Kupon Yönetimi</h3>
             <p className="text-gray-600 text-sm">Kupon oluştur ve yönet</p>
           </div>
+          <div onClick={() => navigate('/admin/pricing')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
+            <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">💰</span></div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">AI Fiyat Listesi</h3>
+            <p className="text-gray-600 text-sm">Hizmet bazlı temel ücretleri yönet</p>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-lg">
