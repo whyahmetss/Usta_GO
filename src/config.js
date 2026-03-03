@@ -99,6 +99,8 @@ export const API_ENDPOINTS = {
     MY:               '/packages/my',
     BUY:              '/packages/buy',
     TOGGLE_AUTO_RENEW: '/packages/auto-renew',
+    ADMIN_LIST:       '/packages/admin',
+    ADMIN_UPDATE:     (packageId) => `/packages/admin/${packageId}`,
   },
 };
 

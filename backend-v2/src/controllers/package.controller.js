@@ -89,4 +89,85 @@ export const packageController = {
 
     return res.json({ success: true, data: updated });
   },
+
+  // ── ADMIN ──────────────────────────────────────────────────────────────
+
+  // GET /packages/admin  — Tüm paket konfigürasyonları + abone istatistikleri
+  getAdminPackages: async (req, res) => {
+    if (req.user.role !== 'ADMIN') return res.status(403).json({ success: false, message: 'Yetkisiz.' });
+
+    // Varsayılan paket konfigürasyonlarını yoksa oluştur
+    const DEFAULTS = [
+      {
+        packageId: 'klasik', name: 'Klasik', price: 499, badge: '🏠',
+        features: JSON.stringify(['Elektrik kontrol (2 ayda 1)', 'Su tesisat kontrolü (3 ayda 1)', 'Sigorta panosu kontrolü (yılda 1)', 'Standart usta atama']),
+      },
+      {
+        packageId: 'pro', name: 'Pro', price: 999, badge: '⚡',
+        features: JSON.stringify(['Elektrik + sigorta panosu (aylık)', 'Su tesisat basınç kontrolü (2 ayda 1)', 'Kaçak akım testi (3 ayda 1)', 'Öncelikli usta atama']),
+      },
+      {
+        packageId: 'plus', name: 'Plus', price: 1999, badge: '👑',
+        features: JSON.stringify(['Tüm Pro hizmetleri dahil', 'Kombi / klima bakımı (6 ayda 1)', 'Kaçak akım testi (aylık)', 'VIP öncelikli usta atama', '7/24 acil yardım hattı']),
+      },
+    ];
+
+    for (const d of DEFAULTS) {
+      await prisma.packageConfig.upsert({
+        where: { packageId: d.packageId },
+        update: {},
+        create: d,
+      });
+    }
+
+    const configs = await prisma.packageConfig.findMany({ orderBy: { price: 'asc' } });
+
+    // Her paket için abone sayısı ve aylık gelir hesapla
+    const result = await Promise.all(configs.map(async (cfg) => {
+      const activeCount = await prisma.userPackage.count({
+        where: { packageId: cfg.packageId, status: 'ACTIVE' },
+      });
+      const cancelledCount = await prisma.userPackage.count({
+        where: { packageId: cfg.packageId, status: 'CANCELLED' },
+      });
+      // Bu ayki yeni aboneler
+      const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
+      const newThisMonth = await prisma.userPackage.count({
+        where: { packageId: cfg.packageId, createdAt: { gte: startOfMonth } },
+      });
+      return {
+        ...cfg,
+        features: JSON.parse(cfg.features || '[]'),
+        activeSubscribers: activeCount,
+        cancelledCount,
+        newThisMonth,
+        monthlyRevenue: activeCount * cfg.price,
+      };
+    }));
+
+    return res.json({ success: true, data: result });
+  },
+
+  // PATCH /packages/admin/:packageId  — Paket fiyatını/özelliklerini güncelle
+  updateAdminPackage: async (req, res) => {
+    if (req.user.role !== 'ADMIN') return res.status(403).json({ success: false, message: 'Yetkisiz.' });
+    const { packageId } = req.params;
+    const { price, features, isActive } = req.body;
+
+    const data = {};
+    if (price !== undefined) {
+      const p = Number(price);
+      if (isNaN(p) || p <= 0) return res.status(400).json({ success: false, message: 'Geçersiz fiyat.' });
+      data.price = p;
+    }
+    if (features !== undefined) data.features = JSON.stringify(features);
+    if (isActive !== undefined) data.isActive = Boolean(isActive);
+
+    const updated = await prisma.packageConfig.update({
+      where: { packageId },
+      data,
+    });
+
+    return res.json({ success: true, data: { ...updated, features: JSON.parse(updated.features || '[]') } });
+  },
 };
