@@ -4,7 +4,18 @@ const prisma = new PrismaClient();
 
 export const createJob = async (customerId, data) => {
   // Only extract fields that exist in the Prisma schema
-  const { title, description, category, location, budget, status, photos } = data;
+  const { title, description, category, location, budget, status, photos, price } = data;
+
+  // Bakiye kontrolü
+  const requiredAmount = price || budget || 0
+  if (requiredAmount > 0) {
+    const customer = await prisma.user.findUnique({ where: { id: customerId }, select: { balance: true } })
+    if (!customer || customer.balance < requiredAmount) {
+      const err = new Error(`Yetersiz bakiye. Gereken: ${requiredAmount} TL, Mevcut: ${customer?.balance ?? 0} TL`)
+      err.statusCode = 402
+      throw err
+    }
+  }
 
   const job = await prisma.job.create({
     data: {
