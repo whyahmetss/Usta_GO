@@ -336,6 +336,21 @@ model Service {
   @@index([isActive])
 }
 
+// Bakım Paketi Konfigürasyonu — Admin tarafından yönetilir
+model PackageConfig {
+  id        String   @id @default(cuid())
+  packageId String   @unique  // klasik | pro | plus
+  name      String
+  price     Float
+  badge     String   @default("📦")
+  features  String   @db.Text  // JSON array
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([packageId])
+}
+
 // Bakım Paketi — Müşteri satın alır, aylık otomatik yenilenir
 model UserPackage {
   id          String        @id @default(cuid())

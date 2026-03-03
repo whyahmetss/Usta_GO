@@ -23,6 +23,7 @@ function ProfilePage() {
     rating: 0,
     successRate: 0
   })
+  const [activePackage, setActivePackage] = useState(null)
   const [profilePhoto, setProfilePhoto] = useState(user?.profileImage || null)
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -40,17 +41,31 @@ function ProfilePage() {
          const userJobs = mapped
           const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
           const activeCount = userJobs.filter(j => j.status === 'pending' || j.status === 'in_progress').length
-          const offersCount = userJobs.reduce((sum, job) => sum + (job.offers?.length || 0), 0)
+          const totalSpent = userJobs
+            .filter(j => j.status === 'completed' || j.status === 'rated')
+            .reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
           const ratings = userJobs.filter(j => j.rating).map(j => j.rating)
           const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b) / ratings.length).toFixed(1) : 0
+
+          // Kupon ve aktif paket verilerini API'den çek
+          let couponCount = 0
+          try {
+            const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+            couponCount = (walletRes?.data?.coupons || []).length
+          } catch { /* kupon 0 kalır */ }
+
+          try {
+            const pkgRes = await fetchAPI(API_ENDPOINTS.PACKAGES.MY)
+            setActivePackage(pkgRes?.data || null)
+          } catch { /* paket yok */ }
 
           setCustomerCompletedJobs(completedCount)
           setStatsData({
             activeJobs: activeCount,
-            offers: offersCount,
+            offers: 0,
             completedJobs: completedCount,
-            totalSpent: user?.totalSpent || 0,
-            coupons: (user?.coupons || []).length,
+            totalSpent,
+            coupons: couponCount,
             averageRating: avgRating,
             thisMonthEarnings: 0,
             rating: 0,
@@ -209,10 +224,15 @@ function ProfilePage() {
               <p className="text-xs text-white/80">Aktif İşler</p>
               <p className="text-2xl font-black">{statsData.activeJobs}</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
-              <div className="text-2xl mb-2">📝</div>
-              <p className="text-xs text-white/80">Aldığı Teklifler</p>
-              <p className="text-2xl font-black">{statsData.offers}</p>
+            <div
+              onClick={() => navigate('/wallet')}
+              className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white cursor-pointer active:scale-95"
+            >
+              <div className="text-2xl mb-2">📦</div>
+              <p className="text-xs text-white/80">Aktif Paketim</p>
+              <p className="text-lg font-black leading-tight">
+                {activePackage ? activePackage.packageName : 'Yok'}
+              </p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition text-white">
               <div className="text-2xl mb-2">✅</div>
