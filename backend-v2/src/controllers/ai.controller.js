@@ -80,6 +80,28 @@ ${serviceList}`,
   return categoryKey
 }
 
+// ── Açıklamadan adet/miktar çıkar ──────────────────────────────────
+const extractQuantity = (text) => {
+  // "3 priz", "üç tane", "iki adet" gibi ifadeleri yakala
+  const wordMap = { bir: 1, iki: 2, üç: 3, uc: 3, dört: 4, dort: 4, beş: 5, bes: 5,
+                    altı: 6, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
+  const lower = text.toLowerCase()
+
+  // Önce rakam + birim: "3 priz", "2 tane", "4 adet"
+  const numMatch = lower.match(/(\d+)\s*(tane|adet|priz|lamba|ampul|kablo|devre|sigort[ae]|valf|musluk|batarya|radyatör|panel)?/)
+  if (numMatch && parseInt(numMatch[1]) > 1 && parseInt(numMatch[1]) <= 20) {
+    return parseInt(numMatch[1])
+  }
+
+  // Sonra yazıyla: "üç priz", "iki tane"
+  for (const [word, val] of Object.entries(wordMap)) {
+    const re = new RegExp(`\\b${word}\\b\\s*(tane|adet|priz|lamba|ampul|kablo|devre)?`)
+    if (re.test(lower) && val > 1) return val
+  }
+
+  return 1
+}
+
 // ── Müşteri mesajı ──────────────────────────────────────────────────
 const buildCustomerMessage = (serviceLabel, finalPrice, isUrgent) => {
   const urgencyNote = isUrgent ? ' Acil servis talebi olarak önceliklendirileceğinizi belirtmek isteriz.' : ''
@@ -136,10 +158,11 @@ export const analyzeJob = async (req, res, next) => {
 
     // 4. Fiyat hesapla
     const basePrice         = matchedService.basePrice
+    const quantity          = extractQuantity(description)
     const nightMultiplier   = getNightMultiplier()
     const urgencyMultiplier = isUrgent ? 1.3 : 1.0
     const regionMultiplier  = getRegionMultiplier(address)
-    const finalPrice = Math.round(basePrice * nightMultiplier * urgencyMultiplier * regionMultiplier)
+    const finalPrice = Math.round(basePrice * quantity * nightMultiplier * urgencyMultiplier * regionMultiplier)
 
     // 5. Müşteri mesajı
     const customerMessage = buildCustomerMessage(matchedService.label, finalPrice, isUrgent)
@@ -151,6 +174,7 @@ export const analyzeJob = async (req, res, next) => {
       urgency: isUrgent ? 'Yüksek' : 'Normal',
       priceBreakdown: {
         basePrice,
+        quantity,
         nightMultiplier,
         urgencyMultiplier,
         regionMultiplier: Math.round(regionMultiplier * 100) / 100,
