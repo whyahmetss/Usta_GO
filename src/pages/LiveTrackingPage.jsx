@@ -274,9 +274,15 @@ function LiveTrackingPage() {
       if (data.heading !== undefined) setBearing(data.heading)
     }
 
+    const onOnTheWay = () => {
+      setTrackingStatus(prev => prev === 'accepted' ? 'on_the_way' : prev)
+    }
+
     socket.on('location_updated', onLocation)
+    socket.on('usta_on_the_way', onOnTheWay)
     return () => {
       socket.off('location_updated', onLocation)
+      socket.off('usta_on_the_way', onOnTheWay)
       socket.off('connect', joinRoom)
       socket.emit('leave_job_room', id)
     }

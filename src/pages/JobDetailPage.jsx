@@ -456,6 +456,10 @@ function JobDetailPage() {
     }
     const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`
     window.open(url, '_blank')
+
+    // Müşteriyi bilgilendir: usta yola çıktı
+    const sock = getSocket()
+    if (sock) sock.emit('usta_on_the_way', { jobId: job.id, customerId: job.customer?.id })
   }
 
   const openCamera = (type) => {

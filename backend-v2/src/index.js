@@ -139,6 +139,13 @@ io.on("connection", (socket) => {
     socket.leave(`job_${jobId}`);
   });
 
+  // Usta yola çıktı → job room + müşteri odasına bildir
+  socket.on("usta_on_the_way", (data) => {
+    const { jobId, customerId } = data;
+    if (jobId) io.to(`job_${jobId}`).emit("usta_on_the_way");
+    if (customerId) io.to(`user_${customerId}`).emit("usta_on_the_way");
+  });
+
   // Online status
   socket.on("user_online", (userId) => {
     io.emit("user_status_changed", { userId, status: "online" });
