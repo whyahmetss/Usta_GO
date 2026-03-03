@@ -50,6 +50,8 @@ const classifyWithDeepSeek = async (description, services) => {
 Aşağıdaki hizmet listesinden EN UYGUN birini seç.
 SADECE kategori kodunu yaz, başka hiçbir şey yazma.
 
+Eğer açıklama çok kısa, belirsiz veya hangi hizmet gerektiği anlaşılamıyorsa INSUFFICIENT yaz.
+
 Hizmet listesi:
 ${serviceList}`,
         },
@@ -129,8 +131,16 @@ export const analyzeJob = async (req, res, next) => {
       return res.status(400).json({ error: 'Açıklama çok kısa (en az 5 karakter)' })
     }
 
-    // 1. DB'den aktif servisleri çek
-    const activeServices = await getActiveServices()
+    // 1. DB'den aktif servisleri ve kullanıcı bakiyesini çek
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+
+    const [activeServices, currentUser] = await Promise.all([
+      getActiveServices(),
+      prisma.user.findUnique({ where: { id: req.user.id }, select: { balance: true } }),
+    ])
+
+    await prisma.$disconnect()
 
     if (activeServices.length === 0) {
       return res.status(503).json({ error: 'Henüz hizmet tanımlı değil. Admin panelinden ekleyin.' })
@@ -146,6 +156,16 @@ export const analyzeJob = async (req, res, next) => {
     let aiError = null
     try {
       const key = await classifyWithDeepSeek(description, activeServices)
+
+      // Açıklama yetersizse hata döndür
+      if (key === 'INSUFFICIENT') {
+        return res.status(422).json({
+          error: 'Açıklama yetersiz',
+          message: 'Açıklamanız çok genel veya kısa. Lütfen sorunu daha detaylı tarif edin. Örn: hangi oda, ne zaman başladı, nasıl bir belirti var.',
+          needsMoreDetail: true,
+        })
+      }
+
       const found = activeServices.find(s => s.category === key)
       if (found) matchedCategory = found.category
       const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
@@ -187,6 +207,7 @@ export const analyzeJob = async (req, res, next) => {
       customerMessage,
       aiUsed,
       aiError,
+      userBalance: currentUser?.balance ?? 0,
     })
   } catch (err) {
     next(err)

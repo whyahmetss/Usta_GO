@@ -63,7 +63,13 @@ function CreateJobPage() {
       setStep(3)
     } catch (err) {
       console.error('AI analiz hatası:', err)
-      setAnalyzeError(err.message || 'Analiz başarısız. Lütfen tekrar deneyin.')
+      // Yetersiz açıklama → step 1'de kal, kullanıcıya daha detaylı yaz
+      const serverMsg = err.response?.data?.message || err.response?.data?.error
+      if (err.response?.data?.needsMoreDetail) {
+        setAnalyzeError(serverMsg)
+      } else {
+        setAnalyzeError(serverMsg || err.message || 'Analiz başarısız. Lütfen tekrar deneyin.')
+      }
       setStep(1)
     } finally {
       setIsAnalyzing(false)
@@ -331,24 +337,45 @@ function CreateJobPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <button
-                onClick={() => { setStep(1); setAiResult(null) }}
-                disabled={isCreating}
-                className="py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300 transition"
-              >
-                Geri Dön
-              </button>
-              <button
-                onClick={handleCreateJob}
-                disabled={isCreating}
-                className={`py-4 rounded-2xl font-bold shadow-lg transition ${
-                  isCreating ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-              >
-                {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
-              </button>
-            </div>
+            {/* Bakiye kontrolü */}
+            {(() => {
+              const userBalance = aiResult?.userBalance ?? 0
+              const insufficient = userBalance < finalPrice
+              return (
+                <>
+                  <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-200'}`}>
+                    <div className="flex justify-between items-center text-sm font-medium">
+                      <span className={insufficient ? 'text-red-700' : 'text-green-700'}>Cüzdan Bakiyeniz</span>
+                      <span className={`font-black text-base ${insufficient ? 'text-red-700' : 'text-green-700'}`}>{userBalance} TL</span>
+                    </div>
+                    {insufficient && (
+                      <p className="text-red-600 text-xs mt-1">
+                        Bu işi açmak için {finalPrice - userBalance} TL daha bakiye yüklemeniz gerekiyor.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <button
+                      onClick={() => { setStep(1); setAiResult(null) }}
+                      disabled={isCreating}
+                      className="py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300 transition"
+                    >
+                      Geri Dön
+                    </button>
+                    <button
+                      onClick={handleCreateJob}
+                      disabled={isCreating || insufficient}
+                      className={`py-4 rounded-2xl font-bold shadow-lg transition ${
+                        isCreating || insufficient ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600'
+                      }`}
+                    >
+                      {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         )}
       </div>

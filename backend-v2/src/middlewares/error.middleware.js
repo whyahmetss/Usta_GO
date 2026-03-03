@@ -30,7 +30,7 @@ export const errorHandler = (err, req, res, _next) => {
   }
 
   // Default error
-  res.status(err.status || 500).json({
+  res.status(err.statusCode || err.status || 500).json({
     error: err.message || "Internal server error",
   });
 };
