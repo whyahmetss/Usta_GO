@@ -19,6 +19,8 @@ import userRoutes from "./routes/user.routes.js";
 import walletRoutes from './routes/wallet.routes.js';
 import uploadRoutes from "./routes/upload.routes.js";
 import complaintRoutes from "./routes/complaint.routes.js";
+import serviceRoutes from "./routes/service.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 
@@ -60,6 +62,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/services",  serviceRoutes);
+app.use("/api/ai",        aiRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({

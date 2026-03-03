@@ -24,6 +24,7 @@
   "author": "Usta GO Team",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.7.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.9.0",
