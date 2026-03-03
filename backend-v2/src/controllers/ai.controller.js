@@ -142,14 +142,18 @@ export const analyzeJob = async (req, res, next) => {
     // 2. DeepSeek ile sınıflandır
     let matchedCategory = fallbackService.category
     let isUrgent = false
+    let aiUsed = false
+    let aiError = null
     try {
       const key = await classifyWithDeepSeek(description, activeServices)
       const found = activeServices.find(s => s.category === key)
       if (found) matchedCategory = found.category
       const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
       isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
+      aiUsed = true
     } catch (aiErr) {
       console.error('[AI] DeepSeek hatası:', aiErr.message)
+      aiError = aiErr.message
     }
 
     // 3. Servisi bul
@@ -181,6 +185,8 @@ export const analyzeJob = async (req, res, next) => {
       },
       estimatedPrice: finalPrice,
       customerMessage,
+      aiUsed,
+      aiError,
     })
   } catch (err) {
     next(err)

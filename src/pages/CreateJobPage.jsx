@@ -56,6 +56,10 @@ function CreateJobPage() {
         body: { description: description.trim(), address: address.trim() },
       })
       setAiResult(res.data)
+      if (res.data?.aiError) {
+        console.warn('[AI] DeepSeek çalışmadı, fallback kullanıldı:', res.data.aiError)
+        setAnalyzeError(`⚠️ AI hatası (fallback kullanıldı): ${res.data.aiError}`)
+      }
       setStep(3)
     } catch (err) {
       console.error('AI analiz hatası:', err)
@@ -241,6 +245,12 @@ function CreateJobPage() {
         {/* ── ADIM 3: SONUÇ + ONAY ── */}
         {step === 3 && aiResult && (
           <div className="space-y-4">
+            {/* AI Hata Uyarısı */}
+            {analyzeError && (
+              <div className="bg-yellow-50 border border-yellow-300 rounded-2xl p-4">
+                <p className="text-yellow-800 text-sm font-medium">{analyzeError}</p>
+              </div>
+            )}
             {/* Müşteri Mesajı */}
             <div className="bg-white rounded-2xl p-5 shadow-lg space-y-3">
               <h3 className="font-bold text-gray-900">🤖 AI Değerlendirmesi</h3>
