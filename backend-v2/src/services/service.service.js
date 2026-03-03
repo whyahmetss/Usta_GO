@@ -1,35 +1,40 @@
 import { PrismaClient } from '@prisma/client'
-import { CATEGORY_WHITELIST, CATEGORY_LABELS } from '../constants/categories.js'
 
 const prisma = new PrismaClient()
 
-/** Tüm servisleri getir (aktif/pasif ayrımı opsiyonel) */
-export const getAllServices = async (onlyActive = false) => {
+/** Kategori key'ini validate et: sadece BÜYÜK harf, rakam, alt çizgi */
+const isValidCategoryKey = (key) =>
+  typeof key === 'string' && /^[A-Z0-9_]{1,40}$/.test(key)
+
+/** Tüm servisleri getir */
+export const getAllServices = async () => {
+  return prisma.service.findMany({ orderBy: { createdAt: 'asc' } })
+}
+
+/** Aktif servisleri getir (AI için) */
+export const getActiveServices = async () => {
   return prisma.service.findMany({
-    where: onlyActive ? { isActive: true } : undefined,
-    orderBy: { category: 'asc' },
+    where: { isActive: true },
+    orderBy: { createdAt: 'asc' },
   })
 }
 
 /** Kategori listesine göre servis fiyatlarını getir */
 export const getServicesByCategories = async (categories) => {
   return prisma.service.findMany({
-    where: {
-      category: { in: categories },
-      isActive: true,
-    },
+    where: { category: { in: categories }, isActive: true },
   })
 }
 
-/** Yeni servis oluştur */
-export const createService = async ({ category, label, basePrice }) => {
-  if (!CATEGORY_WHITELIST.includes(category)) {
-    throw new Error(`Geçersiz kategori: ${category}`)
+/** Yeni servis oluştur — whitelist yok, admin istediği hizmeti ekleyebilir */
+export const createService = async ({ category, label, basePrice, keywords }) => {
+  if (!isValidCategoryKey(category)) {
+    throw new Error('Kategori kodu geçersiz (sadece büyük harf, rakam ve alt çizgi)')
   }
   return prisma.service.create({
     data: {
       category,
-      label: label || CATEGORY_LABELS[category] || category,
+      label: label || category,
       basePrice: Number(basePrice),
     },
   })
@@ -40,7 +45,7 @@ export const updateService = async (id, { label, basePrice, isActive }) => {
   return prisma.service.update({
     where: { id },
     data: {
-      ...(label    !== undefined && { label }),
+      ...(label     !== undefined && { label }),
       ...(basePrice !== undefined && { basePrice: Number(basePrice) }),
       ...(isActive  !== undefined && { isActive }),
     },

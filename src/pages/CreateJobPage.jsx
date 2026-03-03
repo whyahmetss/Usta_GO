@@ -108,7 +108,7 @@ function CreateJobPage() {
         price:       finalPrice,
         address:     address.trim(),
         ...(lat && lng ? { lat, lng } : {}),
-        category:    aiResult?.categories?.[0]?.category || 'GENERAL',
+        category:    aiResult?.category || 'GENERAL',
         urgent:      aiResult?.isUrgent || false,
         status:      'pending',
         photos:      photoUrl ? [photoUrl] : [],
@@ -269,12 +269,10 @@ function CreateJobPage() {
               {/* Fiyat kırılımı */}
               {aiResult.priceBreakdown && (
                 <div className="mt-4 text-left bg-white/10 rounded-xl p-3 text-xs space-y-1">
-                  {aiResult.priceBreakdown.services.map((s, i) => (
-                    <div key={i} className="flex justify-between">
-                      <span className="text-white/70">{s.label}</span>
-                      <span>{s.basePrice} TL</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Temel fiyat ({aiResult.primaryLabel})</span>
+                    <span>{aiResult.priceBreakdown.basePrice} TL</span>
+                  </div>
                   {aiResult.priceBreakdown.nightMultiplier > 1 && (
                     <div className="flex justify-between text-yellow-300">
                       <span>Gece çarpanı</span>
@@ -294,22 +292,6 @@ function CreateJobPage() {
                 </div>
               )}
             </div>
-
-            {/* Kategoriler */}
-            {aiResult.categories?.length > 1 && (
-              <div className="bg-white rounded-2xl p-4 shadow-lg">
-                <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">
-                  <Info size={12} /> Olası ilgili hizmetler
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {aiResult.categories.map((c, i) => (
-                    <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                      {c.label} — %{Math.round(c.confidence * 100)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Kupon */}
             {activeCoupons.length > 0 && (

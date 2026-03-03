@@ -2,33 +2,30 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, Check, X, Info } from 'lucide-react'
 
-const CATEGORY_OPTIONS = [
-  { value: 'ELECTRICAL_SOCKET',          label: 'Priz Tamiri' },
-  { value: 'ELECTRICAL_CIRCUIT_BREAKER', label: 'Sigorta / Kaçak Akım' },
-  { value: 'ELECTRICAL_LIGHTING',        label: 'Aydınlatma Montajı' },
-  { value: 'ELECTRICAL_PANEL',           label: 'Elektrik Panosu' },
-  { value: 'ELECTRICAL_WIRING',          label: 'Kablolama' },
-  { value: 'PLUMBING_LEAK',             label: 'Su Sızıntısı' },
-  { value: 'PLUMBING_DRAIN',            label: 'Tıkanıklık Açma' },
-  { value: 'PLUMBING_INSTALLATION',     label: 'Tesisat Montajı' },
-  { value: 'HVAC_AC',                   label: 'Klima Servis' },
-  { value: 'PAINTING',                  label: 'Boya / Badana' },
-  { value: 'CARPENTRY',                 label: 'Marangoz' },
-  { value: 'GENERAL',                   label: 'Genel Tamir' },
-]
+/** Türkçe label → büyük harfli kategori kodu (PRIZ_TAMIRI, SU_SIZINTISI...) */
+const toKey = (label) => {
+  const map = { ç:'C',Ç:'C',ö:'O',Ö:'O',ş:'S',Ş:'S',ı:'I',İ:'I',ü:'U',Ü:'U',ğ:'G',Ğ:'G' }
+  return label
+    .split('').map(c => map[c] || c).join('')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 30)
+}
 
 function AdminPricingPage() {
   const navigate = useNavigate()
-  const [services, setServices]     = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [showForm, setShowForm]     = useState(false)
-  const [editingId, setEditingId]   = useState(null)
-  const [saving, setSaving]         = useState(false)
-  const [error, setError]           = useState(null)
+  const [services, setServices]   = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [showForm, setShowForm]   = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [saving, setSaving]       = useState(false)
+  const [error, setError]         = useState(null)
 
-  const [form, setForm] = useState({ category: '', label: '', basePrice: '' })
+  const [form, setForm] = useState({ label: '', basePrice: '' })
+  const generatedKey = toKey(form.label || '')
 
   const loadServices = async () => {
     try {
@@ -46,31 +43,30 @@ function AdminPricingPage() {
 
   const openCreate = () => {
     setEditingId(null)
-    setForm({ category: '', label: '', basePrice: '' })
+    setForm({ label: '', basePrice: '' })
     setError(null)
     setShowForm(true)
   }
 
   const openEdit = (svc) => {
     setEditingId(svc.id)
-    setForm({ category: svc.category, label: svc.label, basePrice: String(svc.basePrice) })
+    setForm({ label: svc.label, basePrice: String(svc.basePrice) })
     setError(null)
     setShowForm(true)
   }
 
-  const handleCategoryChange = (cat) => {
-    const opt = CATEGORY_OPTIONS.find(o => o.value === cat)
-    setForm(prev => ({ ...prev, category: cat, label: opt?.label || '' }))
-  }
-
   const handleSave = async () => {
-    if (!form.category || !form.basePrice) {
-      setError('Kategori ve temel fiyat zorunludur.')
+    if (!form.label.trim() || !form.basePrice) {
+      setError('Hizmet adı ve temel fiyat zorunludur.')
       return
     }
     const price = Number(form.basePrice)
     if (isNaN(price) || price <= 0) {
       setError('Geçerli bir fiyat girin.')
+      return
+    }
+    if (!editingId && generatedKey.length < 2) {
+      setError('Daha uzun bir hizmet adı girin.')
       return
     }
     setSaving(true)
@@ -79,12 +75,12 @@ function AdminPricingPage() {
       if (editingId) {
         await fetchAPI(API_ENDPOINTS.SERVICES.UPDATE(editingId), {
           method: 'PATCH',
-          body: { label: form.label, basePrice: price },
+          body: { label: form.label.trim(), basePrice: price },
         })
       } else {
         await fetchAPI(API_ENDPOINTS.SERVICES.CREATE, {
           method: 'POST',
-          body: { category: form.category, label: form.label, basePrice: price },
+          body: { category: generatedKey, label: form.label.trim(), basePrice: price },
         })
       }
       setShowForm(false)
@@ -109,7 +105,7 @@ function AdminPricingPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Bu servisi silmek istediğinizden emin misiniz?')) return
+    if (!confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) return
     try {
       await fetchAPI(API_ENDPOINTS.SERVICES.DELETE(id), { method: 'DELETE' })
       loadServices()
@@ -118,18 +114,15 @@ function AdminPricingPage() {
     }
   }
 
-  // Mevcut kategorileri bul → form'da seçenek olarak kaldır
-  const usedCategories = services.map(s => s.category)
-  const availableOptions = editingId
-    ? CATEGORY_OPTIONS
-    : CATEGORY_OPTIONS.filter(o => !usedCategories.includes(o.value))
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/admin')} className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition">
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition"
+          >
             <ArrowLeft size={18} className="text-gray-600" />
           </button>
           <div>
@@ -146,51 +139,52 @@ function AdminPricingPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-4">
-        {/* Ekleme / Düzenleme Formu */}
+        {/* Form */}
         {showForm && (
           <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-purple-200">
             <h3 className="font-bold text-gray-900 mb-4">
-              {editingId ? 'Hizmet Düzenle' : 'Yeni Hizmet Ekle'}
+              {editingId ? 'Hizmeti Düzenle' : 'Yeni Hizmet Ekle'}
             </h3>
-            {error && <p className="text-sm text-red-600 mb-3 bg-red-50 p-2 rounded-lg">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-600 mb-3 bg-red-50 p-2 rounded-lg">{error}</p>
+            )}
             <div className="space-y-3">
-              {/* Kategori */}
+              {/* Hizmet Adı */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
-                {editingId ? (
-                  <input
-                    value={form.category}
-                    disabled
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm"
-                  />
-                ) : (
-                  <select
-                    value={form.category}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  >
-                    <option value="">-- Seçin --</option>
-                    {availableOptions.map(o => (
-                      <option key={o.value} value={o.value}>{o.label} ({o.value})</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Türkçe Etiket */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Türkçe Etiket</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Hizmet Adı
+                </label>
                 <input
                   value={form.label}
                   onChange={(e) => setForm(prev => ({ ...prev, label: e.target.value }))}
-                  placeholder="Örn: Priz Tamiri"
+                  placeholder="Örn: Priz Tamiri, Su Sızıntısı, Kapı Kilidi..."
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  disabled={saving}
                 />
+                {/* Otomatik üretilen kod (yeni eklemede göster) */}
+                {!editingId && form.label.trim().length > 1 && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <Info size={12} className="text-purple-400 shrink-0" />
+                    <span className="text-xs text-purple-500">
+                      Sistem kodu: <strong className="font-mono">{generatedKey}</strong>
+                    </span>
+                  </div>
+                )}
+                {editingId && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <Info size={12} className="text-gray-400 shrink-0" />
+                    <span className="text-xs text-gray-400">
+                      Sistem kodu değişmez, sadece adı ve fiyatı güncelleyebilirsiniz.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Temel Fiyat */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Temel Fiyat (TL)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Temel Fiyat (TL)
+                </label>
                 <input
                   type="number"
                   min="1"
@@ -198,6 +192,7 @@ function AdminPricingPage() {
                   onChange={(e) => setForm(prev => ({ ...prev, basePrice: e.target.value }))}
                   placeholder="150"
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  disabled={saving}
                 />
               </div>
             </div>
@@ -214,11 +209,9 @@ function AdminPricingPage() {
                 disabled={saving}
                 className="flex-1 py-2.5 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition text-sm disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Check size={16} />
-                )}
+                {saving
+                  ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <Check size={16} />}
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
             </div>
@@ -234,7 +227,9 @@ function AdminPricingPage() {
           <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
             <p className="text-4xl mb-4">💰</p>
             <p className="text-gray-600 font-medium">Henüz hizmet eklenmemiş.</p>
-            <p className="text-gray-400 text-sm mt-1">Yukarıdaki "Yeni Hizmet" butonuyla ekleyin.</p>
+            <p className="text-gray-400 text-sm mt-1">
+              "Yeni Hizmet" butonuyla istediğiniz hizmetleri ekleyin.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -242,10 +237,9 @@ function AdminPricingPage() {
               <div
                 key={svc.id}
                 className={`bg-white rounded-2xl p-5 shadow-lg flex items-center gap-4 border-2 transition ${
-                  svc.isActive ? 'border-transparent' : 'border-gray-200 opacity-60'
+                  svc.isActive ? 'border-transparent' : 'border-gray-200 opacity-50'
                 }`}
               >
-                {/* Renk chip */}
                 <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
                   <span className="text-lg">🔧</span>
                 </div>
@@ -261,7 +255,6 @@ function AdminPricingPage() {
                 </div>
 
                 <div className="flex gap-2 shrink-0">
-                  {/* Aktif/Pasif toggle */}
                   <button
                     onClick={() => handleToggle(svc)}
                     title={svc.isActive ? 'Pasife al' : 'Aktife al'}
@@ -273,14 +266,12 @@ function AdminPricingPage() {
                   >
                     {svc.isActive ? <Check size={15} /> : <X size={15} />}
                   </button>
-
                   <button
                     onClick={() => openEdit(svc)}
                     className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-200 transition"
                   >
                     <Pencil size={14} />
                   </button>
-
                   <button
                     onClick={() => handleDelete(svc.id)}
                     className="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition"
@@ -293,13 +284,12 @@ function AdminPricingPage() {
           </div>
         )}
 
-        {/* Açıklama notu */}
+        {/* Bilgi notu */}
         <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
           <p className="text-xs text-blue-700 font-medium">
-            💡 <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI metni sınıflandırır.
-            Backend bu tablodaki fiyatları baz alarak tahmini ücret hesaplar.
-            Gece (22:00–08:00) ve acil durumlar için çarpanlar otomatik uygulanır.
-            AI fiyat üretmez — fiyat her zaman bu tablodan gelir.
+            💡 <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI,
+            <strong> buradaki aktif hizmetleri</strong> baz alarak en uygun olanı seçer ve
+            fiyat tahmini üretir. İstediğiniz hizmetleri ekleyin, istemediğinizi silin.
           </p>
         </div>
       </div>

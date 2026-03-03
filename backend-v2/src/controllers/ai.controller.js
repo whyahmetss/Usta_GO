@@ -1,24 +1,15 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { PrismaClient } from '@prisma/client'
-import {
-  CATEGORY_WHITELIST,
-  CATEGORY_LABELS,
-  FALLBACK_CATEGORY,
-} from '../constants/categories.js'
-import { getServicesByCategories } from '../services/service.service.js'
+import { getActiveServices } from '../services/service.service.js'
 import { successResponse } from '../utils/response.js'
-
-const prisma = new PrismaClient()
 
 // ── Prompt enjeksiyon önleme ────────────────────────────────────────
 const sanitizeInput = (text) => {
   if (typeof text !== 'string') return ''
   return text
-    .replace(/<[^>]*>/g, '')           // HTML strip
-    .replace(/[{}[\]]/g, '')           // JSON chars
+    .replace(/<[^>]*>/g, '')
+    .replace(/[{}[\]]/g, '')
     .replace(/ignore|system|prompt|assistant|jailbreak/gi, '***')
     .trim()
-    .slice(0, 500)                     // max 500 karakter
+    .slice(0, 500)
 }
 
 // ── Gece/gündüz çarpanı ────────────────────────────────────────────
@@ -35,88 +26,71 @@ const getRegionMultiplier = (address = '') => {
   return 1.15
 }
 
-// ── Kategori → Türkçe anahtar kelimeler (Gemini bağlamı için) ─────
-const CATEGORY_HINTS = {
-  ELECTRICAL_SOCKET:          'priz, soket, elektrik prizi, fiş takılmıyor, akım yok, topraklama, çıkmıyor',
-  ELECTRICAL_CIRCUIT_BREAKER: 'sigorta, sigorta attı, kaçak akım, devre kesici, enerjim kesiliyor',
-  ELECTRICAL_LIGHTING:        'lamba, avize, aydınlatma, spot, led, ampul, neon, ışık yanmıyor',
-  ELECTRICAL_PANEL:           'elektrik panosu, dağıtım kutusu, sayaç, ana sigorta kutusu',
-  ELECTRICAL_WIRING:          'kablo, tesisat, kısa devre, duvar içi kablo, kablolama',
-  PLUMBING_LEAK:              'su sızıntısı, damlıyor, boru patladı, rutubet, sızıyor, ıslaklık',
-  PLUMBING_DRAIN:             'tıkanıklık, tıkalı, gider tıkalı, lavabo, wc, tuvalet, banyo akmıyor',
-  PLUMBING_INSTALLATION:      'musluk, batarya, rezervuar, tesisat montajı, armatür, duş',
-  HVAC_AC:                    'klima, ısıtma, soğutma, split klima, ısı pompası, kombi',
-  PAINTING:                   'boya, badana, duvar boyama, iç cephe, renk değişikliği, sıva',
-  CARPENTRY:                  'kapı, pencere, dolap, ahşap iş, kilit, menteşe, pervaz, parke',
-  GENERAL:                    'genel tamir, karma sorun, diğer, belirsiz',
-}
+// ── DeepSeek çağrısı — DB'deki gerçek kategorilerle çalışır ────────
+const classifyWithDeepSeek = async (description, services) => {
+  const apiKey = process.env.DEEPSEEK_API_KEY
+  if (!apiKey) throw new Error('DEEPSEEK_API_KEY ayarlanmamış')
 
-// ── Gemini çağrısı ─────────────────────────────────────────────────
-const classifyWithGemini = async (description) => {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) throw new Error('GEMINI_API_KEY ayarlanmamış')
-
-  const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
-  const categoryBlock = Object.entries(CATEGORY_HINTS)
-    .map(([k, v]) => `  ${k}: ${v}`)
+  const serviceList = services
+    .map(s => `${s.category}: ${s.label}`)
     .join('\n')
 
-  const prompt = `Sen bir ev tamiri servis sınıflandırma motorusun.
-Görevin YALNIZCA aşağıdaki kategorilerden seçim yapıp JSON döndürmektir.
-KESİNLİKLE: fiyat üretme, teşhis koyma, öneri verme, açıklama yapma.
-Sadece JSON döndür, başka hiçbir şey yazma.
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        {
+          role: 'system',
+          content: `Kullanıcı bir ev tamir sorunu bildirdi.
+Aşağıdaki hizmet listesinden EN UYGUN birini seç.
+SADECE kategori kodunu yaz, başka hiçbir şey yazma.
 
-Geçerli kategoriler ve Türkçe anahtar kelimeler:
-${categoryBlock}
+Hizmet listesi:
+${serviceList}`,
+        },
+        {
+          role: 'user',
+          content: description,
+        },
+      ],
+      max_tokens: 30,
+      temperature: 0,
+    }),
+  })
 
-Kullanıcı açıklaması: ${description}
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`DeepSeek API hatası ${response.status}: ${err.slice(0, 100)}`)
+  }
 
-Döndüreceğin JSON formatı (kesinlikle bu formattan çıkma):
-{
-  "categories": [
-    {"category": "ENUM_DEĞER", "confidence": 0.0-1.0, "possibleCauses": ["neden1", "neden2"]}
-  ],
-  "isUrgent": false
+  const data = await response.json()
+  const raw = data.choices?.[0]?.message?.content?.trim() || ''
+
+  // Sadece kategori kodunu al (A-Z, 0-9, _)
+  const categoryKey = raw.split(/[\s\n]/)[0].replace(/[^A-Z0-9_]/g, '').trim()
+
+  console.log('[AI] DeepSeek raw:', raw.slice(0, 80))
+  console.log('[AI] Parsed key:', categoryKey)
+
+  return categoryKey
 }
 
-Kurallar:
-- Anahtar kelimelerle eşleşen en uygun kategoriyi seç (en fazla 3)
-- confidence 0.4 altındaki kategorileri dahil etme
-- possibleCauses en fazla 3 madde, teknik olmayan Türkçe ile
-- isUrgent: yangın, duman, su baskını, elektrik çarpması gibi acil durumlar için true
-- Emin olamıyorsan GENERAL seç, ama "priz/lamba/musluk/boya" gibi net kelimelerde doğru kategoriyi seç`
-
-  const result = await model.generateContent(prompt)
-  const text = result.response.text().trim()
-  console.log('[AI] Gemini raw response:', text.slice(0, 300))
-
-  // Markdown kod bloğunu temizle (```json ... ```)
-  const cleaned = text.replace(/```(?:json)?\s*/g, '').replace(/```/g, '').trim()
-
-  // JSON bloğu yakala
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error('Gemini geçerli JSON döndürmedi')
-
-  const parsed = JSON.parse(jsonMatch[0])
-  console.log('[AI] Parsed categories:', parsed.categories?.map(c => `${c.category}(${c.confidence})`).join(', '))
-  return parsed
-}
-
-// ── Müşteri mesajı oluştur (Backend template) ──────────────────────
-const buildCustomerMessage = (matchedServices, finalPrice, isUrgent) => {
-  const labels = matchedServices.map(s => s.label).join(' ve ')
+// ── Müşteri mesajı ──────────────────────────────────────────────────
+const buildCustomerMessage = (serviceLabel, finalPrice, isUrgent) => {
   const urgencyNote = isUrgent ? ' Acil servis talebi olarak önceliklendirileceğinizi belirtmek isteriz.' : ''
-
   return {
     giris: 'Talebinizi aldık ve teknik ekibimiz değerlendirdi.',
-    gelisme: `Açıklamanız doğrultusunda ${labels} kapsamında hizmet gerektirdiği değerlendirildi. Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
+    gelisme: `Açıklamanız doğrultusunda "${serviceLabel}" kapsamında hizmet gerektirdiği değerlendirildi. Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
     sonuc: `Tahmini hizmet bedeli ${finalPrice} TL'dir. Bu tutar, usta tarafından yerinde inceleme sonrası kesinleşecektir. Nihai ücret malzeme ve işçilik durumuna göre değişebilir.`,
   }
 }
 
-// ── Ana endpoint handler ───────────────────────────────────────────
+// ── Ana endpoint ───────────────────────────────────────────────────
 export const analyzeJob = async (req, res, next) => {
   try {
     const rawDescription = req.body.description
@@ -130,86 +104,58 @@ export const analyzeJob = async (req, res, next) => {
     const address     = sanitizeInput(rawAddress)
 
     if (description.length < 5) {
-      return res.status(400).json({ error: 'Açıklama çok kısa' })
+      return res.status(400).json({ error: 'Açıklama çok kısa (en az 5 karakter)' })
     }
 
-    // 1. Gemini sınıflandırma
-    let aiResult
+    // 1. DB'den aktif servisleri çek
+    const activeServices = await getActiveServices()
+
+    if (activeServices.length === 0) {
+      return res.status(503).json({ error: 'Henüz hizmet tanımlı değil. Admin panelinden ekleyin.' })
+    }
+
+    const fallbackService =
+      activeServices.find(s => s.category === 'GENERAL') || activeServices[0]
+
+    // 2. DeepSeek ile sınıflandır
+    let matchedCategory = fallbackService.category
+    let isUrgent = false
     try {
-      aiResult = await classifyWithGemini(description)
-    } catch (geminiErr) {
-      console.error('Gemini error:', geminiErr.message)
-      // Gemini hata verirse GENERAL fallback
-      aiResult = {
-        categories: [{ category: FALLBACK_CATEGORY, confidence: 0.5, possibleCauses: [] }],
-        isUrgent: false,
-      }
+      const key = await classifyWithDeepSeek(description, activeServices)
+      const found = activeServices.find(s => s.category === key)
+      if (found) matchedCategory = found.category
+      const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
+      isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
+    } catch (aiErr) {
+      console.error('[AI] DeepSeek hatası:', aiErr.message)
     }
 
-    // 2. Kategori whitelist doğrulama
-    const validCategories = (aiResult.categories || [])
-      .filter(c => CATEGORY_WHITELIST.includes(c.category) && c.confidence >= 0.4)
-      .slice(0, 3)
-
-    if (validCategories.length === 0) {
-      validCategories.push({ category: FALLBACK_CATEGORY, confidence: 0.5, possibleCauses: [] })
-    }
-
-    // 3. DB'den fiyat çek
-    const categoryKeys = validCategories.map(c => c.category)
-    const services = await getServicesByCategories(categoryKeys)
-
-    // DB'de tanımlı olmayan kategoriler için GENERAL'a bak
-    let matchedServices = services
-    if (matchedServices.length === 0) {
-      const generalService = await prisma.service.findFirst({
-        where: { category: FALLBACK_CATEGORY, isActive: true },
-      })
-      if (generalService) matchedServices = [generalService]
-    }
+    // 3. Servisi bul
+    const matchedService =
+      activeServices.find(s => s.category === matchedCategory) || fallbackService
 
     // 4. Fiyat hesapla
-    const baseTotal = matchedServices.reduce((sum, s) => sum + s.basePrice, 0) || 200
-    const nightMultiplier  = getNightMultiplier()
-    const urgencyMultiplier = aiResult.isUrgent ? 1.3 : 1.0
-    const regionMultiplier = getRegionMultiplier(address)
+    const basePrice         = matchedService.basePrice
+    const nightMultiplier   = getNightMultiplier()
+    const urgencyMultiplier = isUrgent ? 1.3 : 1.0
+    const regionMultiplier  = getRegionMultiplier(address)
+    const finalPrice = Math.round(basePrice * nightMultiplier * urgencyMultiplier * regionMultiplier)
 
-    const finalPrice = Math.round(baseTotal * nightMultiplier * urgencyMultiplier * regionMultiplier)
-
-    // 5. Müşteri mesajı (backend template — AI mesaj üretmiyor)
-    const customerMessage = buildCustomerMessage(
-      matchedServices.length > 0 ? matchedServices : [{ label: CATEGORY_LABELS[FALLBACK_CATEGORY] }],
-      finalPrice,
-      aiResult.isUrgent,
-    )
-
-    // 6. Kategorinin frontend label'ını belirle (job title için)
-    const primaryCategory = validCategories[0].category
-    const primaryLabel    = matchedServices[0]?.label || CATEGORY_LABELS[primaryCategory] || 'Genel Tamir'
+    // 5. Müşteri mesajı
+    const customerMessage = buildCustomerMessage(matchedService.label, finalPrice, isUrgent)
 
     successResponse(res, {
-      // AI çıktısı (sınıflandırma)
-      categories: validCategories.map(c => ({
-        category: c.category,
-        label: CATEGORY_LABELS[c.category] || c.category,
-        confidence: c.confidence,
-        possibleCauses: c.possibleCauses || [],
-      })),
-      isUrgent: aiResult.isUrgent || false,
-
-      // Fiyat detayı (backend hesaplaması)
+      primaryLabel: matchedService.label,
+      category:     matchedService.category,
+      isUrgent,
+      urgency: isUrgent ? 'Yüksek' : 'Normal',
       priceBreakdown: {
-        services: matchedServices.map(s => ({ label: s.label, basePrice: s.basePrice })),
-        baseTotal,
+        basePrice,
         nightMultiplier,
         urgencyMultiplier,
         regionMultiplier: Math.round(regionMultiplier * 100) / 100,
       },
       estimatedPrice: finalPrice,
-
-      // Frontend gösterimi için
-      primaryLabel,
-      urgency: aiResult.isUrgent ? 'Yüksek' : 'Normal',
       customerMessage,
     })
   } catch (err) {
