@@ -12,7 +12,8 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "test": "NODE_ENV=test jest --detectOpenHandles",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [
     "express",
