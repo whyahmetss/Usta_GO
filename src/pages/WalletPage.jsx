@@ -28,6 +28,64 @@ function WalletPage() {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponMsg, setCouponMsg] = useState(null)
 
+  // Paket State'leri
+  const [activePackage, setActivePackage] = useState(null)
+  const [packageLoading, setPackageLoading] = useState(false)
+  const [packageMsg, setPackageMsg] = useState(null)
+  const [showPackageSelection, setShowPackageSelection] = useState(false)
+
+  const PACKAGES = [
+    {
+      id: 'klasik',
+      name: 'Klasik',
+      price: 499,
+      badgeColor: 'bg-gray-100 text-gray-700',
+      headerColor: 'from-gray-500 to-gray-600',
+      badge: '🏠',
+      tag: 'Başlangıç',
+      tagColor: 'bg-gray-100 text-gray-600',
+      features: [
+        'Elektrik kontrol (2 ayda 1)',
+        'Su tesisat kontrolü (3 ayda 1)',
+        'Sigorta panosu kontrolü (yılda 1)',
+        'Standart usta atama',
+      ],
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      price: 999,
+      badgeColor: 'bg-blue-100 text-blue-700',
+      headerColor: 'from-blue-500 to-blue-700',
+      badge: '⚡',
+      tag: 'Popüler',
+      tagColor: 'bg-blue-100 text-blue-600',
+      features: [
+        'Elektrik + sigorta panosu (aylık)',
+        'Su tesisat basınç kontrolü (2 ayda 1)',
+        'Kaçak akım testi (3 ayda 1)',
+        'Öncelikli usta atama',
+      ],
+    },
+    {
+      id: 'plus',
+      name: 'Plus',
+      price: 1999,
+      badgeColor: 'bg-amber-100 text-amber-700',
+      headerColor: 'from-amber-500 to-orange-500',
+      badge: '👑',
+      tag: 'En İyi Değer',
+      tagColor: 'bg-amber-100 text-amber-600',
+      features: [
+        'Tüm Pro hizmetleri dahil',
+        'Kombi / klima bakımı (6 ayda 1)',
+        'Kaçak akım testi (aylık)',
+        'VIP öncelikli usta atama',
+        '7/24 acil yardım hattı',
+      ],
+    },
+  ]
+
 useEffect(() => {
   const loadWalletData = async () => {
     try {
@@ -47,6 +105,10 @@ useEffect(() => {
           const txList = Array.isArray(txRes) ? txRes : txRes?.data || []
           setCustomerTransactions(txList)
         } catch { /* işlem geçmişi boş kalır */ }
+        try {
+          const pkgRes = await fetchAPI(API_ENDPOINTS.PACKAGES.MY)
+          setActivePackage(pkgRes?.data || null)
+        } catch { /* paket yok */ }
         return
       }
 
@@ -168,6 +230,41 @@ useEffect(() => {
     } finally {
       setCouponLoading(false)
     }
+  }
+
+  const handleBuyPackage = async (pkg) => {
+    setPackageLoading(true)
+    setPackageMsg(null)
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.PACKAGES.BUY, {
+        method: 'POST',
+        body: { packageId: pkg.id, packageName: pkg.name, price: pkg.price }
+      })
+      if (res?.success || res?.data) {
+        setActivePackage(res.data)
+        setPackageMsg({ ok: true, text: `${pkg.name} paketi aktifleştirildi!` })
+        setShowPackageSelection(false)
+        const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
+        if (walletRes?.data) setCustomerBalance(walletRes.data.balance ?? customerBalance)
+      } else {
+        setPackageMsg({ ok: false, text: res?.message || 'Paket satın alınamadı.' })
+      }
+    } catch (err) {
+      setPackageMsg({ ok: false, text: err.message || 'Paket satın alınamadı.' })
+    } finally {
+      setPackageLoading(false)
+    }
+  }
+
+  const handleToggleAutoRenew = async () => {
+    if (!activePackage) return
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.PACKAGES.TOGGLE_AUTO_RENEW, {
+        method: 'PATCH',
+        body: { autoRenew: !activePackage.autoRenew }
+      })
+      if (res?.data) setActivePackage(res.data)
+    } catch { /* sessiz hata */ }
   }
 
   // --- MÜŞTERİ GÖRÜNÜMÜ ---
@@ -292,6 +389,138 @@ useEffect(() => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Bakım Paketlerim */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 pt-5 pb-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <span className="text-base">📦</span>
+                  </div>
+                  <h3 className="font-bold text-gray-900">Bakım Paketlerim</h3>
+                </div>
+                {!showPackageSelection && (
+                  <button
+                    onClick={() => setShowPackageSelection(true)}
+                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-all"
+                  >
+                    {activePackage ? 'Değiştir' : 'Paket Al'}
+                  </button>
+                )}
+              </div>
+
+              {packageMsg && (
+                <div className={`mb-3 flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-xl ${packageMsg.ok ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                  <span>{packageMsg.ok ? '✅' : '❌'}</span>
+                  {packageMsg.text}
+                </div>
+              )}
+
+              {/* Aktif Paket Bilgisi */}
+              {activePackage && !showPackageSelection ? (
+                <div className="space-y-3">
+                  <div className={`bg-gradient-to-r ${PACKAGES.find(p => p.id === activePackage.packageId)?.headerColor || 'from-indigo-500 to-indigo-700'} rounded-2xl p-4 text-white`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{PACKAGES.find(p => p.id === activePackage.packageId)?.badge || '📦'}</span>
+                        <div>
+                          <p className="font-black text-lg">{activePackage.packageName} Paketi</p>
+                          <p className="text-white/70 text-xs">{activePackage.price?.toLocaleString('tr-TR')} TL/ay</p>
+                        </div>
+                      </div>
+                      <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded-lg">🟢 Aktif</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <span className="text-lg">📅</span>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-500">Sonraki Bakım Tarihi</p>
+                        <p className="font-bold text-gray-900 text-sm">
+                          {activePackage.nextRenewal
+                            ? new Date(activePackage.nextRenewal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">💳</span>
+                        <div>
+                          <p className="text-xs text-gray-500">Otomatik Yenile</p>
+                          <p className="font-semibold text-gray-900 text-sm">{activePackage.autoRenew ? 'Açık' : 'Kapalı'}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleToggleAutoRenew}
+                        className={`relative w-12 h-6 rounded-full transition ${activePackage.autoRenew ? 'bg-green-500' : 'bg-gray-300'}`}
+                      >
+                        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${activePackage.autoRenew ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleBuyPackage(PACKAGES.find(p => p.id === activePackage.packageId))}
+                    disabled={packageLoading}
+                    className="w-full py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {packageLoading ? <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> : '🔄'}
+                    Paketi Yenile
+                  </button>
+                </div>
+              ) : !showPackageSelection ? (
+                <div className="text-center py-4">
+                  <span className="text-4xl">📦</span>
+                  <p className="text-sm text-gray-500 mt-2 font-medium">Aktif paketiniz yok</p>
+                  <p className="text-xs text-gray-400 mt-1">Aylık bakım paketi ile evinizi koruyun</p>
+                </div>
+              ) : null}
+
+              {/* Paket Seçim Ekranı */}
+              {showPackageSelection && (
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-500 text-center mb-2">Paketinizi seçin — ücret cüzdanınızdan düşülür</p>
+                  {PACKAGES.map(pkg => (
+                    <div key={pkg.id} className="border border-gray-100 rounded-2xl p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{pkg.badge}</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-black text-gray-900">{pkg.name}</p>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pkg.tagColor}`}>{pkg.tag}</span>
+                            </div>
+                            <p className="font-black text-indigo-600 text-lg">{pkg.price.toLocaleString('tr-TR')} TL<span className="text-xs text-gray-400 font-normal">/ay</span></p>
+                          </div>
+                        </div>
+                      </div>
+                      <ul className="space-y-1 mb-3">
+                        {pkg.features.map((f, i) => (
+                          <li key={i} className="text-xs text-gray-600 flex items-center gap-2">
+                            <span className="text-green-500 flex-shrink-0">✓</span>{f}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={() => handleBuyPackage(pkg)}
+                        disabled={packageLoading}
+                        className={`w-full py-2.5 bg-gradient-to-r ${pkg.headerColor} text-white rounded-xl font-bold text-sm active:scale-95 transition-all disabled:opacity-50`}
+                      >
+                        {packageLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" /> : `${pkg.name} Paketini Al`}
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => setShowPackageSelection(false)} className="w-full py-2 text-gray-400 text-sm font-medium">
+                    Vazgeç
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* İşlem Geçmişi */}
