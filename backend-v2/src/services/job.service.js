@@ -6,34 +6,55 @@ export const createJob = async (customerId, data) => {
   // Only extract fields that exist in the Prisma schema
   const { title, description, category, location, budget, status, photos, price } = data;
 
+  const amount = price || budget || 0
+
   // Bakiye kontrolü
-  const requiredAmount = price || budget || 0
-  if (requiredAmount > 0) {
+  if (amount > 0) {
     const customer = await prisma.user.findUnique({ where: { id: customerId }, select: { balance: true } })
-    if (!customer || customer.balance < requiredAmount) {
-      const err = new Error(`Yetersiz bakiye. Gereken: ${requiredAmount} TL, Mevcut: ${customer?.balance ?? 0} TL`)
+    if (!customer || customer.balance < amount) {
+      const err = new Error(`Yetersiz bakiye. Gereken: ${amount} TL, Mevcut: ${customer?.balance ?? 0} TL`)
       err.statusCode = 402
       throw err
     }
   }
 
-  const job = await prisma.job.create({
-    data: {
-      title,
-      description,
-      category,
-      location,
-      budget,
-      status,
-      photos: photos || [],
-      customerId,
-    },
-    include: {
-      customer: {
-        select: { id: true, name: true, email: true },
+  // İş oluştur + bakiye düş (atomik)
+  const [job] = await prisma.$transaction([
+    prisma.job.create({
+      data: {
+        title,
+        description,
+        category,
+        location,
+        budget: amount,
+        status,
+        photos: photos || [],
+        customerId,
       },
-    },
-  });
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    ...(amount > 0 ? [
+      prisma.user.update({
+        where: { id: customerId },
+        data: { balance: { decrement: amount } },
+      }),
+    ] : []),
+  ]);
+
+  // Transaction kaydı
+  if (amount > 0) {
+    await prisma.transaction.create({
+      data: {
+        amount: -amount,
+        type: 'WITHDRAWAL',
+        description: `İş ödemesi: ${title}`,
+        userId: customerId,
+        jobId: job.id,
+      },
+    })
+  }
 
   return job;
 };
@@ -357,21 +378,73 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     throw error;
   }
 
-  const updatedJob = await prisma.job.update({
-    where: { id: jobId },
-    data: {
-      status: "CANCELLED",
-      cancelReason: reason,
-      cancelPenalty: penalty,
-      cancelledAt: new Date(),
-    },
-    include: {
-      customer: { select: { id: true, name: true, email: true } },
-      usta: { select: { id: true, name: true, email: true } },
-    },
-  });
+  // Ceza hesabı: eğer penalty gönderilmemişse durum bazlı otomatik hesapla
+  let finalPenalty = penalty
+  if (finalPenalty === 0 && job.budget > 0) {
+    if (job.status === "IN_PROGRESS") {
+      finalPenalty = Math.round(job.budget * 0.3)   // %30 ceza
+    } else if (job.status === "ACCEPTED") {
+      finalPenalty = Math.round(job.budget * 0.15)  // %15 ceza
+    }
+    // PENDING ise ceza yok
+  }
 
-  return updatedJob;
+  const refundAmount = Math.max(0, (job.budget || 0) - finalPenalty)
+
+  // İptal + bakiye iade (atomik)
+  const [updatedJob] = await prisma.$transaction([
+    prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: "CANCELLED",
+        cancelReason: reason,
+        cancelPenalty: finalPenalty,
+        cancelledAt: new Date(),
+      },
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+        usta: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    ...(refundAmount > 0 ? [
+      prisma.user.update({
+        where: { id: job.customerId },
+        data: { balance: { increment: refundAmount } },
+      }),
+    ] : []),
+  ]);
+
+  // Transaction kayıtları
+  const txRecords = []
+  if (refundAmount > 0) {
+    txRecords.push(
+      prisma.transaction.create({
+        data: {
+          amount: refundAmount,
+          type: 'REFUND',
+          description: `İptal iadesi: ${job.title}${finalPenalty > 0 ? ` (${finalPenalty} TL ceza kesildi)` : ''}`,
+          userId: job.customerId,
+          jobId,
+        },
+      })
+    )
+  }
+  if (finalPenalty > 0) {
+    txRecords.push(
+      prisma.transaction.create({
+        data: {
+          amount: -finalPenalty,
+          type: 'WITHDRAWAL',
+          description: `İptal cezası: ${job.title}`,
+          userId: job.customerId,
+          jobId,
+        },
+      })
+    )
+  }
+  if (txRecords.length > 0) await Promise.all(txRecords)
+
+  return { ...updatedJob, refundAmount, penaltyApplied: finalPenalty };
 };
 
 export const rateJob = async (jobId, customerId, rating, review = "") => {
