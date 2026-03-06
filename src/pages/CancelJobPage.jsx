@@ -61,50 +61,40 @@ function CancelJobPage() {
     </div>
   }
 
-  const isProfessional = user?.role === 'professional'
+  const isProfessional = user?.role === 'professional' || user?.role?.toUpperCase() === 'USTA'
 
-  // Calculate penalty
+  // Ceza: Müşteri iptal ederse 0, Usta iptal ederse durum bazlı
   let penalty = 0
-  if (job.status === 'accepted') {
-    penalty = isProfessional ? 30 : 20
-  } else if (job.status === 'in_progress') {
-    penalty = isProfessional ? 100 : 50
+  if (isProfessional) {
+    if (job.status === 'accepted') penalty = 30
+    else if (job.status === 'in_progress') penalty = 100
   }
 
   const reasons = isProfessional
     ? ['Müsait değilim', 'Malzeme eksikliği', 'Konum çok uzak', 'Acil durum', 'Diğer']
     : ['Vazgeçtim', 'Yanlış adres girdim', 'Başka bir usta buldum', 'Fiyat yüksek', 'Diğer']
 
- const handleCancel = async () => {
-    const finalReason = reason === 'Diger' ? customReason : reason
+  const handleCancel = async () => {
+    const finalReason = reason === 'Diğer' ? customReason : reason
     if (!finalReason) {
       alert('Lütfen bir iptal nedeni seçin')
       return
     }
 
     const warningMsg = penalty > 0
-      ? `Bu iş iptal edilecek ve ${penalty} TL Sadakatsizlik bedeli kesilecek. Devam etmek istiyor musunuz?`
+      ? `Bu iş iptal edilecek ve ${penalty} TL sadakatsizlik bedeli kesilecek. Devam etmek istiyor musunuz?`
       : 'Bu iş iptal edilecek. Devam etmek istiyor musunuz?'
 
     if (confirm(warningMsg)) {
       setSubmitting(true)
       try {
-        // BACKEND'E UYGUN GÜNCEL İSTEK
-     // HATALI SATIR:
-// const response = await fetchAPI(`/api/jobs/${id}/status`, ...
+        const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
+          method: 'PUT',
+          body: { reason: finalReason, penalty }
+        })
 
-// DOĞRU SATIR (Başındaki /api/ kısmını sil):
-const response = await fetchAPI(`/jobs/${id}/status`, {
-  method: 'PATCH',
-  body: {
-    status: 'CANCELLED',
-    reason: finalReason,
-    penalty: penalty
-  }
-})
-
-        if (response.data) {
-          alert('Is iptal edildi.')
+        if (response.data || response.success !== false) {
+          alert('İş iptal edildi.')
           navigate(isProfessional ? '/professional' : '/home')
         }
       } catch (err) {
@@ -114,7 +104,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
         setSubmitting(false)
       }
     }
-}
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -168,7 +158,7 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
               </button>
             ))}
           </div>
-          {reason === 'Diger' && (
+          {reason === 'Diğer' && (
             <textarea value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="Iptal nedeninizi yazin..."
               className="w-full mt-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" rows={3} />
           )}
@@ -177,9 +167,9 @@ const response = await fetchAPI(`/jobs/${id}/status`, {
         {/* Actions */}
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgeç</button>
-          <button onClick={handleCancel} disabled={!reason || (reason === 'Diger' && !customReason) || submitting}
+          <button onClick={handleCancel} disabled={!reason || (reason === 'Diğer' && !customReason) || submitting}
             className={`py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
-              !reason || (reason === 'Diger' && !customReason) || submitting
+              !reason || (reason === 'Diğer' && !customReason) || submitting
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-red-600 text-white hover:bg-red-700'
             }`}>

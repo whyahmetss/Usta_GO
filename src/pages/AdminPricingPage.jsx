@@ -149,12 +149,16 @@ function AdminPricingPage() {
     setPkgSaving(true)
     setPkgError(null)
     try {
+      const body = { price }
+      if (editingPkg.features && Array.isArray(editingPkg.features)) {
+        body.features = editingPkg.features.filter(Boolean)
+      }
       await fetchAPI(API_ENDPOINTS.PACKAGES.ADMIN_UPDATE(editingPkg.packageId), {
         method: 'PATCH',
-        body: { price, features: editingPkg.features },
+        body,
       })
       setEditingPkg(null)
-      loadPackages()
+      await loadPackages()
     } catch (err) {
       setPkgError(err.message || 'Kayıt başarısız')
     } finally {

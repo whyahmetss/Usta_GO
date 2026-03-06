@@ -378,15 +378,17 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     throw error;
   }
 
-  // Ceza hesabı: eğer penalty gönderilmemişse durum bazlı otomatik hesapla
+  // Ceza: Müşteri iptal ederse 0, Usta iptal ederse durum bazlı
   let finalPenalty = penalty
-  if (finalPenalty === 0 && job.budget > 0) {
+  if (isCustomer) {
+    finalPenalty = 0
+  } else if (finalPenalty === 0 && job.budget > 0) {
     if (job.status === "IN_PROGRESS") {
-      finalPenalty = Math.round(job.budget * 0.5)   // %50 ceza
+      finalPenalty = Math.round(job.budget * 0.5)
     } else if (job.status === "ACCEPTED") {
-      finalPenalty = Math.round(job.budget * 0.25)  // %25 ceza
+      finalPenalty = Math.round(job.budget * 0.25)
     } else if (job.status === "PENDING") {
-      finalPenalty = Math.round(job.budget * 0.05)  // %5 ceza
+      finalPenalty = Math.round(job.budget * 0.05)
     }
   }
 

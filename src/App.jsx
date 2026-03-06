@@ -22,6 +22,7 @@ import AdminComplaintsPage from './pages/AdminComplaintsPage'
 import AdminMessagesPage from './pages/AdminMessagesPage'
 import AdminCouponsPage from './pages/AdminCouponsPage'
 import AdminPricingPage from './pages/AdminPricingPage'
+import AdminCertificatesPage from './pages/AdminCertificatesPage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
@@ -137,6 +138,7 @@ function AppRoutes() {
       <Route path="/admin/messages" element={<ProtectedRoute roleRequired="admin"><AdminMessagesPage /></ProtectedRoute>} />
       <Route path="/admin/coupons" element={<ProtectedRoute roleRequired="admin"><AdminCouponsPage /></ProtectedRoute>} />
       <Route path="/admin/pricing" element={<ProtectedRoute roleRequired="admin"><AdminPricingPage /></ProtectedRoute>} />
+      <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><AdminCertificatesPage /></ProtectedRoute>} />
 
       <Route path="/track/:id" element={<ProtectedRoute><LiveTrackingPage /></ProtectedRoute>} />
       <Route path="/cancel-job/:id" element={<ProtectedRoute><CancelJobPage /></ProtectedRoute>} />

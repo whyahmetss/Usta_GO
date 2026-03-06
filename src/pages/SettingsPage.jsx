@@ -79,12 +79,18 @@ function SettingsPage() {
       try {
         setCertificateLoading(true)
         setError(null)
-        const res = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
-        setCertificateFile(res.data?.url || res.url)
+        const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+        const fileUrl = uploadRes.data?.url || uploadRes.url
+        if (!fileUrl) throw new Error('Yükleme başarısız')
+        await fetchAPI(API_ENDPOINTS.CERTIFICATES.UPLOAD, {
+          method: 'POST',
+          body: { fileUrl },
+        })
+        setCertificateFile(fileUrl)
         setSuccess('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
         setTimeout(() => setSuccess(null), 3000)
       } catch (err) {
-        setError(err.message)
+        setError(err.message || 'Sertifika yüklenemedi')
       } finally {
         setCertificateLoading(false)
       }

@@ -617,16 +617,12 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-1 flex">
-          <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 rounded-lg font-bold text-sm ${activeTab === 'overview' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>Özet</button>
-          <button onClick={() => setActiveTab('transactions')} className={`flex-1 py-2 rounded-lg font-bold text-sm ${activeTab === 'transactions' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>İşlemler</button>
-        </div>
-
+        <h3 className="font-bold text-gray-900 text-sm">Özet</h3>
         <div className="space-y-3">
           {transactions.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-sm">İşlem geçmişi bulunamadı.</div>
           ) : (
-            (activeTab === 'overview' ? transactions.slice(0, 5) : transactions).map((tx, idx) => (
+            transactions.map((tx, idx) => (
               <div key={tx.id || idx} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
