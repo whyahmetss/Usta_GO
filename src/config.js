@@ -68,10 +68,35 @@ export const API_ENDPOINTS = {
     RELEASE_ESCROW: (jobId) => `/wallet/escrow-release/${jobId}`,
   },
 
+  // Sertifika
+  CERTIFICATES: {
+    UPLOAD: '/certificates',
+    ADMIN_LIST: '/certificates/admin',
+    ADMIN_UPDATE: (id) => `/certificates/admin/${id}`,
+  },
+
   // Upload
   UPLOAD: {
     SINGLE: '/upload/photo',
     MULTIPLE: '/upload/photos',
+  },
+
+  // Offers
+  OFFERS: {
+    WITHDRAW: (offerId) => `/offers/${offerId}/withdraw`,
+  },
+
+  // Notifications (kalıcı)
+  NOTIFICATIONS: {
+    LIST: '/notifications',
+    CREATE: '/notifications',
+    MARK_READ: (id) => `/notifications/${id}/read`,
+    MARK_ALL_READ: '/notifications/read-all',
+  },
+
+  // Reviews
+  REVIEWS: {
+    BY_USTA: (ustaId) => `/reviews/usta/${ustaId}`,
   },
 
   // Complaints

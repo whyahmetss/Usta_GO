@@ -844,14 +844,37 @@ function JobDetailPage() {
         {/* Professional Actions */}
         {isProfessional && (
           <div className="space-y-3">
-            {job.status === 'pending' && (
-              <button
-                onClick={handleAccept}
-                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
-              >
-                İşi Kabul Et
-              </button>
-            )}
+            {job.status === 'pending' && (() => {
+              const myOffer = job.offers?.find(o => (o.ustaId || o.usta?.id) === user?.id && (o.status === 'PENDING' || o.status === 'pending'))
+              return (
+                <>
+                  {myOffer && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm('Teklifinizi geri çekmek istediğinize emin misiniz?')) return
+                        try {
+                          await fetchAPI(API_ENDPOINTS.OFFERS.WITHDRAW(myOffer.id), { method: 'PATCH' })
+                          const res = await fetchAPI(API_ENDPOINTS.JOBS.GET(id))
+                          if (res.data) setJob(mapJobFromBackend(res.data))
+                          alert('Teklifiniz geri alındı.')
+                        } catch (err) {
+                          alert('Teklif geri alınamadı: ' + (err.message || 'Hata'))
+                        }
+                      }}
+                      className="w-full py-3 bg-gray-100 border border-gray-300 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition"
+                    >
+                      Teklifi Geri Al
+                    </button>
+                  )}
+                  <button
+                    onClick={handleAccept}
+                    className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition"
+                  >
+                    İşi Kabul Et
+                  </button>
+                </>
+              )
+            })()}
 
             {job.status === 'accepted' && (
               <>

@@ -22,6 +22,8 @@ import complaintRoutes from "./routes/complaint.routes.js";
 import serviceRoutes from "./routes/service.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
 import packageRoutes from "./routes/package.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import certificateRoutes from "./routes/certificate.routes.js";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 
@@ -66,6 +68,8 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/services",  serviceRoutes);
 app.use("/api/ai",        aiRoutes);
 app.use("/api/packages",  packageRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/certificates", certificateRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({

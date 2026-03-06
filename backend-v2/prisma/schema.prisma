@@ -29,6 +29,7 @@ model User {
   profileImage String?
   ratings   Float      @default(0)
   balance   Float      @default(0)
+  isActive  Boolean    @default(true)  // Usta: iş almayı aç/kapat
 
   // Referral
   referralCode   String?  @unique
@@ -44,6 +45,8 @@ model User {
   complaints   Complaint[]    @relation("complaintsFiled")
   couponUsages CouponUsage[]
   packages     UserPackage[]
+  certificates UserCertificate[]
+  notifications Notification[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -253,6 +256,7 @@ enum TransactionType {
   REFUND
   COUPON
   REFERRAL
+  TOPUP
 }
 
 enum TransactionStatus {
@@ -378,4 +382,40 @@ enum PackageStatus {
   ACTIVE
   CANCELLED
   EXPIRED
+}
+
+// Kalıcı Bildirimler
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // job | message | system
+  title       String
+  message     String   @db.Text
+  icon        String?
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  jobId       String?
+  targetUrl   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+// Usta Sertifika - Admin onayı için
+model UserCertificate {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  status      String   @default("PENDING")  // PENDING | APPROVED | REJECTED
+  adminNote   String?
+
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
 }

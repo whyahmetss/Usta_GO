@@ -50,6 +50,36 @@ export const walletController = {
     }
   },
 
+  // POST /wallet/topup - Bakiye yükle (ödeme simülasyonu - gerçek gateway için genişletilmeli)
+  topup: async (req, res) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || amount < 10) return res.status(400).json({ success: false, error: 'Minimum 10 TL yükleyebilirsiniz' });
+      const amt = Number(amount);
+      if (isNaN(amt)) return res.status(400).json({ success: false, error: 'Geçersiz tutar' });
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: req.user.id },
+          data: { balance: { increment: amt } },
+        }),
+        prisma.transaction.create({
+          data: {
+            userId: req.user.id,
+            amount: amt,
+            type: 'TOPUP',
+            status: 'COMPLETED',
+            description: `Bakiye yükleme: ${amt} TL`,
+          },
+        }),
+      ]);
+      const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { balance: true } });
+      res.json({ success: true, message: `${amt} TL hesabınıza yüklendi`, data: { balance: user?.balance ?? 0 } });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
   // POST /wallet/coupon - redeem a coupon
   redeemCoupon: async (req, res) => {
     try {

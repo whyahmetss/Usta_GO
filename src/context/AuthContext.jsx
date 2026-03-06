@@ -235,91 +235,92 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
-  // --- UNREAD MESSAGE NOTIFICATIONS (on app startup only) ---
+  // --- LOAD PERSISTENT NOTIFICATIONS ---
   useEffect(() => {
     if (!user || useLocalStorage) return
 
-    const loadUnreadNotifications = async () => {
+    const loadNotifications = async () => {
       try {
-        const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_UNREAD)
+        const response = await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.LIST)
         if (response.data && Array.isArray(response.data)) {
-          const msgNotifs = response.data
-            .filter(msg => {
-              const senderRole = msg.sender?.role?.toLowerCase()
-              return senderRole === 'admin'
-            })
-            .map(msg => ({
-              id: 'msg_' + msg.id,
-              type: 'message',
-              title: `${msg.sender?.name || 'Yeni Mesaj'}`,
-              message: msg.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
-              icon: '💬',
-              targetUserId: user.id,
-              read: false,
-              time: msg.createdAt || new Date().toISOString(),
-            }))
-          setNotifications(prev => [
-            ...prev.filter(n => n.type !== 'message'),
-            ...msgNotifs,
-          ])
+          const mapped = response.data.map(n => ({
+            id: n.id,
+            type: n.type || 'system',
+            title: n.title,
+            message: n.message,
+            icon: n.icon || '🔔',
+            read: n.read,
+            time: n.createdAt || n.readAt || new Date().toISOString(),
+            targetUserId: user.id,
+            jobId: n.jobId,
+          }))
+          setNotifications(mapped)
         }
       } catch (err) {
-        console.warn('Could not load unread messages:', err)
+        console.warn('Could not load notifications:', err)
       }
     }
 
-    loadUnreadNotifications()
+    loadNotifications()
   }, [user?.id, useLocalStorage])
 
   // --- NOTIFICATIONS ---
-  const addNotification = useCallback((notif) => {
-    const newNotif = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-      ...notif,
-      read: false,
-      time: new Date().toISOString(),
+  const addNotification = useCallback(async (notif) => {
+    const baseNotif = { ...notif, read: false, time: new Date().toISOString(), targetUserId: user?.id }
+    if (useLocalStorage || !user) {
+      setNotifications(prev => [{ id: Date.now().toString(), ...baseNotif }, ...prev])
+      return
     }
-    setNotifications(prev => [newNotif, ...prev])
-  }, [])
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.CREATE, {
+        method: 'POST',
+        body: {
+          type: notif.type || 'system',
+          title: notif.title,
+          message: notif.message,
+          icon: notif.icon || '🔔',
+          jobId: notif.jobId,
+          targetUrl: notif.targetUrl,
+        },
+      })
+      if (res.data) {
+        setNotifications(prev => [{ id: res.data.id, ...baseNotif }, ...prev])
+      }
+    } catch {
+      setNotifications(prev => [{ id: Date.now().toString(), ...baseNotif }, ...prev])
+    }
+  }, [user?.id, useLocalStorage])
 
   const markNotificationRead = useCallback(async (notifId) => {
-    try {
-      if (useLocalStorage) {
-        setNotifications(prev => prev.map(n =>
-          n.id === notifId ? { ...n, read: true } : n
-        ))
-      } else {
-        // API call would be handled server-side in production
-        setNotifications(prev => prev.map(n =>
-          n.id === notifId ? { ...n, read: true } : n
-        ))
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n))
+    if (!useLocalStorage && notifId && !String(notifId).startsWith('msg_')) {
+      try {
+        await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notifId), { method: 'PATCH' })
+      } catch (err) {
+        console.warn('Mark notification read:', err)
       }
-    } catch (err) {
-      console.error('Error marking notification as read:', err)
     }
   }, [useLocalStorage])
 
   const markAllNotificationsRead = useCallback(async () => {
-    try {
-      if (useLocalStorage) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-      } else {
-        // API call would be handled server-side in production
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (!useLocalStorage) {
+      try {
+        await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ, { method: 'PATCH' })
+      } catch (err) {
+        console.warn('Mark all read:', err)
       }
-    } catch (err) {
-      console.error('Error marking all notifications as read:', err)
     }
   }, [useLocalStorage])
 
   const getUnreadNotificationCount = useCallback(() => {
     if (!user) return 0
-    return notifications.filter(n => !n.read && n.targetUserId === user.id).length
+    return notifications.filter(n => !n.read).length
   }, [notifications, user])
 
   const getUserNotifications = useCallback(() => {
     if (!user) return []
-    return notifications.filter(n => n.targetUserId === user.id)
+    return notifications
   }, [notifications, user])
 
   // --- JOBS ---

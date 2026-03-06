@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, LogOut, Copy, Share2, Gift, Camera } from 'lucide-react'
+import { ArrowLeft, LogOut, Copy, Share2, Gift, Camera, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 
@@ -27,6 +27,7 @@ function ProfilePage() {
   const [profilePhoto, setProfilePhoto] = useState(user?.profileImage || null)
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [ustaReviews, setUstaReviews] = useState([])
 
   // --- VERİ ÇEKME (Wallet Mantığı) ---
   const fetchStats = async () => {
@@ -103,6 +104,8 @@ function ProfilePage() {
             rating: avgRating,
             successRate: successRate
           })
+          const ratedJobs = userJobs.filter(j => (j.rating || j.ratingReview) && (j.professional?.id === user?.id || j.professionalId === user?.id))
+          setUstaReviews(ratedJobs)
         }
       }
     } catch (err) {
@@ -288,6 +291,30 @@ function ProfilePage() {
               <div className="text-2xl mb-2">📈</div>
               <p className="text-xs text-white/80">Başarı Oranı</p>
               <p className="text-2xl font-black">%{statsData.successRate}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Usta Değerlendirmeleri */}
+        {(user?.role === 'professional' || user?.role?.toUpperCase() === 'USTA') && ustaReviews.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 mb-4">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Star size={18} className="text-yellow-500" />
+              Bana Yapılan Değerlendirmeler
+            </h3>
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {ustaReviews.map((j, idx) => (
+                <div key={j.id || idx} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-gray-900">{j.title || 'İş'}</span>
+                    <span className="flex items-center gap-0.5 text-yellow-500">
+                      {[1,2,3,4,5].map(n => <Star key={n} size={12} fill={n <= (j.rating || 0) ? 'currentColor' : 'none'} />)}
+                    </span>
+                  </div>
+                  {(j.ratingReview || j.review) && <p className="text-sm text-gray-600">{j.ratingReview || j.review}</p>}
+                  <p className="text-xs text-gray-400 mt-1">{j.completedAt ? new Date(j.completedAt).toLocaleDateString('tr-TR') : ''}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}

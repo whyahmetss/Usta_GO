@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Send } from 'lucide-react'
+import { ArrowLeft, Send, Check, CheckCheck } from 'lucide-react'
 import { getSocket, emitEvent } from '../utils/socket'
 
 function MessagesPage() {
@@ -72,6 +72,16 @@ function MessagesPage() {
           const response = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(otherPersonId))
           if (response.data && Array.isArray(response.data)) {
             setJobMessages(response.data)
+            // Mark received messages as read
+            const toMark = response.data.filter(m => m.receiverId === user?.id && !m.isRead)
+            const markIds = new Set(toMark.map(m => m.id))
+            toMark.forEach(m => {
+              fetchAPI(API_ENDPOINTS.MESSAGES.MARK_READ(m.id), { method: 'PATCH' })
+                .then(() => {
+                  setJobMessages(prev => prev.map(msg => markIds.has(msg.id) ? { ...msg, isRead: true, readAt: new Date().toISOString() } : msg))
+                })
+                .catch(() => {})
+            })
           }
         }
       } catch (err) {
@@ -338,9 +348,10 @@ function MessagesPage() {
                     : 'bg-white text-gray-900 rounded-bl-md shadow-sm'
                 }`}>
                   <p className="text-sm">{msg.content || msg.text}</p>
-                  <p className={`text-[10px] mt-1 ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
-                    {formatTime(msg.createdAt || msg.timestamp)}
-                  </p>
+                  <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
+                    <span className="text-[10px]">{formatTime(msg.createdAt || msg.timestamp)}</span>
+                    {isMe && (msg.isRead ? <CheckCheck size={12} className="opacity-80" /> : <Check size={12} className="opacity-80" />)}
+                  </div>
                 </div>
               </div>
             )

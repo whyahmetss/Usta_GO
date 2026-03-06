@@ -67,7 +67,7 @@ export const registerUser = async (data) => {
   const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true },
     token,
   };
 };
@@ -97,7 +97,7 @@ export const loginUser = async (email, password) => {
   const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true },
     token,
   };
 };
@@ -108,7 +108,7 @@ export const getUserProfile = async (userId) => {
     select: {
       id: true, name: true, email: true, role: true, phone: true,
       bio: true, profileImage: true, ratings: true, balance: true,
-      referralCode: true, createdAt: true, updatedAt: true,
+      isActive: true, referralCode: true, createdAt: true, updatedAt: true,
     },
   });
 
@@ -116,6 +116,14 @@ export const getUserProfile = async (userId) => {
     const error = new Error("User not found");
     error.status = 404;
     throw error;
+  }
+
+  if (user.role === 'USTA') {
+    const latestCert = await prisma.userCertificate.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    user.verificationStatus = latestCert ? (latestCert.status === 'APPROVED' ? 'verified' : latestCert.status === 'PENDING' ? 'pending' : 'rejected') : 'unverified';
   }
 
   // Auto-generate referral code for users who don't have one yet
@@ -144,12 +152,16 @@ export const getUserProfile = async (userId) => {
 };
 
 export const updateUserProfile = async (userId, data) => {
+  const allowed = ['name', 'phone', 'bio', 'profileImage', 'isActive'];
+  const sanitized = Object.fromEntries(
+    Object.entries(data).filter(([k]) => allowed.includes(k))
+  );
   const user = await prisma.user.update({
     where: { id: userId },
-    data: { ...data },
+    data: sanitized,
     select: {
       id: true, name: true, email: true, role: true, phone: true,
-      bio: true, profileImage: true, referralCode: true,
+      bio: true, profileImage: true, isActive: true, referralCode: true,
     },
   });
   return user;
