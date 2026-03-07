@@ -131,24 +131,27 @@ export const walletController = {
     }
   },
 
-  // GET/POST /wallet/topup/callback - iyzico ödeme sonrası yönlendirir (auth yok)
+  // GET/POST /wallet/topup/callback - iyzico ödeme sonrası HTML sayfa döner (SPA/redirect bağımsız)
   topupCallback: async (req, res) => {
-    const redirectTo = (status, extra = '') => {
-      const base = `${getFrontendUrl().replace(/\/$/, '')}/payment-result?status=${status}`;
-      const url = extra ? `${base}&${extra}` : base;
+    const walletUrl = getFrontendUrl().replace(/\/$/, '') + '/wallet';
+    const odemeUrl = getFrontendUrl().replace(/\/$/, '') + '/odeme';
+    const sendHtml = (success, amount, errorMsg) => {
       res.set('Cache-Control', 'no-store');
-      return res.redirect(302, url);
+      res.type('html');
+      const title = success ? 'Ödeme Başarılı' : 'Ödeme Başarısız';
+      const msg = success
+        ? `${Number(amount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.`
+        : (errorMsg || 'Ödeme işlemi tamamlanamadı.');
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="3;url=${walletUrl}"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
+      return res.send(html);
     };
     try {
       const token = req.query.token || req.body?.token;
-      if (!token) {
-        return redirectTo('fail', 'error=token_yok');
-      }
+      if (!token) return sendHtml(false, 0, 'Token bulunamadı.');
 
       const result = await iyzicoService.retrieveCheckoutForm(token);
       if (!result || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
-        const errMsg = result?.errorMessage || 'Ödeme başarısız';
-        return redirectTo('fail', `error=${encodeURIComponent(errMsg)}`);
+        return sendHtml(false, 0, result?.errorMessage || 'Ödeme başarısız.');
       }
 
       const conversationId = result.conversationId || '';
@@ -156,9 +159,7 @@ export const walletController = {
       const userId = match ? match[1] : null;
       const paidPrice = parseFloat(result.paidPrice || result.price || 0);
 
-      if (!userId || paidPrice <= 0) {
-        return redirectTo('fail', 'error=gecersiz_sonuc');
-      }
+      if (!userId || paidPrice <= 0) return sendHtml(false, 0, 'Geçersiz işlem sonucu.');
 
       await prisma.$transaction([
         prisma.user.update({
@@ -176,10 +177,10 @@ export const walletController = {
         }),
       ]);
 
-      return redirectTo('success', `amount=${paidPrice}`);
+      return sendHtml(true, paidPrice);
     } catch (error) {
       console.error('topupCallback error:', error);
-      return redirectTo('fail', `error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
+      return sendHtml(false, 0, error.message || 'Beklenmeyen hata.');
     }
   },
 
