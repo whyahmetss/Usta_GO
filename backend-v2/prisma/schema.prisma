@@ -64,6 +64,7 @@ enum UserRole {
 
 enum UserStatus {
   ACTIVE
+  PENDING_APPROVAL  // Usta: admin onayı bekliyor
   BANNED
   SUSPENDED
   DELETED

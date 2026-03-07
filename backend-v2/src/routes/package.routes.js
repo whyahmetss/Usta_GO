@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Müşteri
 router.get('/my', authMiddleware, packageController.getMyPackage);
+router.get('/list', authMiddleware, packageController.getListPackages);
 router.post('/buy', authMiddleware, packageController.buyPackage);
 router.patch('/auto-renew', authMiddleware, packageController.toggleAutoRenew);
 

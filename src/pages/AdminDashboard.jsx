@@ -178,6 +178,18 @@ function AdminDashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h3>
             <p className="text-gray-600 text-sm">Müşteri ve Usta hesaplarını yönet</p>
           </div>
+          <div onClick={() => navigate('/admin/pending-ustas')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer border-2 border-amber-200">
+            <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">⚡</span></div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Onay Bekleyen Ustalar</h3>
+            <p className="text-gray-600 text-sm">Yeni usta kayıtlarını onayla</p>
+            {savedUsers.filter(u => u.role === 'USTA' && u.status === 'PENDING_APPROVAL').length > 0 && (
+              <div className="mt-3">
+                <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
+                  {savedUsers.filter(u => u.role === 'USTA' && u.status === 'PENDING_APPROVAL').length} Bekliyor
+                </span>
+              </div>
+            )}
+          </div>
           <div onClick={() => navigate('/admin/jobs')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
             <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">📋</span></div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">İş Yönetimi</h3>

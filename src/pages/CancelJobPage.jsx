@@ -94,7 +94,8 @@ function CancelJobPage() {
         })
 
         if (response.data || response.success !== false) {
-          alert('İş iptal edildi.')
+          const withdrawn = response.data?.withdrawnOffer
+          alert(withdrawn ? 'Teklifiniz geri alındı.' : 'İş iptal edildi.')
           navigate(isProfessional ? '/professional' : '/home')
         }
       } catch (err) {

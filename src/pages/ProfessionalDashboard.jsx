@@ -125,8 +125,15 @@ function ProfessionalDashboard() {
     { label: 'Aktif Is', value: myActiveJobs.length.toString(), icon: TrendingUp, color: 'purple' },
   ]
 
+  const isPendingApproval = user?.status === 'PENDING_APPROVAL'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 pb-24">
+      {isPendingApproval && (
+        <div className="bg-amber-500 text-white px-4 py-3 text-center font-semibold text-sm">
+          Hesabınız admin onayı bekliyor. Onaylandıktan sonra iş alabileceksiniz.
+        </div>
+      )}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 pb-6 pt-4 px-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
