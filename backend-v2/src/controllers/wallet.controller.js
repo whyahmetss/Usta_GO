@@ -142,7 +142,7 @@ export const walletController = {
       const msg = success
         ? `${Number(amount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.`
         : (errorMsg || 'Ödeme işlemi tamamlanamadı.');
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="3;url=${walletUrl}"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
       return res.send(html);
     };
     try {
