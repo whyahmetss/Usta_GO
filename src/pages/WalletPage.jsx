@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { ArrowLeft, TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle } from 'lucide-react'
 
 function WalletPage() {
@@ -112,74 +111,58 @@ useEffect(() => {
         return
       }
 
-      const jobsResponse = await fetchAPI(API_ENDPOINTS.JOBS.LIST);
-      if (jobsResponse?.data && Array.isArray(jobsResponse.data)) {
-        const mapped = mapJobsFromBackend(jobsResponse.data);
-        const myJobs = mapped.filter(j =>
-          j.ustaId === user?.id &&
-          (j.status === 'completed' || j.status === 'rated')
-        );
+      // Usta: balances and transactions should come from wallet endpoints
+      const [walletRes, txRes] = await Promise.all([
+        fetchAPI(API_ENDPOINTS.WALLET.GET).catch(() => null),
+        fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS).catch(() => null),
+      ])
 
-        // Toplam bakiye
-        const totalBalance = myJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
-        setBalance(totalBalance);
+      const txList = Array.isArray(txRes) ? txRes : txRes?.data || []
+      const earningTxs = txList.filter(t => (t.type || '').toUpperCase() === 'EARNING' && (t.status || '').toUpperCase() === 'COMPLETED')
+      const withdrawalTxs = txList.filter(t => (t.type || '').toUpperCase() === 'WITHDRAWAL')
 
-        // Bu ay kazanç
-        const now = new Date();
-        const thisMonthJobs = myJobs.filter(j => {
-          const d = j.completedAt ? new Date(j.completedAt) : null;
-          return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        });
-        setThisMonthEarnings(thisMonthJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0));
+      const now = new Date()
+      const thisMonth = now.getMonth()
+      const thisYear = now.getFullYear()
+      const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const lastMonth = lastMonthDate.getMonth()
+      const lastMonthYear = lastMonthDate.getFullYear()
 
-        // Geçen ay kazanç
-        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastMonthJobs = myJobs.filter(j => {
-          const d = j.completedAt ? new Date(j.completedAt) : null;
-          return d && d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
-        });
-        setLastMonthEarnings(lastMonthJobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0));
+      const earningsThisMonth = earningTxs
+        .filter(t => {
+          const d = t.createdAt ? new Date(t.createdAt) : null
+          return d && d.getMonth() === thisMonth && d.getFullYear() === thisYear
+        })
+        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+      const earningsLastMonth = earningTxs
+        .filter(t => {
+          const d = t.createdAt ? new Date(t.createdAt) : null
+          return d && d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear
+        })
+        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
 
-        // Tamamlanan işleri işlem geçmişi olarak göster
-        const jobTransactions = myJobs
-          .sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0))
-          .map(j => ({
-            id: j.id,
-            description: j.title || 'Tamamlanan İş',
-            amount: Number(j.budget) || 0,
-            date: j.completedAt || null,
-          }));
+      setThisMonthEarnings(earningsThisMonth)
+      setLastMonthEarnings(earningsLastMonth)
 
-        // Bakiye ve bekleyen çekimi GET /wallet'tan al (backend doğru hesaplıyor)
-        try {
-          const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET);
-          if (walletRes?.data) {
-            setBalance(walletRes.data.balance ?? totalBalance);
-            setPendingWithdrawal(walletRes.data.pendingWithdrawal || 0);
-          }
-        } catch {
-          // jobs'tan hesaplanan totalBalance kalır
-        }
-
-        // Çekim geçmişini işlem listesine ekle
-        try {
-          const txRes = await fetchAPI(API_ENDPOINTS.WALLET.GET_TRANSACTIONS);
-          const txList = Array.isArray(txRes) ? txRes : txRes?.data || [];
-          const withdrawalTxs = txList.filter(t =>
-            (t.type || '').toUpperCase() === 'WITHDRAWAL'
-          );
-          const withdrawalHistory = withdrawalTxs.map(t => ({
-            id: t.id,
-            description: `Para Çekme${t.bankName ? ` - ${t.bankName}` : ''}`,
-            amount: -(Number(t.amount) || 0),
-            date: t.createdAt || null,
-          }));
-          setTransactions([...jobTransactions, ...withdrawalHistory]
-            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)));
-        } catch {
-          setTransactions(jobTransactions);
-        }
+      if (walletRes?.data) {
+        setBalance(walletRes.data.balance ?? 0)
+        setPendingWithdrawal(walletRes.data.pendingWithdrawal || 0)
       }
+
+      const earningHistory = earningTxs.map(t => ({
+        id: t.id,
+        description: t.description || 'İş Kazancı',
+        amount: Number(t.amount) || 0,
+        date: t.createdAt || null,
+      }))
+      const withdrawalHistory = withdrawalTxs.map(t => ({
+        id: t.id,
+        description: `Para Çekme${t.bankName ? ` - ${t.bankName}` : ''}`,
+        amount: -(Number(t.amount) || 0),
+        date: t.createdAt || null,
+      }))
+      setTransactions([...earningHistory, ...withdrawalHistory]
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)))
 
     } catch (err) {
       console.error('Cüzdan yükleme hatası:', err);

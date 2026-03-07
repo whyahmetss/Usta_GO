@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchAPI, uploadFile } from '../utils/api'
+import { fetchAPI, uploadFile, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { ArrowLeft, User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { mapUserFromBackend } from '../utils/fieldMapper'
 
 function SettingsPage() {
   const { user, setUser } = useAuth()
@@ -63,8 +64,10 @@ function SettingsPage() {
         body: { isActive: newActiveStatus }
       })
       setIsActive(newActiveStatus)
-      setUser(res.data || res)
-      setSuccess(newActiveStatus ? 'Hesabınız aktif edildi. Artık iş alabilirsiniz.' : 'Hesabınız bloke edildi. Yeni iş talepleri almayacaksınız.')
+      const updatedUser = mapUserFromBackend(res.data || res)
+      setUser(updatedUser)
+      setStoredUser(updatedUser)
+      setSuccess(newActiveStatus ? 'Durumunuz aktif edildi. Artık iş alabilirsiniz.' : 'Durumunuz pasif edildi. Yeni iş talepleri almayacaksınız.')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
       setError(err.message)

@@ -99,7 +99,10 @@ export const acceptOffer = async (offerId, customerId) => {
     // Update job status
     await tx.job.update({
       where: { id: offer.jobId },
-      data: { status: "IN_PROGRESS" },
+      data: {
+        status: "ACCEPTED",
+        ustaId: offer.ustaId,
+      },
     });
 
     // Reject other offers for this job

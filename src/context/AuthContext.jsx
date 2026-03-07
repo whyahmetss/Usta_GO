@@ -97,12 +97,24 @@ export function AuthProvider({ children }) {
       // Listen for real-time message notifications
       socket.on('receive_message', (message) => {
         setMessages(prev => [...prev, message])
-        addNotification({
-          type: 'message',
-          title: 'Yeni Mesaj',
-          message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
-          icon: '💬',
-          targetUserId: user.id,
+        // Collapse message notifications: single unread notif per sender
+        setNotifications(prev => {
+          const senderId = message?.senderId || 'unknown'
+          const id = `msg_${senderId}`
+          const baseNotif = {
+            id,
+            type: 'message',
+            title: 'Yeni Mesaj',
+            message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+            icon: '💬',
+            read: false,
+            time: new Date().toISOString(),
+            targetUserId: user.id,
+            senderId,
+            lastMessageId: message?.id,
+          }
+          const withoutThisSender = prev.filter(n => n.id !== id)
+          return [baseNotif, ...withoutThisSender]
         })
       })
 
@@ -175,19 +187,24 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const register = useCallback(async (email, password, name, role, phone = '', referralCode = null) => {
+  const register = useCallback(async (email, password, name, role, phone = '', referralCode) => {
     try {
       setError(null)
+      const cleanedReferralCode =
+        typeof referralCode === 'string' && referralCode.trim()
+          ? referralCode.trim().toUpperCase()
+          : undefined
+      const body = {
+        email,
+        password,
+        name,
+        role: role?.toUpperCase() || 'CUSTOMER',
+        phone,
+        ...(cleanedReferralCode ? { referralCode: cleanedReferralCode } : {}),
+      }
       const response = await fetchAPI(API_ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',
-        body: { 
-  email, 
-  password, 
-  name, 
-  role: role?.toUpperCase() || 'CUSTOMER', 
-  phone, 
-  referralCode 
-},
+        body,
         includeAuth: false
       })
 

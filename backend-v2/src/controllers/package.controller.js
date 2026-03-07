@@ -160,7 +160,21 @@ export const packageController = {
       if (isNaN(p) || p <= 0) return res.status(400).json({ success: false, message: 'Geçersiz fiyat.' });
       data.price = p;
     }
-    if (features !== undefined) data.features = JSON.stringify(features);
+    if (features !== undefined) {
+      let parsed = features;
+      if (typeof parsed === 'string') {
+        try {
+          parsed = JSON.parse(parsed);
+        } catch {
+          // allow a plain string -> treat as single feature
+          parsed = [parsed];
+        }
+      }
+      if (!Array.isArray(parsed)) {
+        return res.status(400).json({ success: false, message: 'Geçersiz özellik listesi.' });
+      }
+      data.features = JSON.stringify(parsed.filter(Boolean).map(String));
+    }
     if (isActive !== undefined) data.isActive = Boolean(isActive);
 
     const updated = await prisma.packageConfig.update({

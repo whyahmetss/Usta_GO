@@ -115,15 +115,31 @@ function MessagesPage() {
           if (prev.some(m => m.id === message.id)) return prev
           return [...prev, message]
         })
+        // If this message is for me and I'm in the chat, mark as read immediately
+        if (message?.receiverId === user?.id && !message?.isRead) {
+          fetchAPI(API_ENDPOINTS.MESSAGES.MARK_READ(message.id), { method: 'PATCH' })
+            .then(() => {
+              setJobMessages(prev => prev.map(m => m.id === message.id ? { ...m, isRead: true, readAt: new Date().toISOString() } : m))
+            })
+            .catch(() => {})
+        }
       }
     }
 
+    const handleMessageRead = (payload) => {
+      const { messageId, readAt } = payload || {}
+      if (!messageId) return
+      setJobMessages(prev => prev.map(m => m.id === messageId ? { ...m, isRead: true, readAt: readAt || new Date().toISOString() } : m))
+    }
+
     socket.on('receive_message', handleReceiveMessage)
+    socket.on('message_read', handleMessageRead)
 
     return () => {
       socket.off('receive_message', handleReceiveMessage)
+      socket.off('message_read', handleMessageRead)
     }
-  }, [selectedJobId])
+  }, [selectedJobId, user?.id])
 
   // Refetch messages when tab becomes visible (handles missed socket messages)
   useEffect(() => {

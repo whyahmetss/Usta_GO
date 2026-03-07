@@ -63,6 +63,15 @@ export const markMessageAsRead = async (messageId, userId) => {
       isRead: true,
       readAt: new Date(),
     },
+    select: {
+      id: true,
+      senderId: true,
+      receiverId: true,
+      isRead: true,
+      readAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
   return updatedMessage;
