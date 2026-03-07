@@ -150,7 +150,13 @@ export const walletController = {
       if (!token) return sendHtml(false, 0, 'Token bulunamadı.');
 
       const result = await iyzicoService.retrieveCheckoutForm(token);
-      if (!result || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
+      const payOk = result?.status === 'success' && (
+        result.paymentStatus === 'SUCCESS' ||
+        result.paymentStatus === '1' ||
+        result.fraudStatus === 1
+      );
+      if (!result || !payOk) {
+        console.log('topupCallback iyzico result:', JSON.stringify(result, null, 2));
         return sendHtml(false, 0, result?.errorMessage || 'Ödeme başarısız.');
       }
 
