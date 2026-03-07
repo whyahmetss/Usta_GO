@@ -394,10 +394,13 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
       });
       return { ...updatedJob, withdrawnOffer: true };
     }
+    const err = new Error("Bu işe teklif vermediniz veya teklifiniz zaten geri alındı. İptal edilecek bir bağlantınız yok.");
+    err.status = 403;
+    throw err;
   }
 
   if (!isCustomer && !isUsta) {
-    const error = new Error("Unauthorized");
+    const error = new Error("Bu işi iptal etme yetkiniz yok.");
     error.status = 403;
     throw error;
   }
