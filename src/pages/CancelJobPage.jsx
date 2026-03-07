@@ -187,26 +187,27 @@ function CancelJobPage() {
 
         {/* Reason Selection - withdraw için gizle, diğerleri için göster */}
         {!(job.status === 'pending' && isProfessional && !myOffer) && (
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="font-bold text-gray-900 mb-4">{myOffer ? 'Teklifinizi geri çekmek için onaylayın' : 'İptal nedeni'}</h3>
-          <div className="space-y-2">
-            {reasons.map(r => (
-              <button key={r} onClick={() => setReason(r)}
-                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition font-medium ${
-                  reason === r ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                }`}>
-                {r}
-              </button>
-            ))}
-          </div>
-          {reason === 'Diğer' && (
-            <textarea value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="Iptal nedeninizi yazin..."
-              className="w-full mt-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" rows={3} />
-          )}
-        </div>
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-bold text-gray-900 mb-4">{myOffer ? 'Teklifinizi geri çekmek için onaylayın' : 'İptal nedeni'}</h3>
+              <div className="space-y-2">
+                {reasons.map(r => (
+                  <button key={r} onClick={() => setReason(r)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition font-medium ${
+                      reason === r ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              {reason === 'Diğer' && (
+                <textarea value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="Iptal nedeninizi yazin..."
+                  className="w-full mt-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" rows={3} />
+              )}
+            </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-3">
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-3">
           <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgeç</button>
           <button
             onClick={handleCancel}
@@ -229,6 +230,8 @@ function CancelJobPage() {
             )}
           </button>
         </div>
+          </div>
+        )}
       </div>
     </div>
   )
