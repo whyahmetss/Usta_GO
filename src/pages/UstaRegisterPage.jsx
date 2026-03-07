@@ -4,12 +4,11 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import Logo from '../components/Logo'
-import { ArrowLeft, Upload, FileText } from 'lucide-react'
+import { ArrowLeft, Upload } from 'lucide-react'
 
 function UstaRegisterPage() {
   const navigate = useNavigate()
   const { register } = useAuth()
-  const [step, setStep] = useState(1)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,7 +33,7 @@ function UstaRegisterPage() {
     setPhone(formatted)
   }
 
-  const handleSubmitStep1 = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     if (!name || !email || !password || !confirmPassword || !phone) {
@@ -54,46 +53,32 @@ function UstaRegisterPage() {
       setError('Telefon formatı: 05XX XXX XX XX')
       return
     }
+    if (!certFile) {
+      setError('Sertifika veya meslek belgesi yüklemek zorunludur')
+      return
+    }
 
     setLoading(true)
     try {
       const result = await register(email, password, name, 'USTA', phone, referralCode?.trim() ? referralCode.trim() : undefined)
-      if (result && result.success) {
-        setStep(2)
-      } else {
+      if (!result?.success) {
         setError(result?.error || 'Kayıt başarısız')
+        setLoading(false)
+        return
       }
-    } catch (err) {
-      setError('Bir bağlantı hatası oluştu')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSubmitStep2 = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      if (certFile) {
-        const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, certFile, 'photo')
-        const fileUrl = uploadRes.data?.url || uploadRes.url
-        if (!fileUrl) throw new Error('Dosya yüklenemedi')
-        await fetchAPI(API_ENDPOINTS.CERTIFICATES.UPLOAD, {
-          method: 'POST',
-          body: { fileUrl },
-        })
-      }
+      const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, certFile, 'photo')
+      const fileUrl = uploadRes.data?.url || uploadRes.url
+      if (!fileUrl) throw new Error('Belge yüklenemedi')
+      await fetchAPI(API_ENDPOINTS.CERTIFICATES.UPLOAD, {
+        method: 'POST',
+        body: { fileUrl },
+      })
       navigate('/professional')
     } catch (err) {
-      setError(err.message || 'Sertifika yüklenirken hata oluştu')
+      setError(err.message || 'Kayıt sırasında hata oluştu')
     } finally {
       setLoading(false)
     }
-  }
-
-  const skipCert = () => {
-    navigate('/professional')
   }
 
   return (
@@ -108,50 +93,41 @@ function UstaRegisterPage() {
       </div>
 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20 max-w-md w-full">
-        {step === 1 ? (
-          <form onSubmit={handleSubmitStep1} className="space-y-4">
-            <input type="text" placeholder="Ad Soyad" value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            <input type="tel" placeholder="Telefon (05XX XXX XX XX)" value={phone} onChange={handlePhoneChange}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            <input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            <input type="text" placeholder="Davet Kodu (İsteğe Bağlı)" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-20 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-              <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">Göster/Gizle</button>
-            </div>
-            <input type={showPassword ? 'text' : 'password'} placeholder="Şifre (Tekrar)" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            {error && <p className="text-red-300 text-sm">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:bg-white/90 transition shadow-xl disabled:opacity-60">
-              {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleSubmitStep2} className="space-y-4">
-            <p className="text-white/90 text-sm">Hesabınız oluşturuldu. Sertifika yükleyerek profilinizi güçlendirin (opsiyonel).</p>
-            <label className="block">
-              <div className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition ${certFile ? 'border-green-400 bg-green-500/20' : 'border-white/40 bg-white/10 hover:bg-white/20'}`}>
-                <Upload size={32} className="mx-auto mb-2 text-white/80" />
-                <p className="text-white font-semibold">{certFile ? certFile.name : 'Sertifika / Belge Yükle'}</p>
-                <p className="text-white/60 text-xs mt-1">PDF, JPG veya PNG (max 5MB)</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" placeholder="Ad Soyad" value={name} onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+          <input type="tel" placeholder="Telefon (05XX XXX XX XX)" value={phone} onChange={handlePhoneChange}
+            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+          <input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+          <input type="text" placeholder="Davet Kodu (İsteğe Bağlı)" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+          <div className="relative">
+            <input type={showPassword ? 'text' : 'password'} placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 pr-20 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+            <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">Göster/Gizle</button>
+          </div>
+          <input type={showPassword ? 'text' : 'password'} placeholder="Şifre (Tekrar)" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+
+          {/* Zorunlu belge alanı */}
+          <div>
+            <label className="block text-white text-sm font-semibold mb-2">Sertifika / Meslek Belgesi (Zorunlu)</label>
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed rounded-2xl p-5 text-center transition ${certFile ? 'border-green-400 bg-green-500/20' : 'border-white/40 bg-white/10 hover:bg-white/20'}`}>
+                <Upload size={28} className="mx-auto mb-2 text-white/80" />
+                <p className="text-white font-semibold text-sm">{certFile ? certFile.name : 'Belge yüklemek için tıklayın'}</p>
+                <p className="text-white/60 text-xs mt-1">PDF, JPG veya PNG</p>
               </div>
               <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] || null)} />
             </label>
-            {error && <p className="text-red-300 text-sm">{error}</p>}
-            <div className="flex gap-3">
-              <button type="button" onClick={skipCert} className="flex-1 py-3 bg-white/20 text-white rounded-xl font-bold border border-white/30">
-                Şimdilik Atlayayım
-              </button>
-              <button type="submit" disabled={loading} className="flex-1 py-3 bg-white text-blue-600 rounded-xl font-bold disabled:opacity-60 flex items-center justify-center gap-2">
-                {loading ? 'Yükleniyor...' : <><FileText size={18} /> Yükle ve Devam</>}
-              </button>
-            </div>
-          </form>
-        )}
+          </div>
+
+          {error && <p className="text-red-300 text-sm">{error}</p>}
+          <button type="submit" disabled={loading} className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:bg-white/90 transition shadow-xl disabled:opacity-60">
+            {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
+          </button>
+        </form>
       </div>
     </div>
   )

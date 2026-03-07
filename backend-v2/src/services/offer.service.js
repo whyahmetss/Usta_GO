@@ -3,7 +3,18 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createOffer = async (jobId, ustaId, data) => {
-  // Check if job exists
+  const usta = await prisma.user.findUnique({ where: { id: ustaId }, select: { status: true } });
+  if (!usta) {
+    const error = new Error("User not found");
+    error.status = 404;
+    throw error;
+  }
+  if (usta.status === "PENDING_APPROVAL") {
+    const error = new Error("Hesabınız henüz admin tarafından onaylanmadı. İş teklifi vermek için lütfen onay bekleyin.");
+    error.status = 403;
+    throw error;
+  }
+
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
     const error = new Error("Job not found");
@@ -69,12 +80,18 @@ export const getUstaOffers = async (ustaId, skip = 0, take = 10) => {
 export const acceptOffer = async (offerId, customerId) => {
   const offer = await prisma.offer.findUnique({
     where: { id: offerId },
-    include: { job: true },
+    include: { job: true, usta: { select: { id: true, status: true } } },
   });
 
   if (!offer) {
     const error = new Error("Offer not found");
     error.status = 404;
+    throw error;
+  }
+
+  if (offer.usta?.status === "PENDING_APPROVAL") {
+    const error = new Error("Bu ustanın hesabı henüz onaylanmadı. Teklif kabul edilemez.");
+    error.status = 403;
     throw error;
   }
 

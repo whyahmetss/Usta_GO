@@ -23,8 +23,9 @@ function ProfessionalDashboard() {
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
+      const isPendingApproval = user?.status === 'PENDING_APPROVAL'
       const [pendingResponse, myJobsResponse] = await Promise.all([
-        fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
+        isPendingApproval ? Promise.resolve({ data: [] }) : fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
         fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
       ])
 
@@ -49,7 +50,7 @@ function ProfessionalDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, user?.status])
 
   useEffect(() => {
     if (user?.role === 'professional') {
