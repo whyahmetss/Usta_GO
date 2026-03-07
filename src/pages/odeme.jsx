@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard, ShieldCheck, CheckCircle } from 'lucide-react';
 import { fetchAPI } from '../utils/api';
 import { API_ENDPOINTS } from '../config';
@@ -8,52 +8,67 @@ const PRESET_AMOUNTS = [100, 200, 500, 1000];
 
 const Odeme = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedAmount, setSelectedAmount] = useState(200);
   const [customAmount, setCustomAmount] = useState('');
-  const [cardName, setCardName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [successAmount, setSuccessAmount] = useState(0);
 
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
 
-  const formatCardNumber = (val) => {
-    const digits = val.replace(/\D/g, '').slice(0, 16);
-    return digits.replace(/(.{4})/g, '$1 ').trim();
-  };
-
-  const formatExpiry = (val) => {
-    const digits = val.replace(/\D/g, '').slice(0, 4);
-    if (digits.length >= 3) return digits.slice(0, 2) + '/' + digits.slice(2);
-    return digits;
-  };
+  // iyzico callback'ten dönüş: ?status=success&amount=100 veya ?status=fail&error=...
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const amount = searchParams.get('amount');
+    const err = searchParams.get('error');
+    if (status === 'success' && amount) {
+      setSuccess(true);
+      setSuccessAmount(parseFloat(amount) || finalAmount);
+    } else if (status === 'fail') {
+      setError(err ? decodeURIComponent(err) : 'Ödeme başarısız oldu.');
+    }
+  }, [searchParams, finalAmount]);
 
   const handlePay = async () => {
     if (!finalAmount || finalAmount < 10) {
       setError('Minimum yükleme tutarı 10 TL');
       return;
     }
-    if (!cardName.trim() || cardNumber.replace(/\s/g, '').length < 16 || expiry.length < 5 || cvc.length < 3) {
-      setError('Lütfen tüm kart bilgilerini eksiksiz girin');
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP, {
+      // Önce iyzico Checkout Form başlat
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_INIT, {
         method: 'POST',
         body: { amount: finalAmount }
       });
-      if (res?.data || res?.success || res?.message?.toLowerCase().includes('başar')) {
-        setSuccess(true);
-      } else {
-        setError(res?.message || 'Ödeme işlemi başarısız oldu. Lütfen tekrar deneyin.');
+      if (res?.success && res?.data?.paymentPageUrl) {
+        window.location.href = res.data.paymentPageUrl;
+        return;
       }
+      setError(res?.error || 'Ödeme başlatılamadı.');
     } catch (err) {
-      setError(err.message || 'Ödeme işlemi başarısız oldu.');
+      // iyzico yapılandırılmamışsa (503) eski simülasyon akışına düş
+      if (err?.message?.includes('iyzico') || err?.message?.includes('yapılandırılmamış')) {
+        try {
+          const fallback = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP, {
+            method: 'POST',
+            body: { amount: finalAmount }
+          });
+          if (fallback?.data || fallback?.success) {
+            setSuccess(true);
+            setSuccessAmount(finalAmount);
+          } else {
+            setError(fallback?.error || 'Ödeme başarısız.');
+          }
+        } catch (e) {
+          setError(e?.message || 'Ödeme başarısız.');
+        }
+      } else {
+        setError(err?.message || 'Ödeme işlemi başarısız oldu.');
+      }
     } finally {
       setLoading(false);
     }
@@ -67,7 +82,7 @@ const Odeme = () => {
             <CheckCircle size={40} className="text-green-500" />
           </div>
           <h2 className="text-2xl font-black text-gray-900 mb-2">Ödeme Başarılı!</h2>
-          <p className="text-gray-500 mb-1">{finalAmount.toLocaleString('tr-TR')} TL hesabınıza yüklendi.</p>
+          <p className="text-gray-500 mb-1">{(successAmount || finalAmount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.</p>
           <p className="text-sm text-gray-400 mb-8">Bakiyeniz güncellendi.</p>
           <button
             onClick={() => navigate('/wallet')}
@@ -124,45 +139,10 @@ const Odeme = () => {
           />
         </div>
 
-        {/* Kart Bilgileri */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-          <div className="flex items-center gap-2 text-blue-600 mb-1">
-            <CreditCard size={20} />
-            <span className="font-bold text-gray-800">Kart Bilgileri</span>
-          </div>
-          <input
-            type="text"
-            placeholder="Kart Üzerindeki İsim"
-            value={cardName}
-            onChange={e => setCardName(e.target.value)}
-            className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            placeholder="0000 0000 0000 0000"
-            value={cardNumber}
-            onChange={e => setCardNumber(formatCardNumber(e.target.value))}
-            maxLength={19}
-            className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex gap-3">
-            <input
-              type="text"
-              placeholder="AA/YY"
-              value={expiry}
-              onChange={e => setExpiry(formatExpiry(e.target.value))}
-              maxLength={5}
-              className="w-1/2 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              placeholder="CVC"
-              value={cvc}
-              onChange={e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              maxLength={4}
-              className="w-1/2 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* iyzico ile ödeme - kart bilgileri iyzico sayfasında girilecek */}
+        <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100 flex items-center gap-3">
+          <CreditCard size={24} className="text-blue-600 flex-shrink-0" />
+          <p className="text-blue-800 text-sm font-medium">Ödeme butonuna tıkladığınızda iyzico güvenli ödeme sayfasına yönlendirileceksiniz. Kart bilgilerinizi orada gireceksiniz.</p>
         </div>
 
         {error && (

@@ -6,6 +6,9 @@ const router = express.Router();
 
 router.get('/', authMiddleware, walletController.getWalletBalance);
 router.post('/topup', authMiddleware, walletController.topup);
+router.post('/topup/init', authMiddleware, walletController.topupInit);
+router.get('/topup/callback', walletController.topupCallback);
+router.post('/topup/callback', walletController.topupCallback);
 router.get('/transactions', authMiddleware, walletController.getTransactions);
 router.get('/admin/withdrawals', authMiddleware, walletController.getAllWithdrawals);
 router.post('/withdraw', authMiddleware, walletController.createWithdrawal);

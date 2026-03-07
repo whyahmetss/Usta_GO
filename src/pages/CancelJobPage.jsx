@@ -74,7 +74,37 @@ function CancelJobPage() {
     ? ['Müsait değilim', 'Malzeme eksikliği', 'Konum çok uzak', 'Acil durum', 'Diğer']
     : ['Vazgeçtim', 'Yanlış adres girdim', 'Başka bir usta buldum', 'Fiyat yüksek', 'Diğer']
 
+  // PENDING işte usta teklifi varsa: teklifi geri çek (withdraw), yoksa iş iptali yapılamaz
+  const myOffer = job.status === 'pending' && isProfessional && job.offers?.find(
+    o => (o.ustaId || o.usta?.id) === user?.id && (o.status === 'PENDING' || o.status === 'pending')
+  )
+  const isWithdrawCase = job.status === 'pending' && isProfessional && myOffer
+  const isNoOfferCase = job.status === 'pending' && isProfessional && !myOffer
+
   const handleCancel = async () => {
+    // PENDING iş + usta + teklifi var → withdraw endpoint kullan (JOBS.CANCEL Unauthorized verebiliyordu)
+    if (job.status === 'pending' && isProfessional && myOffer) {
+      if (!confirm('Teklifinizi geri çekmek istediğinize emin misiniz?')) return
+      setSubmitting(true)
+      try {
+        await fetchAPI(API_ENDPOINTS.OFFERS.WITHDRAW(myOffer.id), { method: 'PATCH' })
+        alert('Teklifiniz geri alındı.')
+        navigate('/professional')
+      } catch (err) {
+        console.error('Withdraw offer error:', err)
+        alert(`Hata: ${err.message}`)
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    // Teklifi olmayan usta PENDING işi iptal edemez
+    if (job.status === 'pending' && isProfessional && !myOffer) {
+      alert('Bu işe teklif vermediniz. İptal edilecek bir bağlantınız yok.')
+      return
+    }
+
     const finalReason = reason === 'Diğer' ? customReason : reason
     if (!finalReason) {
       alert('Lütfen bir iptal nedeni seçin')
@@ -146,9 +176,19 @@ function CancelJobPage() {
           </div>
         )}
 
-        {/* Reason Selection */}
+        {/* PENDING + usta + teklifi yok: iptal edilemez */}
+        {job.status === 'pending' && isProfessional && !myOffer && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+            <p className="text-amber-800 font-semibold">Bu işe teklif vermediniz.</p>
+            <p className="text-amber-700 text-sm mt-1">İptal edilecek bir bağlantınız yok.</p>
+            <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-xl font-bold">Geri Dön</button>
+          </div>
+        )}
+
+        {/* Reason Selection - withdraw için gizle, diğerleri için göster */}
+        {!(job.status === 'pending' && isProfessional && !myOffer) && (
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="font-bold text-gray-900 mb-4">İptal nedeni</h3>
+          <h3 className="font-bold text-gray-900 mb-4">{myOffer ? 'Teklifinizi geri çekmek için onaylayın' : 'İptal nedeni'}</h3>
           <div className="space-y-2">
             {reasons.map(r => (
               <button key={r} onClick={() => setReason(r)}
@@ -168,12 +208,15 @@ function CancelJobPage() {
         {/* Actions */}
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => navigate(-1)} disabled={submitting} className="py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition disabled:opacity-50">Vazgeç</button>
-          <button onClick={handleCancel} disabled={!reason || (reason === 'Diğer' && !customReason) || submitting}
+          <button
+            onClick={handleCancel}
+            disabled={isWithdrawCase ? submitting : (!reason || (reason === 'Diğer' && !customReason) || submitting)}
             className={`py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
-              !reason || (reason === 'Diğer' && !customReason) || submitting
+              (isWithdrawCase ? submitting : (!reason || (reason === 'Diğer' && !customReason) || submitting))
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-red-600 text-white hover:bg-red-700'
-            }`}>
+            }`}
+          >
             {submitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -181,7 +224,7 @@ function CancelJobPage() {
               </>
             ) : (
               <>
-                İptal Et {penalty > 0 && `(${penalty} TL)`}
+                {isWithdrawCase ? 'Teklifimi Geri Al' : `İptal Et ${penalty > 0 ? `(${penalty} TL)` : ''}`}
               </>
             )}
           </button>

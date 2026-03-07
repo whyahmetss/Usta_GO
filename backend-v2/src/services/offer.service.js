@@ -178,8 +178,8 @@ export const withdrawOffer = async (offerId, ustaId) => {
     throw error;
   }
 
-  if (offer.ustaId !== ustaId) {
-    const error = new Error("Unauthorized");
+  if (String(offer.ustaId) !== String(ustaId)) {
+    const error = new Error("Bu teklif size ait değil.");
     error.status = 403;
     throw error;
   }

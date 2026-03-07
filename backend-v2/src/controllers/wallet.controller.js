@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import * as iyzicoService from '../services/iyzico.service.js';
 
 const prisma = new PrismaClient();
+
+const getCallbackBaseUrl = () => process.env.IYZIPAY_CALLBACK_BASE || process.env.API_BASE_URL || 'https://usta-go-1.onrender.com';
+const getFrontendUrl = () => process.env.FRONTEND_URL || 'https://usta-go-app.onrender.com';
 
 export const walletController = {
   // GET /wallet
@@ -51,7 +55,7 @@ export const walletController = {
     }
   },
 
-  // POST /wallet/topup - Bakiye yükle (ödeme simülasyonu - gerçek gateway için genişletilmeli)
+  // POST /wallet/topup - Bakiye yükle (simülasyon - iyzico yoksa direkt yükler)
   topup: async (req, res) => {
     try {
       const { amount } = req.body;
@@ -78,6 +82,90 @@ export const walletController = {
       res.json({ success: true, message: `${amt} TL hesabınıza yüklendi`, data: { balance: user?.balance ?? 0 } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  // POST /wallet/topup/init - iyzico Checkout Form başlat, ödeme sayfası URL döner
+  topupInit: async (req, res) => {
+    try {
+      if (!process.env.IYZIPAY_API_KEY || !process.env.IYZIPAY_SECRET_KEY) {
+        return res.status(503).json({ success: false, error: 'iyzico entegrasyonu yapılandırılmamış. Lütfen IYZIPAY_API_KEY ve IYZIPAY_SECRET_KEY ekleyin.' });
+      }
+      const { amount } = req.body;
+      if (!amount || amount < 10) return res.status(400).json({ success: false, error: 'Minimum 10 TL yükleyebilirsiniz' });
+      const amt = Number(amount);
+      if (isNaN(amt)) return res.status(400).json({ success: false, error: 'Geçersiz tutar' });
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { id: true, name: true, email: true, phone: true },
+      });
+      if (!user) return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı' });
+
+      const baseUrl = getCallbackBaseUrl().replace(/\/$/, '');
+      const callbackUrl = `${baseUrl}/api/wallet/topup/callback`;
+
+      const result = await iyzicoService.initializeCheckoutForm(
+        { userId: req.user.id, amount: amt, user: { name: user.name, email: user.email, phone: user.phone } },
+        callbackUrl
+      );
+
+      res.json({
+        success: true,
+        data: {
+          paymentPageUrl: result.paymentPageUrl,
+          token: result.token,
+        },
+      });
+    } catch (error) {
+      console.error('topupInit error:', error);
+      res.status(500).json({ success: false, error: error.message || 'Ödeme başlatılamadı' });
+    }
+  },
+
+  // GET /wallet/topup/callback - iyzico ödeme sonrası yönlendirir (auth yok)
+  topupCallback: async (req, res) => {
+    try {
+      const token = req.query.token || req.body?.token;
+      if (!token) {
+        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=token_yok`);
+      }
+
+      const result = await iyzicoService.retrieveCheckoutForm(token);
+      if (!result || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
+        const errMsg = result?.errorMessage || 'Ödeme başarısız';
+        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=${encodeURIComponent(errMsg)}`);
+      }
+
+      const conversationId = result.conversationId || '';
+      const match = conversationId.match(/^topup-(.+?)-(\d+)$/);
+      const userId = match ? match[1] : null;
+      const paidPrice = parseFloat(result.paidPrice || result.price || 0);
+
+      if (!userId || paidPrice <= 0) {
+        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=gecersiz_sonuc`);
+      }
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: userId },
+          data: { balance: { increment: paidPrice } },
+        }),
+        prisma.transaction.create({
+          data: {
+            userId,
+            amount: paidPrice,
+            type: 'TOPUP',
+            status: 'COMPLETED',
+            description: `Bakiye yükleme (iyzico): ${paidPrice} TL`,
+          },
+        }),
+      ]);
+
+      return res.redirect(`${getFrontendUrl()}/odeme?status=success&amount=${paidPrice}`);
+    } catch (error) {
+      console.error('topupCallback error:', error);
+      return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
     }
   },
 
