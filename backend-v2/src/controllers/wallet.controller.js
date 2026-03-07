@@ -28,11 +28,12 @@ export const walletController = {
         return res.json({ success: true, data: { balance: user?.balance ?? 0, coupons } });
       }
 
-      // USTA: calculate from jobs
-      const jobs = await prisma.job.findMany({
-        where: { ustaId: req.user.id, status: { in: ['COMPLETED', 'RATED'] } }
+      // USTA: use user's balance (already net of commission) as earnings base
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { balance: true },
       });
-      const totalEarnings = jobs.reduce((sum, j) => sum + (Number(j.budget) || 0), 0);
+      const totalEarnings = Number(user?.balance) || 0;
 
       const pendingAgg = await prisma.transaction.aggregate({
         _sum: { amount: true },

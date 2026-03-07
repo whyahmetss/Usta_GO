@@ -9,11 +9,13 @@ function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [referralCode, setReferralCode] = useState('')
   const [role, setRole] = useState('CUSTOMER') 
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   
   const navigate = useNavigate()
   const { login, register } = useAuth()
@@ -50,13 +52,17 @@ function AuthPage() {
         }
       } else {
         // KAYIT İŞLEMİ
-        if (!name || !email || !password || !phone) {
+        if (!name || !email || !password || !confirmPassword || !phone) {
           setError('Lütfen tüm alanları doldurun')
           return
         }
 
         if (password.length < 6) {
           setError('Şifre en az 6 karakter olmalı')
+          return
+        }
+        if (password !== confirmPassword) {
+          setError('Şifreler eşleşmiyor')
           return
         }
 
@@ -66,7 +72,14 @@ function AuthPage() {
           return
         }
 
-        const result = await register(email, password, name, role, phone, referralCode || null)
+        const result = await register(
+          email,
+          password,
+          name,
+          role,
+          phone,
+          referralCode?.trim() ? referralCode.trim() : undefined
+        )
         
         if (result && result.success) {
           if (role === 'USTA' || result.role === 'professional') {
@@ -188,14 +201,33 @@ return (
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
             />
-            
-            <input
-              type="password"
-              placeholder="Şifre"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
+
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-20 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80 hover:text-white"
+              >
+                {showPassword ? 'Gizle' : 'Göster'}
+              </button>
+            </div>
+
+            {!isLogin && (
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Şifre (Tekrar)"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+            )}
 
             {error && (
               <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-center">

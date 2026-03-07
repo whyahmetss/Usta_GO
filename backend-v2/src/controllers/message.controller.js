@@ -32,6 +32,14 @@ export const markAsRead = async (req, res, next) => {
   try {
     const { messageId } = req.params;
     const message = await messageService.markMessageAsRead(messageId, req.user.id);
+    // Notify sender so they can show "seen"
+    if (message?.senderId) {
+      io.to(`user_${message.senderId}`).emit("message_read", {
+        messageId: message.id,
+        readerId: req.user.id,
+        readAt: message.readAt,
+      });
+    }
     successResponse(res, message, "Message marked as read");
   } catch (error) {
     next(error);
