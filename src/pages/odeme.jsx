@@ -50,27 +50,8 @@ const Odeme = () => {
       }
       setError(res?.error || 'Ödeme başlatılamadı.');
     } catch (err) {
-      const msg = (err?.message || '').toLowerCase();
-      const isConfigError = msg.includes('iyzico') || msg.includes('yapılandırılmamış') || msg.includes('api') && (msg.includes('bilgileri') || msg.includes('key') || msg.includes('bulunamadı'));
-      // iyzico yapılandırılmamışsa veya API bilgisi hatası: simülasyon akışına düş
-      if (isConfigError) {
-        try {
-          const fallback = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP, {
-            method: 'POST',
-            body: { amount: finalAmount }
-          });
-          if (fallback?.data || fallback?.success) {
-            setSuccess(true);
-            setSuccessAmount(finalAmount);
-          } else {
-            setError('Ödeme sistemi henüz yapılandırılmadı. Lütfen daha sonra tekrar deneyin veya yönetici ile iletişime geçin.');
-          }
-        } catch (e) {
-          setError('Ödeme sistemi henüz yapılandırılmadı. Lütfen daha sonra tekrar deneyin.');
-        }
-      } else {
-        setError(err?.message || 'Ödeme işlemi başarısız oldu.');
-      }
+      // iyzico'ya gitmeden bakiye yükleme yok; hata göster
+      setError(err?.message || 'Ödeme işlemi başarısız oldu.');
     } finally {
       setLoading(false);
     }
