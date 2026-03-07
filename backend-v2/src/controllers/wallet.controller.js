@@ -119,6 +119,14 @@ export const walletController = {
       });
     } catch (error) {
       console.error('topupInit error:', error);
+      const msg = (error.message || '').toLowerCase();
+      // iyzico'dan gelen API anahtar hatası → kullanıcıya net mesaj
+      if (msg.includes('api') && (msg.includes('bilgileri') || msg.includes('bulunamadı') || msg.includes('key') || msg.includes('geçersiz'))) {
+        return res.status(503).json({
+          success: false,
+          error: 'iyzico API anahtarları eksik veya hatalı. Lütfen IYZIPAY_API_KEY ve IYZIPAY_SECRET_KEY değerlerini kontrol edin (sandbox için iyzico panelinden sandbox anahtarlarını kullanın).'
+        });
+      }
       res.status(500).json({ success: false, error: error.message || 'Ödeme başlatılamadı' });
     }
   },
