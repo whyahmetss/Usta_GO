@@ -136,13 +136,13 @@ export const walletController = {
     try {
       const token = req.query.token || req.body?.token;
       if (!token) {
-        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=token_yok`);
+        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=token_yok`);
       }
 
       const result = await iyzicoService.retrieveCheckoutForm(token);
       if (!result || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
         const errMsg = result?.errorMessage || 'Ödeme başarısız';
-        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=${encodeURIComponent(errMsg)}`);
+        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=${encodeURIComponent(errMsg)}`);
       }
 
       const conversationId = result.conversationId || '';
@@ -151,7 +151,7 @@ export const walletController = {
       const paidPrice = parseFloat(result.paidPrice || result.price || 0);
 
       if (!userId || paidPrice <= 0) {
-        return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=gecersiz_sonuc`);
+        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=gecersiz_sonuc`);
       }
 
       await prisma.$transaction([
@@ -170,10 +170,10 @@ export const walletController = {
         }),
       ]);
 
-      return res.redirect(`${getFrontendUrl()}/odeme?status=success&amount=${paidPrice}`);
+      return res.redirect(`${getFrontendUrl()}/payment-result?status=success&amount=${paidPrice}`);
     } catch (error) {
       console.error('topupCallback error:', error);
-      return res.redirect(`${getFrontendUrl()}/odeme?status=fail&error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
+      return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
     }
   },
 
