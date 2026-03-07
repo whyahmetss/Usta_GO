@@ -131,18 +131,24 @@ export const walletController = {
     }
   },
 
-  // GET /wallet/topup/callback - iyzico ödeme sonrası yönlendirir (auth yok)
+  // GET/POST /wallet/topup/callback - iyzico ödeme sonrası yönlendirir (auth yok)
   topupCallback: async (req, res) => {
+    const redirectTo = (status, extra = '') => {
+      const base = `${getFrontendUrl().replace(/\/$/, '')}/payment-result?status=${status}`;
+      const url = extra ? `${base}&${extra}` : base;
+      res.set('Cache-Control', 'no-store');
+      return res.redirect(302, url);
+    };
     try {
       const token = req.query.token || req.body?.token;
       if (!token) {
-        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=token_yok`);
+        return redirectTo('fail', 'error=token_yok');
       }
 
       const result = await iyzicoService.retrieveCheckoutForm(token);
       if (!result || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
         const errMsg = result?.errorMessage || 'Ödeme başarısız';
-        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=${encodeURIComponent(errMsg)}`);
+        return redirectTo('fail', `error=${encodeURIComponent(errMsg)}`);
       }
 
       const conversationId = result.conversationId || '';
@@ -151,7 +157,7 @@ export const walletController = {
       const paidPrice = parseFloat(result.paidPrice || result.price || 0);
 
       if (!userId || paidPrice <= 0) {
-        return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=gecersiz_sonuc`);
+        return redirectTo('fail', 'error=gecersiz_sonuc');
       }
 
       await prisma.$transaction([
@@ -170,10 +176,10 @@ export const walletController = {
         }),
       ]);
 
-      return res.redirect(`${getFrontendUrl()}/payment-result?status=success&amount=${paidPrice}`);
+      return redirectTo('success', `amount=${paidPrice}`);
     } catch (error) {
       console.error('topupCallback error:', error);
-      return res.redirect(`${getFrontendUrl()}/payment-result?status=fail&error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
+      return redirectTo('fail', `error=${encodeURIComponent(error.message || 'Beklenmeyen hata')}`);
     }
   },
 
