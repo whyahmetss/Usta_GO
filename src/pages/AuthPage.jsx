@@ -153,7 +153,7 @@ return (
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRole('USTA')}
+                      onClick={() => { setRole('USTA'); navigate('/register/usta') }}
                       className={`p-4 rounded-xl border-2 transition ${role === 'USTA' ? 'bg-white border-white' : 'bg-white/20 border-white/30'}`}
                     >
                       <div className="text-3xl mb-2">⚡</div>

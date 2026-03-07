@@ -32,65 +32,24 @@ function WalletPage() {
   const [packageLoading, setPackageLoading] = useState(false)
   const [packageMsg, setPackageMsg] = useState(null)
   const [showPackageSelection, setShowPackageSelection] = useState(false)
+  const [packages, setPackages] = useState([])
 
-  const PACKAGES = [
-    {
-      id: 'klasik',
-      name: 'Klasik',
-      price: 499,
-      badgeColor: 'bg-gray-100 text-gray-700',
-      headerColor: 'from-gray-500 to-gray-600',
-      badge: '🏠',
-      tag: 'Başlangıç',
-      tagColor: 'bg-gray-100 text-gray-600',
-      features: [
-        'Elektrik kontrol (2 ayda 1)',
-        'Su tesisat kontrolü (3 ayda 1)',
-        'Sigorta panosu kontrolü (yılda 1)',
-        'Standart usta atama',
-      ],
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 999,
-      badgeColor: 'bg-blue-100 text-blue-700',
-      headerColor: 'from-blue-500 to-blue-700',
-      badge: '⚡',
-      tag: 'Popüler',
-      tagColor: 'bg-blue-100 text-blue-600',
-      features: [
-        'Elektrik + sigorta panosu (aylık)',
-        'Su tesisat basınç kontrolü (2 ayda 1)',
-        'Kaçak akım testi (3 ayda 1)',
-        'Öncelikli usta atama',
-      ],
-    },
-    {
-      id: 'plus',
-      name: 'Plus',
-      price: 1999,
-      badgeColor: 'bg-amber-100 text-amber-700',
-      headerColor: 'from-amber-500 to-orange-500',
-      badge: '👑',
-      tag: 'En İyi Değer',
-      tagColor: 'bg-amber-100 text-amber-600',
-      features: [
-        'Tüm Pro hizmetleri dahil',
-        'Kombi / klima bakımı (6 ayda 1)',
-        'Kaçak akım testi (aylık)',
-        'VIP öncelikli usta atama',
-        '7/24 acil yardım hattı',
-      ],
-    },
-  ]
+  const PKG_STYLES = {
+    klasik: { badgeColor: 'bg-gray-100 text-gray-700', headerColor: 'from-gray-500 to-gray-600', tagColor: 'bg-gray-100 text-gray-600' },
+    pro: { badgeColor: 'bg-blue-100 text-blue-700', headerColor: 'from-blue-500 to-blue-700', tagColor: 'bg-blue-100 text-blue-600' },
+    plus: { badgeColor: 'bg-amber-100 text-amber-700', headerColor: 'from-amber-500 to-orange-500', tagColor: 'bg-amber-100 text-amber-600' },
+  }
+  const PACKAGES = packages.map((p) => ({
+    ...p,
+    ...(PKG_STYLES[p.packageId || p.id] || PKG_STYLES.klasik),
+  }))
 
 useEffect(() => {
   const loadWalletData = async () => {
     try {
       setLoading(true);
 
-      // Müşteri için sadece wallet verisi yeter
+      // Müşteri için wallet + paket listesi (admin fiyatlarından)
       if (user?.role === 'customer') {
         try {
           const walletRes = await fetchAPI(API_ENDPOINTS.WALLET.GET)
@@ -108,6 +67,10 @@ useEffect(() => {
           const pkgRes = await fetchAPI(API_ENDPOINTS.PACKAGES.MY)
           setActivePackage(pkgRes?.data || null)
         } catch { /* paket yok */ }
+        try {
+          const listRes = await fetchAPI(API_ENDPOINTS.PACKAGES.LIST)
+          setPackages(Array.isArray(listRes?.data) ? listRes.data : [])
+        } catch { setPackages([]) }
         return
       }
 
@@ -221,7 +184,7 @@ useEffect(() => {
     try {
       const res = await fetchAPI(API_ENDPOINTS.PACKAGES.BUY, {
         method: 'POST',
-        body: { packageId: pkg.id, packageName: pkg.name, price: pkg.price }
+        body: { packageId: pkg.id || pkg.packageId }
       })
       if (res?.success || res?.data) {
         setActivePackage(res.data)
@@ -404,10 +367,10 @@ useEffect(() => {
               {/* Aktif Paket Bilgisi */}
               {activePackage && !showPackageSelection ? (
                 <div className="space-y-3">
-                  <div className={`bg-gradient-to-r ${PACKAGES.find(p => p.id === activePackage.packageId)?.headerColor || 'from-indigo-500 to-indigo-700'} rounded-2xl p-4 text-white`}>
+                  <div className={`bg-gradient-to-r ${PACKAGES.find(p => (p.id || p.packageId) === activePackage.packageId)?.headerColor || PKG_STYLES[activePackage.packageId]?.headerColor || 'from-indigo-500 to-indigo-700'} rounded-2xl p-4 text-white`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">{PACKAGES.find(p => p.id === activePackage.packageId)?.badge || '📦'}</span>
+                        <span className="text-2xl">{PACKAGES.find(p => (p.id || p.packageId) === activePackage.packageId)?.badge || '📦'}</span>
                         <div>
                           <p className="font-black text-lg">{activePackage.packageName} Paketi</p>
                           <p className="text-white/70 text-xs">{activePackage.price?.toLocaleString('tr-TR')} TL/ay</p>
@@ -448,8 +411,11 @@ useEffect(() => {
                   </div>
 
                   <button
-                    onClick={() => handleBuyPackage(PACKAGES.find(p => p.id === activePackage.packageId))}
-                    disabled={packageLoading}
+                    onClick={() => {
+                      const p = PACKAGES.find(x => (x.id || x.packageId) === activePackage.packageId)
+                      if (p) handleBuyPackage(p)
+                    }}
+                    disabled={packageLoading || !PACKAGES.find(p => (p.id || p.packageId) === activePackage.packageId)}
                     className="w-full py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
                   >
                     {packageLoading ? <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> : '🔄'}
@@ -483,7 +449,7 @@ useEffect(() => {
                         </div>
                       </div>
                       <ul className="space-y-1 mb-3">
-                        {pkg.features.map((f, i) => (
+                        {(pkg.features || []).map((f, i) => (
                           <li key={i} className="text-xs text-gray-600 flex items-center gap-2">
                             <span className="text-green-500 flex-shrink-0">✓</span>{f}
                           </li>

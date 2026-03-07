@@ -34,6 +34,7 @@ export const registerUser = async (data) => {
     attempts++;
   } while (attempts < 10);
 
+  const isUsta = (role || "").toUpperCase() === "USTA";
   const user = await prisma.user.create({
     data: {
       name,
@@ -42,6 +43,7 @@ export const registerUser = async (data) => {
       role: role || "CUSTOMER",
       phone,
       referralCode: newReferralCode,
+      status: isUsta ? "PENDING_APPROVAL" : "ACTIVE",
     },
   });
 
@@ -67,7 +69,7 @@ export const registerUser = async (data) => {
   const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true, status: user.status },
     token,
   };
 };
@@ -97,7 +99,7 @@ export const loginUser = async (email, password) => {
   const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true, status: user.status },
     token,
   };
 };
@@ -108,7 +110,7 @@ export const getUserProfile = async (userId) => {
     select: {
       id: true, name: true, email: true, role: true, phone: true,
       bio: true, profileImage: true, ratings: true, balance: true,
-      isActive: true, referralCode: true, createdAt: true, updatedAt: true,
+      isActive: true, referralCode: true, status: true, createdAt: true, updatedAt: true,
     },
   });
 

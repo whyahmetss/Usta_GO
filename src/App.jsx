@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { MapsProvider } from './context/MapsContext'
 import AuthPage from './pages/AuthPage'
+import UstaRegisterPage from './pages/UstaRegisterPage'
 import HomePage from './pages/HomePage'
 import ProfessionalDashboard from './pages/ProfessionalDashboard'
 import AdminDashboard from './pages/AdminDashboard'
@@ -23,6 +24,7 @@ import AdminMessagesPage from './pages/AdminMessagesPage'
 import AdminCouponsPage from './pages/AdminCouponsPage'
 import AdminPricingPage from './pages/AdminPricingPage'
 import AdminCertificatesPage from './pages/AdminCertificatesPage'
+import AdminPendingUstasPage from './pages/AdminPendingUstasPage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
@@ -84,6 +86,7 @@ function AppRoutes() {
           )
         }
       />
+      <Route path="/register/usta" element={user ? <Navigate to="/professional" /> : <UstaRegisterPage />} />
 
       {/* Musteri Routes */}
       <Route
@@ -139,6 +142,7 @@ function AppRoutes() {
       <Route path="/admin/coupons" element={<ProtectedRoute roleRequired="admin"><AdminCouponsPage /></ProtectedRoute>} />
       <Route path="/admin/pricing" element={<ProtectedRoute roleRequired="admin"><AdminPricingPage /></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><AdminCertificatesPage /></ProtectedRoute>} />
+      <Route path="/admin/pending-ustas" element={<ProtectedRoute roleRequired="admin"><AdminPendingUstasPage /></ProtectedRoute>} />
 
       <Route path="/track/:id" element={<ProtectedRoute><LiveTrackingPage /></ProtectedRoute>} />
       <Route path="/cancel-job/:id" element={<ProtectedRoute><CancelJobPage /></ProtectedRoute>} />

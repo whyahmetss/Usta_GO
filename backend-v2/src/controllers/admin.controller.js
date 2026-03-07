@@ -34,6 +34,35 @@ export const unbanUser = async (req, res, next) => {
   }
 };
 
+export const getPendingUstas = async (req, res, next) => {
+  try {
+    const users = await adminService.getPendingUstas();
+    res.json({ success: true, data: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveUsta = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.approveUsta(userId);
+    successResponse(res, user, "Usta onaylandı");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectUsta = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.rejectUsta(userId, req.body?.reason);
+    successResponse(res, user, "Usta reddedildi");
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteUser = async (req, res, next) => {
   try {
     const { userId } = req.params;

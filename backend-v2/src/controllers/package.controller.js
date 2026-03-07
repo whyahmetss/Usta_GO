@@ -21,10 +21,17 @@ export const packageController = {
 
   // POST /packages/buy  — Paket satın al (bakiyeden düş)
   buyPackage: async (req, res) => {
-    const { packageId, packageName, price } = req.body;
-    if (!packageId || !packageName || !price) {
-      return res.status(400).json({ success: false, message: 'Eksik parametre.' });
+    const { packageId } = req.body;
+    if (!packageId) {
+      return res.status(400).json({ success: false, message: 'Paket ID gerekli.' });
     }
+
+    const config = await prisma.packageConfig.findUnique({ where: { packageId } });
+    if (!config || !config.isActive) {
+      return res.status(404).json({ success: false, message: 'Paket bulunamadı.' });
+    }
+    const price = config.price;
+    const packageName = config.name;
 
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
@@ -72,6 +79,24 @@ export const packageController = {
     });
 
     return res.json({ success: true, data: result });
+  },
+
+  // GET /packages/list  — Müşteri için paket listesi (admin fiyatlarından)
+  getListPackages: async (req, res) => {
+    const configs = await prisma.packageConfig.findMany({
+      where: { isActive: true },
+      orderBy: { price: 'asc' },
+    });
+    const list = configs.map((c) => ({
+      id: c.packageId,
+      packageId: c.packageId,
+      name: c.name,
+      price: c.price,
+      badge: c.badge || '📦',
+      features: JSON.parse(c.features || '[]'),
+      tag: c.packageId === 'pro' ? 'Popüler' : c.packageId === 'plus' ? 'En İyi Değer' : 'Başlangıç',
+    }));
+    return res.json({ success: true, data: list });
   },
 
   // PATCH /packages/auto-renew  — Otomatik yenileme aç/kapat

@@ -41,6 +41,9 @@ export const API_ENDPOINTS = {
 // Admin
   ADMIN: {
     GET_USERS: '/admin/users?limit=500',
+    PENDING_USTAS: '/admin/pending-ustas',
+    APPROVE_USTA: (userId) => `/admin/users/${userId}/approve-usta`,
+    REJECT_USTA: (userId) => `/admin/users/${userId}/reject-usta`,
     DELETE_JOB: (id) => `/admin/jobs/${id}`,
     DELETE_USER: (id) => `/admin/users/${id}`,
     COUPONS: '/admin/coupons',
@@ -122,6 +125,7 @@ export const API_ENDPOINTS = {
   // Bakım Paketleri
   PACKAGES: {
     MY:               '/packages/my',
+    LIST:             '/packages/list',
     BUY:              '/packages/buy',
     TOGGLE_AUTO_RENEW: '/packages/auto-renew',
     ADMIN_LIST:       '/packages/admin',

@@ -26,6 +26,10 @@ router.patch("/users/:userId/ban", adminController.banUser);
  */
 router.patch("/users/:userId/unban", adminController.unbanUser);
 
+router.get("/pending-ustas", adminController.getPendingUstas);
+router.patch("/users/:userId/approve-usta", adminController.approveUsta);
+router.patch("/users/:userId/reject-usta", adminController.rejectUsta);
+
 /**
  * @route DELETE /api/admin/users/:userId
  * @desc Delete a user

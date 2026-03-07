@@ -366,6 +366,24 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
   const isCustomer = job.customerId === userId;
   const isUsta = job.ustaId === userId;
 
+  // PENDING job: usta may have an offer but not be assigned - allow "reject" by withdrawing offer
+  if (!isCustomer && !isUsta && job.status === "PENDING") {
+    const offer = await prisma.offer.findFirst({
+      where: { jobId, ustaId: userId, status: "PENDING" },
+    });
+    if (offer) {
+      await prisma.offer.update({
+        where: { id: offer.id },
+        data: { status: "WITHDRAWN" },
+      });
+      const updatedJob = await prisma.job.findUnique({
+        where: { id: jobId },
+        include: { customer: true, usta: true },
+      });
+      return { ...updatedJob, withdrawnOffer: true };
+    }
+  }
+
   if (!isCustomer && !isUsta) {
     const error = new Error("Unauthorized");
     error.status = 403;
