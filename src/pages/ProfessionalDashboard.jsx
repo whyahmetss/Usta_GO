@@ -6,7 +6,6 @@ import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { useNavigate } from 'react-router-dom'
 import { connectSocket } from '../utils/socket'
-import Logo from '../components/Logo'
 import Card from '../components/Card'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
@@ -91,10 +90,18 @@ function ProfessionalDashboard() {
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Logo size="sm" />
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">{user?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'U'}</span>
+                </div>
+              )}
+            </div>
             <div>
               <p className="text-xs text-gray-400 font-medium">Usta Paneli</p>
-              <h1 className="text-lg font-bold text-gray-900">{user?.name}</h1>
+              <h1 className="text-[15px] font-semibold text-gray-900">{user?.name}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
