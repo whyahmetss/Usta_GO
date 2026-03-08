@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Check, X, ExternalLink, Loader } from 'lucide-react'
+import { Check, X, ExternalLink, Loader, FileText } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -65,7 +65,7 @@ function AdminCertificatesPage() {
           </div>
         ) : certificates.length === 0 ? (
           <EmptyState
-            icon="📄"
+            icon={FileText}
             title="Bekleyen sertifika yok"
             description="Usta sertifika yüklediğinde burada görünür."
           />
@@ -75,7 +75,7 @@ function AdminCertificatesPage() {
               <Card key={c.id}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">📜</span>
+                    <FileText size={18} className="text-amber-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900">{c.user?.name || 'Usta'}</p>

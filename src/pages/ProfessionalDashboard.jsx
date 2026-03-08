@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin } from 'lucide-react'
+import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -136,7 +136,7 @@ function ProfessionalDashboard() {
             <p className="text-sm text-gray-400">Yükleniyor...</p>
           </div>
         ) : jobRequests.length === 0 ? (
-          <EmptyState icon="📋" title="Yeni iş talebi yok" description="Müşteriler iş oluşturduğunda burada görünür" />
+          <EmptyState icon={ClipboardList} title="Yeni iş talebi yok" description="Müşteriler iş oluşturduğunda burada görünür" />
         ) : (
           <div className="space-y-3">
             {jobRequests.map(job => (
@@ -168,7 +168,7 @@ function ProfessionalDashboard() {
             <div className="space-y-2">
               {myCompletedJobs.slice(0, 3).map(job => (
                 <Card key={job.id} onClick={() => navigate(`/job/${job.id}`)} className="flex items-center gap-3 !p-3.5">
-                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">✅</div>
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0"><CheckCircle size={20} className="text-emerald-500" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm truncate">{job.title}</p>
                     <p className="text-[11px] text-gray-400 truncate">{job.location?.address}</p>

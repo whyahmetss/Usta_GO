@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Plus, Pencil, Trash2, Check, X, Info, Users, TrendingUp, Loader } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, X, Info, Users, TrendingUp, Loader, Coins, Wrench } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -188,13 +188,13 @@ function AdminPricingPage() {
             onClick={() => setActiveTab('services')}
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'services' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
           >
-            🔧 Hizmet Fiyatları
+            Hizmet Fiyatları
           </button>
           <button
             onClick={() => setActiveTab('packages')}
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'packages' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
           >
-            📦 Bakım Paketleri
+            Bakım Paketleri
           </button>
         </div>
       </div>
@@ -336,7 +336,7 @@ function AdminPricingPage() {
                         <ul className="space-y-1">
                           {(pkg.features || []).map((f, i) => (
                             <li key={i} className="text-xs text-gray-600 flex items-center gap-2">
-                              <span className="text-emerald-500 flex-shrink-0">✓</span>{f}
+                              <Check size={14} className="text-emerald-500 flex-shrink-0" />{f}
                             </li>
                           ))}
                         </ul>
@@ -420,7 +420,7 @@ function AdminPricingPage() {
               </div>
             ) : services.length === 0 ? (
               <EmptyState
-                icon="💰"
+                icon={Coins}
                 title="Henüz hizmet eklenmemiş"
                 description="Yeni Hizmet butonuyla hizmetlerinizi ekleyin."
               />
@@ -430,7 +430,7 @@ function AdminPricingPage() {
                   <Card key={svc.id} className={!svc.isActive ? 'opacity-50' : ''}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
-                        <span className="text-lg">🔧</span>
+                        <Wrench size={18} className="text-gray-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900">{svc.label}</p>
@@ -471,7 +471,7 @@ function AdminPricingPage() {
             {/* Info note */}
             <Card className="!bg-primary-50 !border-primary-100">
               <p className="text-[11px] text-primary-700 font-medium leading-relaxed">
-                💡 <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI,
+                <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI,
                 <strong> buradaki aktif hizmetleri</strong> baz alarak en uygun olanı seçer ve
                 fiyat tahmini üretir.
               </p>

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign } from 'lucide-react'
+import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign, User } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
@@ -116,7 +116,7 @@ function ProfilePage() {
             {profilePhoto ? (
               <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-4xl">{user?.avatar || '👤'}</span>
+              <User size={28} className="text-gray-400" />
             )}
           </div>
           <label className="absolute bottom-0 right-0 w-7 h-7 bg-primary-500 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-primary-600 transition">

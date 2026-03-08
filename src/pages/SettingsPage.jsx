@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, uploadFile, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -230,7 +230,7 @@ function SettingsPage() {
         {/* Doğrulama (Usta için) */}
         {user?.role === 'professional' && (
           <Card padding="p-6">
-            <h3 className="font-bold text-gray-900 mb-4">🆔 Doğrulama</h3>
+            <h3 className="font-bold text-gray-900 mb-4">Doğrulama</h3>
             <div className="space-y-3">
               <div className={`p-4 rounded-xl border-2 ${
                 user?.verificationStatus === 'verified' ? 'border-emerald-300 bg-emerald-50' :
@@ -354,7 +354,9 @@ function SettingsPage() {
         <Card onClick={() => navigate('/help')} padding="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xl">💬</span>
+              <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center">
+                <MessageCircle size={18} className="text-primary-500" />
+              </div>
               <span className="font-semibold text-gray-900">Yardım & Destek</span>
             </div>
             <span className="text-gray-400">→</span>
@@ -365,7 +367,9 @@ function SettingsPage() {
         <Card onClick={() => navigate('/about')} padding="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xl">ℹ️</span>
+              <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
+                <Info size={18} className="text-gray-600" />
+              </div>
               <span className="font-semibold text-gray-900">Hakkında</span>
             </div>
             <span className="text-gray-400">→</span>

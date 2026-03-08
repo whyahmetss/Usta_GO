@@ -17,6 +17,9 @@ import {
   Ticket,
   Coins,
   Award,
+  ClipboardList,
+  Star,
+  Inbox,
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
@@ -342,7 +345,7 @@ function AdminDashboard() {
             </h2>
             {recentJobs.length === 0 ? (
               <EmptyState
-                icon="📋"
+                icon={ClipboardList}
                 title="Henüz iş yok"
                 description="Yeni işler burada görünecek"
               />
@@ -376,11 +379,11 @@ function AdminDashboard() {
           {/* Ratings */}
           <Card padding="p-4" className="mb-6">
             <h2 className="text-base font-semibold text-gray-900 mb-4">
-              ⭐ Tüm Değerlendirmeler
+              Tüm Değerlendirmeler
             </h2>
             {allJobs.filter((j) => j.rating).length === 0 ? (
               <EmptyState
-                icon="⭐"
+                icon={Star}
                 title="Henüz değerlendirme yok"
                 description="Müşteri değerlendirmeleri burada görünecek"
               />
@@ -405,9 +408,7 @@ function AdminDashboard() {
                         </div>
                         <div className="flex gap-0.5 shrink-0">
                           {[...Array(5)].map((_, i) => (
-                            <span key={i} className="text-sm">
-                              {i < (job.rating || 0) ? '⭐' : '☆'}
-                            </span>
+                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
                           ))}
                         </div>
                       </div>
@@ -429,7 +430,7 @@ function AdminDashboard() {
           <Card padding="p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-900">
-                🚨 Tüm Şikayetler
+                Tüm Şikayetler
               </h2>
               <div className="flex gap-2">
                 {[
@@ -456,7 +457,7 @@ function AdminDashboard() {
               (c) => complaintFilter === 'all' || c.status === complaintFilter
             ).length === 0 ? (
               <EmptyState
-                icon="📭"
+                icon={Inbox}
                 title="Bu kategoride şikayet yok"
                 description="Şikayetler filtreye göre listelenecek"
               />

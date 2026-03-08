@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
-import { Star } from 'lucide-react'
+import { Star, User } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
@@ -139,7 +139,7 @@ function RateJobPage() {
               {otherPerson?.profileImage ? (
                 <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                <div className="w-full h-full flex items-center justify-center"><User size={32} className="text-gray-400" /></div>
               )}
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">{otherPerson?.name}</h3>

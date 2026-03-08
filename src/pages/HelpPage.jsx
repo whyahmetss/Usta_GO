@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Search, MessageCircle, Mail, Phone } from 'lucide-react'
+import { Search, MessageCircle, Mail, Phone, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -70,7 +70,7 @@ function HelpPage() {
           {filtered.map((faq, idx) => (
             <details key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden group">
               <summary className="px-4 py-4 cursor-pointer hover:bg-gray-50 font-bold text-gray-900 flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden">
-                <span className="text-lg">❓</span>
+                <HelpCircle size={18} className="text-primary-500" />
                 <span className="flex-1">{faq.q}</span>
               </summary>
               <div className="px-4 pb-4 pt-0 text-gray-600 bg-gray-50 border-t border-gray-100">

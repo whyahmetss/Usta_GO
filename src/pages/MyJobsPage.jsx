@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { MapPin } from 'lucide-react'
+import { MapPin, ClipboardList } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
@@ -85,7 +85,7 @@ function MyJobsPage() {
             <p className="text-sm text-gray-400">Yükleniyor...</p>
           </div>
         ) : displayJobs.length === 0 ? (
-          <EmptyState icon="📋" title="Henüz iş bulunmuyor" description="Yeni bir iş oluşturmak için ana sayfaya gidin." />
+          <EmptyState icon={ClipboardList} title="Henüz iş bulunmuyor" description="Yeni bir iş oluşturmak için ana sayfaya gidin." />
         ) : (
           <div className="space-y-3">
             {displayJobs.map(job => (

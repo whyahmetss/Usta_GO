@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle, Package, Calendar, ArrowDownCircle, ArrowUpCircle, Coins, ShoppingCart } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
@@ -192,7 +192,7 @@ function WalletPage() {
           <Card>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center text-sm">📦</div>
+                <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center"><Package size={16} className="text-violet-500" /></div>
                 <h3 className="font-semibold text-gray-900 text-sm">Bakım Paketleri</h3>
               </div>
               {!showPackageSelection && (
@@ -220,10 +220,10 @@ function WalletPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2"><span className="text-sm">📅</span><div><p className="text-[10px] text-gray-400">Sonraki Bakım</p><p className="font-medium text-gray-900 text-xs">{activePackage.nextRenewal ? new Date(activePackage.nextRenewal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '—'}</p></div></div>
+                  <div className="flex items-center gap-2"><Calendar size={14} className="text-gray-500" /><div><p className="text-[10px] text-gray-400">Sonraki Bakım</p><p className="font-medium text-gray-900 text-xs">{activePackage.nextRenewal ? new Date(activePackage.nextRenewal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '—'}</p></div></div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2"><span className="text-sm">💳</span><p className="text-xs text-gray-600">Otomatik Yenile</p></div>
+                  <div className="flex items-center gap-2"><CreditCard size={14} className="text-gray-500" /><p className="text-xs text-gray-600">Otomatik Yenile</p></div>
                   <button onClick={handleToggleAutoRenew} className={`relative w-11 h-6 rounded-full transition ${activePackage.autoRenew ? 'bg-emerald-500' : 'bg-gray-300'}`}>
                     <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${activePackage.autoRenew ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </button>
@@ -231,7 +231,7 @@ function WalletPage() {
               </div>
             ) : !showPackageSelection ? (
               <div className="text-center py-4">
-                <span className="text-3xl">📦</span>
+                <Package size={28} className="text-gray-300 mx-auto" />
                 <p className="text-xs text-gray-400 mt-2">Aktif paketiniz yok</p>
               </div>
             ) : null}
@@ -276,7 +276,7 @@ function WalletPage() {
                   return (
                     <Card key={tx.id || idx} className="flex items-center gap-3 !p-3.5">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isCredit ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                        <span className="text-sm">{isCredit ? '💳' : '🛒'}</span>
+                        {isCredit ? <ArrowDownCircle size={16} className="text-emerald-500" /> : <ShoppingCart size={16} className="text-rose-500" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 text-xs truncate">{tx.description || tx.note || (isCredit ? 'Bakiye Yüklendi' : 'Ödeme')}</p>
@@ -335,7 +335,7 @@ function WalletPage() {
               {transactions.map((tx, idx) => (
                 <Card key={tx.id || idx} className="flex items-center gap-3 !p-3.5">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tx.amount > 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                    <span className="text-sm">{tx.amount > 0 ? '💰' : '📤'}</span>
+                    {tx.amount > 0 ? <Coins size={16} className="text-emerald-500" /> : <ArrowUpCircle size={16} className="text-rose-500" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-xs truncate">{tx.description || 'İşlem'}</p>

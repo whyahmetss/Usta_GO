@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapUsersFromBackend } from '../utils/fieldMapper'
-import { LogOut, Trash2, Shield, AlertCircle, Loader, Star, Briefcase } from 'lucide-react'
+import { LogOut, Trash2, Shield, AlertCircle, Loader, Star, Briefcase, Users, User } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -113,7 +113,7 @@ function AdminUsersPage() {
           </div>
         ) : users.length === 0 ? (
           <EmptyState
-            icon="👥"
+            icon={Users}
             title="Henüz kullanıcı yok"
             description="Kayıtlı kullanıcılar burada listelenir."
           />
@@ -123,7 +123,7 @@ function AdminUsersPage() {
               <Card key={user.id}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">
-                    {user.avatar || '👤'}
+                    {user.avatar || <User size={18} className="text-gray-400" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

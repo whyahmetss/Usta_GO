@@ -7,7 +7,7 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
 import { connectSocket, getSocket } from '../utils/socket'
-import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle, Car, Wrench, PartyPopper, Zap } from 'lucide-react'
 import Card from '../components/Card'
 
 const DEFAULT_CENTER = [41.0082, 28.9784]
@@ -27,11 +27,11 @@ function calcBearing(from, to) {
 }
 
 const STATUS_STEPS = [
-  { key: 'accepted',    label: 'Kabul',  icon: '✅' },
-  { key: 'on_the_way',  label: 'Yolda',  icon: '🚗' },
-  { key: 'arrived',     label: 'Geldi',  icon: '📍' },
-  { key: 'in_progress', label: 'Başladı',icon: '🔧' },
-  { key: 'completed',   label: 'Bitti',  icon: '🎉' },
+  { key: 'accepted',    label: 'Kabul',  icon: CheckCircle },
+  { key: 'on_the_way',  label: 'Yolda',  icon: Car },
+  { key: 'arrived',     label: 'Geldi',  icon: MapPin },
+  { key: 'in_progress', label: 'Başladı',icon: Wrench },
+  { key: 'completed',   label: 'Bitti',  icon: PartyPopper },
 ]
 
 // ── Leaflet custom ikonlar ───────────────────────────────────────────
@@ -361,7 +361,7 @@ function LiveTrackingPage() {
         {trackingStatus === 'arrived' && (
           <div className="absolute inset-0 z-[400] bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card px-8 py-6 text-center mx-4">
-              <div className="text-5xl mb-3">🎉</div>
+              <div className="mb-3"><PartyPopper size={48} className="text-emerald-500" /></div>
               <h3 className="text-xl font-black text-gray-900">Usta Geldi!</h3>
               <p className="text-gray-600 text-sm mt-1">Ustanız kapınızda</p>
             </div>
@@ -432,7 +432,7 @@ function LiveTrackingPage() {
                       ? 'bg-primary-500 text-white scale-110'
                       : 'bg-gray-200 text-gray-400'
                   }`}>
-                    {i <= currentStep ? step.icon : i + 1}
+                    {i <= currentStep ? <step.icon size={14} /> : i + 1}
                   </div>
                   <span className={`text-[10px] mt-1.5 font-semibold text-center leading-tight ${
                     i <= currentStep ? 'text-primary-700' : 'text-gray-400'
@@ -476,7 +476,7 @@ function LiveTrackingPage() {
                 <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center text-2xl overflow-hidden shrink-0">
                   {professional.profileImage
                     ? <img src={professional.profileImage} alt="" className="w-full h-full object-cover" />
-                    : '⚡'}
+                    : <Zap size={16} className="text-amber-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-900">{professional.name}</h4>

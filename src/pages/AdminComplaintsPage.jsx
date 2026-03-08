@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
-import { CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Loader, User, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import StatusBadge from '../components/StatusBadge'
@@ -144,7 +144,7 @@ function AdminComplaintsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon="✅"
+            icon={CheckCircle}
             title="Gösterilecek şikayet yok"
             description="Bu kategoride şikayet bulunmuyor."
           />
@@ -184,7 +184,7 @@ function AdminComplaintsPage() {
                 {/* Customer & Professional */}
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center gap-2.5 p-2.5 bg-primary-50/50 rounded-xl">
-                    <div className="text-base">👤</div>
+                    <User size={18} className="text-gray-400" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900">{complaint.customerName}</p>
                       <p className="text-[11px] text-gray-500 truncate">{complaint.customerEmail}</p>
@@ -196,7 +196,7 @@ function AdminComplaintsPage() {
                   </div>
 
                   <div className="flex items-center gap-2.5 p-2.5 bg-accent-50/50 rounded-xl">
-                    <div className="text-base">⚡</div>
+                    <Zap size={18} className="text-amber-500" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900">{complaint.professionalName}</p>
                       <p className="text-[11px] text-gray-500 truncate">{complaint.professionalEmail}</p>

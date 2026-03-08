@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
             type: 'message',
             title: 'Yeni Mesaj',
             message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
-            icon: '💬',
+            icon: 'message',
             read: false,
             time: new Date().toISOString(),
             targetUserId: user.id,
@@ -128,7 +128,7 @@ export function AuthProvider({ children }) {
             type: 'job',
             title: 'İş Güncellendi',
             message: data.message,
-            icon: '🔔',
+            icon: 'bell',
             targetUserId: user.id,
           })
         }
@@ -141,7 +141,7 @@ export function AuthProvider({ children }) {
             type: 'job',
             title: 'Yeni İş!',
             message: `${jobData.title || 'Yeni bir iş'} oluşturuldu`,
-            icon: '🆕',
+            icon: 'new',
             targetUserId: user.id,
           })
         }
@@ -265,7 +265,7 @@ export function AuthProvider({ children }) {
             type: n.type || 'system',
             title: n.title,
             message: n.message,
-            icon: n.icon || '🔔',
+            icon: n.icon || 'bell',
             read: n.read,
             time: n.createdAt || n.readAt || new Date().toISOString(),
             targetUserId: user.id,
@@ -295,7 +295,7 @@ export function AuthProvider({ children }) {
           type: notif.type || 'system',
           title: notif.title,
           message: notif.message,
-          icon: notif.icon || '🔔',
+          icon: notif.icon || 'bell',
           jobId: notif.jobId,
           targetUrl: notif.targetUrl,
         },
@@ -372,7 +372,7 @@ export function AuthProvider({ children }) {
           type: 'job',
           title: 'İş Oluşturuldu',
           message: `${mapped.title} Başarıyla oluşturuldu`,
-          icon: '✨'
+          icon: 'sparkle'
         })
         return mapped
       }
@@ -416,7 +416,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'İş Kabul Edildi',
           message: 'İş başarıyla kabul edildi',
-          icon: '✅'
+          icon: 'check'
         })
         return response.data
       }
@@ -467,7 +467,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'İş Başladı',
           message: 'İş başarıyla başlatıldı',
-          icon: '🚀'
+          icon: 'rocket'
         })
       }
     } catch (err) {
@@ -517,7 +517,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'İş Tamamlandı',
           message: 'İş tamamlandı. Lütfen değerlendiriniz.',
-          icon: '🎉'
+          icon: 'party'
         })
       }
     } catch (err) {
@@ -554,7 +554,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'İş İptal Edildi',
           message: 'İş başarıyla iptal edildi',
-          icon: '❌'
+          icon: 'cancel'
         })
       }
     } catch (err) {
@@ -591,7 +591,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'Değerlendirme Yapıldı',
           message: 'Teşekkürler! Değerlendirmeniz kaydedildi.',
-          icon: '⭐'
+          icon: 'star'
         })
       }
     } catch (err) {
@@ -779,7 +779,7 @@ export function AuthProvider({ children }) {
           type: 'status',
           title: 'Para Çekme Talebi',
           message: `${amount} Para çekme talebiniz gönderildi`,
-          icon: '💰'
+          icon: 'coins'
         })
         return { success: true }
       }
@@ -850,7 +850,7 @@ export function AuthProvider({ children }) {
           type: 'message',
           title: 'Mesaj Gönderildi',
           message: text.substring(0, 50),
-          icon: '💬'
+          icon: 'message'
         })
         return newMessage
       }
@@ -866,7 +866,7 @@ export function AuthProvider({ children }) {
           type: 'message',
           title: 'Mesaj Gönderildi',
           message: text.substring(0, 50),
-          icon: '💬'
+          icon: 'message'
         })
         return response.data
       }

@@ -1,4 +1,4 @@
-import { Search, Bell, Settings, Plus } from 'lucide-react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import Logo from '../components/Logo'
@@ -17,12 +17,12 @@ function HomePage() {
   })()
 
   const categories = [
-    { id: 'electric', name: 'Elektrik', icon: '⚡', active: true, path: '/create-job', bgColor: 'bg-amber-50', iconBg: 'bg-amber-100' },
-    { id: 'plumbing', name: 'Tesisat', icon: '🔧', active: false, bgColor: 'bg-blue-50', iconBg: 'bg-blue-100' },
-    { id: 'renovation', name: 'Tadilat', icon: '🔨', active: false, bgColor: 'bg-orange-50', iconBg: 'bg-orange-100' },
-    { id: 'cleaning', name: 'Temizlik', icon: '🧹', active: false, bgColor: 'bg-purple-50', iconBg: 'bg-purple-100' },
-    { id: 'painting', name: 'Boyacı', icon: '🎨', active: false, bgColor: 'bg-green-50', iconBg: 'bg-green-100' },
-    { id: 'carpentry', name: 'Marangoz', icon: '🪚', active: false, bgColor: 'bg-yellow-50', iconBg: 'bg-yellow-100' },
+    { id: 'electric', name: 'Elektrik', Icon: Zap, active: true, path: '/create-job', bgColor: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
+    { id: 'plumbing', name: 'Tesisat', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
+    { id: 'renovation', name: 'Tadilat', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+    { id: 'cleaning', name: 'Temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { id: 'painting', name: 'Boyacı', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
+    { id: 'carpentry', name: 'Marangoz', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-700' },
   ]
 
   return (
@@ -74,14 +74,16 @@ function HomePage() {
         </button>
       </div>
 
-      {/* Promo Card - Dark premium style like reference */}
+      {/* Promo Card */}
       <div className="px-5 mb-5">
         <div
           onClick={() => navigate('/create-job')}
           className="bg-gray-900 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-950 rounded-3xl" />
-          <div className="absolute right-4 bottom-2 opacity-[0.08] text-[80px] select-none">👷</div>
+          <div className="absolute right-4 bottom-3 opacity-[0.06]">
+            <Zap size={80} />
+          </div>
           <div className="relative z-10">
             <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[11px] font-semibold text-emerald-400 mb-3 tracking-wide">
               %20 İNDİRİM
@@ -103,30 +105,33 @@ function HomePage() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => category.active && category.path && navigate(category.path)}
-              disabled={!category.active}
-              className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square ${
-                category.active
-                  ? `${category.bgColor} active:scale-95`
-                  : 'bg-gray-50 opacity-50'
-              }`}
-            >
-              {!category.active && (
-                <span className="absolute top-2 right-2 bg-gray-900/70 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
-                  Yakında
+          {categories.map(category => {
+            const CatIcon = category.Icon
+            return (
+              <button
+                key={category.id}
+                onClick={() => category.active && category.path && navigate(category.path)}
+                disabled={!category.active}
+                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square ${
+                  category.active
+                    ? `${category.bgColor} active:scale-95`
+                    : 'bg-gray-50 opacity-50'
+                }`}
+              >
+                {!category.active && (
+                  <span className="absolute top-2 right-2 bg-gray-900/70 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                    Yakında
+                  </span>
+                )}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${category.active ? category.iconBg : 'bg-gray-100'}`}>
+                  <CatIcon size={24} className={category.active ? category.iconColor : 'text-gray-400'} />
+                </div>
+                <span className={`text-[12px] font-medium ${category.active ? 'text-gray-700' : 'text-gray-400'}`}>
+                  {category.name}
                 </span>
-              )}
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${category.active ? category.iconBg : 'bg-gray-100'}`}>
-                <span className="text-2xl">{category.icon}</span>
-              </div>
-              <span className={`text-[12px] font-medium ${category.active ? 'text-gray-700' : 'text-gray-400'}`}>
-                {category.name}
-              </span>
-            </button>
-          ))}
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>

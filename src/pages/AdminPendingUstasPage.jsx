@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Check, X, FileText, Loader } from 'lucide-react'
+import { Check, X, FileText, Loader, HardHat, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -68,7 +68,7 @@ function AdminPendingUstasPage() {
           </div>
         ) : list.length === 0 ? (
           <EmptyState
-            icon="👷"
+            icon={HardHat}
             title="Onay bekleyen usta yok"
             description="Yeni usta kayıtları burada listelenir."
           />
@@ -78,7 +78,7 @@ function AdminPendingUstasPage() {
               <Card key={u.id}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">⚡</span>
+                    <Zap size={18} className="text-amber-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900">{u.name}</p>

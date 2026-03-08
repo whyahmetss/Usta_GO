@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { User, Zap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Logo from '../components/Logo'
 
@@ -147,7 +148,7 @@ function AuthPage() {
                       onClick={() => setRole('CUSTOMER')}
                       className={`p-4 rounded-xl border-2 transition-all active:scale-[0.98] ${role === 'CUSTOMER' ? 'bg-primary-50 border-primary-300 text-primary-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'}`}
                     >
-                      <div className="text-2xl mb-1.5">👤</div>
+                      <div className="mb-1.5"><User size={24} className="text-gray-600" /></div>
                       <div className="font-semibold text-sm">Müşteri</div>
                     </button>
                     <button
@@ -155,7 +156,7 @@ function AuthPage() {
                       onClick={() => { setRole('USTA'); navigate('/register/usta') }}
                       className={`p-4 rounded-xl border-2 transition-all active:scale-[0.98] ${role === 'USTA' ? 'bg-primary-50 border-primary-300 text-primary-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'}`}
                     >
-                      <div className="text-2xl mb-1.5">⚡</div>
+                      <div className="mb-1.5"><Zap size={24} className="text-amber-500" /></div>
                       <div className="font-semibold text-sm">Usta</div>
                     </button>
                   </div>

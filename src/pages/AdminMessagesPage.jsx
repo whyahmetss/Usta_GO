@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Send, Loader } from 'lucide-react'
+import { Send, Loader, Users, Zap, User, MessageSquare, Inbox } from 'lucide-react'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import PageHeader from '../components/PageHeader'
@@ -97,16 +97,16 @@ function AdminMessagesPage() {
   }
 
   const roleLabel = (role) => {
-    if (role === 'USTA') return '⚡ Usta'
-    if (role === 'CUSTOMER') return '👤 Müşteri'
+    if (role === 'USTA') return 'Usta'
+    if (role === 'CUSTOMER') return 'Müşteri'
     return role
   }
 
   const modeOptions = [
-    { id: 'all', label: 'Tüm Kullanıcılar', icon: '👥' },
-    { id: 'professionals', label: 'Ustalar', icon: '⚡' },
-    { id: 'customers', label: 'Müşteriler', icon: '👤' },
-    { id: 'individual', label: 'Bireysel', icon: '💬' }
+    { id: 'all', label: 'Tüm Kullanıcılar', icon: Users },
+    { id: 'professionals', label: 'Ustalar', icon: Zap },
+    { id: 'customers', label: 'Müşteriler', icon: User },
+    { id: 'individual', label: 'Bireysel', icon: MessageSquare }
   ]
 
   return (
@@ -140,7 +140,7 @@ function AdminMessagesPage() {
                         : 'bg-white border-gray-200'
                     }`}
                   >
-                    <div className="text-xl mb-1">{mode.icon}</div>
+                    <div className="mb-1">{<mode.icon size={20} />}</div>
                     <p className={`text-[11px] font-semibold ${sendMode === mode.id ? 'text-primary-600' : 'text-gray-600'}`}>
                       {mode.label}
                     </p>
@@ -205,7 +205,7 @@ function AdminMessagesPage() {
 
           {sentMessages.length === 0 ? (
             <EmptyState
-              icon="📭"
+              icon={Inbox}
               title="Henüz mesaj gönderilmedi"
               description="Gönderdiğiniz mesajlar burada görünür."
             />

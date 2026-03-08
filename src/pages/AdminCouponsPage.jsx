@@ -166,7 +166,7 @@ function AdminCouponsPage() {
             </div>
           ) : coupons.length === 0 ? (
             <EmptyState
-              icon="🎟️"
+              icon={Tag}
               title="Henüz kupon yok"
               description="Yukarıdan yeni kupon oluşturabilirsiniz."
             />

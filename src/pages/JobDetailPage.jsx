@@ -5,7 +5,7 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
 import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
-import { MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2 } from 'lucide-react'
+import { MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2, RefreshCw, User } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { connectSocket, getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
@@ -206,7 +206,7 @@ function CameraModal({ isOpen, onClose, onCapture }) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-          <div className="text-6xl mb-4">📷</div>
+          <div className="mb-4"><Camera size={48} className="text-gray-300" /></div>
           <p className="text-white text-lg mb-6">Fotograf Çek veya Galeriden Seç</p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button
@@ -249,13 +249,13 @@ function CameraModal({ isOpen, onClose, onCapture }) {
           onClick={switchCamera}
           className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center"
         >
-          <span className="text-white text-lg">🔄</span>
+          <RefreshCw size={18} className="text-white" />
         </button>
       </div>
 
       {error ? (
         <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-          <div className="text-6xl mb-4">📷</div>
+          <div className="mb-4"><Camera size={48} className="text-gray-300" /></div>
           <p className="text-white text-lg mb-4">{error}</p>
           <label className="px-6 py-3 bg-primary-500 text-white rounded-2xl font-semibold cursor-pointer active:scale-[0.98]">
             Dosyadan Seç
@@ -623,7 +623,7 @@ function JobDetailPage() {
                 {otherPerson.profileImage ? (
                   <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-12 h-12 rounded-full object-cover" />
                 ) : (
-                  '👤'
+                  <User size={18} className="text-gray-400" />
                 )}
               </div>
               <div className="flex-1">

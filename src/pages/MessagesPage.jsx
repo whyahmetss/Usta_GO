@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Send, Check, CheckCheck } from 'lucide-react'
+import { ArrowLeft, Send, Check, CheckCheck, User, MessageCircle } from 'lucide-react'
 import { getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
@@ -216,7 +216,7 @@ function MessagesPage() {
               </button>
             </div>
           ) : userJobs.length === 0 ? (
-            <EmptyState icon="💬" title="Henüz mesaj yok" description="İş kabul edildikten sonra mesajlaşabilirsiniz" />
+            <EmptyState icon={MessageCircle} title="Henüz mesaj yok" description="İş kabul edildikten sonra mesajlaşabilirsiniz" />
           ) : (
             <div className="space-y-2">
               {userJobs.map(job => {
@@ -228,7 +228,7 @@ function MessagesPage() {
                     className="bg-white rounded-2xl p-4 border border-gray-100 shadow-card cursor-pointer hover:shadow-card-hover transition-all flex items-center gap-3"
                   >
                     <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-                      {otherPerson?.avatar || '👤'}
+                      <User size={18} className="text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 text-sm truncate">{otherPerson?.name || 'Bilinmiyor'}</h3>
@@ -262,7 +262,7 @@ function MessagesPage() {
             <ArrowLeft size={20} className="text-gray-700" />
           </button>
           <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
-            {otherPerson?.avatar || '👤'}
+            <User size={18} className="text-gray-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-gray-900 truncate">{otherPerson?.name || 'Bilinmiyor'}</h2>

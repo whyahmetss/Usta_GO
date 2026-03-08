@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { X, ZoomIn, Loader, Trash2, MapPin, Calendar, Tag } from 'lucide-react'
+import { X, ZoomIn, Loader, Trash2, MapPin, Calendar, Tag, AlertTriangle, ClipboardList, User, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import StatusBadge from '../components/StatusBadge'
@@ -106,7 +106,7 @@ function AdminJobsPage() {
         {error && (
           <Card className="!border-amber-200 !bg-amber-50">
             <div className="flex items-start gap-2">
-              <span className="text-amber-500 mt-0.5">⚠️</span>
+              <AlertTriangle size={14} className="text-amber-500 mt-0.5" />
               <p className="text-xs text-amber-700">{error}</p>
             </div>
           </Card>
@@ -138,7 +138,7 @@ function AdminJobsPage() {
           </div>
         ) : filteredJobs.length === 0 ? (
           <EmptyState
-            icon="📋"
+            icon={ClipboardList}
             title="Bu durumda iş yok"
             description="Farklı bir filtre deneyin."
           />
@@ -198,7 +198,7 @@ function AdminJobsPage() {
                 {/* Customer & Professional */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5 p-2.5 bg-primary-50/50 rounded-xl">
-                    <div className="text-lg">{job.customer?.avatar || '👤'}</div>
+                    <div className="text-lg">{job.customer?.avatar || <User size={18} className="text-gray-400" />}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900">{job.customer?.name}</p>
                       <p className="text-[11px] text-gray-500 truncate">{job.customer?.email}</p>
@@ -208,7 +208,7 @@ function AdminJobsPage() {
                   </div>
 
                   <div className="flex items-center gap-2.5 p-2.5 bg-accent-50/50 rounded-xl">
-                    <div className="text-lg">{job.professional?.avatar || '⚡'}</div>
+                    <div className="text-lg">{job.professional?.avatar || <Zap size={18} className="text-amber-500" />}</div>
                     <div className="flex-1 min-w-0">
                       {job.professional ? (
                         <>

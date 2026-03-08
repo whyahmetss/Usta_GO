@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
-import { CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Loader, Clock, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import StatusBadge from '../components/StatusBadge'
@@ -130,7 +130,7 @@ function AdminWithdrawalsPage() {
           </div>
         ) : filteredWithdrawals.length === 0 ? (
           <EmptyState
-            icon={filter === 'pending' ? '⏳' : filter === 'approved' ? '✅' : '❌'}
+            icon={filter === 'pending' ? Clock : filter === 'approved' ? CheckCircle : XCircle}
             title={filter === 'pending' ? 'Bekleyen talep yok' : filter === 'approved' ? 'Onaylanan talep yok' : 'Reddedilen talep yok'}
             description="Bu kategoride çekim talebi bulunmuyor."
           />
@@ -142,7 +142,7 @@ function AdminWithdrawalsPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-                      {w.professional?.avatar || '⚡'}
+                      {w.professional?.avatar || <Zap size={18} className="text-amber-500" />}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{w.professional?.name || w.userId || 'Usta'}</p>
