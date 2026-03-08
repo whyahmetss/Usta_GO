@@ -8,6 +8,7 @@ import { mapJobsFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import StatCard from '../components/StatCard'
+import ImageCropper from '../components/ImageCropper'
 
 function ProfilePage() {
   const { user, logout, setUser } = useAuth()
@@ -23,6 +24,7 @@ function ProfilePage() {
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [ustaReviews, setUstaReviews] = useState([])
+  const [cropperSrc, setCropperSrc] = useState(null)
 
   const fetchStats = async () => {
     try {
@@ -69,21 +71,29 @@ function ProfilePage() {
     if (user?.id) { fetchStats(); setProfilePhoto(user?.profileImage || null) }
   }, [user])
 
-  const handlePhotoUpload = async (e) => {
+  const handlePhotoSelect = (e) => {
     const file = e.target.files[0]
-    if (file) {
-      setUploading(true)
-      try {
-        const uploadResponse = await uploadFile('/upload/photo', file, 'photo')
-        const photoUrl = uploadResponse.data?.url || uploadResponse.url || uploadResponse.data
-        if (photoUrl) {
-          await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, { method: 'PUT', body: { profileImage: photoUrl } })
-          setProfilePhoto(photoUrl)
-          setUser(prev => ({ ...prev, profileImage: photoUrl }))
-        }
-      } catch (err) { console.error('Yükleme hatası:', err); alert('Fotoğraf yüklenirken hata oluştu') }
-      finally { setUploading(false) }
-    }
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setCropperSrc(reader.result)
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleCroppedPhoto = async (blob) => {
+    setCropperSrc(null)
+    setUploading(true)
+    try {
+      const file = new File([blob], `avatar_${Date.now()}.jpg`, { type: 'image/jpeg' })
+      const uploadResponse = await uploadFile('/upload/photo', file, 'photo')
+      const photoUrl = uploadResponse.data?.url || uploadResponse.url || uploadResponse.data
+      if (photoUrl) {
+        await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, { method: 'PUT', body: { profileImage: photoUrl } })
+        setProfilePhoto(photoUrl)
+        setUser(prev => ({ ...prev, profileImage: photoUrl }))
+      }
+    } catch (err) { console.error('Yukleme hatasi:', err); alert('Fotograf yuklenirken hata olustu') }
+    finally { setUploading(false) }
   }
 
   const handleLogout = () => {
@@ -119,9 +129,12 @@ function ProfilePage() {
               <User size={28} className="text-gray-400" />
             )}
           </div>
-          <label className="absolute bottom-0 right-0 w-7 h-7 bg-primary-500 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-primary-600 transition">
-            <Camera size={14} className="text-white" />
-            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+          <label className={`absolute bottom-0 right-0 w-7 h-7 bg-primary-500 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-primary-600 transition ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            {uploading
+              ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              : <Camera size={14} className="text-white" />
+            }
+            <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" disabled={uploading} />
           </label>
         </div>
         <h1 className="text-lg font-bold text-gray-900">{user?.name}</h1>
@@ -237,6 +250,14 @@ function ProfilePage() {
           <LogOut size={18} /> Çıkış Yap
         </button>
       </div>
+
+      {cropperSrc && (
+        <ImageCropper
+          imageSrc={cropperSrc}
+          onCropDone={handleCroppedPhoto}
+          onCancel={() => setCropperSrc(null)}
+        />
+      )}
     </div>
   )
 }
