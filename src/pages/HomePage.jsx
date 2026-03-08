@@ -19,10 +19,11 @@ function HomePage() {
   const unreadNotifs = getUnreadNotificationCount()
 
   const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 12) return 'Günaydın'
-    if (h < 18) return 'İyi Günler'
-    return 'İyi Akşamlar'
+    const h = parseInt(new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }).format(new Date()), 10)
+    if (h >= 5 && h < 12) return 'Günaydın'
+    if (h >= 12 && h < 18) return 'Tünaydın'
+    if (h >= 18 && h < 22) return 'İyi Akşamlar'
+    return 'İyi Geceler'
   })()
 
   const loadCampaign = async () => {
