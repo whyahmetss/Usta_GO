@@ -4,6 +4,8 @@ import { Save, Eye, Trash2, Palette, Loader2, Image, Flower, Zap, Gift, Sparkles
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 
+const CAMPAIGNS = API_ENDPOINTS.CAMPAIGNS ?? { ACTIVE: '/campaigns/active', SET: '/campaigns', DELETE: '/campaigns' }
+
 const ICON_OPTIONS = [
   { value: '', label: 'Yok' },
   { value: 'flower', label: 'Cicek (Kadinlar Gunu)', Icon: Flower },
@@ -77,7 +79,7 @@ function AdminCampaignsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetchAPI(API_ENDPOINTS.CAMPAIGNS.ACTIVE, { includeAuth: false })
+        const res = await fetchAPI(CAMPAIGNS.ACTIVE, { includeAuth: false })
         if (res.data && res.data.title) {
           setCampaign({
             ...emptyCampaign,
@@ -102,7 +104,7 @@ function AdminCampaignsPage() {
     setSaving(true)
     setMsg(null)
     try {
-      await fetchAPI(API_ENDPOINTS.CAMPAIGNS.SET, {
+      await fetchAPI(CAMPAIGNS.SET, {
         method: 'POST',
         body: {
           ...campaign,
@@ -126,7 +128,7 @@ function AdminCampaignsPage() {
     setDeleting(true)
     setMsg(null)
     try {
-      await fetchAPI(API_ENDPOINTS.CAMPAIGNS.DELETE, { method: 'DELETE' })
+      await fetchAPI(CAMPAIGNS.DELETE, { method: 'DELETE' })
       setCampaign({ ...emptyCampaign })
       setHasExisting(false)
       setMsg({ ok: true, text: 'Kampanya kaldirildi.' })
