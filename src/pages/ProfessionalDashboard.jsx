@@ -16,6 +16,7 @@ function ProfessionalDashboard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [allJobs, setAllJobs] = useState([])
+  const [ownJobs, setOwnJobs] = useState([])
 
   const unreadNotifs = getUnreadNotificationCount()
 
@@ -27,6 +28,11 @@ function ProfessionalDashboard() {
     return 'İyi Geceler'
   })()
 
+  const normalizeJob = (job) => ({
+    ...job,
+    location: typeof job.location === 'string' ? { address: job.location } : (job.location || { address: 'Adres belirtilmedi' })
+  })
+
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
@@ -35,14 +41,19 @@ function ProfessionalDashboard() {
         isPendingApproval ? Promise.resolve({ data: [] }) : fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
         fetchAPI(`${API_ENDPOINTS.JOBS.MY_JOBS}?limit=500`),
       ])
-      const allRaw = [...(pendingResponse?.data || []), ...(myJobsResponse?.data || [])]
+
+      // MY_JOBS: sadece bu ustanın işleri (istatistikler için)
+      const myRaw = Array.isArray(myJobsResponse?.data) ? myJobsResponse.data : []
+      const myMapped = mapJobsFromBackend(myRaw).map(normalizeJob)
+      setOwnJobs(myMapped)
+
+      // Bekleyen genel işler + kendi işleri (iş talepleri için)
+      const pendingRaw = Array.isArray(pendingResponse?.data) ? pendingResponse.data : []
       const uniqueMap = new Map()
-      allRaw.forEach(j => uniqueMap.set(j.id, j))
-      const mappedJobs = mapJobsFromBackend(Array.from(uniqueMap.values()))
-      setAllJobs(mappedJobs.map(job => ({
-        ...job,
-        location: typeof job.location === 'string' ? { address: job.location } : (job.location || { address: 'Adres belirtilmedi' })
-      })))
+      myRaw.forEach(j => uniqueMap.set(j.id, j))
+      pendingRaw.forEach(j => { if (!uniqueMap.has(j.id)) uniqueMap.set(j.id, j) })
+      const allMapped = mapJobsFromBackend(Array.from(uniqueMap.values())).map(normalizeJob)
+      setAllJobs(allMapped)
     } catch (err) { console.error('Load dashboard error:', err) }
     finally { setLoading(false) }
   }, [user?.id, user?.status])
@@ -84,17 +95,19 @@ function ProfessionalDashboard() {
     return () => { socket.off('new_job_available', handleNewJob); socket.off('connect', handleConnect) }
   }, [user?.id, user?.role, loadDashboardData])
 
+  // Bekleyen genel işler (iş talepleri listesi) - kendi kabul etmedikleri
   const jobRequests = allJobs.filter(j => j.status === 'pending')
-  const myCompletedJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'completed' || j.status === 'rated'))
-  const myActiveJobs = allJobs.filter(j => (j.professionalId === user?.id || j.professional?.id === user?.id) && (j.status === 'accepted' || j.status === 'in_progress'))
+  // İstatistikler için sadece kendi işleri kullan (MY_JOBS endpoint zaten filtreli döner)
+  const myCompletedJobs = ownJobs.filter(j => j.status === 'completed' || j.status === 'rated')
+  const myActiveJobs = ownJobs.filter(j => j.status === 'accepted' || j.status === 'in_progress')
 
   const now = new Date()
   const thisMonthEarnings = myCompletedJobs
     .filter(j => { const d = j.completedAt ? new Date(j.completedAt) : null; return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() })
-    .reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
+    .reduce((sum, j) => sum + (Number(j.price) || Number(j.budget) || 0), 0)
 
   const ratedJobs = myCompletedJobs.filter(j => j.rating)
-  const avgRating = ratedJobs.length > 0 ? (ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length).toFixed(1) : '0.0'
+  const avgRating = ratedJobs.length > 0 ? (ratedJobs.reduce((sum, j) => sum + (Number(j.rating) || 0), 0) / ratedJobs.length).toFixed(1) : '0.0'
 
   const isPendingApproval = user?.status === 'PENDING_APPROVAL'
 
