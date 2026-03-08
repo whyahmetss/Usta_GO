@@ -17,11 +17,13 @@ function AdminMessagesPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
 
+  const adminGetUsers = API_ENDPOINTS?.ADMIN?.GET_USERS ?? '/admin/users?limit=500'
+
   useEffect(() => {
     const loadUsers = async () => {
       try {
         setLoading(true)
-        const response = await fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS)
+        const response = await fetchAPI(adminGetUsers)
         if (response.data && Array.isArray(response.data)) {
           const filtered = response.data.filter(u => u.role !== 'ADMIN')
           setUsers(filtered)
@@ -33,7 +35,7 @@ function AdminMessagesPage() {
       }
     }
     loadUsers()
-  }, [])
+  }, [adminGetUsers])
 
   const handleSendMessage = async () => {
     if (!messageText.trim()) {
@@ -69,7 +71,7 @@ function AdminMessagesPage() {
 
     for (const target of targetUsers) {
       try {
-        await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+        await fetchAPI(API_ENDPOINTS?.MESSAGES?.SEND ?? '/messages', {
           method: 'POST',
           body: { receiverId: target.id, content: messageText.trim() }
         })
@@ -131,7 +133,7 @@ function AdminMessagesPage() {
               {/* Mode Selection */}
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {modeOptions.map(mode => {
-                  const ModeIcon = mode.icon
+                  const ModeIcon = mode?.icon || Inbox
                   return (
                   <button
                     key={mode.id}

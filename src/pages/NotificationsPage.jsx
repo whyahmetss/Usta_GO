@@ -136,7 +136,7 @@ function NotificationsPage() {
   }
 
   const handleNotificationClick = (notif) => {
-    markNotificationRead(notif.id)
+    markNotificationRead?.(notif?.id)
     if (notif.jobId) {
       if (notif.type === 'message') navigate(`/messages/${notif.jobId}`)
       else navigate(`/job/${notif.jobId}`)
@@ -202,7 +202,7 @@ function NotificationsPage() {
 
         {tab === 'all' && unreadCount > 0 && (
           <button
-            onClick={markAllNotificationsRead}
+            onClick={() => markAllNotificationsRead?.()}
             className="w-full mt-6 py-3.5 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-2xl font-semibold hover:opacity-90 active:scale-[0.98] transition"
           >
             Tumunu Okundu Isaretle

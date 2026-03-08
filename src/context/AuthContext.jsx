@@ -40,10 +40,16 @@ export function AuthProvider({ children }) {
   const [messages, setMessages] = useState([])
   const [notifications, setNotifications] = useState([])
   const [notifArchived, setNotifArchived] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ustago_notif_archived') || '[]') } catch { return [] }
+    try {
+      const v = JSON.parse(localStorage.getItem('ustago_notif_archived') || '[]')
+      return Array.isArray(v) ? v : []
+    } catch { return [] }
   })
   const [notifPinned, setNotifPinned] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ustago_notif_pinned') || '[]') } catch { return [] }
+    try {
+      const v = JSON.parse(localStorage.getItem('ustago_notif_pinned') || '[]')
+      return Array.isArray(v) ? v : []
+    } catch { return [] }
   })
   const [transactions, setTransactions] = useState([])
   const [withdrawals, setWithdrawals] = useState([])
@@ -343,16 +349,18 @@ export function AuthProvider({ children }) {
 
   const getUserNotifications = useCallback(() => {
     if (!user) return []
-    const excludeArchived = notifications.filter(n => !notifArchived.includes(n.id))
-    const pinned = excludeArchived.filter(n => notifPinned.includes(n.id))
-    const unpinned = excludeArchived.filter(n => !notifPinned.includes(n.id))
+    const archived = Array.isArray(notifArchived) ? notifArchived : []
+    const pinnedIds = Array.isArray(notifPinned) ? notifPinned : []
+    const excludeArchived = notifications.filter(n => !archived.includes(n.id))
+    const pinned = excludeArchived.filter(n => pinnedIds.includes(n.id))
+    const unpinned = excludeArchived.filter(n => !pinnedIds.includes(n.id))
     return [...pinned, ...unpinned]
   }, [notifications, user, notifArchived, notifPinned])
 
   const removeNotification = useCallback(async (notifId) => {
     setNotifications(prev => prev.filter(n => n.id !== notifId))
-    setNotifArchived(prev => { const next = prev.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}; return next })
-    setNotifPinned(prev => { const next = prev.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}; return next })
+    setNotifArchived(prev => { const arr = Array.isArray(prev) ? prev : []; const next = arr.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}; return next })
+    setNotifPinned(prev => { const arr = Array.isArray(prev) ? prev : []; const next = arr.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}; return next })
     if (!useLocalStorage && notifId && !String(notifId).startsWith('msg_')) {
       try { await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.DELETE(notifId), { method: 'DELETE' }) } catch {}
     }
@@ -360,7 +368,8 @@ export function AuthProvider({ children }) {
 
   const archiveNotification = useCallback((notifId) => {
     setNotifArchived(prev => {
-      const next = prev.includes(notifId) ? prev : [...prev, notifId]
+      const arr = Array.isArray(prev) ? prev : []
+      const next = arr.includes(notifId) ? arr : [...arr, notifId]
       try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}
       return next
     })
@@ -368,7 +377,8 @@ export function AuthProvider({ children }) {
 
   const unarchiveNotification = useCallback((notifId) => {
     setNotifArchived(prev => {
-      const next = prev.filter(id => id !== notifId)
+      const arr = Array.isArray(prev) ? prev : []
+      const next = arr.filter(id => id !== notifId)
       try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}
       return next
     })
@@ -389,7 +399,8 @@ export function AuthProvider({ children }) {
 
   const unpinNotification = useCallback((notifId) => {
     setNotifPinned(prev => {
-      const next = prev.filter(id => id !== notifId)
+      const arr = Array.isArray(prev) ? prev : []
+      const next = arr.filter(id => id !== notifId)
       try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}
       return next
     })
