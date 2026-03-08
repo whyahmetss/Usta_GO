@@ -162,7 +162,7 @@ function CreateJobPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-10">
         {/* STEP 1 */}
         {step === 1 && (
           <div className="space-y-4">

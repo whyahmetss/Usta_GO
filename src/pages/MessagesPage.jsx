@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Send, Check, CheckCheck, User, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Send, Check, CheckCheck, User, MessageCircle, ChevronRight } from 'lucide-react'
 import { getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
@@ -246,9 +246,6 @@ function MessagesPage() {
   }
 
   const otherPerson = user?.role === 'customer' ? selectedJob?.professional : selectedJob?.customer
-  const ChevronRight2 = ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"></polyline></svg>
-  )
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

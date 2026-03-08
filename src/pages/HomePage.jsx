@@ -1,4 +1,5 @@
-import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import Logo from '../components/Logo'
@@ -6,6 +7,10 @@ import Logo from '../components/Logo'
 function HomePage() {
   const { user, getUnreadNotificationCount } = useAuth()
   const navigate = useNavigate()
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [campaign, setCampaign] = useState(null)
+  const [campaignLoading, setCampaignLoading] = useState(true)
 
   const unreadNotifs = getUnreadNotificationCount()
 
@@ -16,14 +21,35 @@ function HomePage() {
     return 'İyi Akşamlar'
   })()
 
-  const categories = [
-    { id: 'electric', name: 'Elektrik', Icon: Zap, active: true, path: '/create-job', bgColor: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
-    { id: 'plumbing', name: 'Tesisat', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
-    { id: 'renovation', name: 'Tadilat', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-    { id: 'cleaning', name: 'Temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-    { id: 'painting', name: 'Boyacı', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
-    { id: 'carpentry', name: 'Marangoz', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-700' },
+  useState(() => {
+    try {
+      const stored = localStorage.getItem('ustago_active_campaign')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.active && parsed.title) setCampaign(parsed)
+      }
+    } catch { /* no campaign */ }
+    setCampaignLoading(false)
+  })
+
+  const allServices = [
+    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconColor: 'text-blue-600', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconColor: 'text-green-600', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
+
+  const filteredServices = searchQuery.trim()
+    ? allServices.filter(s =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.keywords.some(k => k.includes(searchQuery.toLowerCase()))
+      )
+    : allServices
+
+  const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
     <div className="bg-white dark:bg-[#0c0c0c] min-h-screen">
@@ -64,9 +90,9 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Search */}
+        {/* Search trigger */}
         <button
-          onClick={() => navigate('/create-job')}
+          onClick={() => setShowSearch(true)}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50 text-left"
         >
           <Search size={18} strokeWidth={1.8} className="text-gray-400 flex-shrink-0" />
@@ -74,66 +100,208 @@ function HomePage() {
         </button>
       </div>
 
-      {/* Promo Card */}
+      {/* Campaign Banner */}
       <div className="px-5 mb-5">
-        <div
-          onClick={() => navigate('/create-job')}
-          className="bg-gray-900 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-950 rounded-3xl" />
-          <div className="absolute right-4 bottom-3 opacity-[0.06]">
-            <Zap size={80} />
+        {campaign ? (
+          <div
+            onClick={() => campaign.active_service === 'electric' ? navigate('/create-job') : null}
+            className="rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: campaign.bg_color || '#111827' }}
+          >
+            <div className="relative z-10">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold mb-3 tracking-wide"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: campaign.badge_color || '#34d399' }}>
+                {campaign.badge_text || 'KAMPANYA'}
+              </span>
+              <h2 className="text-lg font-bold text-white mb-1 leading-snug">{campaign.title}</h2>
+              <p className="text-gray-400 text-[13px] mb-4">{campaign.description}</p>
+              {campaign.button_text && (
+                <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-gray-900 rounded-xl text-[13px] font-semibold">
+                  {campaign.button_text}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="relative z-10">
-            <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[11px] font-semibold text-emerald-400 mb-3 tracking-wide">
-              %20 İNDİRİM
-            </span>
-            <h2 className="text-lg font-bold text-white mb-1 leading-snug">İlk Siparişinizde!</h2>
-            <p className="text-gray-400 text-[13px] mb-4">Hemen ilan açın, profesyonel hizmet alın</p>
-            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-gray-900 rounded-xl text-[13px] font-semibold">
-              Hemen Başla
-            </span>
+        ) : !campaignLoading && (
+          <div
+            onClick={() => navigate('/create-job')}
+            className="bg-gray-900 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-950 rounded-3xl" />
+            <div className="absolute right-4 bottom-3 opacity-[0.06]">
+              <Zap size={80} />
+            </div>
+            <div className="relative z-10">
+              <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[11px] font-semibold text-emerald-400 mb-3 tracking-wide">
+                %20 İNDİRİM
+              </span>
+              <h2 className="text-lg font-bold text-white mb-1 leading-snug">İlk Siparişinizde!</h2>
+              <p className="text-gray-400 text-[13px] mb-4">Hemen ilan açın, profesyonel hizmet alın</p>
+              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-gray-900 rounded-xl text-[13px] font-semibold">
+                Hemen Başla
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Categories */}
       <div className="px-5 pb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[15px] font-semibold text-gray-900">Kategoriler</h3>
-          <span className="text-[12px] text-gray-400">Tümü</span>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {categories.map(category => {
-            const CatIcon = category.Icon
+          {allServices.map(svc => {
+            const CatIcon = svc.Icon
             return (
               <button
-                key={category.id}
-                onClick={() => category.active && category.path && navigate(category.path)}
-                disabled={!category.active}
+                key={svc.id}
+                onClick={() => svc.active ? navigate('/create-job') : null}
+                disabled={!svc.active}
                 className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square ${
-                  category.active
-                    ? `${category.bgColor} active:scale-95`
+                  svc.active
+                    ? `${svc.bgColor} active:scale-95`
                     : 'bg-gray-50 opacity-50'
                 }`}
               >
-                {!category.active && (
+                {!svc.active && (
                   <span className="absolute top-2 right-2 bg-gray-900/70 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
                     Yakında
                   </span>
                 )}
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${category.active ? category.iconBg : 'bg-gray-100'}`}>
-                  <CatIcon size={24} className={category.active ? category.iconColor : 'text-gray-400'} />
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.active ? svc.bgColor : 'bg-gray-100'}`}>
+                  <CatIcon size={24} className={svc.active ? svc.iconColor : 'text-gray-400'} />
                 </div>
-                <span className={`text-[12px] font-medium ${category.active ? 'text-gray-700' : 'text-gray-400'}`}>
-                  {category.name}
+                <span className={`text-[12px] font-medium ${svc.active ? 'text-gray-700' : 'text-gray-400'}`}>
+                  {svc.name}
                 </span>
               </button>
             )
           })}
         </div>
       </div>
+
+      {/* Search Overlay */}
+      {showSearch && (
+        <div className="fixed inset-0 z-[60] bg-white dark:bg-[#0c0c0c]">
+          {/* Search Header */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-[#262626]">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => { setShowSearch(false); setSearchQuery('') }}
+                className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+              <div className="flex-1 relative">
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Sorununu yaz veya hizmet ara..."
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-y-auto h-[calc(100vh-80px)] px-5 py-5">
+            {/* Popular searches */}
+            {!searchQuery.trim() && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp size={14} className="text-gray-400" />
+                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Popüler Aramalar</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {popularSearches.map(q => (
+                    <button
+                      key={q}
+                      onClick={() => setSearchQuery(q)}
+                      className="px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl text-[13px] text-gray-600 font-medium hover:bg-gray-100 transition"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent label */}
+            {!searchQuery.trim() && (
+              <div className="flex items-center gap-2 mb-3">
+                <Clock size={14} className="text-gray-400" />
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tüm Hizmetler</h4>
+              </div>
+            )}
+
+            {searchQuery.trim() && (
+              <p className="text-xs text-gray-400 mb-3">{filteredServices.length} sonuç</p>
+            )}
+
+            {/* Service list */}
+            <div className="space-y-2">
+              {filteredServices.map(svc => {
+                const SvcIcon = svc.Icon
+                return (
+                  <button
+                    key={svc.id}
+                    onClick={() => {
+                      if (svc.active) {
+                        setShowSearch(false)
+                        setSearchQuery('')
+                        navigate('/create-job')
+                      }
+                    }}
+                    disabled={!svc.active}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all ${
+                      svc.active
+                        ? 'bg-gray-50 dark:bg-[#141414] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] active:scale-[0.98]'
+                        : 'bg-gray-50/50 opacity-40'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.bgColor}`}>
+                      <SvcIcon size={22} className={svc.iconColor} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900 text-sm">{svc.name}</h3>
+                        {!svc.active && (
+                          <span className="bg-gray-200 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded-full">Yakında</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{svc.desc}</p>
+                    </div>
+                    {svc.active && <ArrowRight size={16} className="text-gray-300 flex-shrink-0" />}
+                  </button>
+                )
+              })}
+
+              {filteredServices.length === 0 && searchQuery.trim() && (
+                <div className="text-center py-12">
+                  <Search size={32} className="text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm text-gray-400 font-medium mb-1">Sonuç bulunamadı</p>
+                  <p className="text-xs text-gray-300">Farklı bir arama deneyin</p>
+                </div>
+              )}
+            </div>
+
+            {/* Direct create button */}
+            <div className="mt-6 pb-6">
+              <button
+                onClick={() => { setShowSearch(false); navigate('/create-job') }}
+                className="w-full py-4 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              >
+                <Zap size={18} />
+                Direkt İş Talebi Oluştur
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

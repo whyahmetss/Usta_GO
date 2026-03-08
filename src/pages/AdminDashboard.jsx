@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Star,
   Inbox,
+  Megaphone,
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
@@ -226,6 +227,13 @@ function AdminDashboard() {
       title: 'Sertifika Onayları',
       desc: 'Usta sertifikalarını onayla',
       color: 'amber',
+    },
+    {
+      path: '/admin/campaigns',
+      icon: Megaphone,
+      title: 'Kampanyalar',
+      desc: 'Ana sayfa etkinlik ve kampanya yönet',
+      color: 'rose',
     },
   ]
 
