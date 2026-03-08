@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { fetchAPI, uploadFile, setStoredUser } from '../utils/api'
+import { fetchAPI, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -25,8 +25,6 @@ function SettingsPage() {
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [certificateFile, setCertificateFile] = useState(null)
-  const [certificateLoading, setCertificateLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
@@ -74,39 +72,18 @@ function SettingsPage() {
         body: { isActive: newActiveStatus }
       })
       setIsActive(newActiveStatus)
-      const updatedUser = mapUserFromBackend(res.data || res)
-      setUser(updatedUser)
-      setStoredUser(updatedUser)
+      const patched = mapUserFromBackend(res.data || res)
+      setUser(prev => {
+        const merged = prev ? { ...prev, ...patched } : patched
+        setStoredUser(merged)
+        return merged
+      })
       setSuccess(newActiveStatus ? 'Durumunuz aktif edildi. Artık iş alabilirsiniz.' : 'Durumunuz pasif edildi. Yeni iş talepleri almayacaksınız.')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleCertificateUpload = async (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      try {
-        setCertificateLoading(true)
-        setError(null)
-        const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
-        const fileUrl = uploadRes.data?.url || uploadRes.url
-        if (!fileUrl) throw new Error('Yükleme başarısız')
-        await fetchAPI(API_ENDPOINTS.CERTIFICATES.UPLOAD, {
-          method: 'POST',
-          body: { fileUrl },
-        })
-        setCertificateFile(fileUrl)
-        setSuccess('Sertifika yüklendi! Admin tarafından onay bekleniyor.')
-        setTimeout(() => setSuccess(null), 3000)
-      } catch (err) {
-        setError(err.message || 'Sertifika yüklenemedi')
-      } finally {
-        setCertificateLoading(false)
-      }
     }
   }
 
@@ -233,57 +210,36 @@ function SettingsPage() {
             <h3 className="font-bold text-gray-900 mb-4">Doğrulama</h3>
             <div className="space-y-3">
               <div className={`p-4 rounded-xl border-2 ${
-                user?.verificationStatus === 'verified' ? 'border-emerald-300 bg-emerald-50' :
-                user?.verificationStatus === 'pending' ? 'border-amber-300 bg-amber-50' :
-                'border-gray-200 bg-gray-50'
+                user?.verificationStatus === 'verified' ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-900/20' :
+                user?.verificationStatus === 'pending' ? 'border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20' :
+                'border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {user?.verificationStatus === 'verified' ? (
                     <>
                       <CheckCircle size={20} className="text-emerald-600" />
-                      <span className="font-bold text-emerald-700">Doğrulanmış</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400">Doğrulanmış</span>
                     </>
                   ) : user?.verificationStatus === 'pending' ? (
                     <>
                       <Clock size={20} className="text-amber-600" />
-                      <span className="font-bold text-amber-700">İnceleme Bekleniyor</span>
+                      <span className="font-bold text-amber-700 dark:text-amber-400">İnceleme Bekleniyor</span>
                     </>
                   ) : (
                     <>
-                      <Upload size={20} className="text-gray-600" />
-                      <span className="font-bold text-gray-700">Doğrulanmamış</span>
+                      <AlertCircle size={20} className="text-gray-600" />
+                      <span className="font-bold text-gray-700 dark:text-gray-400">Doğrulanmamış</span>
                     </>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {user?.verificationStatus === 'verified'
                     ? 'Profil öğenin "Doğrulanmış" rozetine sahiptir. ⭐'
                     : user?.verificationStatus === 'pending'
                     ? 'Sertifikanız admin tarafından incelenmektedir.'
-                    : 'Sertifika yükleyerek profil güvenilirliğini artırın.'}
+                    : 'Kayıt sırasında yüklenen belgeler incelenmektedir.'}
                 </p>
               </div>
-
-              {user?.verificationStatus !== 'verified' && (
-                <label className="block">
-                  <div className={`border-2 border-dashed border-primary-300 rounded-xl p-4 text-center cursor-pointer hover:border-primary-500 transition ${
-                    certificateLoading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}>
-                    <Upload size={24} className="mx-auto mb-2 text-primary-500" />
-                    <p className="text-sm font-bold text-gray-900">
-                      {certificateLoading ? 'Yükleniyor...' : 'Sertifika Yükle'}
-                    </p>
-                    <p className="text-xs text-gray-500">PDF, JPG veya PNG</p>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleCertificateUpload}
-                    disabled={certificateLoading}
-                    className="hidden"
-                  />
-                </label>
-              )}
             </div>
           </Card>
         )}
