@@ -219,7 +219,7 @@ export const updateJobStatus = async (jobId, customerId, status) => {
 };
 
 export const acceptJob = async (jobId, ustaId) => {
-  const usta = await prisma.user.findUnique({ where: { id: ustaId }, select: { status: true } });
+  const usta = await prisma.user.findUnique({ where: { id: ustaId }, select: { status: true, isActive: true } });
   if (!usta) {
     const error = new Error("User not found");
     error.status = 404;
@@ -227,6 +227,11 @@ export const acceptJob = async (jobId, ustaId) => {
   }
   if (usta.status === "PENDING_APPROVAL") {
     const error = new Error("Hesabınız henüz admin tarafından onaylanmadı. İş kabul edemezsiniz.");
+    error.status = 403;
+    throw error;
+  }
+  if (!usta.isActive) {
+    const error = new Error("İş alma durumunuz pasif. Yeni iş kabul edebilmek için Ayarlar > İş Alma Durumu'nu açın.");
     error.status = 403;
     throw error;
   }

@@ -411,6 +411,10 @@ function JobDetailPage() {
   const isCustomer = user?.role === 'customer'
 
   const handleAccept = async () => {
+    if (user?.isActive === false) {
+      alert('İş alma durumunuz pasif. Ayarlar > İş Alma Durumu bölümünden açın.')
+      return
+    }
     if (confirm('Bu işi kabul etmek istiyor musunuz?')) {
       try {
         // Await the API call
@@ -843,9 +847,14 @@ function JobDetailPage() {
                   )}
                   <button
                     onClick={handleAccept}
-                    className="w-full py-4 bg-accent-500 text-white rounded-2xl font-semibold text-base hover:bg-accent-600 active:scale-[0.98] transition"
+                    disabled={user?.isActive === false}
+                    className={`w-full py-4 rounded-2xl font-semibold text-base transition active:scale-[0.98] ${
+                      user?.isActive === false
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-accent-500 text-white hover:bg-accent-600'
+                    }`}
                   >
-                    İşi Kabul Et
+                    {user?.isActive === false ? 'İş Alma Kapalı (Ayarlar > İş Alma Durumu)' : 'İşi Kabul Et'}
                   </button>
                 </>
               )

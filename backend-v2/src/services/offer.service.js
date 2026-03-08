@@ -80,7 +80,7 @@ export const getUstaOffers = async (ustaId, skip = 0, take = 10) => {
 export const acceptOffer = async (offerId, customerId) => {
   const offer = await prisma.offer.findUnique({
     where: { id: offerId },
-    include: { job: true, usta: { select: { id: true, status: true } } },
+    include: { job: true, usta: { select: { id: true, status: true, isActive: true } } },
   });
 
   if (!offer) {
@@ -91,6 +91,12 @@ export const acceptOffer = async (offerId, customerId) => {
 
   if (offer.usta?.status === "PENDING_APPROVAL") {
     const error = new Error("Bu ustanın hesabı henüz onaylanmadı. Teklif kabul edilemez.");
+    error.status = 403;
+    throw error;
+  }
+
+  if (!offer.usta?.isActive) {
+    const error = new Error("Bu usta şu anda iş almıyor. Lütfen başka bir usta seçin.");
     error.status = 403;
     throw error;
   }
