@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -21,6 +21,11 @@ function SettingsPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [isActive, setIsActive] = useState(user?.isActive ?? true)
+  useEffect(() => {
+    if (user?.isActive !== undefined && user?.isActive !== null) {
+      setIsActive(user.isActive)
+    }
+  }, [user?.isActive])
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')

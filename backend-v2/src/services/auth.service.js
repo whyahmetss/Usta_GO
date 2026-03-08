@@ -145,7 +145,7 @@ export const getUserProfile = async (userId) => {
       select: {
         id: true, name: true, email: true, role: true, phone: true,
         bio: true, profileImage: true, ratings: true, balance: true,
-        referralCode: true, createdAt: true, updatedAt: true,
+        isActive: true, referralCode: true, status: true, createdAt: true, updatedAt: true,
       },
     });
   }
