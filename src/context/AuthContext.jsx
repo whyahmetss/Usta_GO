@@ -349,9 +349,10 @@ export function AuthProvider({ children }) {
 
   const getUserNotifications = useCallback(() => {
     if (!user) return []
+    const list = Array.isArray(notifications) ? notifications : []
     const archived = Array.isArray(notifArchived) ? notifArchived : []
     const pinnedIds = Array.isArray(notifPinned) ? notifPinned : []
-    const excludeArchived = notifications.filter(n => !archived.includes(n.id))
+    const excludeArchived = list.filter(n => n && !archived.includes(n.id))
     const pinned = excludeArchived.filter(n => pinnedIds.includes(n.id))
     const unpinned = excludeArchived.filter(n => !pinnedIds.includes(n.id))
     return [...pinned, ...unpinned]
@@ -386,12 +387,15 @@ export function AuthProvider({ children }) {
 
   const getArchivedNotifications = useCallback(() => {
     if (!user) return []
-    return notifications.filter(n => notifArchived.includes(n.id))
+    const list = Array.isArray(notifications) ? notifications : []
+    const archived = Array.isArray(notifArchived) ? notifArchived : []
+    return list.filter(n => n && archived.includes(n.id))
   }, [notifications, user, notifArchived])
 
   const pinNotification = useCallback((notifId) => {
     setNotifPinned(prev => {
-      const next = prev.includes(notifId) ? prev : [...prev, notifId]
+      const arr = Array.isArray(prev) ? prev : []
+      const next = arr.includes(notifId) ? arr : [...arr, notifId]
       try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}
       return next
     })

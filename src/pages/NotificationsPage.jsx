@@ -20,11 +20,14 @@ const ICON_MAP = {
 }
 
 function NotifIcon({ type }) {
-  const entry = ICON_MAP[type] || ICON_MAP.bell
-  const { Icon, bg, color } = entry
+  const key = typeof type === 'string' ? type : 'bell'
+  const entry = ICON_MAP[key] || ICON_MAP.bell
+  const Icon = entry?.Icon || Bell
+  const bg = entry?.bg || 'bg-amber-500/15'
+  const color = entry?.color || 'text-amber-400'
   return (
     <div className={`w-11 h-11 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0`}>
-      <Icon size={22} className={color} strokeWidth={1.8} />
+      {typeof Icon === 'function' && <Icon size={22} className={color} strokeWidth={1.8} />}
     </div>
   )
 }
@@ -121,10 +124,10 @@ function NotificationsPage() {
   const notifPinned = auth?.notifPinned ?? []
 
   const [tab, setTab] = useState('all')
-  const notifications = typeof getUserNotifications === 'function' ? getUserNotifications() : []
-  const archived = typeof getArchivedNotifications === 'function' ? getArchivedNotifications() : []
-  const list = tab === 'archived' ? archived : notifications
-  const unreadCount = (notifications || []).filter(n => !n.read).length
+  const notifications = (typeof getUserNotifications === 'function' ? getUserNotifications() : null) ?? []
+  const archived = (typeof getArchivedNotifications === 'function' ? getArchivedNotifications() : null) ?? []
+  const list = Array.isArray(tab === 'archived' ? archived : notifications) ? (tab === 'archived' ? archived : notifications) : []
+  const unreadCount = (Array.isArray(notifications) ? notifications : []).filter(n => n && !n.read).length
   const pinnedIds = new Set(Array.isArray(notifPinned) ? notifPinned : [])
 
   const formatTime = (isoString) => {
