@@ -415,6 +415,9 @@ model Campaign {
   bgColor     String   @default("#111827") @map("bg_color")
   badgeColor  String   @default("#34d399") @map("badge_color")
   textColor   String   @default("#ffffff") @map("text_color")
+  bgImage     String?  @map("bg_image")   // Arka plan resmi URL
+  iconType    String?  @map("icon_type")  // flower, zap, gift, sparkles, heart, star, party
+  iconImage   String?  @map("icon_image") // Ozel ikon resmi URL (oncelikli)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

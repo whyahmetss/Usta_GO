@@ -23,6 +23,9 @@ router.get("/active", async (req, res) => {
       bg_color: campaign.bgColor,
       badge_color: campaign.badgeColor,
       text_color: campaign.textColor,
+      bg_image: campaign.bgImage || null,
+      icon_type: campaign.iconType || null,
+      icon_image: campaign.iconImage || null,
       active: campaign.active,
       updatedAt: campaign.updatedAt,
     },
@@ -30,7 +33,7 @@ router.get("/active", async (req, res) => {
 });
 
 router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
-  const { title, description, badge_text, button_text, bg_color, badge_color, text_color } = req.body;
+  const { title, description, badge_text, button_text, bg_color, badge_color, text_color, bg_image, icon_type, icon_image } = req.body;
   if (!title) return res.status(400).json({ error: "Kampanya basligi zorunludur" });
 
   await prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
@@ -44,6 +47,9 @@ router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
       bgColor: bg_color || "#111827",
       badgeColor: badge_color || "#34d399",
       textColor: text_color || "#ffffff",
+      bgImage: bg_image || null,
+      iconType: icon_type || null,
+      iconImage: icon_image || null,
       active: true,
     },
   });
@@ -58,6 +64,9 @@ router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
       bg_color: campaign.bgColor,
       badge_color: campaign.badgeColor,
       text_color: campaign.textColor,
+      bg_image: campaign.bgImage,
+      icon_type: campaign.iconType,
+      icon_image: campaign.iconImage,
       active: campaign.active,
       updatedAt: campaign.updatedAt,
     },

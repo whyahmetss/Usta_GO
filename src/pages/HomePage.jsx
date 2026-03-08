@@ -1,7 +1,11 @@
-import { useState } from 'react'
-import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper } from 'lucide-react'
+
+const CAMPAIGN_ICONS = { flower: Flower, zap: Zap, gift: Gift, sparkles: Sparkles, heart: Heart, star: Star, party: PartyPopper }
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import Logo from '../components/Logo'
 
 function HomePage() {
@@ -21,16 +25,23 @@ function HomePage() {
     return 'İyi Akşamlar'
   })()
 
-  useState(() => {
+  const loadCampaign = async () => {
     try {
-      const stored = localStorage.getItem('ustago_active_campaign')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (parsed.active && parsed.title) setCampaign(parsed)
-      }
-    } catch { /* no campaign */ }
-    setCampaignLoading(false)
-  })
+      setCampaignLoading(true)
+      const res = await fetchAPI(API_ENDPOINTS.CAMPAIGNS.ACTIVE + '?t=' + Date.now(), { includeAuth: false })
+      if (res.data && res.data.title) setCampaign(res.data)
+      else setCampaign(null)
+    } catch { setCampaign(null) }
+    finally { setCampaignLoading(false) }
+  }
+
+  useEffect(() => { loadCampaign() }, [])
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') loadCampaign() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
 
   const allServices = [
     { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
@@ -104,10 +115,16 @@ function HomePage() {
       <div className="px-5 mb-5">
         {campaign ? (
           <div
-            onClick={() => campaign.active_service === 'electric' ? navigate('/create-job') : null}
-            className="rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: campaign.bg_color || '#111827' }}
+            onClick={() => navigate('/create-job')}
+            className="rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform min-h-[140px]"
+            style={{
+              backgroundColor: campaign.bg_color || '#111827',
+              backgroundImage: campaign.bg_image ? `url(${campaign.bg_image})` : undefined,
+              backgroundSize: campaign.bg_image ? 'cover' : undefined,
+              backgroundPosition: campaign.bg_image ? 'center' : undefined,
+            }}
           >
+            {campaign.bg_image && <div className="absolute inset-0 bg-black/40 z-[1]" />}
             <div className="relative z-10">
               <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold mb-3 tracking-wide"
                 style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: campaign.badge_color || '#34d399' }}>
@@ -121,6 +138,18 @@ function HomePage() {
                 </span>
               )}
             </div>
+            {(campaign.icon_type || campaign.icon_image) && (() => {
+              const IconComp = campaign.icon_type && CAMPAIGN_ICONS[campaign.icon_type]
+              return (
+                <div className="absolute right-4 bottom-4 top-4 flex items-center justify-center opacity-20 z-[2]">
+                  {campaign.icon_image ? (
+                    <img src={campaign.icon_image} alt="" className="w-20 h-20 object-contain" />
+                  ) : IconComp ? (
+                    <IconComp size={80} className="text-white" strokeWidth={1.5} />
+                  ) : null}
+                </div>
+              )
+            })()}
           </div>
         ) : !campaignLoading && (
           <div
