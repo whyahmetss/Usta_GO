@@ -26,4 +26,5 @@ export const updateProfileSchema = z.object({
   bio: z.string().optional(),
   phone: z.string().optional(),
   profileImage: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
