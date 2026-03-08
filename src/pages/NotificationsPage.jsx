@@ -102,6 +102,13 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onUnarchive, onPi
 function NotificationsPage() {
   const navigate = useNavigate()
   const auth = useAuth()
+  if (!auth) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <p className="text-sm text-gray-500">Yükleniyor...</p>
+      </div>
+    )
+  }
   const getUserNotifications = auth?.getUserNotifications
   const markNotificationRead = auth?.markNotificationRead
   const markAllNotificationsRead = auth?.markAllNotificationsRead

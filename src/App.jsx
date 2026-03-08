@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { MapsProvider } from './context/MapsContext'
 import Layout from './components/Layout'
+import PageErrorBoundary from './components/PageErrorBoundary'
 import AuthPage from './pages/AuthPage'
 import UstaRegisterPage from './pages/UstaRegisterPage'
 import HomePage from './pages/HomePage'
@@ -101,7 +102,7 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute><Layout><NotificationsPage /></Layout></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
       <Route path="/my-jobs" element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
       <Route path="/messages/:jobId" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
@@ -119,7 +120,7 @@ function AppRoutes() {
       <Route path="/admin/users" element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/jobs" element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/complaints" element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/messages" element={<ProtectedRoute roleRequired="admin"><Layout><AdminMessagesPage /></Layout></ProtectedRoute>} />
+      <Route path="/admin/messages" element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
       <Route path="/admin/coupons" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/pricing" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
