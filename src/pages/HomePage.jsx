@@ -26,7 +26,7 @@ function HomePage() {
   ]
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white dark:bg-[#0c0c0c] min-h-screen">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between mb-5">

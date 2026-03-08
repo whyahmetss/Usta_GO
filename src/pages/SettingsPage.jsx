@@ -1,15 +1,23 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, uploadFile, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
+const themeOptions = [
+  { id: 'light', label: 'Açık', icon: Sun },
+  { id: 'dark', label: 'Koyu', icon: Moon },
+  { id: 'system', label: 'Sistem', icon: Monitor },
+]
+
 function SettingsPage() {
   const { user, setUser } = useAuth()
+  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [isActive, setIsActive] = useState(user?.isActive ?? true)
@@ -128,6 +136,33 @@ function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Tema */}
+        <Card padding="p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Tema</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {themeOptions.map(opt => {
+              const Icon = opt.icon
+              const active = theme === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setTheme(opt.id)}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                    active
+                      ? 'border-primary-500 bg-primary-50'
+                      : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon size={22} className={active ? 'text-primary-500' : 'text-gray-500'} />
+                  <span className={`text-xs font-semibold ${active ? 'text-primary-600' : 'text-gray-600'}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </Card>
 
         {/* Hesap Bilgileri */}
         <Card padding="p-6">
