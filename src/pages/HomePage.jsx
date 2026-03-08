@@ -45,12 +45,12 @@ function HomePage() {
   }, [])
 
   const allServices = [
-    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
-    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconColor: 'text-blue-600', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
-    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
-    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
-    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconColor: 'text-green-600', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
-    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
+    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-primary-50 dark:bg-primary-900/30', iconColor: 'text-primary-600 dark:text-primary-400', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
 
   const filteredServices = searchQuery.trim()
@@ -64,7 +64,7 @@ function HomePage() {
   const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
-    <div className="bg-white dark:bg-[#0c0c0c] min-h-screen">
+    <div className="bg-gray-50 dark:bg-[#111827] min-h-screen">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between mb-5">
@@ -95,7 +95,7 @@ function HomePage() {
             </button>
             <button
               onClick={() => navigate('/settings')}
-              className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
             >
               <Settings size={18} strokeWidth={1.8} className="text-gray-700" />
             </button>
@@ -105,7 +105,7 @@ function HomePage() {
         {/* Search trigger */}
         <button
           onClick={() => setShowSearch(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50 text-left"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600 text-left"
         >
           <Search size={18} strokeWidth={1.8} className="text-gray-400 flex-shrink-0" />
           <span className="text-[13px] text-gray-400">Hangi hizmete ihtiyacınız var?</span>
@@ -155,14 +155,14 @@ function HomePage() {
         ) : !campaignLoading && (
           <div
             onClick={() => navigate('/create-job')}
-            className="bg-gray-900 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+            className="bg-primary-600 dark:bg-primary-700 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-950 rounded-3xl" />
-            <div className="absolute right-4 bottom-3 opacity-[0.06]">
-              <Zap size={80} />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-3xl" />
+            <div className="absolute right-4 bottom-3 opacity-10">
+              <Zap size={80} className="text-white" />
             </div>
             <div className="relative z-10">
-              <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[11px] font-semibold text-emerald-400 mb-3 tracking-wide">
+              <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-[11px] font-semibold text-white mb-3 tracking-wide">
                 %20 İNDİRİM
               </span>
               <h2 className="text-lg font-bold text-white mb-1 leading-snug">İlk Siparişinizde!</h2>
@@ -196,7 +196,7 @@ function HomePage() {
                 }`}
               >
                 {!svc.active && (
-                  <span className="absolute top-2 right-2 bg-gray-900/70 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 bg-gray-500/80 dark:bg-gray-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
                     Yakında
                   </span>
                 )}

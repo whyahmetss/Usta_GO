@@ -135,116 +135,24 @@ function AdminDashboard() {
   ).length
 
   const statsList = [
-    {
-      label: 'Toplam Kullanıcı',
-      value: stats.totalUsers.toString(),
-      icon: Users,
-      color: 'primary',
-    },
-    {
-      label: 'Aktif İşler',
-      value: stats.activeJobs.toString(),
-      icon: Briefcase,
-      color: 'emerald',
-    },
-    {
-      label: 'Toplam Gelir',
-      value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`,
-      icon: DollarSign,
-      color: 'accent',
-    },
-    {
-      label: 'Toplam İş',
-      value: stats.totalJobs.toString(),
-      icon: TrendingUp,
-      color: 'violet',
-    },
+    { label: 'Toplam Kullanıcı', value: stats.totalUsers.toString(), icon: Users, color: 'primary' },
+    { label: 'Aktif İşler', value: stats.activeJobs.toString(), icon: Briefcase, color: 'primary' },
+    { label: 'Toplam Gelir', value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'primary' },
+    { label: 'Toplam İş', value: stats.totalJobs.toString(), icon: TrendingUp, color: 'primary' },
   ]
 
   const managementItems = [
-    {
-      path: '/admin/users',
-      icon: Users,
-      title: 'Kullanıcı Yönetimi',
-      desc: 'Müşteri ve Usta hesaplarını yönet',
-      color: 'primary',
-    },
-    {
-      path: '/admin/pending-ustas',
-      icon: UserCheck,
-      title: 'Onay Bekleyen Ustalar',
-      desc: 'Yeni usta kayıtlarını onayla',
-      color: 'amber',
-      badge: pendingUstas > 0 ? `${pendingUstas} Bekliyor` : null,
-    },
-    {
-      path: '/admin/jobs',
-      icon: Briefcase,
-      title: 'İş Yönetimi',
-      desc: 'Tüm işleri görüntüle ve yönet',
-      color: 'emerald',
-    },
-    {
-      path: '/admin/withdrawals',
-      icon: Wallet,
-      title: 'Para Çekme Talepleri',
-      desc: 'Usta ödemelerini onayla',
-      color: 'amber',
-      badge: pendingWithdrawals > 0 ? `${pendingWithdrawals} Bekliyor` : null,
-    },
-    {
-      path: '/admin/complaints',
-      icon: AlertCircle,
-      title: 'Şikayet Yönetimi',
-      desc: 'Müşteri şikayetlerini yönet',
-      color: 'rose',
-      badge: openComplaints > 0 ? `${openComplaints} Açık` : null,
-    },
-    {
-      path: '/admin/messages',
-      icon: MessageSquare,
-      title: 'Mesaj Sistemi',
-      desc: 'Toplu mesaj gönder',
-      color: 'violet',
-    },
-    {
-      path: '/admin/coupons',
-      icon: Ticket,
-      title: 'Kupon Yönetimi',
-      desc: 'Kupon oluştur ve yönet',
-      color: 'accent',
-    },
-    {
-      path: '/admin/pricing',
-      icon: Coins,
-      title: 'AI Fiyat Listesi',
-      desc: 'Hizmet bazlı temel ücretleri yönet',
-      color: 'violet',
-    },
-    {
-      path: '/admin/certificates',
-      icon: Award,
-      title: 'Sertifika Onayları',
-      desc: 'Usta sertifikalarını onayla',
-      color: 'amber',
-    },
-    {
-      path: '/admin/campaigns',
-      icon: Megaphone,
-      title: 'Kampanyalar',
-      desc: 'Ana sayfa etkinlik ve kampanya yönet',
-      color: 'rose',
-    },
+    { path: '/admin/users', icon: Users, title: 'Kullanıcı Yönetimi', desc: 'Müşteri ve Usta hesaplarını yönet', badge: null },
+    { path: '/admin/pending-ustas', icon: UserCheck, title: 'Onay Bekleyen Ustalar', desc: 'Yeni usta kayıtlarını onayla', badge: pendingUstas > 0 ? `${pendingUstas} Bekliyor` : null },
+    { path: '/admin/jobs', icon: Briefcase, title: 'İş Yönetimi', desc: 'Tüm işleri görüntüle ve yönet', badge: null },
+    { path: '/admin/withdrawals', icon: Wallet, title: 'Para Çekme Talepleri', desc: 'Usta ödemelerini onayla', badge: pendingWithdrawals > 0 ? `${pendingWithdrawals} Bekliyor` : null },
+    { path: '/admin/complaints', icon: AlertCircle, title: 'Şikayet Yönetimi', desc: 'Müşteri şikayetlerini yönet', badge: openComplaints > 0 ? `${openComplaints} Açık` : null },
+    { path: '/admin/messages', icon: MessageSquare, title: 'Mesaj Sistemi', desc: 'Toplu mesaj gönder', badge: null },
+    { path: '/admin/coupons', icon: Ticket, title: 'Kupon Yönetimi', desc: 'Kupon oluştur ve yönet', badge: null },
+    { path: '/admin/pricing', icon: Coins, title: 'AI Fiyat Listesi', desc: 'Hizmet bazlı temel ücretleri yönet', badge: null },
+    { path: '/admin/certificates', icon: Award, title: 'Sertifika Onayları', desc: 'Usta sertifikalarını onayla', badge: null },
+    { path: '/admin/campaigns', icon: Megaphone, title: 'Kampanyalar', desc: 'Ana sayfa etkinlik ve kampanya yönet', badge: null },
   ]
-
-  const colorMap = {
-    primary: 'bg-primary-50 text-primary-600',
-    accent: 'bg-accent-50 text-accent-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    amber: 'bg-amber-50 text-amber-600',
-    rose: 'bg-rose-50 text-rose-600',
-    violet: 'bg-violet-50 text-violet-600',
-  }
 
   if (loading) {
     return (
@@ -286,7 +194,7 @@ function AdminDashboard() {
           rightAction={
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition"
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-[0.98] transition"
             >
               <LogOut size={18} /> Çıkış
             </button>
@@ -323,15 +231,11 @@ function AdminDashboard() {
                 >
                   <div className="flex flex-col">
                     <div className="flex items-start justify-between mb-2">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          colorMap[item.color] || colorMap.primary
-                        }`}
-                      >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
                         <Icon size={20} />
                       </div>
                       {item.badge && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-50 text-amber-700">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
                           {item.badge}
                         </span>
                       )}
@@ -362,7 +266,7 @@ function AdminDashboard() {
                 {recentJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -416,7 +320,7 @@ function AdminDashboard() {
                         </div>
                         <div className="flex gap-0.5 shrink-0">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-primary-500 fill-primary-500' : 'text-gray-300 dark:text-gray-600'} />
                           ))}
                         </div>
                       </div>
@@ -481,10 +385,10 @@ function AdminDashboard() {
                       key={complaint.id}
                       className={`p-3 rounded-xl border ${
                         complaint.status === 'resolved'
-                          ? 'bg-emerald-50/50 border-emerald-100'
+                          ? 'bg-primary-50/50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
                           : complaint.status === 'rejected'
-                          ? 'bg-rose-50/50 border-rose-100'
-                          : 'bg-amber-50/50 border-amber-100'
+                          ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                          : 'bg-primary-50/30 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
