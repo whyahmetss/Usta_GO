@@ -13,7 +13,7 @@
 
 body {
   overflow-x: hidden;
-  background-color: #f8fafc;
+  background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -26,32 +26,6 @@ body {
 
 .leaflet-pane { z-index: 1 !important; }
 .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
-
-/* Legacy support - pages still referencing these will gradually be migrated */
-.blue-gradient-bg {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-}
-
-.blur-card {
-  filter: blur(3px);
-  opacity: 0.6;
-  pointer-events: none;
-  user-select: none;
-}
-
-.coming-soon-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
-}
 
 @layer utilities {
   .safe-bottom {
