@@ -1,5 +1,30 @@
 import { ZodError } from "zod";
 
+/** Amele bot'a hata bildirimi gönder (fire-and-forget, 500 hatalarında) */
+async function notifyAmeleOnError(err, req) {
+  const apiKey = process.env.INTERNAL_API_KEY;
+  if (!apiKey) return;
+
+  try {
+    await fetch("https://amele.onrender.com/internal/error-log", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        servis: "ustago-backend",
+        endpoint: req.path || req.url,
+        hata_mesaji: err.message,
+        stack_trace: err.stack,
+        onem: "high",
+      }),
+    });
+  } catch (e) {
+    console.error("Amele bildirim gönderilemedi:", e.message);
+  }
+}
+
 export const errorHandler = (err, req, res, _next) => {
   console.error("Error:", err);
 
@@ -29,8 +54,12 @@ export const errorHandler = (err, req, res, _next) => {
     return res.status(401).json({ error: "Token expired" });
   }
 
-  // Default error
-  res.status(err.statusCode || err.status || 500).json({
+  // Default error (500) - Amele bot'a bildirim
+  const status = err.statusCode || err.status || 500;
+  if (status >= 500 && process.env.INTERNAL_API_KEY) {
+    notifyAmeleOnError(err, req).catch(() => {});
+  }
+  res.status(status).json({
     error: err.message || "Internal server error",
   });
 };
