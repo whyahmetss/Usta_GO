@@ -130,7 +130,9 @@ function AdminMessagesPage() {
             <>
               {/* Mode Selection */}
               <div className="grid grid-cols-2 gap-2 mb-4">
-                {modeOptions.map(mode => (
+                {modeOptions.map(mode => {
+                  const ModeIcon = mode.icon
+                  return (
                   <button
                     key={mode.id}
                     onClick={() => setSendMode(mode.id)}
@@ -140,12 +142,12 @@ function AdminMessagesPage() {
                         : 'bg-white border-gray-200'
                     }`}
                   >
-                    <div className="mb-1">{<mode.icon size={20} />}</div>
+                    <div className="mb-1"><ModeIcon size={20} /></div>
                     <p className={`text-[11px] font-semibold ${sendMode === mode.id ? 'text-primary-600' : 'text-gray-600'}`}>
                       {mode.label}
                     </p>
                   </button>
-                ))}
+                )})}
               </div>
 
               {/* Individual user picker */}
