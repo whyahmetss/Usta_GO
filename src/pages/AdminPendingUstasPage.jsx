@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, Check, X, FileText, User } from 'lucide-react'
+import { Check, X, FileText, Loader } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import EmptyState from '../components/EmptyState'
 
 function AdminPendingUstasPage() {
   const navigate = useNavigate()
@@ -46,58 +49,72 @@ function AdminPendingUstasPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/admin')} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Onay Bekleyen Ustalar</h1>
-            <p className="text-sm text-gray-500">Kayıt olan ustaları onaylayın veya reddedin</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Onay Bekleyen Ustalar"
+        onBack={() => navigate('/admin')}
+      />
 
-      <div className="p-4">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 mb-4">{error}</div>
+          <Card className="!bg-rose-50 !border-rose-200">
+            <p className="text-xs text-rose-600 font-medium">{error}</p>
+          </Card>
         )}
+
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-col items-center py-16">
+            <Loader size={28} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-xs text-gray-500">Ustalar yükleniyor...</p>
           </div>
         ) : list.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-            <User size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Onay bekleyen usta yok</p>
-            <p className="text-gray-400 text-sm mt-1">Yeni usta kayıtları burada listelenir</p>
-          </div>
+          <EmptyState
+            icon="👷"
+            title="Onay bekleyen usta yok"
+            description="Yeni usta kayıtları burada listelenir."
+          />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {list.map((u) => (
-              <div key={u.id} className="bg-white rounded-2xl p-5 shadow border border-gray-100">
-                <div className="flex items-start justify-between gap-4">
+              <Card key={u.id}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">⚡</span>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{u.name}</p>
-                    <p className="text-sm text-gray-500">{u.email}</p>
-                    {u.phone && <p className="text-sm text-gray-500">{u.phone}</p>}
-                    <p className="text-xs text-gray-400 mt-1">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</p>
+                    <p className="text-sm font-semibold text-gray-900">{u.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                    {u.phone && <p className="text-xs text-gray-500">{u.phone}</p>}
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {new Date(u.createdAt).toLocaleDateString('tr-TR')}
+                    </p>
                     {u.certificates?.length > 0 && (
-                      <a href={u.certificates[0].fileUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-indigo-600 font-medium">
-                        <FileText size={14} /> Sertifika görüntüle
+                      <a
+                        href={u.certificates[0].fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 text-xs text-primary-600 font-medium"
+                      >
+                        <FileText size={13} /> Sertifika görüntüle
                       </a>
                     )}
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => handleApprove(u.id)} className="p-2.5 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition">
-                      <Check size={20} />
-                    </button>
-                    <button onClick={() => handleReject(u.id)} className="p-2.5 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition">
-                      <X size={20} />
-                    </button>
-                  </div>
                 </div>
-              </div>
+
+                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => handleApprove(u.id)}
+                    className="py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                  >
+                    <Check size={14} /> Onayla
+                  </button>
+                  <button
+                    onClick={() => handleReject(u.id)}
+                    className="py-2.5 bg-rose-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                  >
+                    <X size={14} /> Reddet
+                  </button>
+                </div>
+              </Card>
             ))}
           </div>
         )}

@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
 import { connectSocket, getSocket } from '../utils/socket'
 import { ArrowLeft, Phone, MessageCircle, MapPin, Clock, Navigation, Star, CheckCircle } from 'lucide-react'
+import Card from '../components/Card'
 
 const DEFAULT_CENTER = [41.0082, 28.9784]
 
@@ -301,21 +302,19 @@ function LiveTrackingPage() {
   // ── Yükleme ───────────────────────────────────────────────────────
   if (jobLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center py-20 bg-gray-50">
+        <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600 text-lg mb-4">İş bulunamadı</p>
-          <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">
-            Geri Dön
-          </button>
-        </div>
+      <div className="flex flex-col items-center justify-center py-20 px-4 bg-gray-50">
+        <p className="text-gray-600 text-lg mb-4">İş bulunamadı</p>
+        <button onClick={() => navigate(-1)} className="px-6 py-2.5 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98]">
+          Geri Dön
+        </button>
       </div>
     )
   }
@@ -324,9 +323,9 @@ function LiveTrackingPage() {
   const ustaIcon     = makeUstaIcon(bearing)
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="bg-gray-50 flex flex-col min-h-screen">
 
-      {/* ── HARİTA ──────────────────────────────────────────────────── */}
+      {/* Map */}
       <div className="relative" style={{ height: '55vh' }}>
 
         {/* Geri butonu */}
@@ -345,12 +344,12 @@ function LiveTrackingPage() {
           </div>
         )}
 
-        {/* ETA rozeti */}
+        {/* ETA badge */}
         {trackingStatus !== 'completed' && trackingStatus !== 'in_progress' && (
-          <div className="absolute top-4 right-4 z-[400] bg-white rounded-2xl shadow-lg px-4 py-2">
+          <div className="absolute top-4 right-4 z-[400] bg-white rounded-2xl border border-gray-100 shadow-card px-4 py-2">
             <div className="flex items-center gap-2">
-              <Clock size={16} className="text-blue-600" />
-              <span className="text-lg font-black text-blue-600">{formatEta(eta)}</span>
+              <Clock size={16} className="text-primary-500" />
+              <span className="text-lg font-black text-primary-600">{formatEta(eta)}</span>
             </div>
             {distance !== null && distance > 0 && (
               <p className="text-xs text-gray-500 text-center mt-0.5">{distance.toFixed(1)} km</p>
@@ -358,10 +357,10 @@ function LiveTrackingPage() {
           </div>
         )}
 
-        {/* Usta geldi overlay */}
+        {/* Usta arrived overlay */}
         {trackingStatus === 'arrived' && (
-          <div className="absolute inset-0 z-[400] bg-green-500/20 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white rounded-3xl shadow-2xl px-8 py-6 text-center mx-4">
+          <div className="absolute inset-0 z-[400] bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-card px-8 py-6 text-center mx-4">
               <div className="text-5xl mb-3">🎉</div>
               <h3 className="text-xl font-black text-gray-900">Usta Geldi!</h3>
               <p className="text-gray-600 text-sm mt-1">Ustanız kapınızda</p>
@@ -418,63 +417,63 @@ function LiveTrackingPage() {
         </MapContainer>
       </div>
 
-      {/* ── BOTTOM SHEET ────────────────────────────────────────────── */}
-      <div className="flex-1 bg-white rounded-t-3xl -mt-4 relative z-10 shadow-2xl overflow-auto">
+      {/* Bottom sheet */}
+      <div className="flex-1 bg-white rounded-t-3xl -mt-4 relative z-10 shadow-card overflow-auto">
         <div className="px-5 pt-4 pb-8 space-y-4">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto" />
 
-          {/* Durum adımları */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4">
+          {/* Status steps */}
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
             <div className="flex items-center justify-between mb-3">
               {STATUS_STEPS.map((step, i) => (
                 <div key={step.key} className="flex flex-col items-center flex-1">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${
                     i <= currentStep
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md scale-110'
+                      ? 'bg-primary-500 text-white scale-110'
                       : 'bg-gray-200 text-gray-400'
                   }`}>
                     {i <= currentStep ? step.icon : i + 1}
                   </div>
                   <span className={`text-[10px] mt-1.5 font-semibold text-center leading-tight ${
-                    i <= currentStep ? 'text-blue-700' : 'text-gray-400'
+                    i <= currentStep ? 'text-primary-700' : 'text-gray-400'
                   }`}>{step.label}</span>
                 </div>
               ))}
             </div>
             <div className="relative h-1.5 bg-gray-200 rounded-full mx-4">
               <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-700 rounded-full transition-all duration-700"
+                className="absolute left-0 top-0 h-full bg-primary-500 rounded-full transition-all duration-700"
                 style={{ width: `${(currentStep / (STATUS_STEPS.length - 1)) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* ETA kartları */}
+          {/* ETA cards */}
           {trackingStatus !== 'completed' && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-3 text-center text-white shadow-lg">
-                <Clock size={18} className="mx-auto mb-1 opacity-80" />
-                <p className="text-lg font-black">{formatEta(eta)}</p>
-                <p className="text-[10px] opacity-75">Tahmini Varış</p>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-3 text-center text-white shadow-lg">
-                <Navigation size={18} className="mx-auto mb-1 opacity-80" />
-                <p className="text-lg font-black">{distance !== null && distance > 0 ? distance.toFixed(1) : '...'} km</p>
-                <p className="text-[10px] opacity-75">Mesafe</p>
-              </div>
-              <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-3 text-center text-white shadow-lg">
-                <MapPin size={18} className="mx-auto mb-1 opacity-80" />
-                <p className="text-lg font-black">{job.budget || job.price || '-'}</p>
-                <p className="text-[10px] opacity-75">TL Ücret</p>
-              </div>
+              <Card padding="p-3" className="text-center">
+                <Clock size={18} className="mx-auto mb-1 text-primary-500" />
+                <p className="text-lg font-black text-gray-900">{formatEta(eta)}</p>
+                <p className="text-[10px] text-gray-500">Tahmini Varış</p>
+              </Card>
+              <Card padding="p-3" className="text-center">
+                <Navigation size={18} className="mx-auto mb-1 text-primary-500" />
+                <p className="text-lg font-black text-gray-900">{distance !== null && distance > 0 ? distance.toFixed(1) : '...'} km</p>
+                <p className="text-[10px] text-gray-500">Mesafe</p>
+              </Card>
+              <Card padding="p-3" className="text-center">
+                <MapPin size={18} className="mx-auto mb-1 text-primary-500" />
+                <p className="text-lg font-black text-gray-900">{job.budget || job.price || '-'}</p>
+                <p className="text-[10px] text-gray-500">TL Ücret</p>
+              </Card>
             </div>
           )}
 
-          {/* Usta bilgisi */}
+          {/* Professional info */}
           {professional && (
-            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+            <Card padding="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-2xl shadow-md overflow-hidden shrink-0">
+                <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center text-2xl overflow-hidden shrink-0">
                   {professional.profileImage
                     ? <img src={professional.profileImage} alt="" className="w-full h-full object-cover" />
                     : '⚡'}
@@ -483,7 +482,7 @@ function LiveTrackingPage() {
                   <h4 className="font-bold text-gray-900">{professional.name}</h4>
                   {professional.ratings > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
-                      <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                      <Star size={12} className="text-amber-400 fill-amber-400" />
                       <span className="text-xs font-semibold text-gray-600">{Number(professional.ratings).toFixed(1)}</span>
                     </div>
                   )}
@@ -491,24 +490,24 @@ function LiveTrackingPage() {
                 <div className="flex gap-2">
                   {professional.phone && (
                     <a href={`tel:${professional.phone}`}
-                      className="w-11 h-11 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center">
-                      <Phone size={18} className="text-green-600" />
+                      className="w-11 h-11 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center hover:bg-emerald-100">
+                      <Phone size={18} className="text-emerald-600" />
                     </a>
                   )}
                   <button onClick={() => navigate(`/messages/${job.id}`)}
-                    className="w-11 h-11 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-center">
-                    <MessageCircle size={18} className="text-blue-600" />
+                    className="w-11 h-11 bg-primary-50 border border-primary-200 rounded-xl flex items-center justify-center hover:bg-primary-100">
+                    <MessageCircle size={18} className="text-primary-600" />
                   </button>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* İş adresi */}
-          <div className="bg-gray-50 rounded-2xl p-4">
+          {/* Job address */}
+          <Card padding="p-4" className="bg-gray-50">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                <MapPin size={18} className="text-blue-600" />
+              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center shrink-0">
+                <MapPin size={18} className="text-primary-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-gray-900 text-sm">{job.title}</h4>
@@ -517,33 +516,33 @@ function LiveTrackingPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* Tamamlandı */}
+          {/* Completed */}
           {trackingStatus === 'completed' && (
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 text-center">
-              <CheckCircle size={40} className="text-green-500 mx-auto mb-2" />
+            <Card padding="p-5" className="bg-emerald-50 border-emerald-200 text-center">
+              <CheckCircle size={40} className="text-emerald-600 mx-auto mb-2" />
               <h3 className="text-lg font-black text-gray-900">İş Tamamlandı!</h3>
               <p className="text-sm text-gray-600 mt-1">Usta işinizi başarıyla tamamladı.</p>
               {job.status === 'completed' && !job.rating && user?.role === 'customer' && (
                 <button onClick={() => navigate(`/rate/${job.id}`)}
-                  className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl font-bold shadow-lg">
+                  className="mt-4 px-6 py-3 bg-amber-500 text-white rounded-2xl font-semibold hover:bg-amber-600 active:scale-[0.98] transition">
                   Değerlendir
                 </button>
               )}
-            </div>
+            </Card>
           )}
 
-          {/* Aksiyonlar */}
+          {/* Actions */}
           <div className="space-y-3 pb-2">
             <button onClick={() => navigate(`/job/${job.id}`)}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
+              className="w-full py-3.5 bg-primary-500 text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-600 active:scale-[0.98] transition">
               <CheckCircle size={18} />
               İş Detaylarına Git
             </button>
             {professional?.phone && (
               <a href={`tel:${professional.phone}`}
-                className="w-full py-3.5 bg-white border-2 border-green-500 text-green-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2">
+                className="w-full py-3.5 bg-white border-2 border-emerald-500 text-emerald-600 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-50 active:scale-[0.98] transition">
                 <Phone size={18} />
                 Ara
               </a>

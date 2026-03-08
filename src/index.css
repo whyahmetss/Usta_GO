@@ -13,21 +13,23 @@
 
 body {
   overflow-x: hidden;
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Usta marker ping animasyonu (Leaflet DivIcon içinde kullanılır) */
 @keyframes usta-ping {
   0%   { transform: scale(1);   opacity: 0.5; }
   70%  { transform: scale(1.9); opacity: 0;   }
   100% { transform: scale(1.9); opacity: 0;   }
 }
 
-/* Leaflet z-index düzeltmesi — uygulama headerının altında kalmasın */
 .leaflet-pane { z-index: 1 !important; }
 .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
 
+/* Legacy support - pages still referencing these will gradually be migrated */
 .blue-gradient-bg {
-  background: linear-gradient(180deg, #4169E1 0%, #1E3A8A 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
 }
 
 .blur-card {
@@ -41,12 +43,25 @@ body {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 700;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
-import { ArrowLeft, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function AdminWithdrawalsPage() {
   const navigate = useNavigate()
@@ -37,7 +41,6 @@ function AdminWithdrawalsPage() {
       try {
         setProcessingId(id)
         setError(null)
-        // TODO: Use PATCH /api/wallet/withdraw/:id/approve when endpoint is available
         await fetchAPI(`/wallet/withdraw/${id}/approve`, {
           method: 'PATCH',
           body: {}
@@ -60,7 +63,6 @@ function AdminWithdrawalsPage() {
       try {
         setProcessingId(id)
         setError(null)
-        // TODO: Use PATCH /api/wallet/withdraw/:id/reject when endpoint is available
         await fetchAPI(`/wallet/withdraw/${id}/reject`, {
           method: 'PATCH',
           body: { rejectionReason: reason || 'Belirtilmedi' }
@@ -77,104 +79,142 @@ function AdminWithdrawalsPage() {
     }
   }
 
+  const filterOptions = [
+    { id: 'pending', label: 'Bekleyen' },
+    { id: 'approved', label: 'Onaylanan' },
+    { id: 'rejected', label: 'Reddedilen' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 pt-4 pb-4">
-          <div className="flex items-center gap-4 mb-4">
-            <button onClick={() => navigate(-1)} className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition">
-              <ArrowLeft size={20} className="text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-xl font-black text-gray-900">Para Çekme Talepleri</h1>
-              <p className="text-xs text-gray-500">Usta ödemelerini yönetin</p>
-            </div>
-          </div>
-          <div className="flex gap-2 bg-gray-100 rounded-xl p-1">
-            {['pending', 'approved', 'rejected'].map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${filter === f ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}`}>
-                {f === 'pending' ? `Bekleyen (${withdrawals.filter(w => w.status === 'pending').length})` : f === 'approved' ? 'Onaylanan' : 'Reddedilen'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Para Çekme Talepleri"
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4 py-6 space-y-3">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        {/* Filter tabs */}
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+          {filterOptions.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] ${
+                filter === f.id
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500'
+              }`}
+            >
+              {f.label}
+              {f.id === 'pending' && ` (${withdrawals.filter(w => w.status === 'pending').length})`}
+            </button>
+          ))}
+        </div>
+
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-red-700">Hata</p>
-              <p className="text-sm text-red-600">{error}</p>
+          <Card className="!bg-rose-50 !border-rose-200">
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-rose-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-rose-700">Hata</p>
+                <p className="text-[11px] text-rose-600">{error}</p>
+              </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
-            <p className="text-gray-600 font-semibold">Çekim talepleri yükleniyor...</p>
+          <div className="flex flex-col items-center py-16">
+            <Loader size={28} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-xs text-gray-500">Çekim talepleri yükleniyor...</p>
           </div>
         ) : filteredWithdrawals.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">{filter === 'pending' ? '⏳' : filter === 'approved' ? '✅' : '❌'}</div>
-            <p className="text-gray-600 font-semibold">
-              {filter === 'pending' ? 'Bekleyen talep yok' : filter === 'approved' ? 'Onaylanan talep yok' : 'Reddedilen talep yok'}
-            </p>
-          </div>
+          <EmptyState
+            icon={filter === 'pending' ? '⏳' : filter === 'approved' ? '✅' : '❌'}
+            title={filter === 'pending' ? 'Bekleyen talep yok' : filter === 'approved' ? 'Onaylanan talep yok' : 'Reddedilen talep yok'}
+            description="Bu kategoride çekim talebi bulunmuyor."
+          />
         ) : (
-          filteredWithdrawals.map(w => (
-            <div key={w.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">{w.professional?.avatar || '⚡'}</div>
-                  <div>
-                    <p className="font-bold text-gray-900">{w.professional?.name || w.userId || 'Usta'}</p>
-                    <p className="text-xs text-gray-500">{new Date(w.requestDate || w.createdAt).toLocaleString('tr-TR')}</p>
+          <div className="space-y-3">
+            {filteredWithdrawals.map(w => (
+              <Card key={w.id}>
+                {/* User & Amount */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                      {w.professional?.avatar || '⚡'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{w.professional?.name || w.userId || 'Usta'}</p>
+                      <p className="text-[11px] text-gray-500">
+                        {new Date(w.requestDate || w.createdAt).toLocaleString('tr-TR')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg font-bold text-emerald-600">{(w.amount || 0).toLocaleString('tr-TR')} TL</p>
+                    <StatusBadge status={w.status} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-black text-green-600">{(w.amount || 0).toLocaleString('tr-TR')} TL</p>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold mt-1 ${
-                    w.status === 'pending' ? 'bg-orange-100 text-orange-700' : w.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>{w.status === 'pending' ? 'Bekliyor' : w.status === 'approved' ? 'Onaylandı' : 'Reddedildi'}</span>
+
+                {/* Bank details */}
+                <div className="bg-gray-50 rounded-xl p-3 space-y-1.5 mb-3">
+                  {w.bankName && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Banka</span>
+                      <span className="font-semibold text-gray-900">{w.bankName}</span>
+                    </div>
+                  )}
+                  {w.iban && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">IBAN</span>
+                      <span className="font-mono text-[11px] text-gray-900">{w.iban}</span>
+                    </div>
+                  )}
+                  {w.accountHolder && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Hesap Sahibi</span>
+                      <span className="font-semibold text-gray-900">{w.accountHolder}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="space-y-2 mb-4">
-                {w.bankName && <div className="flex justify-between text-sm"><span className="text-gray-600">Banka:</span><span className="font-semibold text-gray-900">{w.bankName}</span></div>}
-                {w.iban && <div className="flex justify-between text-sm"><span className="text-gray-600">IBAN:</span><span className="font-mono text-xs text-gray-900">{w.iban}</span></div>}
-                {w.accountHolder && <div className="flex justify-between text-sm"><span className="text-gray-600">Hesap Sahibi:</span><span className="font-semibold text-gray-900">{w.accountHolder}</span></div>}
-              </div>
-              {w.status === 'pending' ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleReject(w.id)}
-                    disabled={processingId === w.id}
-                    className="py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <XCircle size={18} /> {processingId === w.id ? 'İşleniyor' : 'Reddet'}
-                  </button>
-                  <button
-                    onClick={() => handleApprove(w.id)}
-                    disabled={processingId === w.id}
-                    className="py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <CheckCircle size={18} /> {processingId === w.id ? 'İşleniyor' : 'Onayla'}
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    {w.status === 'approved' ? <CheckCircle size={16} className="text-green-600" /> : <XCircle size={16} className="text-red-600" />}
-                    <span className="text-gray-700">{w.processedDate && new Date(w.processedDate).toLocaleString('tr-TR')} tarihinde işlendi</span>
+
+                {/* Actions */}
+                {w.status === 'pending' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleReject(w.id)}
+                      disabled={processingId === w.id}
+                      className="py-2.5 bg-rose-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <XCircle size={14} /> {processingId === w.id ? 'İşleniyor' : 'Reddet'}
+                    </button>
+                    <button
+                      onClick={() => handleApprove(w.id)}
+                      disabled={processingId === w.id}
+                      className="py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle size={14} /> {processingId === w.id ? 'İşleniyor' : 'Onayla'}
+                    </button>
                   </div>
-                  {w.rejectionReason && <p className="text-xs text-red-600 mt-2">Red nedeni: {w.rejectionReason}</p>}
-                </div>
-              )}
-            </div>
-          ))
+                ) : (
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <div className="flex items-center gap-2 text-xs">
+                      {w.status === 'approved'
+                        ? <CheckCircle size={14} className="text-emerald-500" />
+                        : <XCircle size={14} className="text-rose-500" />}
+                      <span className="text-gray-600">
+                        {w.processedDate && new Date(w.processedDate).toLocaleString('tr-TR')} tarihinde işlendi
+                      </span>
+                    </div>
+                    {w.rejectionReason && (
+                      <p className="text-[11px] text-rose-600 mt-1.5">Red nedeni: {w.rejectionReason}</p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>

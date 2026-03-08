@@ -4,7 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Star } from 'lucide-react'
+import { MapPin } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function MyJobsPage() {
   const { user } = useAuth()
@@ -19,12 +22,9 @@ function MyJobsPage() {
       setLoading(true)
       setError(null)
       const response = await fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS)
-
       const rawData = response?.data || response || []
-
       if (Array.isArray(rawData)) {
-        const mappedJobs = mapJobsFromBackend(rawData)
-        setUserJobs(mappedJobs)
+        setUserJobs(mapJobsFromBackend(rawData))
       }
     } catch (err) {
       console.error('Load jobs error:', err)
@@ -34,96 +34,81 @@ function MyJobsPage() {
     }
   }
 
-  // Initial load
   useEffect(() => {
     if (user) loadUserJobs()
   }, [user])
 
-  // Filter jobs by status (after mapping, all statuses are lowercase)
   const activeJobs = userJobs.filter(j =>
     ['pending', 'accepted', 'in_progress'].includes(j.status?.toLowerCase())
   )
   const completedJobs = userJobs.filter(j =>
     ['completed', 'rated'].includes(j.status?.toLowerCase())
   )
-  const cancelledJobs = userJobs.filter(j =>
-    ['cancelled'].includes(j.status?.toLowerCase())
-  )
 
-  const displayJobs = activeTab === 'active' ? activeJobs : activeTab === 'completed' ? completedJobs : cancelledJobs
+  const displayJobs = activeTab === 'active' ? activeJobs : completedJobs
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: { text: 'Bekliyor', color: 'bg-yellow-100 text-yellow-600' },
-      accepted: { text: 'Kabul Edildi', color: 'bg-blue-100 text-blue-600' },
-      in_progress: { text: 'Devam Ediyor', color: 'bg-purple-100 text-purple-600' },
-      completed: { text: 'Tamamlandı', color: 'bg-green-100 text-green-600' },
-      rated: { text: 'Değerlendirildi', color: 'bg-emerald-100 text-emerald-600' },
-      cancelled: { text: 'İptal Edildi', color: 'bg-red-100 text-red-600' }
-    }
-    return badges[status] || { text: status, color: 'bg-gray-100 text-gray-600' }
-  }
+  const tabs = [
+    { key: 'active', label: 'Aktif', count: activeJobs.length },
+    { key: 'completed', label: 'Tamamlanan', count: completedJobs.length },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="blue-gradient-bg pb-6 pt-4 px-4">
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-white">İşlerim</h1>
-            <p className="text-white/70 text-sm">{activeJobs.length} aktif, {completedJobs.length} tamamlanmış</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setActiveTab('active')}
-            className={`flex-1 py-3 rounded-xl font-bold transition ${activeTab === 'active' ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
-            Aktif ({activeJobs.length})
-          </button>
-          <button onClick={() => setActiveTab('completed')}
-            className={`flex-1 py-3 rounded-xl font-bold transition ${activeTab === 'completed' ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
-            Tamamlanan ({completedJobs.length})
-          </button>
+    <div>
+      <PageHeader
+        title="İşlerim"
+        onBack={false}
+      />
+
+      {/* Tabs */}
+      <div className="px-4 pt-2 pb-4">
+        <div className="flex bg-gray-100 rounded-xl p-1">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab.key
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500'
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="px-4 py-6">
+      <div className="px-4 pb-6">
         {loading ? (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Yükleniyor...</p>
+            <div className="w-10 h-10 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-sm text-gray-400">Yükleniyor...</p>
           </div>
         ) : displayJobs.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-3xl shadow-sm">
-            <div className="text-6xl mb-4">📋</div>
-            <p className="text-gray-600 font-semibold">Henüz iş bulunmuyor</p>
-          </div>
+          <EmptyState icon="📋" title="Henüz iş bulunmuyor" description="Yeni bir iş oluşturmak için ana sayfaya gidin." />
         ) : (
-          <div className="space-y-4">
-            {displayJobs.map(job => {
-              const statusBadge = getStatusBadge(job.status)
-              return (
-                <div key={job.id} onClick={() => navigate(`/job/${job.id}`)}
-                  className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-lg mb-1">{job.title}</h3>
-                      {/* DÜZELTME: location.address yerine location veya address kullanıyoruz */}
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
-                         {job.location || job.address || 'Adres belirtilmedi'}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${statusBadge.color}`}>{statusBadge.text}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{job.description}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                    <div className="text-xl font-black text-blue-600">{job.price || job.budget} TL</div>
-                    <div className="text-xs font-bold text-gray-400">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</div>
-                  </div>
+          <div className="space-y-3">
+            {displayJobs.map(job => (
+              <div
+                key={job.id}
+                onClick={() => navigate(`/job/${job.id}`)}
+                className="bg-white rounded-2xl p-4 border border-gray-100 shadow-card cursor-pointer hover:shadow-card-hover active:scale-[0.99] transition-all"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-gray-900 text-sm flex-1 mr-2">{job.title}</h3>
+                  <StatusBadge status={job.status} />
                 </div>
-              )
-            })}
+                <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                  <MapPin size={12} />
+                  {job.location || job.address || 'Adres belirtilmedi'}
+                </p>
+                <p className="text-xs text-gray-400 mb-3 line-clamp-2">{job.description}</p>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                  <span className="text-base font-bold text-primary-600">{job.price || job.budget} TL</span>
+                  <span className="text-[11px] text-gray-400">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

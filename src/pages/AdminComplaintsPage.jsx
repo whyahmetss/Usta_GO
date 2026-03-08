@@ -1,12 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
-import { ArrowLeft, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function AdminComplaintsPage() {
   const navigate = useNavigate()
   const [allComplaints, setAllComplaints] = useState([])
-  const [filter, setFilter] = useState('open') // open, resolved, rejected, all
+  const [filter, setFilter] = useState('open')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,7 +27,6 @@ function AdminComplaintsPage() {
       setAllComplaints(data)
     } catch (err) {
       console.warn('Complaints API error, falling back to jobs data:', err)
-      // Fallback: extract complaints from jobs endpoint
       try {
         const jobsRes = await fetchAPI('/jobs', { method: 'GET' })
         const jobs = Array.isArray(jobsRes) ? jobsRes : jobsRes.data || []
@@ -84,149 +87,145 @@ function AdminComplaintsPage() {
     ? allComplaints
     : allComplaints.filter(c => c.status === filter)
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate('/admin')}
-            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Şikayet Yönetimi</h1>
-            <p className="text-sm text-gray-500">Toplam {allComplaints.length} şikayet</p>
-          </div>
-        </div>
-      </div>
+  const statusMap = {
+    open: 'pending',
+    resolved: 'resolved',
+    rejected: 'rejected',
+  }
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+  const filterOptions = [
+    { id: 'open', label: 'Açık' },
+    { id: 'resolved', label: 'Çözüldü' },
+    { id: 'rejected', label: 'Reddedildi' },
+    { id: 'all', label: 'Tümü' },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="Şikayet Yönetimi"
+        onBack={() => navigate('/admin')}
+      />
+
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        <p className="text-xs text-gray-500 font-medium px-1">Toplam {allComplaints.length} şikayet</p>
+
         {error && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-yellow-700">Uyarı</p>
-              <p className="text-sm text-yellow-600">{error}</p>
+          <Card className="!border-amber-200 !bg-amber-50">
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-700">{error}</p>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Filters */}
-        <div className="flex gap-2 mb-6">
-          {['open', 'resolved', 'rejected', 'all'].map(status => (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {filterOptions.map(f => (
             <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-xl font-bold transition ${
-                filter === status
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all active:scale-[0.97] ${
+                filter === f.id
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-white border border-gray-200 text-gray-600'
               }`}
             >
-              {status === 'open' ? '📋 Açık' : status === 'resolved' ? '✅ Çözüldü' : status === 'rejected' ? '❌ Reddedildi' : '📊 Tümü'}
-              {status !== 'all' && ` (${allComplaints.filter(c => c.status === status).length})`}
+              {f.label}
+              {f.id !== 'all' && ` (${allComplaints.filter(c => c.status === f.id).length})`}
             </button>
           ))}
         </div>
 
-        {/* Loading */}
         {loading ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
-            <p className="text-gray-600 font-semibold">Şikayetler yükleniyor...</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader size={32} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-sm text-gray-500 font-medium">Şikayetler yükleniyor...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <div className="text-6xl mb-4">✅</div>
-            <p className="text-gray-600 text-lg">Gösterilecek şikayet yok</p>
-          </div>
+          <EmptyState
+            icon="✅"
+            title="Gösterilecek şikayet yok"
+            description="Bu kategoride şikayet bulunmuyor."
+          />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filtered.map((complaint, idx) => (
-              <div key={complaint.id || idx} className={`bg-white rounded-2xl p-6 shadow-sm border-l-4 ${
-                complaint.status === 'resolved' ? 'border-green-500' :
-                complaint.status === 'rejected' ? 'border-red-500' :
-                'border-yellow-500'
-              }`}>
-                <div className="grid grid-cols-2 gap-6 mb-4">
-                  {/* Info */}
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Şikayet Detayları</h3>
-                    <div className="space-y-3">
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Müşteri Bilgileri:</p>
-                        <p><strong>{complaint.customerName}</strong></p>
-                        <p className="text-sm text-gray-600">{complaint.customerEmail}</p>
-                        <p className="text-sm text-gray-600">{complaint.customerPhone}</p>
-                      </div>
-                      <div className="bg-orange-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Usta Bilgileri:</p>
-                        <p><strong>{complaint.professionalName}</strong></p>
-                        <p className="text-sm text-gray-600">{complaint.professionalEmail}</p>
-                        <p className="text-sm text-gray-600">{complaint.professionalPhone}</p>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">İş:</p>
-                        <p><strong>{complaint.jobTitle}</strong></p>
-                      </div>
-                      <div className="bg-red-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Şikayet Nedeni:</p>
-                        <p><strong>{complaint.reason}</strong></p>
-                      </div>
+              <Card key={complaint.id || idx}>
+                {/* Status & date header */}
+                <div className="flex items-center justify-between mb-3">
+                  <StatusBadge
+                    status={statusMap[complaint.status] || complaint.status}
+                    label={complaint.status === 'open' ? 'Açık' : undefined}
+                  />
+                  {complaint.filedAt && (
+                    <p className="text-[11px] text-gray-400">
+                      {new Date(complaint.filedAt).toLocaleDateString('tr-TR', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </p>
+                  )}
+                </div>
+
+                {/* Job title */}
+                <p className="text-sm font-semibold text-gray-900 mb-2">{complaint.jobTitle}</p>
+
+                {/* Reason */}
+                <div className="bg-rose-50 rounded-xl p-3 mb-3">
+                  <p className="text-[11px] text-rose-500 font-medium mb-0.5">Şikayet Nedeni</p>
+                  <p className="text-xs text-rose-700 font-semibold">{complaint.reason}</p>
+                </div>
+
+                {/* Description */}
+                <p className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-3">
+                  {complaint.details || 'Detaylı açıklama yok'}
+                </p>
+
+                {/* Customer & Professional */}
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center gap-2.5 p-2.5 bg-primary-50/50 rounded-xl">
+                    <div className="text-base">👤</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-900">{complaint.customerName}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{complaint.customerEmail}</p>
+                      {complaint.customerPhone && complaint.customerPhone !== '-' && (
+                        <p className="text-[11px] text-gray-500">{complaint.customerPhone}</p>
+                      )}
                     </div>
+                    <span className="text-[10px] font-medium text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">Müşteri</span>
                   </div>
 
-                  {/* Description & Status */}
-                  <div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 mb-2">Açıklama</h3>
-                      <p className="text-gray-700 bg-gray-50 p-3 rounded-lg text-sm mb-4">
-                        {complaint.details || 'Detaylı açıklama yok'}
-                      </p>
-                      {complaint.filedAt && (
-                        <p className="text-xs text-gray-500">
-                          {new Date(complaint.filedAt).toLocaleDateString('tr-TR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                  <div className="flex items-center gap-2.5 p-2.5 bg-accent-50/50 rounded-xl">
+                    <div className="text-base">⚡</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-900">{complaint.professionalName}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{complaint.professionalEmail}</p>
+                      {complaint.professionalPhone && complaint.professionalPhone !== '-' && (
+                        <p className="text-[11px] text-gray-500">{complaint.professionalPhone}</p>
                       )}
                     </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <h3 className="font-bold text-gray-900 mb-2">Durum & İşlem</h3>
-                      <div className={`px-3 py-2 rounded-lg mb-3 text-center font-bold ${
-                        complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                        complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {complaint.status === 'open' ? '📋 Açık' : complaint.status === 'resolved' ? '✅ Çözüldü' : '❌ Reddedildi'}
-                      </div>
-
-                      {complaint.status === 'open' && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResolveComplaint(complaint.id, complaint.jobId)}
-                            className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
-                          >
-                            <CheckCircle size={16} /> Çöz Bakalım Ahmet
-                          </button>
-                          <button
-                            onClick={() => handleRejectComplaint(complaint.id, complaint.jobId)}
-                            className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition flex items-center justify-center gap-1 text-sm"
-                          >
-                            <XCircle size={16} /> Reddet
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-[10px] font-medium text-accent-600 bg-accent-100 px-2 py-0.5 rounded-full">Usta</span>
                   </div>
                 </div>
-              </div>
+
+                {/* Actions */}
+                {complaint.status === 'open' && (
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleResolveComplaint(complaint.id, complaint.jobId)}
+                      className="py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-xs hover:bg-emerald-600 transition flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    >
+                      <CheckCircle size={14} /> Çözüldü
+                    </button>
+                    <button
+                      onClick={() => handleRejectComplaint(complaint.id, complaint.jobId)}
+                      className="py-2.5 bg-rose-500 text-white rounded-2xl font-semibold text-xs hover:bg-rose-600 transition flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    >
+                      <XCircle size={14} /> Reddet
+                    </button>
+                  </div>
+                )}
+              </Card>
             ))}
           </div>
         )}

@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Search, MessageCircle, Mail, Phone } from 'lucide-react'
+import { Search, MessageCircle, Mail, Phone } from 'lucide-react'
 import { useState } from 'react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
 
 function HelpPage() {
   const navigate = useNavigate()
@@ -47,76 +49,71 @@ function HelpPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="blue-gradient-bg pb-6 pt-4 px-4">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-white">Yardım & Destek</h1>
-            <p className="text-white/80 text-sm">Sorularınız, Cevaplarımız</p>
+    <div className="bg-gray-50">
+      <PageHeader title="Yardım & Destek" onBack={() => navigate(-1)} />
+
+      <div className="px-4 py-6 max-w-lg mx-auto">
+        <div className="mb-6">
+          <div className="relative">
+            <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cevap ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+            />
           </div>
         </div>
 
-        <div className="relative">
-          <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" />
-          <input
-            type="text"
-            placeholder="Cevap ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 backdrop-blur border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-          />
-        </div>
-      </div>
-
-      <div className="px-4 py-6">
         <div className="space-y-3 mb-8">
           {filtered.map((faq, idx) => (
-            <details key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-              <summary className="px-4 py-4 cursor-pointer hover:bg-gray-50 font-bold text-gray-900 flex items-center gap-2">
+            <details key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden group">
+              <summary className="px-4 py-4 cursor-pointer hover:bg-gray-50 font-bold text-gray-900 flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden">
                 <span className="text-lg">❓</span>
                 <span className="flex-1">{faq.q}</span>
               </summary>
-              <div className="px-4 pb-4 text-gray-600 bg-gray-50 border-t border-gray-200">
-                <p>{faq.a}</p>
+              <div className="px-4 pb-4 pt-0 text-gray-600 bg-gray-50 border-t border-gray-100">
+                <p className="pt-3">{faq.a}</p>
               </div>
             </details>
           ))}
         </div>
 
-        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-          <h3 className="text-xl font-bold mb-4">Yine de Yardıma mı İhtiyacınız Var?</h3>
-          <p className="text-white/90 mb-4">Doğrudan bizimle iletişime geçin</p>
+        <Card padding="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Yine de Yardıma mı İhtiyacınız Var?</h3>
+          <p className="text-gray-600 mb-4">Doğrudan bizimle iletişime geçin</p>
 
           <div className="space-y-3">
-            <a href="mailto:support@ustagochannel.com" className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur rounded-xl hover:bg-white/30 transition">
-              <Mail size={20} />
+            <a
+              href="mailto:support@ustagochannel.com"
+              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-100"
+            >
+              <Mail size={20} className="text-primary-500" />
               <div>
-                <p className="text-sm font-semibold">E-posta Gönder</p>
-                <p className="text-xs text-white/80">support@ustagochannel.com</p>
+                <p className="text-sm font-semibold text-gray-900">E-posta Gönder</p>
+                <p className="text-xs text-gray-500">support@ustagochannel.com</p>
               </div>
             </a>
-            <a href="tel:+905324445566" className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur rounded-xl hover:bg-white/30 transition">
-              <Phone size={20} />
+            <a
+              href="tel:+905324445566"
+              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-100"
+            >
+              <Phone size={20} className="text-primary-500" />
               <div>
-                <p className="text-sm font-semibold">Ara</p>
-                <p className="text-xs text-white/80">+90 535 273 7638</p>
+                <p className="text-sm font-semibold text-gray-900">Ara</p>
+                <p className="text-xs text-gray-500">+90 535 273 7638</p>
               </div>
             </a>
-            <div className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur rounded-xl">
-              <MessageCircle size={20} />
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <MessageCircle size={20} className="text-primary-500" />
               <div>
-                <p className="text-sm font-semibold">Canlı Sohbet</p>
-                <p className="text-xs text-white/80">Pazartesi-Pazar, 09:00-23:00</p>
+                <p className="text-sm font-semibold text-gray-900">Canlı Sohbet</p>
+                <p className="text-xs text-gray-500">Pazartesi-Pazar, 09:00-23:00</p>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )

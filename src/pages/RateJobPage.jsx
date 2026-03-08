@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
 
 function RateJobPage() {
   const { id } = useParams()
@@ -27,7 +29,7 @@ function RateJobPage() {
         if (response.data) {
           setJob(mapJobFromBackend(response.data))
         } else {
-          setError('Is bulunamadi')
+          setError('İş bulunamadı')
         }
       } catch (err) {
         console.error('Load job error:', err)
@@ -43,40 +45,54 @@ function RateJobPage() {
   }, [id])
 
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-600">Lütfen giriş yapın</p>
-    </div>
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-600">Lütfen giriş yapın</p>
+      </div>
+    )
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">İş yükleniyor...</p>
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">İş yükleniyor...</p>
+        </div>
       </div>
-    </div>
+    )
   }
 
   if (error || !job) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
         <p className="text-gray-600 text-xl mb-4">{error || 'İş bulunamadı'}</p>
-        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Geri Dön</button>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2.5 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98]"
+        >
+          Geri Dön
+        </button>
       </div>
-    </div>
+    )
   }
 
   const isProfessional = user?.role === 'professional'
   const otherPerson = isProfessional ? job?.customer : (job?.professional || job?.usta)
 
   if (!otherPerson) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-gray-600 text-xl mb-4">Değerlendirme yapılamıyor</p>
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <p className="text-gray-600 text-xl mb-2">Değerlendirme yapılamıyor</p>
         <p className="text-gray-500 text-sm mb-4">Usta veya müşteri bilgisi eksik</p>
-        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Geri Dön</button>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2.5 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98]"
+        >
+          Geri Dön
+        </button>
       </div>
-    </div>
+    )
   }
 
   const handleSubmit = async () => {
@@ -109,38 +125,32 @@ function RateJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="blue-gradient-bg pb-6 pt-4 px-4">
-        <button 
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-6"
-        >
-          <ArrowLeft size={20} className="text-white" />
-        </button>
+    <div className="bg-gray-50">
+      <PageHeader title="Değerlendirme" />
 
-        <h1 className="text-2xl font-black text-white mb-2">Değerlendirme</h1>
-        <p className="text-white/80 text-sm">{job.title}</p>
-      </div>
+      <div className="px-4 py-4 space-y-4">
+        {/* Job title context */}
+        <p className="text-sm text-gray-500 -mt-1">{job.title}</p>
 
-      <div className="px-4 py-6">
         {/* Person Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6 text-center">
-          <div className="text-6xl mb-3">
-            {otherPerson?.profileImage ? (
-              <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
-            ) : (
-              '👤'
-            )}
+        <Card padding="p-6">
+          <div className="text-center">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 mx-auto mb-3">
+              {otherPerson?.profileImage ? (
+                <img src={otherPerson.profileImage} alt={otherPerson.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+              )}
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">{otherPerson?.name}</h3>
+            <p className="text-sm text-gray-600">
+              {isProfessional ? 'Müşteriyi Değerlendir' : 'Ustayı Değerlendir'}
+            </p>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1">{otherPerson?.name}</h3>
-          <p className="text-sm text-gray-600">
-            {isProfessional ? 'Müşteriyi Değerlendir' : 'Ustayı Değerlendir'}
-          </p>
-        </div>
+        </Card>
 
         {/* Star Rating */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
+        <Card padding="p-6">
           <h3 className="font-bold text-gray-900 mb-4 text-center">Puanınız</h3>
           <div className="flex justify-center gap-3 mb-2">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -149,14 +159,14 @@ function RateJobPage() {
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                className="transition-transform hover:scale-110"
+                className="transition-transform hover:scale-110 active:scale-[0.98]"
               >
                 <Star
                   size={48}
                   className={`${
                     star <= (hoverRating || rating)
-                      ? 'text-yellow-500 fill-yellow-500'
-                      : 'text-gray-300'
+                      ? 'text-amber-400 fill-amber-400'
+                      : 'text-gray-200'
                   }`}
                 />
               </button>
@@ -170,34 +180,34 @@ function RateJobPage() {
              rating === 4 ? 'İyi' :
              'Mükemmel'}
           </p>
-        </div>
+        </Card>
 
         {/* Review */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-          <h3 className="font-bold text-gray-900 mb-3">Yorumunuz (İateğe bağlıs)</h3>
+        <Card padding="p-6">
+          <h3 className="font-bold text-gray-900 mb-3">Yorumunuz (İsteğe bağlı)</h3>
           <textarea
             value={review}
             onChange={(e) => setReview(e.target.value)}
             placeholder="Deneyiminizi paylaşın..."
-            className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             rows={5}
           />
-        </div>
+        </Card>
 
         {/* Submit */}
         <button
           onClick={handleSubmit}
           disabled={rating === 0 || submitting}
-          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 ${
+          className={`w-full py-4 rounded-2xl font-semibold text-base transition flex items-center justify-center gap-2 active:scale-[0.98] ${
             rating === 0 || submitting
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl'
+              : 'bg-primary-500 text-white hover:bg-primary-600'
           }`}
         >
           {submitting ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Gonderiliyor...
+              Gönderiliyor...
             </>
           ) : (
             'Değerlendirmeyi Gönder'

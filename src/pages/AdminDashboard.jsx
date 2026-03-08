@@ -4,8 +4,26 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { LogOut, Users, Briefcase, DollarSign, TrendingUp } from 'lucide-react'
-import Logo from '../components/Logo'
+import {
+  LogOut,
+  Users,
+  Briefcase,
+  DollarSign,
+  TrendingUp,
+  UserCheck,
+  Wallet,
+  AlertCircle,
+  MessageSquare,
+  Ticket,
+  Coins,
+  Award,
+} from 'lucide-react'
+import Layout from '../components/Layout'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import StatCard from '../components/StatCard'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -17,7 +35,7 @@ function AdminDashboard() {
     totalUsers: 0,
     activeJobs: 0,
     totalRevenue: 0,
-    totalJobs: 0
+    totalJobs: 0,
   })
   const [savedUsers, setSavedUsers] = useState([])
   const [allJobs, setAllJobs] = useState([])
@@ -25,51 +43,61 @@ function AdminDashboard() {
   const [allComplaints, setAllComplaints] = useState([])
   const [complaintFilter, setComplaintFilter] = useState('all')
 
-  // Load dashboard data from API
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Fetch users, jobs and complaints in parallel
         const [usersResponse, jobsResponse, complaintsResponse] = await Promise.allSettled([
           fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
           fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?limit=500`),
           fetchAPI(API_ENDPOINTS.COMPLAINTS.LIST),
         ])
 
-        // Users
-        const usersData = usersResponse.status === 'fulfilled' && Array.isArray(usersResponse.value?.data)
-          ? usersResponse.value.data : []
+        const usersData =
+          usersResponse.status === 'fulfilled' && Array.isArray(usersResponse.value?.data)
+            ? usersResponse.value.data
+            : []
         setSavedUsers(usersData)
 
-        // Complaints
-        const complaintsData = complaintsResponse.status === 'fulfilled' && Array.isArray(complaintsResponse.value?.data)
-          ? complaintsResponse.value.data : []
+        const complaintsData =
+          complaintsResponse.status === 'fulfilled' &&
+          Array.isArray(complaintsResponse.value?.data)
+            ? complaintsResponse.value.data
+            : []
         setAllComplaints(complaintsData)
 
-        // Jobs
-        const jobsRaw = jobsResponse.status === 'fulfilled' && Array.isArray(jobsResponse.value?.data)
-          ? jobsResponse.value.data : []
-        const mappedJobs = mapJobsFromBackend(jobsRaw).map(job => ({
+        const jobsRaw =
+          jobsResponse.status === 'fulfilled' && Array.isArray(jobsResponse.value?.data)
+            ? jobsResponse.value.data
+            : []
+        const mappedJobs = mapJobsFromBackend(jobsRaw).map((job) => ({
           ...job,
-          location: typeof job.location === 'string'
-            ? { address: job.location }
-            : (job.location || { address: 'Adres belirtilmedi' }),
+          location:
+            typeof job.location === 'string'
+              ? { address: job.location }
+              : (job.location || { address: 'Adres belirtilmedi' }),
         }))
         setAllJobs(mappedJobs)
-        setRecentJobs([...mappedJobs]
-          .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
-          .slice(0, 5))
+        setRecentJobs(
+          [...mappedJobs]
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+            )
+            .slice(0, 5)
+        )
 
-        // Revenue = sum of budget for all completed/rated jobs
         const totalRevenue = mappedJobs
-          .filter(j => j.status === 'completed' || j.status === 'rated')
+          .filter((j) => j.status === 'completed' || j.status === 'rated')
           .reduce((sum, j) => sum + (Number(j.budget) || Number(j.price) || 0), 0)
 
         const activeJobsCount = mappedJobs.filter(
-          j => j.status !== 'completed' && j.status !== 'cancelled' && j.status !== 'rated'
+          (j) =>
+            j.status !== 'completed' &&
+            j.status !== 'cancelled' &&
+            j.status !== 'rated'
         ).length
 
         setStats({
@@ -89,285 +117,406 @@ function AdminDashboard() {
     loadDashboardData()
   }, [])
 
-  const handleLogout = () => { logout(); navigate('/') }
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
-  const pendingWithdrawals = allJobs.filter(j => j.withdrawalRequest?.status === 'pending').length
-  const openComplaints = allComplaints.filter(c => c.status === 'open').length
+  const pendingWithdrawals = allJobs.filter(
+    (j) => j.withdrawalRequest?.status === 'pending'
+  ).length
+  const openComplaints = allComplaints.filter((c) => c.status === 'open').length
+  const pendingUstas = savedUsers.filter(
+    (u) => u.role === 'USTA' && u.status === 'PENDING_APPROVAL'
+  ).length
 
   const statsList = [
-    { label: 'Toplam Kullanici', value: stats.totalUsers.toString(), icon: Users, color: 'blue' },
-    { label: 'Aktif Isler', value: stats.activeJobs.toString(), icon: Briefcase, color: 'green' },
-    { label: 'Toplam Gelir', value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'purple' },
-    { label: 'Toplam Is', value: stats.totalJobs.toString(), icon: TrendingUp, color: 'orange' },
+    {
+      label: 'Toplam Kullanıcı',
+      value: stats.totalUsers.toString(),
+      icon: Users,
+      color: 'primary',
+    },
+    {
+      label: 'Aktif İşler',
+      value: stats.activeJobs.toString(),
+      icon: Briefcase,
+      color: 'emerald',
+    },
+    {
+      label: 'Toplam Gelir',
+      value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`,
+      icon: DollarSign,
+      color: 'accent',
+    },
+    {
+      label: 'Toplam İş',
+      value: stats.totalJobs.toString(),
+      icon: TrendingUp,
+      color: 'violet',
+    },
   ]
+
+  const managementItems = [
+    {
+      path: '/admin/users',
+      icon: Users,
+      title: 'Kullanıcı Yönetimi',
+      desc: 'Müşteri ve Usta hesaplarını yönet',
+      color: 'primary',
+    },
+    {
+      path: '/admin/pending-ustas',
+      icon: UserCheck,
+      title: 'Onay Bekleyen Ustalar',
+      desc: 'Yeni usta kayıtlarını onayla',
+      color: 'amber',
+      badge: pendingUstas > 0 ? `${pendingUstas} Bekliyor` : null,
+    },
+    {
+      path: '/admin/jobs',
+      icon: Briefcase,
+      title: 'İş Yönetimi',
+      desc: 'Tüm işleri görüntüle ve yönet',
+      color: 'emerald',
+    },
+    {
+      path: '/admin/withdrawals',
+      icon: Wallet,
+      title: 'Para Çekme Talepleri',
+      desc: 'Usta ödemelerini onayla',
+      color: 'amber',
+      badge: pendingWithdrawals > 0 ? `${pendingWithdrawals} Bekliyor` : null,
+    },
+    {
+      path: '/admin/complaints',
+      icon: AlertCircle,
+      title: 'Şikayet Yönetimi',
+      desc: 'Müşteri şikayetlerini yönet',
+      color: 'rose',
+      badge: openComplaints > 0 ? `${openComplaints} Açık` : null,
+    },
+    {
+      path: '/admin/messages',
+      icon: MessageSquare,
+      title: 'Mesaj Sistemi',
+      desc: 'Toplu mesaj gönder',
+      color: 'violet',
+    },
+    {
+      path: '/admin/coupons',
+      icon: Ticket,
+      title: 'Kupon Yönetimi',
+      desc: 'Kupon oluştur ve yönet',
+      color: 'accent',
+    },
+    {
+      path: '/admin/pricing',
+      icon: Coins,
+      title: 'AI Fiyat Listesi',
+      desc: 'Hizmet bazlı temel ücretleri yönet',
+      color: 'violet',
+    },
+    {
+      path: '/admin/certificates',
+      icon: Award,
+      title: 'Sertifika Onayları',
+      desc: 'Usta sertifikalarını onayla',
+      color: 'amber',
+    },
+  ]
+
+  const colorMap = {
+    primary: 'bg-primary-50 text-primary-600',
+    accent: 'bg-accent-50 text-accent-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    rose: 'bg-rose-50 text-rose-600',
+    violet: 'bg-violet-50 text-violet-600',
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Admin paneli yükleniyor...</p>
+      <Layout hideNav>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-gray-600">Admin paneli yükleniyor...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-            Yenile
-          </button>
+      <Layout hideNav>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-sm text-rose-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98] transition"
+            >
+              Yenile
+            </button>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" />
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Admin Paneli</h1>
-              <p className="text-sm text-gray-500">Hoş geldin, {user?.name}</p>
-            </div>
+    <Layout hideNav>
+      <div className="min-h-screen bg-gray-50">
+        <PageHeader
+          title="Admin Paneli"
+          onBack={false}
+          rightAction={
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition"
+            >
+              <LogOut size={18} /> Çıkış
+            </button>
+          }
+        />
+
+        <div className="max-w-2xl mx-auto px-4 pb-8">
+          <p className="text-sm text-gray-500 -mt-2 mb-6">
+            Hoş geldin, {user?.name}
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {statsList.map((stat, idx) => (
+              <StatCard
+                key={idx}
+                icon={stat.icon}
+                label={stat.label}
+                value={stat.value}
+                color={stat.color}
+              />
+            ))}
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition">
-            <LogOut size={18} /> Çıkış
-          </button>
+
+          {/* Management Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {managementItems.map((item, idx) => {
+              const Icon = item.icon
+              return (
+                <Card
+                  key={idx}
+                  onClick={() => navigate(item.path)}
+                  padding="p-4"
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-start justify-between mb-2">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          colorMap[item.color] || colorMap.primary
+                        }`}
+                      >
+                        <Icon size={20} />
+                      </div>
+                      {item.badge && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-50 text-amber-700">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-900 mb-0.5">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-gray-500">{item.desc}</p>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Recent Jobs */}
+          <Card padding="p-4" className="mb-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">
+              Son İşler
+            </h2>
+            {recentJobs.length === 0 ? (
+              <EmptyState
+                icon="📋"
+                title="Henüz iş yok"
+                description="Yeni işler burada görünecek"
+              />
+            ) : (
+              <div className="space-y-3">
+                {recentJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {job.title}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {job.customer?.name} — {job.location?.address}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-sm font-semibold text-emerald-600">
+                        {job.price ?? job.budget} TL
+                      </p>
+                      <StatusBadge status={job.status} size="sm" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Ratings */}
+          <Card padding="p-4" className="mb-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">
+              ⭐ Tüm Değerlendirmeler
+            </h2>
+            {allJobs.filter((j) => j.rating).length === 0 ? (
+              <EmptyState
+                icon="⭐"
+                title="Henüz değerlendirme yok"
+                description="Müşteri değerlendirmeleri burada görünecek"
+              />
+            ) : (
+              <div className="space-y-3">
+                {allJobs
+                  .filter((j) => j.rating)
+                  .slice(0, 10)
+                  .map((job) => (
+                    <div
+                      key={job.id}
+                      className="p-3 rounded-xl bg-primary-50/50 border border-gray-100"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {job.customer?.name} → {job.professional?.name || 'Usta'}
+                          </p>
+                          <p className="text-xs text-gray-600 truncate">
+                            {job.title}
+                          </p>
+                        </div>
+                        <div className="flex gap-0.5 shrink-0">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className="text-sm">
+                              {i < (job.rating || 0) ? '⭐' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      {job.ratingReview && (
+                        <p className="text-xs text-gray-700 bg-white/60 p-2 rounded-lg">
+                          "{job.ratingReview}"
+                        </p>
+                      )}
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {new Date(job.createdAt).toLocaleDateString('tr-TR')}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Complaints */}
+          <Card padding="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">
+                🚨 Tüm Şikayetler
+              </h2>
+              <div className="flex gap-2">
+                {[
+                  { key: 'all', label: 'Tümü' },
+                  { key: 'open', label: 'Bekleyen' },
+                  { key: 'resolved', label: 'Çözüldü' },
+                  { key: 'rejected', label: 'Reddedildi' },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setComplaintFilter(tab.key)}
+                    className={`text-[11px] px-2.5 py-1 rounded-full font-medium transition ${
+                      complaintFilter === tab.key
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {allComplaints.filter(
+              (c) => complaintFilter === 'all' || c.status === complaintFilter
+            ).length === 0 ? (
+              <EmptyState
+                icon="📭"
+                title="Bu kategoride şikayet yok"
+                description="Şikayetler filtreye göre listelenecek"
+              />
+            ) : (
+              <div className="space-y-3">
+                {allComplaints
+                  .filter(
+                    (c) =>
+                      complaintFilter === 'all' || c.status === complaintFilter
+                  )
+                  .map((complaint) => (
+                    <div
+                      key={complaint.id}
+                      className={`p-3 rounded-xl border ${
+                        complaint.status === 'resolved'
+                          ? 'bg-emerald-50/50 border-emerald-100'
+                          : complaint.status === 'rejected'
+                          ? 'bg-rose-50/50 border-rose-100'
+                          : 'bg-amber-50/50 border-amber-100'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {complaint.customerName}
+                          </p>
+                          <p className="text-xs text-gray-600 truncate">
+                            {complaint.jobTitle} — {complaint.reason}
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={
+                            complaint.status === 'open'
+                              ? 'pending'
+                              : complaint.status
+                          }
+                          label={
+                            complaint.status === 'open'
+                              ? 'Bekliyor'
+                              : undefined
+                          }
+                          size="sm"
+                        />
+                      </div>
+                      {complaint.details && (
+                        <p className="text-xs text-gray-700 bg-white/60 p-2 rounded-lg">
+                          {complaint.details}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-gray-500 mt-2">
+                        {new Date(complaint.filedAt).toLocaleDateString('tr-TR')}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </Card>
         </div>
       </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {statsList.map((stat, idx) => {
-            const Icon = stat.icon
-            const colorMap = {
-              blue: 'bg-blue-100 text-blue-600',
-              green: 'bg-green-100 text-green-600',
-              purple: 'bg-purple-100 text-purple-600',
-              orange: 'bg-orange-100 text-orange-600'
-            }
-            const textColorMap = {
-              blue: 'text-blue-600',
-              green: 'text-green-600',
-              purple: 'text-purple-600',
-              orange: 'text-orange-600'
-            }
-            return (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className={`w-12 h-12 ${colorMap[stat.color]} rounded-xl flex items-center justify-center`}>
-                    <Icon size={24} />
-                  </div>
-                  <div className={`text-3xl font-black ${textColorMap[stat.color]}`}>{stat.value}</div>
-                </div>
-                <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div onClick={() => navigate('/admin/users')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">👥</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h3>
-            <p className="text-gray-600 text-sm">Müşteri ve Usta hesaplarını yönet</p>
-          </div>
-          <div onClick={() => navigate('/admin/pending-ustas')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer border-2 border-amber-200">
-            <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">⚡</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Onay Bekleyen Ustalar</h3>
-            <p className="text-gray-600 text-sm">Yeni usta kayıtlarını onayla</p>
-            {savedUsers.filter(u => u.role === 'USTA' && u.status === 'PENDING_APPROVAL').length > 0 && (
-              <div className="mt-3">
-                <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
-                  {savedUsers.filter(u => u.role === 'USTA' && u.status === 'PENDING_APPROVAL').length} Bekliyor
-                </span>
-              </div>
-            )}
-          </div>
-          <div onClick={() => navigate('/admin/jobs')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">📋</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">İş Yönetimi</h3>
-            <p className="text-gray-600 text-sm">Tüm işleri görüntüle ve yönet</p>
-          </div>
-          <div onClick={() => navigate('/admin/withdrawals')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">💰</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Para Çekme Talepleri</h3>
-            <p className="text-gray-600 text-sm">Usta ödemelerini onayla</p>
-            {pendingWithdrawals > 0 && (
-              <div className="mt-3">
-                <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{pendingWithdrawals} Bekliyor</span>
-              </div>
-            )}
-          </div>
-          <div onClick={() => navigate('/admin/complaints')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">🚨</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Şikayet Yönetimi</h3>
-            <p className="text-gray-600 text-sm">Müşteri şikayetlerini yönet</p>
-            {openComplaints > 0 && (
-              <div className="mt-3">
-                <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">{openComplaints} Açık</span>
-              </div>
-            )}
-          </div>
-          <div onClick={() => navigate('/admin/messages')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">📢</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Mesaj Sistemi</h3>
-            <p className="text-gray-600 text-sm">Toplu mesaj gönder</p>
-          </div>
-          <div onClick={() => navigate('/admin/coupons')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">🎟️</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Kupon Yönetimi</h3>
-            <p className="text-gray-600 text-sm">Kupon oluştur ve yönet</p>
-          </div>
-          <div onClick={() => navigate('/admin/pricing')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">💰</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">AI Fiyat Listesi</h3>
-            <p className="text-gray-600 text-sm">Hizmet bazlı temel ücretleri yönet</p>
-          </div>
-          <div onClick={() => navigate('/admin/certificates')} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer">
-            <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-4"><span className="text-3xl">📜</span></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Sertifika Onayları</h3>
-            <p className="text-gray-600 text-sm">Usta sertifikalarını onayla</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Son İşler</h3>
-          {recentJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-6">Henüz iş yok</p>
-          ) : (
-            <div className="space-y-3">
-              {recentJobs.map(job => (
-                <div key={job.id} className={`flex items-center gap-4 p-4 rounded-xl ${
-                  job.status === 'completed' || job.status === 'rated' ? 'bg-green-50' :
-                  job.status === 'cancelled' ? 'bg-red-50' :
-                  job.status === 'in_progress' ? 'bg-purple-50' :
-                  job.status === 'accepted' ? 'bg-blue-50' : 'bg-yellow-50'
-                }`}>
-                  <span className="text-2xl">
-                    {job.status === 'completed' || job.status === 'rated' ? '✅' :
-                     job.status === 'cancelled' ? '❌' :
-                     job.status === 'in_progress' ? '🔧' :
-                     job.status === 'accepted' ? '👍' : '⏳'}
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{job.title}</p>
-                    <p className="text-sm text-gray-600">{job.customer.name} - {job.location.address}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-green-600">{job.price} TL</p>
-                    <span className={`text-xs font-bold ${
-                      job.status === 'pending' ? 'text-yellow-600' :
-                      job.status === 'accepted' ? 'text-blue-600' :
-                      job.status === 'in_progress' ? 'text-purple-600' :
-                      job.status === 'cancelled' ? 'text-red-600' : 'text-green-600'
-                    }`}>
-                      {job.status === 'pending' ? 'Bekliyor' :
-                       job.status === 'accepted' ? 'Kabul Edildi' :
-                       job.status === 'in_progress' ? 'Devam Ediyor' :
-                       job.status === 'cancelled' ? 'İptal' :
-                       job.status === 'rated' ? 'Değerlendirildi' : 'Tamamlandı'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Değerlendirmeler */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">⭐ Tüm Değerlendirmeler</h3>
-          {allJobs.filter(j => j.rating).length === 0 ? (
-            <p className="text-gray-500 text-center py-6">Henüz değerlendirme yok</p>
-          ) : (
-            <div className="space-y-3">
-              {allJobs.filter(j => j.rating).slice(0, 10).map(job => (
-                <div key={job.id} className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-bold text-gray-900">{job.customer.name} → {job.professional?.name || 'Usta'}</p>
-                      <p className="text-sm text-gray-600">{job.title}</p>
-                    </div>
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i}>{i < (job.rating || 0) ? '⭐' : '☆'}</span>
-                      ))}
-                    </div>
-                  </div>
-                  {job.ratingReview && (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded">"{job.ratingReview}"</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Şikayetler */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900">🚨 Tüm Şikayetler</h3>
-            <div className="flex gap-2">
-              {[
-                { key: 'all', label: 'Tümü' },
-                { key: 'open', label: 'Bekleyen' },
-                { key: 'resolved', label: 'Çözüldü' },
-                { key: 'rejected', label: 'Reddedildi' },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setComplaintFilter(tab.key)}
-                  className={`text-xs px-3 py-1 rounded-full font-bold transition ${
-                    complaintFilter === tab.key
-                      ? 'bg-gray-800 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >{tab.label}</button>
-              ))}
-            </div>
-          </div>
-          {allComplaints.filter(c => complaintFilter === 'all' || c.status === complaintFilter).length === 0 ? (
-            <p className="text-gray-500 text-center py-6">Bu kategoride şikayet yok</p>
-          ) : (
-            <div className="space-y-3">
-              {allComplaints.filter(c => complaintFilter === 'all' || c.status === complaintFilter).map(complaint => (
-                <div key={complaint.id} className={`p-4 rounded-xl border-2 ${
-                  complaint.status === 'resolved' ? 'bg-green-50 border-green-300' :
-                  complaint.status === 'rejected' ? 'bg-red-50 border-red-300' :
-                  'bg-orange-50 border-orange-300'
-                }`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-bold text-gray-900">{complaint.customerName}</p>
-                      <p className="text-sm text-gray-600">{complaint.jobTitle} — {complaint.reason}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                      complaint.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                      complaint.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {complaint.status === 'open' ? 'Bekliyor' : complaint.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
-                    </span>
-                  </div>
-                  {complaint.details && (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded">{complaint.details}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-2">{new Date(complaint.filedAt).toLocaleDateString('tr-TR')}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }
 

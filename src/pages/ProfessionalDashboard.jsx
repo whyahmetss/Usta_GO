@@ -1,25 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, Menu, Home, Briefcase, MessageSquare, User, DollarSign, Star, TrendingUp } from 'lucide-react'
+import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { useNavigate } from 'react-router-dom'
-import { connectSocket, getSocket } from '../utils/socket'
-import HamburgerMenu from '../components/HamburgerMenu.jsx'
+import { connectSocket } from '../utils/socket'
 import Logo from '../components/Logo'
+import Card from '../components/Card'
+import StatCard from '../components/StatCard'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function ProfessionalDashboard() {
-  const { user, getUnreadNotificationCount, getUnreadMessageCount } = useAuth()
+  const { user, getUnreadNotificationCount } = useAuth()
   const navigate = useNavigate()
-  const [showMenu, setShowMenu] = useState(false)
   const [loading, setLoading] = useState(true)
   const [allJobs, setAllJobs] = useState([])
 
   const unreadNotifs = getUnreadNotificationCount()
-  const unreadMessages = getUnreadMessageCount()
 
-  // Load professional dashboard data
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
@@ -28,78 +28,41 @@ function ProfessionalDashboard() {
         isPendingApproval ? Promise.resolve({ data: [] }) : fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
         fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
       ])
-
-      const pendingRaw = pendingResponse?.data || []
-      const myJobsRaw = myJobsResponse?.data || []
-
-      const allRaw = [...pendingRaw, ...myJobsRaw]
+      const allRaw = [...(pendingResponse?.data || []), ...(myJobsResponse?.data || [])]
       const uniqueMap = new Map()
       allRaw.forEach(j => uniqueMap.set(j.id, j))
-      const uniqueJobs = Array.from(uniqueMap.values())
-
-      const mappedJobs = mapJobsFromBackend(uniqueJobs)
-      const normalizedJobs = mappedJobs.map(job => ({
+      const mappedJobs = mapJobsFromBackend(Array.from(uniqueMap.values()))
+      setAllJobs(mappedJobs.map(job => ({
         ...job,
-        location: typeof job.location === 'string'
-          ? { address: job.location }
-          : (job.location || { address: 'Adres belirtilmedi' })
-      }))
-      setAllJobs(normalizedJobs)
-    } catch (err) {
-      console.error('Load dashboard error:', err)
-    } finally {
-      setLoading(false)
-    }
+        location: typeof job.location === 'string' ? { address: job.location } : (job.location || { address: 'Adres belirtilmedi' })
+      })))
+    } catch (err) { console.error('Load dashboard error:', err) }
+    finally { setLoading(false) }
   }, [user?.id, user?.status])
 
   useEffect(() => {
-    if (user?.role === 'professional') {
-      loadDashboardData()
-    }
+    if (user?.role === 'professional') loadDashboardData()
   }, [user?.role, loadDashboardData])
 
-  // Listen for real-time new job updates
   useEffect(() => {
     if (user?.role !== 'professional') return
-
     const socket = connectSocket(user?.id)
-
     const handleNewJob = async (jobData) => {
-      console.log('New job received via socket:', jobData)
       try {
-        // Fetch full job from API — socket payload may be incomplete (deployed backend)
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(jobData.id))
         const fullJob = response?.data
         if (!fullJob) return
-
-        setAllJobs(prevJobs => {
-          if (prevJobs.some(j => j.id === fullJob.id)) return prevJobs
-          const mappedJob = mapJobsFromBackend([fullJob])[0]
-          const normalizedJob = {
-            ...mappedJob,
-            location: typeof mappedJob.location === 'string'
-              ? { address: mappedJob.location }
-              : (mappedJob.location || { address: 'Adres belirtilmedi' })
-          }
-          return [normalizedJob, ...prevJobs]
+        setAllJobs(prev => {
+          if (prev.some(j => j.id === fullJob.id)) return prev
+          const mapped = mapJobsFromBackend([fullJob])[0]
+          return [{ ...mapped, location: typeof mapped.location === 'string' ? { address: mapped.location } : (mapped.location || { address: 'Adres belirtilmedi' }) }, ...prev]
         })
-      } catch (err) {
-        console.error('Fetch new job error:', err)
-      }
+      } catch (err) { console.error('Fetch new job error:', err) }
     }
-
-    // Reload on reconnect — Render.com restarts drop all socket connections
-    const handleConnect = () => {
-      loadDashboardData()
-    }
-
+    const handleConnect = () => loadDashboardData()
     socket.on('new_job_available', handleNewJob)
     socket.on('connect', handleConnect)
-
-    return () => {
-      socket.off('new_job_available', handleNewJob)
-      socket.off('connect', handleConnect)
-    }
+    return () => { socket.off('new_job_available', handleNewJob); socket.off('connect', handleConnect) }
   }, [user?.id, user?.role, loadDashboardData])
 
   const jobRequests = allJobs.filter(j => j.status === 'pending')
@@ -108,161 +71,123 @@ function ProfessionalDashboard() {
 
   const now = new Date()
   const thisMonthEarnings = myCompletedJobs
-    .filter(j => {
-      const d = j.completedAt ? new Date(j.completedAt) : null
-      return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-    })
+    .filter(j => { const d = j.completedAt ? new Date(j.completedAt) : null; return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() })
     .reduce((sum, j) => sum + (Number(j.budget) || 0), 0)
 
   const ratedJobs = myCompletedJobs.filter(j => j.rating)
-  const avgRating = ratedJobs.length > 0
-    ? (ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length).toFixed(1)
-    : '0.0'
-
-  const stats = [
-    { label: 'Bu Ay Kazanc', value: `${thisMonthEarnings.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'green', link: '/wallet' },
-    { label: 'Tamamlanan Is', value: myCompletedJobs.length.toString(), icon: Briefcase, color: 'blue' },
-    { label: 'Ortalama Puan', value: avgRating, icon: Star, color: 'yellow' },
-    { label: 'Aktif Is', value: myActiveJobs.length.toString(), icon: TrendingUp, color: 'purple' },
-  ]
+  const avgRating = ratedJobs.length > 0 ? (ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length).toFixed(1) : '0.0'
 
   const isPendingApproval = user?.status === 'PENDING_APPROVAL'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 pb-24">
+    <div>
       {isPendingApproval && (
-        <div className="bg-amber-500 text-white px-4 py-3 text-center font-semibold text-sm">
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm font-medium text-amber-700">
           Hesabınız admin onayı bekliyor. Onaylandıktan sonra iş alabileceksiniz.
         </div>
       )}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 pb-6 pt-4 px-4">
+
+      {/* Header */}
+      <div className="px-4 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Logo size="md" />
+            <Logo size="sm" />
             <div>
-              <h1 className="text-2xl font-black text-white">Usta Paneli</h1>
-              <p className="text-white/70 text-xs">Hoş geldin, {user?.name}</p>
+              <p className="text-xs text-gray-400 font-medium">Usta Paneli</p>
+              <h1 className="text-lg font-bold text-gray-900">{user?.name}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/notifications')} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center relative">
-              <Bell size={20} className="text-white" />
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/notifications')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center relative transition-colors hover:bg-gray-100">
+              <Bell size={18} className="text-gray-600" />
               {unreadNotifs > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-rose-500 text-white text-[10px] font-bold rounded-full px-1">
                   {unreadNotifs > 9 ? '9+' : unreadNotifs}
                 </span>
               )}
             </button>
-            <button onClick={() => setShowMenu(true)} className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <Menu size={20} className="text-white" />
+            <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center transition-colors hover:bg-gray-100">
+              <Settings size={18} className="text-gray-600" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {stats.map((stat, idx) => {
-            const Icon = stat.icon
-            return (
-              <div key={idx} onClick={() => stat.link && navigate(stat.link)}
-                className={`bg-white/20 backdrop-blur rounded-2xl p-4 ${stat.link ? 'cursor-pointer hover:bg-white/30 transition' : ''}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Icon size={16} className="text-white" />
-                  </div>
-                  <span className="text-2xl font-black text-white">{stat.value}</span>
-                </div>
-                <p className="text-white/80 text-xs font-medium">{stat.label}</p>
-                {stat.link && <p className="text-white/90 text-xs font-semibold mt-1">Cuzdani Gor</p>}
-              </div>
-            )
-          })}
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <StatCard icon={DollarSign} label="Bu Ay Kazanç" value={`${thisMonthEarnings.toLocaleString('tr-TR')} TL`} color="emerald" onClick={() => navigate('/wallet')} />
+          <StatCard icon={Briefcase} label="Tamamlanan İş" value={myCompletedJobs.length} color="primary" />
+          <StatCard icon={Star} label="Ortalama Puan" value={avgRating} color="amber" />
+          <StatCard icon={TrendingUp} label="Aktif İş" value={myActiveJobs.length} color="violet" />
         </div>
       </div>
 
-      <div className="px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Yeni İş Talepleri</h2>
-          <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-bold">{jobRequests.length} Yeni</span>
+      {/* Job Requests */}
+      <div className="px-4 pb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-gray-900">Yeni İş Talepleri</h2>
+          {jobRequests.length > 0 && (
+            <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[11px] font-semibold">{jobRequests.length} Yeni</span>
+          )}
         </div>
-        {jobRequests.length === 0 ? (
-          <div className="text-center py-8 bg-white rounded-2xl shadow-lg">
-            <div className="text-5xl mb-3">📋</div>
-            <p className="text-gray-600 font-semibold">Yeni iş talebi yok</p>
-            <p className="text-gray-400 text-sm mt-1">Müşteriler iş olusturduğunda burada görünür</p>
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-10 h-10 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-sm text-gray-400">Yükleniyor...</p>
           </div>
+        ) : jobRequests.length === 0 ? (
+          <EmptyState icon="📋" title="Yeni iş talebi yok" description="Müşteriler iş oluşturduğunda burada görünür" />
         ) : (
           <div className="space-y-3">
             {jobRequests.map(job => (
-              <div key={job.id} onClick={() => navigate(`/job/${job.id}`)}
-                className="bg-white rounded-2xl p-5 shadow-lg border-l-4 border-green-500 cursor-pointer hover:shadow-xl transition">
-                {job.urgent && (
-                  <div className="inline-block px-2 py-1 bg-red-100 text-red-600 rounded-lg text-xs font-bold mb-3">Acil</div>
-                )}
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{job.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{job.location.address}</p>
-                  <p className="text-sm text-gray-700">{job.description}</p>
+              <Card key={job.id} onClick={() => navigate(`/job/${job.id}`)}>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900 text-sm flex-1 mr-2">{job.title}</h3>
+                  {job.urgent && <StatusBadge status="urgent" />}
                 </div>
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                  <div><p className="text-xs text-gray-500">Müşteri</p><p className="text-sm font-bold text-gray-900">{job.customer.name}</p></div>
-                  <div><p className="text-xs text-gray-500">Tarih</p><p className="text-sm font-bold text-gray-900">{new Date(job.date).toLocaleDateString('tr-TR')}</p></div>
-                  <div><p className="text-xs text-gray-500">Ücret</p><p className="text-lg font-black text-green-600">{job.price} TL</p></div>
+                <p className="text-xs text-gray-500 flex items-center gap-1 mb-1.5">
+                  <MapPin size={12} /> {job.location?.address || 'Adres belirtilmedi'}
+                </p>
+                <p className="text-xs text-gray-400 mb-3 line-clamp-2">{job.description}</p>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Müşteri:</span>
+                    <span className="text-xs font-medium text-gray-700">{job.customer?.name}</span>
+                  </div>
+                  <span className="text-base font-bold text-emerald-600">{job.price} TL</span>
                 </div>
-                <div className="text-center text-sm text-blue-600 font-semibold">Detaylar Görüntüle</div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
-      </div>
 
-      {myCompletedJobs.length > 0 && (
-        <div className="px-4 py-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Son Tamamlanan İşler</h2>
-          <div className="space-y-2">
-            {myCompletedJobs.slice(0, 3).map(job => (
-              <div key={job.id} onClick={() => navigate(`/job/${job.id}`)} className="bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg transition">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"><span className="text-2xl">✅</span></div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-900">{job.title}</p>
-                  <p className="text-xs text-gray-600">{job.location.address}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-green-600">{job.price} TL</p>
-                  {job.rating && (
-                    <div className="flex items-center gap-1 text-xs">
-                      <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                      <span className="font-bold">{job.rating}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+        {/* Completed Jobs */}
+        {myCompletedJobs.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-3">Son Tamamlanan İşler</h2>
+            <div className="space-y-2">
+              {myCompletedJobs.slice(0, 3).map(job => (
+                <Card key={job.id} onClick={() => navigate(`/job/${job.id}`)} className="flex items-center gap-3 !p-3.5">
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">✅</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm truncate">{job.title}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{job.location?.address}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-emerald-600 text-sm">{job.price} TL</p>
+                    {job.rating && (
+                      <div className="flex items-center gap-0.5 justify-end">
+                        <Star size={10} className="text-amber-400 fill-amber-400" />
+                        <span className="text-[10px] font-medium text-gray-500">{job.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-xl z-50">
-        <div className="flex items-center justify-around">
-          <button onClick={() => navigate('/professional')} className="flex flex-col items-center gap-1 text-green-600">
-            <Home size={24} /><span className="text-xs font-semibold">Ana Sayfa</span>
-          </button>
-          <button onClick={() => navigate('/my-jobs')} className="flex flex-col items-center gap-1 text-gray-400">
-            <Briefcase size={24} /><span className="text-xs font-semibold">İşlerim</span>
-          </button>
-          <button onClick={() => navigate('/messages')} className="flex flex-col items-center gap-1 relative text-gray-400">
-            <MessageSquare size={24} /><span className="text-xs font-semibold">Mesajlar</span>
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
-                {unreadMessages > 9 ? '9+' : unreadMessages}
-              </span>
-            )}
-          </button>
-          <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1 text-gray-400">
-            <User size={24} /><span className="text-xs font-semibold">Profil</span>
-          </button>
-        </div>
+        )}
       </div>
-      <HamburgerMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
     </div>
   )
 }

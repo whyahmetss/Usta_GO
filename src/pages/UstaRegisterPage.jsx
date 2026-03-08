@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import Logo from '../components/Logo'
-import { ArrowLeft, Upload } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import { Upload, Eye, EyeOff } from 'lucide-react'
 
 function UstaRegisterPage() {
   const navigate = useNavigate()
@@ -82,52 +84,108 @@ function UstaRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen blue-gradient-bg flex flex-col p-4">
-      <button onClick={() => navigate(-1)} className="self-start w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-        <ArrowLeft size={20} className="text-white" />
-      </button>
-      <div className="flex flex-col items-center text-center mb-6">
-        <Logo size="lg" className="mb-4 shadow-2xl rounded-3xl" />
-        <h1 className="text-3xl font-black text-white">Usta Kayıt</h1>
-        <p className="text-white/80 text-sm mt-1">Profesyonel olarak hizmet vermek için kayıt olun</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <PageHeader title="Usta Kayıt" onBack={() => navigate(-1)} />
 
-      <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20 max-w-md w-full">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" placeholder="Ad Soyad" value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-          <input type="tel" placeholder="Telefon (05XX XXX XX XX)" value={phone} onChange={handlePhoneChange}
-            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-          <input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-          <input type="text" placeholder="Davet Kodu (İsteğe Bağlı)" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-          <div className="relative">
-            <input type={showPassword ? 'text' : 'password'} placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-20 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-            <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">Göster/Gizle</button>
-          </div>
-          <input type={showPassword ? 'text' : 'password'} placeholder="Şifre (Tekrar)" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+      <div className="flex-1 px-4 py-6 max-w-md mx-auto w-full">
+        <div className="flex flex-col items-center text-center mb-6">
+          <Logo size="lg" className="mb-3" />
+          <h1 className="text-lg font-bold text-gray-900">Profesyonel Kayıt</h1>
+          <p className="text-gray-500 text-sm mt-1">Profesyonel olarak hizmet vermek için kayıt olun</p>
+        </div>
 
-          {/* Zorunlu belge alanı */}
-          <div>
-            <label className="block text-white text-sm font-semibold mb-2">Sertifika / Meslek Belgesi (Zorunlu)</label>
-            <label className="block cursor-pointer">
-              <div className={`border-2 border-dashed rounded-2xl p-5 text-center transition ${certFile ? 'border-green-400 bg-green-500/20' : 'border-white/40 bg-white/10 hover:bg-white/20'}`}>
-                <Upload size={28} className="mx-auto mb-2 text-white/80" />
-                <p className="text-white font-semibold text-sm">{certFile ? certFile.name : 'Belge yüklemek için tıklayın'}</p>
-                <p className="text-white/60 text-xs mt-1">PDF, JPG veya PNG</p>
+        <Card padding="p-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Ad Soyad"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+            />
+            <input
+              type="tel"
+              placeholder="Telefon (05XX XXX XX XX)"
+              value={phone}
+              onChange={handlePhoneChange}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+            />
+            <input
+              type="email"
+              placeholder="E-posta"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Davet Kodu (İsteğe Bağlı)"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 p-1"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Şifre (Tekrar)"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm text-gray-900 placeholder-gray-400"
+            />
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-2">Sertifika / Meslek Belgesi (Zorunlu)</label>
+              <label className="block cursor-pointer">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-5 text-center transition ${
+                    certFile
+                      ? 'border-emerald-300 bg-emerald-50'
+                      : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <Upload size={24} className="mx-auto mb-2 text-gray-500" />
+                  <p className="text-sm font-semibold text-gray-700">{certFile ? certFile.name : 'Belge yüklemek için tıklayın'}</p>
+                  <p className="text-[11px] text-gray-500 mt-1">PDF, JPG veya PNG</p>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={(e) => setCertFile(e.target.files?.[0] || null)}
+                />
+              </label>
+            </div>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                <p className="text-rose-700 text-sm font-semibold">{error}</p>
               </div>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] || null)} />
-            </label>
-          </div>
+            )}
 
-          {error && <p className="text-red-300 text-sm">{error}</p>}
-          <button type="submit" disabled={loading} className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:bg-white/90 transition shadow-xl disabled:opacity-60">
-            {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold text-sm hover:bg-primary-600 active:scale-[0.98] transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
+            </button>
+          </form>
+        </Card>
       </div>
     </div>
   )
