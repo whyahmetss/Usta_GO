@@ -234,8 +234,12 @@ function MessagesPage() {
                     onClick={() => setSelectedJobId(job.id)}
                     className="w-full bg-white dark:bg-[#141414] rounded-2xl p-4 border border-gray-100 dark:border-[#262626] flex items-center gap-3 text-left active:scale-[0.98] transition-all"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-bold">{initials}</span>
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {otherPerson?.profileImage ? (
+                        <img src={otherPerson.profileImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white text-sm font-bold">{initials}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
@@ -270,8 +274,12 @@ function MessagesPage() {
           >
             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-sm font-bold">{initials}</span>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {otherPerson?.profileImage ? (
+              <img src={otherPerson.profileImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-sm font-bold">{initials}</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate">{otherPerson?.name || 'Bilinmiyor'}</h2>
