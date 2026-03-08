@@ -101,6 +101,7 @@ export const API_ENDPOINTS = {
     CREATE: '/notifications',
     MARK_READ: (id) => `/notifications/${id}/read`,
     MARK_ALL_READ: '/notifications/read-all',
+    DELETE: (id) => `/notifications/${id}`,
   },
 
   // Reviews

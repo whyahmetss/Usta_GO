@@ -48,3 +48,12 @@ export const markAllAsRead = async (userId) => {
   });
   return { success: true };
 };
+
+export const deleteNotification = async (notificationId, userId) => {
+  const n = await prisma.notification.findFirst({
+    where: { id: notificationId, userId },
+  });
+  if (!n) return null;
+  await prisma.notification.delete({ where: { id: notificationId } });
+  return { success: true };
+};

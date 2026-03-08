@@ -39,6 +39,12 @@ export function AuthProvider({ children }) {
   const [jobs, setJobs] = useState([])
   const [messages, setMessages] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [notifArchived, setNotifArchived] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ustago_notif_archived') || '[]') } catch { return [] }
+  })
+  const [notifPinned, setNotifPinned] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ustago_notif_pinned') || '[]') } catch { return [] }
+  })
   const [transactions, setTransactions] = useState([])
   const [withdrawals, setWithdrawals] = useState([])
   const [error, setError] = useState(null)
@@ -337,8 +343,44 @@ export function AuthProvider({ children }) {
 
   const getUserNotifications = useCallback(() => {
     if (!user) return []
-    return notifications
-  }, [notifications, user])
+    const excludeArchived = notifications.filter(n => !notifArchived.includes(n.id))
+    const pinned = excludeArchived.filter(n => notifPinned.includes(n.id))
+    const unpinned = excludeArchived.filter(n => !notifPinned.includes(n.id))
+    return [...pinned, ...unpinned]
+  }, [notifications, user, notifArchived, notifPinned])
+
+  const removeNotification = useCallback(async (notifId) => {
+    setNotifications(prev => prev.filter(n => n.id !== notifId))
+    setNotifArchived(prev => { const next = prev.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}; return next })
+    setNotifPinned(prev => { const next = prev.filter(id => id !== notifId); try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}; return next })
+    if (!useLocalStorage && notifId && !String(notifId).startsWith('msg_')) {
+      try { await fetchAPI(API_ENDPOINTS.NOTIFICATIONS.DELETE(notifId), { method: 'DELETE' }) } catch {}
+    }
+  }, [useLocalStorage])
+
+  const archiveNotification = useCallback((notifId) => {
+    setNotifArchived(prev => {
+      const next = prev.includes(notifId) ? prev : [...prev, notifId]
+      try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
+
+  const pinNotification = useCallback((notifId) => {
+    setNotifPinned(prev => {
+      const next = prev.includes(notifId) ? prev : [...prev, notifId]
+      try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
+
+  const unpinNotification = useCallback((notifId) => {
+    setNotifPinned(prev => {
+      const next = prev.filter(id => id !== notifId)
+      try { localStorage.setItem('ustago_notif_pinned', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
 
   // --- JOBS ---
   const createJob = useCallback(async (jobData) => {
@@ -1009,6 +1051,11 @@ export function AuthProvider({ children }) {
       markAllNotificationsRead,
       getUnreadNotificationCount,
       getUserNotifications,
+      removeNotification,
+      archiveNotification,
+      pinNotification,
+      unpinNotification,
+      notifPinned,
       // Financial
       transactions,
       withdrawals,
