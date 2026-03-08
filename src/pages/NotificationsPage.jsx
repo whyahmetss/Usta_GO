@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, MessageCircle, Briefcase, CheckCircle, XCircle, Rocket, Star, Coins, Sparkles, PlusCircle, Trash2, Archive, Pin, PinOff } from 'lucide-react'
+import { Bell, MessageCircle, Briefcase, CheckCircle, XCircle, Rocket, Star, Coins, Sparkles, PlusCircle, Trash2, Archive, ArchiveRestore, Pin, PinOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
@@ -29,7 +29,7 @@ function NotifIcon({ type }) {
   )
 }
 
-function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, isPinned, formatTime, NotifIcon }) {
+function SwipeableNotif({ notif, onPress, onDelete, onArchive, onUnarchive, onPin, onUnpin, isPinned, isArchived, formatTime, NotifIcon }) {
   const [swipe, setSwipe] = useState(0)
   const startX = useRef(0)
 
@@ -58,11 +58,11 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, i
             <span className="text-[10px] font-medium">{isPinned ? 'Coz' : 'Sabitle'}</span>
           </button>
           <button
-            onClick={() => { onArchive(notif.id); setSwipe(0) }}
+            onClick={() => { (isArchived ? onUnarchive : onArchive)(notif?.id); setSwipe(0) }}
             className="flex-1 flex flex-col items-center justify-center gap-1 bg-amber-500 text-white min-w-[40px] active:bg-amber-600"
           >
-            <Archive size={18} />
-            <span className="text-[10px] font-medium">Arsivle</span>
+            {isArchived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
+            <span className="text-[10px] font-medium">{isArchived ? 'Cikar' : 'Arsivle'}</span>
           </button>
           <button
             onClick={() => { onDelete(notif?.id); setSwipe(0) }}
@@ -109,9 +109,14 @@ function NotificationsPage() {
   const archiveNotification = auth?.archiveNotification ?? (() => {})
   const pinNotification = auth?.pinNotification ?? (() => {})
   const unpinNotification = auth?.unpinNotification ?? (() => {})
+  const unarchiveNotification = auth?.unarchiveNotification ?? (() => {})
+  const getArchivedNotifications = auth?.getArchivedNotifications
   const notifPinned = auth?.notifPinned ?? []
 
+  const [tab, setTab] = useState('all')
   const notifications = typeof getUserNotifications === 'function' ? getUserNotifications() : []
+  const archived = typeof getArchivedNotifications === 'function' ? getArchivedNotifications() : []
+  const list = tab === 'archived' ? archived : notifications
   const unreadCount = (notifications || []).filter(n => !n.read).length
   const pinnedIds = new Set(Array.isArray(notifPinned) ? notifPinned : [])
 
@@ -151,24 +156,43 @@ function NotificationsPage() {
       />
 
       <div className="px-4 py-5 max-w-lg mx-auto">
-        {notifications.length === 0 ? (
+        {/* Tabs */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setTab('all')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-gray-400'}`}
+          >
+            Tumu
+          </button>
+          <button
+            onClick={() => setTab('archived')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${tab === 'archived' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-gray-400'}`}
+          >
+            <Archive size={16} />
+            Arsiv ({archived.length})
+          </button>
+        </div>
+
+        {list.length === 0 ? (
           <EmptyState
-            icon={Bell}
-            title="Henuz bildirim yok"
-            description="Is olusturulunca veya mesaj gelince bildirimler burada gorunur. Saga kaydirarak Sil, Arsivle veya Sabitle yapabilirsiniz."
+            icon={tab === 'archived' ? Archive : Bell}
+            title={tab === 'archived' ? 'Arsivde bildirim yok' : 'Henuz bildirim yok'}
+            description={tab === 'archived' ? 'Arsivlenen bildirimler burada gorunur.' : 'Is olusturulunca veya mesaj gelince bildirimler burada gorunur. Saga kaydirarak Sil, Arsivle veya Sabitle yapabilirsiniz.'}
           />
         ) : (
           <div className="space-y-0">
-            {notifications.filter(Boolean).map((notif, i) => (
+            {list.filter(Boolean).map((notif, i) => (
               <SwipeableNotif
                 key={notif?.id || `n-${i}`}
                 notif={notif}
                 onPress={handleNotificationClick}
                 onDelete={removeNotification}
                 onArchive={archiveNotification}
+                onUnarchive={unarchiveNotification}
                 onPin={pinNotification}
                 onUnpin={unpinNotification}
                 isPinned={pinnedIds.has(notif?.id)}
+                isArchived={tab === 'archived'}
                 formatTime={formatTime}
                 NotifIcon={NotifIcon}
               />
@@ -176,7 +200,7 @@ function NotificationsPage() {
           </div>
         )}
 
-        {unreadCount > 0 && (
+        {tab === 'all' && unreadCount > 0 && (
           <button
             onClick={markAllNotificationsRead}
             className="w-full mt-6 py-3.5 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-2xl font-semibold hover:opacity-90 active:scale-[0.98] transition"

@@ -366,6 +366,19 @@ export function AuthProvider({ children }) {
     })
   }, [])
 
+  const unarchiveNotification = useCallback((notifId) => {
+    setNotifArchived(prev => {
+      const next = prev.filter(id => id !== notifId)
+      try { localStorage.setItem('ustago_notif_archived', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
+
+  const getArchivedNotifications = useCallback(() => {
+    if (!user) return []
+    return notifications.filter(n => notifArchived.includes(n.id))
+  }, [notifications, user, notifArchived])
+
   const pinNotification = useCallback((notifId) => {
     setNotifPinned(prev => {
       const next = prev.includes(notifId) ? prev : [...prev, notifId]
@@ -1053,9 +1066,11 @@ export function AuthProvider({ children }) {
       getUserNotifications,
       removeNotification,
       archiveNotification,
+      unarchiveNotification,
       pinNotification,
       unpinNotification,
       notifPinned,
+      getArchivedNotifications,
       // Financial
       transactions,
       withdrawals,
