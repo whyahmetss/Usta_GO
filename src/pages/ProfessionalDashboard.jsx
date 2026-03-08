@@ -33,7 +33,7 @@ function ProfessionalDashboard() {
       const isPendingApproval = user?.status === 'PENDING_APPROVAL'
       const [pendingResponse, myJobsResponse] = await Promise.all([
         isPendingApproval ? Promise.resolve({ data: [] }) : fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`),
-        fetchAPI(API_ENDPOINTS.JOBS.MY_JOBS),
+        fetchAPI(`${API_ENDPOINTS.JOBS.MY_JOBS}?limit=500`),
       ])
       const allRaw = [...(pendingResponse?.data || []), ...(myJobsResponse?.data || [])]
       const uniqueMap = new Map()
@@ -49,6 +49,18 @@ function ProfessionalDashboard() {
 
   useEffect(() => {
     if (user?.role === 'professional') loadDashboardData()
+  }, [user?.role, loadDashboardData])
+
+  useEffect(() => {
+    if (user?.role !== 'professional') return
+    const onVisible = () => loadDashboardData()
+    window.addEventListener('focus', onVisible)
+    const onVisibilityChange = () => { if (document.visibilityState === 'visible') onVisible() }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener('focus', onVisible)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [user?.role, loadDashboardData])
 
   useEffect(() => {
