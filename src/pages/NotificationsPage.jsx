@@ -105,13 +105,10 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onUnarchive, onPi
 function NotificationsPage() {
   const navigate = useNavigate()
   const auth = useAuth()
-  if (!auth) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <p className="text-sm text-gray-500">Yükleniyor...</p>
-      </div>
-    )
-  }
+
+  // ALL hooks must be called before any conditional return
+  const [tab, setTab] = useState('all')
+
   const getUserNotifications = auth?.getUserNotifications
   const markNotificationRead = auth?.markNotificationRead
   const markAllNotificationsRead = auth?.markAllNotificationsRead
@@ -123,10 +120,9 @@ function NotificationsPage() {
   const getArchivedNotifications = auth?.getArchivedNotifications
   const notifPinned = auth?.notifPinned ?? []
 
-  const [tab, setTab] = useState('all')
   const notifications = (typeof getUserNotifications === 'function' ? getUserNotifications() : null) ?? []
   const archived = (typeof getArchivedNotifications === 'function' ? getArchivedNotifications() : null) ?? []
-  const list = Array.isArray(tab === 'archived' ? archived : notifications) ? (tab === 'archived' ? archived : notifications) : []
+  const list = tab === 'archived' ? (Array.isArray(archived) ? archived : []) : (Array.isArray(notifications) ? notifications : [])
   const unreadCount = (Array.isArray(notifications) ? notifications : []).filter(n => n && !n.read).length
   const pinnedIds = new Set(Array.isArray(notifPinned) ? notifPinned : [])
 
