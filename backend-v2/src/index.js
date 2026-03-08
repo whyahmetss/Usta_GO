@@ -21,6 +21,8 @@ import aiRoutes from "./routes/ai.routes.js";
 import packageRoutes from "./routes/package.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import certificateRoutes from "./routes/certificate.routes.js";
+import campaignRoutes from "./routes/campaign.routes.js";
+import { PrismaClient } from "@prisma/client";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 
@@ -67,6 +69,39 @@ app.use("/api/ai",        aiRoutes);
 app.use("/api/packages",  packageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/certificates", certificateRoutes);
+// Public campaign (müşteri ana sayfası) - index'te, campaign router'dan önce
+const prisma = new PrismaClient();
+app.get("/api/campaigns/active", async (req, res) => {
+  try {
+    const campaign = await prisma.campaign.findFirst({
+      where: { active: true },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (!campaign) return res.json({ data: null });
+    res.json({
+      data: {
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description || "",
+        badge_text: campaign.badgeText || "",
+        button_text: campaign.buttonText || "",
+        bg_color: campaign.bgColor,
+        badge_color: campaign.badgeColor,
+        text_color: campaign.textColor,
+        bg_image: campaign.bgImage || null,
+        icon_type: campaign.iconType || null,
+        icon_image: campaign.iconImage || null,
+        active: campaign.active,
+        updatedAt: campaign.updatedAt,
+      },
+    });
+  } catch (err) {
+    console.error("Campaign active error:", err);
+    res.json({ data: null });
+  }
+});
+app.use("/api/campaigns", campaignRoutes);
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
