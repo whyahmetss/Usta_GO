@@ -1,5 +1,4 @@
-ammmmmmmmmmmmmmmmmm
-Profesyonel ev hizmetleri platformu - Tam özellikli, çalışır versiyon
+onel ev hizmetleri platformu - Tam özellikli, çalışır versiyon
 
 ## ✅ YAPILAN TÜM ÖZELLİKLER
 
