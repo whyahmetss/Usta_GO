@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, Send, Check, CheckCheck, User, MessageCircle, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Send, Check, CheckCheck, User, MessageCircle, ChevronRight, Phone, MoreVertical } from 'lucide-react'
 import { getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
+import StatusBadge from '../components/StatusBadge'
 
 function MessagesPage() {
   const { jobId: paramJobId } = useParams()
@@ -140,7 +141,7 @@ function MessagesPage() {
     const otherPersonId = user?.role === 'customer'
       ? selectedJob?.professional?.id
       : selectedJob?.customer?.id
-    if (!otherPersonId) { alert("Alıcı bilgisi bulunamadı!"); return }
+    if (!otherPersonId) { alert("Alici bilgisi bulunamadi!"); return }
     const messageToSend = messageText.trim()
     setMessageText('')
     setIsSending(true)
@@ -155,7 +156,7 @@ function MessagesPage() {
       }
     } catch (err) {
       setMessageText(messageToSend)
-      alert(`Mesaj gönderilemedi: ${err.message}`)
+      alert(`Mesaj gonderilemedi: ${err.message}`)
     } finally {
       setIsSending(false)
     }
@@ -170,7 +171,7 @@ function MessagesPage() {
     const otherPersonId = user?.role === 'customer'
       ? selectedJob?.professional?.id
       : selectedJob?.customer?.id
-    if (!otherPersonId) { alert("Alıcı bilgisi bulunamadı!"); return }
+    if (!otherPersonId) { alert("Alici bilgisi bulunamadi!"); return }
     setIsSending(true)
     try {
       const response = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
@@ -182,60 +183,69 @@ function MessagesPage() {
         emitEvent('send_message', { receiverId: otherPersonId, message: response.data })
       }
     } catch (err) {
-      alert(`Mesaj gönderilemedi: ${err.message}`)
+      alert(`Mesaj gonderilemedi: ${err.message}`)
     } finally {
       setIsSending(false)
     }
   }
 
   const quickMessages = user?.role === 'professional'
-    ? ['Yoldayım, 10 dk', 'Malzeme almam gerekiyor', 'İş tamamlandı', 'Gecikeceğim']
-    : ['Ne zaman geleceksiniz?', 'Teşekkürler', 'Kolay ulaşabilir misiniz?', 'İptal etmek istiyorum']
+    ? ['Yoldayim, 10 dk', 'Malzeme almam gerekiyor', 'Is tamamlandi', 'Gecikecegim']
+    : ['Ne zaman geleceksiniz?', 'Tesekkurler', 'Kolay ulasabilir misiniz?', 'Iptal etmek istiyorum']
 
   const formatTime = (ts) => {
     const d = new Date(ts)
     return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Job list view
+  const getInitials = (name) => {
+    if (!name) return '?'
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  // ─── Conversation List ───
   if (!selectedJobId) {
     return (
       <div>
         <PageHeader title="Mesajlar" onBack={false} />
-        <div className="px-4 py-2">
+        <div className="px-4 py-4">
           {loading ? (
-            <div className="text-center py-12">
-              <div className="w-10 h-10 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-sm text-gray-400">Yükleniyor...</p>
+            <div className="text-center py-16">
+              <div className="w-10 h-10 border-[3px] border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Yukleniyor...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
+            <div className="text-center py-16">
               <p className="text-rose-500 text-sm mb-3">{error}</p>
-              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary-500 text-white rounded-xl text-sm font-medium">
+              <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-xl text-sm font-medium">
                 Yenile
               </button>
             </div>
           ) : userJobs.length === 0 ? (
-            <EmptyState icon={MessageCircle} title="Henüz mesaj yok" description="İş kabul edildikten sonra mesajlaşabilirsiniz" />
+            <EmptyState icon={MessageCircle} title="Henuz mesaj yok" description="Is kabul edildikten sonra mesajlasabilirsiniz" />
           ) : (
             <div className="space-y-2">
               {userJobs.map(job => {
                 const otherPerson = user.role === 'customer' ? job.professional : job.customer
+                const initials = getInitials(otherPerson?.name)
                 return (
-                  <div
+                  <button
                     key={job.id}
                     onClick={() => setSelectedJobId(job.id)}
-                    className="bg-white rounded-2xl p-4 border border-gray-100 shadow-card cursor-pointer hover:shadow-card-hover transition-all flex items-center gap-3"
+                    className="w-full bg-white dark:bg-[#141414] rounded-2xl p-4 border border-gray-100 dark:border-[#262626] flex items-center gap-3 text-left active:scale-[0.98] transition-all"
                   >
-                    <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-                      <User size={18} className="text-gray-400" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-bold">{initials}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">{otherPerson?.name || 'Bilinmiyor'}</h3>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h3 className="font-semibold text-gray-900 text-[14px] truncate">{otherPerson?.name || 'Bilinmiyor'}</h3>
+                        <StatusBadge status={job.status} />
+                      </div>
                       <p className="text-xs text-gray-400 truncate">{job.title}</p>
                     </div>
-                    <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
-                  </div>
+                    <ChevronRight size={16} className="text-gray-300 flex-shrink-0 ml-1" />
+                  </button>
                 )
               })}
             </div>
@@ -245,93 +255,130 @@ function MessagesPage() {
     )
   }
 
+  // ─── Chat View ───
   const otherPerson = user?.role === 'customer' ? selectedJob?.professional : selectedJob?.customer
+  const initials = getInitials(otherPerson?.name)
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="fixed inset-0 z-[55] flex flex-col bg-[#f0f2f5] dark:bg-[#0b141a]">
       {/* Chat Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="flex items-center gap-3 h-14 px-4">
+      <header className="bg-white dark:bg-[#141414] border-b border-gray-100 dark:border-[#262626] flex-shrink-0">
+        <div className="flex items-center gap-3 h-16 px-4">
           <button
             onClick={() => setSelectedJobId(null)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors -ml-1"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-[#1f1f1f] transition-colors"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
-          <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
-            <User size={18} className="text-gray-400" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-sm font-bold">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-gray-900 truncate">{otherPerson?.name || 'Bilinmiyor'}</h2>
+            <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate">{otherPerson?.name || 'Bilinmiyor'}</h2>
             <p className="text-[11px] text-gray-400 truncate">{selectedJob?.title}</p>
           </div>
+          <button
+            onClick={() => navigate(`/job/${selectedJobId}`)}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-[#1f1f1f] transition-colors"
+          >
+            <MoreVertical size={18} className="text-gray-500" />
+          </button>
         </div>
       </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {loadingMessages ? (
-          <div className="text-center py-8">
-            <div className="w-8 h-8 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-xs text-gray-400">Mesajlar yükleniyor...</p>
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-[3px] border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-xs text-gray-400">Mesajlar yukleniyor...</p>
           </div>
         ) : jobMessages.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-xs text-gray-400">Henüz mesaj yok. İlk mesajı gönderin!</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-white dark:bg-[#141414] flex items-center justify-center mx-auto mb-3">
+              <MessageCircle size={28} className="text-gray-300" />
+            </div>
+            <p className="text-sm text-gray-400 font-medium mb-1">Henuz mesaj yok</p>
+            <p className="text-xs text-gray-300">Ilk mesaji gonderin!</p>
           </div>
         ) : (
-          jobMessages.map(msg => {
-            const isMe = msg.senderId === user?.id
-            return (
-              <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl ${
-                  isMe
-                    ? 'bg-primary-500 text-white rounded-br-md'
-                    : 'bg-white text-gray-900 rounded-bl-md border border-gray-100 shadow-card'
-                }`}>
-                  <p className="text-sm leading-relaxed">{msg.content || msg.text}</p>
-                  <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-white/50' : 'text-gray-300'}`}>
-                    <span className="text-[10px]">{formatTime(msg.createdAt || msg.timestamp)}</span>
-                    {isMe && (msg.isRead ? <CheckCheck size={12} /> : <Check size={12} />)}
+          <div className="space-y-1">
+            {jobMessages.map((msg, idx) => {
+              const isMe = msg.senderId === user?.id
+              const prevMsg = idx > 0 ? jobMessages[idx - 1] : null
+              const showGap = prevMsg && prevMsg.senderId !== msg.senderId
+
+              return (
+                <div key={msg.id}>
+                  {showGap && <div className="h-2" />}
+                  <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] relative group ${
+                      isMe
+                        ? 'bg-[#005c4b] dark:bg-[#005c4b] text-white rounded-2xl rounded-tr-md'
+                        : 'bg-white dark:bg-[#1f2c34] text-gray-900 dark:text-gray-100 rounded-2xl rounded-tl-md'
+                    }`}>
+                      <div className="px-3 pt-1.5 pb-1">
+                        <p className="text-[14px] leading-[1.45]">{msg.content || msg.text}</p>
+                      </div>
+                      <div className={`flex items-center justify-end gap-1 px-3 pb-1.5 ${isMe ? 'text-white/50' : 'text-gray-400'}`}>
+                        <span className="text-[10px]">{formatTime(msg.createdAt || msg.timestamp)}</span>
+                        {isMe && (
+                          msg.isRead
+                            ? <CheckCheck size={14} className="text-[#53bdeb]" />
+                            : <Check size={14} />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Quick Messages */}
-      <div className="px-4 py-2 overflow-x-auto flex gap-2 flex-shrink-0 scrollbar-hide">
+      <div className="px-3 py-2 overflow-x-auto flex gap-1.5 flex-shrink-0 scrollbar-hide bg-[#f0f2f5] dark:bg-[#0b141a]">
         {quickMessages.map((qm, idx) => (
-          <button key={idx} onClick={() => handleSendQuickMessage(qm)} disabled={isSending}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-full text-[11px] font-medium text-gray-600 whitespace-nowrap hover:bg-gray-50 transition disabled:opacity-50">
+          <button
+            key={idx}
+            onClick={() => handleSendQuickMessage(qm)}
+            disabled={isSending}
+            className="px-3.5 py-2 bg-white dark:bg-[#1f2c34] rounded-full text-[12px] font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap active:scale-95 transition disabled:opacity-50 border border-gray-100 dark:border-[#2a3942]"
+          >
             {qm}
           </button>
         ))}
       </div>
 
-      {/* Input */}
-      <div className="px-4 py-3 bg-white border-t border-gray-100 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <input
-            type="text"
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Mesajınızı yazın..."
-            disabled={isSending}
-            className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300 text-sm disabled:opacity-50"
-          />
-          <button onClick={handleSend} disabled={!messageText.trim() || isSending}
-            className={`w-11 h-11 rounded-xl flex items-center justify-center transition ${
-              messageText.trim() && !isSending ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-gray-100 text-gray-300'
-            }`}>
+      {/* Input Area */}
+      <div className="px-3 py-2.5 bg-[#f0f2f5] dark:bg-[#0b141a] flex-shrink-0 safe-bottom">
+        <div className="flex items-end gap-2">
+          <div className="flex-1 bg-white dark:bg-[#1f2c34] rounded-3xl border border-gray-100 dark:border-[#2a3942] overflow-hidden">
+            <input
+              type="text"
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Mesajinizi yazin..."
+              disabled={isSending}
+              className="w-full px-5 py-3 bg-transparent text-[14px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none disabled:opacity-50"
+            />
+          </div>
+          <button
+            onClick={handleSend}
+            disabled={!messageText.trim() || isSending}
+            className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 ${
+              messageText.trim() && !isSending
+                ? 'bg-[#005c4b] text-white'
+                : 'bg-gray-200 dark:bg-[#1f2c34] text-gray-400'
+            }`}
+          >
             {isSending ? (
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-white rounded-full animate-spin" />
             ) : (
-              <Send size={18} />
+              <Send size={20} className="-rotate-45 ml-0.5" />
             )}
           </button>
         </div>
