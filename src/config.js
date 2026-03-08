@@ -47,6 +47,11 @@ export const API_ENDPOINTS = {
     DELETE_JOB: (id) => `/admin/jobs/${id}`,
     DELETE_USER: (id) => `/admin/users/${id}`,
     COUPONS: '/admin/coupons',
+    CAMPAIGNS: {
+      ACTIVE: '/admin/campaigns/active',
+      SET: '/admin/campaigns',
+      DELETE: '/admin/campaigns',
+    },
   },
 
 // Messages
@@ -108,6 +113,13 @@ export const API_ENDPOINTS = {
     LIST: '/complaints',
     RESOLVE: (id) => `/complaints/${id}/resolve`,
     REJECT: (id) => `/complaints/${id}/reject`,
+  },
+
+  // Kampanyalar
+  CAMPAIGNS: {
+    ACTIVE: '/campaigns/active',
+    SET: '/campaigns',
+    DELETE: '/campaigns',
   },
 
   // AI Fiyat Analizi

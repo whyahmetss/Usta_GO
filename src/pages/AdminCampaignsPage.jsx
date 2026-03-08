@@ -4,7 +4,11 @@ import { Save, Eye, Trash2, Palette, Loader2, Image, Flower, Zap, Gift, Sparkles
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 
-const CAMPAIGNS = API_ENDPOINTS.CAMPAIGNS ?? { ACTIVE: '/campaigns/active', SET: '/campaigns', DELETE: '/campaigns' }
+const CAMPAIGNS = API_ENDPOINTS.ADMIN?.CAMPAIGNS ?? {
+  ACTIVE: '/admin/campaigns/active',
+  SET: '/admin/campaigns',
+  DELETE: '/admin/campaigns',
+}
 
 const ICON_OPTIONS = [
   { value: '', label: 'Yok' },
@@ -79,7 +83,7 @@ function AdminCampaignsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetchAPI(CAMPAIGNS.ACTIVE, { includeAuth: false })
+        const res = await fetchAPI(CAMPAIGNS.ACTIVE)
         if (res.data && res.data.title) {
           setCampaign({
             ...emptyCampaign,

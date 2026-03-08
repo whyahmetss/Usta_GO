@@ -158,3 +158,76 @@ export const toggleCoupon = async (req, res, next) => {
     res.json({ success: true, data: updated });
   } catch (error) { next(error); }
 };
+
+// Kampanya
+export const getActiveCampaign = async (req, res, next) => {
+  try {
+    const campaign = await _prisma.campaign.findFirst({ where: { active: true }, orderBy: { updatedAt: "desc" } });
+    if (!campaign) return res.json({ data: null });
+    res.json({
+      data: {
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description || "",
+        badge_text: campaign.badgeText || "",
+        button_text: campaign.buttonText || "",
+        bg_color: campaign.bgColor,
+        badge_color: campaign.badgeColor,
+        text_color: campaign.textColor,
+        bg_image: campaign.bgImage || null,
+        icon_type: campaign.iconType || null,
+        icon_image: campaign.iconImage || null,
+        active: campaign.active,
+        updatedAt: campaign.updatedAt,
+      },
+    });
+  } catch (error) { next(error); }
+};
+
+export const setCampaign = async (req, res, next) => {
+  try {
+    const { title, description, badge_text, button_text, bg_color, badge_color, text_color, bg_image, icon_type, icon_image } = req.body;
+    if (!title) return res.status(400).json({ error: "Kampanya basligi zorunludur" });
+    await _prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
+    const campaign = await _prisma.campaign.create({
+      data: {
+        title,
+        description: description || "",
+        badgeText: badge_text || "",
+        buttonText: button_text || "",
+        bgColor: bg_color || "#111827",
+        badgeColor: badge_color || "#34d399",
+        textColor: text_color || "#ffffff",
+        bgImage: bg_image || null,
+        iconType: icon_type || null,
+        iconImage: icon_image || null,
+        active: true,
+      },
+    });
+    res.json({
+      data: {
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description,
+        badge_text: campaign.badgeText,
+        button_text: campaign.buttonText,
+        bg_color: campaign.bgColor,
+        badge_color: campaign.badgeColor,
+        text_color: campaign.textColor,
+        bg_image: campaign.bgImage,
+        icon_type: campaign.iconType,
+        icon_image: campaign.iconImage,
+        active: campaign.active,
+        updatedAt: campaign.updatedAt,
+      },
+      message: "Kampanya yayinlandi",
+    });
+  } catch (error) { next(error); }
+};
+
+export const deleteCampaign = async (req, res, next) => {
+  try {
+    await _prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
+    res.json({ data: null, message: "Kampanya kaldirildi" });
+  } catch (error) { next(error); }
+};

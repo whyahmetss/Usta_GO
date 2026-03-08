@@ -66,4 +66,9 @@ router.post("/coupons", adminController.createCoupon);
 router.delete("/coupons/:couponId", adminController.deleteCoupon);
 router.patch("/coupons/:couponId/toggle", adminController.toggleCoupon);
 
+// Kampanya
+router.get("/campaigns/active", adminController.getActiveCampaign);
+router.post("/campaigns", adminController.setCampaign);
+router.delete("/campaigns", adminController.deleteCampaign);
+
 export default router;
