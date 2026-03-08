@@ -4,7 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapUsersFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, LogOut, Trash2, Shield, AlertCircle, Loader } from 'lucide-react'
+import { LogOut, Trash2, Shield, AlertCircle, Loader, Star, Briefcase } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import EmptyState from '../components/EmptyState'
 
 function AdminUsersPage() {
   const { logout } = useAuth()
@@ -29,7 +32,6 @@ function AdminUsersPage() {
       setUsers(mapUsersFromBackend(raw))
     } catch (err) {
       setError(err.message)
-      // Fallback to empty array if endpoint not available yet
       setUsers([])
     } finally {
       setLoading(false)
@@ -56,119 +58,106 @@ function AdminUsersPage() {
     }
   }
 
+  const roleBadge = (role) => {
+    if (role === 'admin') return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-violet-50 text-violet-700">
+        <Shield size={12} /> Admin
+      </span>
+    )
+    if (role === 'professional') return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-primary-50 text-primary-700">
+        Usta
+      </span>
+    )
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-accent-50 text-accent-700">
+        Müşteri
+      </span>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/admin')}
-              className="w-10 h-10 hover:bg-gray-100 rounded-lg flex items-center justify-center transition"
-            >
-              <ArrowLeft size={20} className="text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Kullanıcı Yönetimi</h1>
-              <p className="text-sm text-gray-500">Toplam {users.length} kullanıcı</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="Kullanıcı Yönetimi"
+        onBack={() => navigate('/admin')}
+        rightAction={
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
           >
-            <LogOut size={18} /> Çıkış
+            <LogOut size={18} />
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
+        <p className="text-xs text-gray-500 font-medium px-1">Toplam {users.length} kullanıcı</p>
+
         {error && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-yellow-700">Uyarı</p>
-              <p className="text-sm text-yellow-600">{error}</p>
+          <Card className="!border-amber-200 !bg-amber-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-700">Uyarı</p>
+                <p className="text-xs text-amber-600 mt-0.5">{error}</p>
+              </div>
             </div>
-          </div>
+          </Card>
         )}
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          {loading ? (
-            <div className="p-12 text-center">
-              <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
-              <p className="text-gray-600 font-semibold">Kullanıcılar yükleniyor...</p>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="text-5xl mb-3">👥</div>
-              <p className="text-gray-600 font-semibold">Henüz kullanıcı yok</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Ad</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">E-posta</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Rol</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Tamamlanan İş</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Puan</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">İşlem</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user, idx) => (
-                    <tr key={user.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{user.avatar || '👤'}</span>
-                          <span className="font-semibold text-gray-900">{user.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          {/* After mapUsersFromBackend: role is 'admin','professional','customer' */}
-                          {user.role === 'admin' && (
-                            <>
-                              <Shield size={16} className="text-purple-600" />
-                              <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-xs font-bold">
-                                Admin
-                              </span>
-                            </>
-                          )}
-                          {user.role === 'professional' && (
-                            <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">
-                              Usta
-                            </span>
-                          )}
-                          {user.role === 'customer' && (
-                            <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
-                              Müşteri
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.completedJobs || 0}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.rating || 0}⭐</td>
-                      <td className="px-6 py-4 text-sm">
-                        {user.role !== 'admin' && user.role !== 'ADMIN' && (
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            disabled={deletingId === user.id}
-                            className="flex items-center gap-1 px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Trash2 size={14} /> {deletingId === user.id ? 'Siliniyor...' : 'Sil'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader size={32} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-sm text-gray-500 font-medium">Kullanıcılar yükleniyor...</p>
+          </div>
+        ) : users.length === 0 ? (
+          <EmptyState
+            icon="👥"
+            title="Henüz kullanıcı yok"
+            description="Kayıtlı kullanıcılar burada listelenir."
+          />
+        ) : (
+          <div className="space-y-3">
+            {users.map((user) => (
+              <Card key={user.id}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">
+                    {user.avatar || '👤'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                      {roleBadge(user.role)}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Briefcase size={12} className="text-gray-400" />
+                        <span>{user.completedJobs || 0} iş</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Star size={12} className="text-amber-400" />
+                        <span>{user.rating || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {user.role !== 'admin' && user.role !== 'ADMIN' && (
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={deletingId === user.id}
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    >
+                      {deletingId === user.id
+                        ? <Loader size={14} className="animate-spin" />
+                        : <Trash2 size={16} />}
+                    </button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

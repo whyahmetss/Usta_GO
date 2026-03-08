@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, Check, X, FileText } from 'lucide-react'
+import { Check, X, ExternalLink, Loader } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import EmptyState from '../components/EmptyState'
 
 function AdminCertificatesPage() {
   const navigate = useNavigate()
@@ -43,62 +46,71 @@ function AdminCertificatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-4 py-4 flex items-center gap-4">
-        <button onClick={() => navigate('/admin')} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Sertifika Onayları</h1>
-          <p className="text-sm text-gray-500">Usta sertifikalarını incele</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Sertifika Onayları"
+        onBack={() => navigate('/admin')}
+      />
 
-      <div className="px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 mb-4">{error}</div>
+          <Card className="!bg-rose-50 !border-rose-200">
+            <p className="text-xs text-rose-600 font-medium">{error}</p>
+          </Card>
         )}
+
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-col items-center py-16">
+            <Loader size={28} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-xs text-gray-500">Sertifikalar yükleniyor...</p>
           </div>
         ) : certificates.length === 0 ? (
-          <div className="text-center py-16">
-            <FileText size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 font-medium">Bekleyen sertifika yok</p>
-          </div>
+          <EmptyState
+            icon="📄"
+            title="Bekleyen sertifika yok"
+            description="Usta sertifika yüklediğinde burada görünür."
+          />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {certificates.map((c) => (
-              <div key={c.id} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{c.user?.name || 'Usta'}</p>
-                    <p className="text-sm text-gray-500">{c.user?.email}</p>
-                    <p className="text-xs text-gray-400 mt-2">{new Date(c.createdAt).toLocaleString('tr-TR')}</p>
+              <Card key={c.id}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">📜</span>
                   </div>
-                  <div className="flex gap-2">
-                    <a href={c.fileUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl text-sm font-semibold">
-                      Görüntüle
-                    </a>
-                    <button
-                      onClick={() => handleStatus(c.id, 'APPROVED')}
-                      disabled={actionId === c.id}
-                      className="p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 disabled:opacity-50"
-                      title="Onayla"
-                    >
-                      <Check size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleStatus(c.id, 'REJECTED')}
-                      disabled={actionId === c.id}
-                      className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 disabled:opacity-50"
-                      title="Reddet"
-                    >
-                      <X size={18} />
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{c.user?.name || 'Usta'}</p>
+                    <p className="text-xs text-gray-500 truncate">{c.user?.email}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {new Date(c.createdAt).toLocaleString('tr-TR')}
+                    </p>
                   </div>
                 </div>
-              </div>
+
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <a
+                    href={c.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2.5 bg-primary-50 text-primary-600 rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                  >
+                    <ExternalLink size={13} /> Görüntüle
+                  </a>
+                  <button
+                    onClick={() => handleStatus(c.id, 'APPROVED')}
+                    disabled={actionId === c.id}
+                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:opacity-50"
+                  >
+                    <Check size={14} /> Onayla
+                  </button>
+                  <button
+                    onClick={() => handleStatus(c.id, 'REJECTED')}
+                    disabled={actionId === c.id}
+                    className="flex-1 py-2.5 bg-rose-500 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:opacity-50"
+                  >
+                    <X size={14} /> Reddet
+                  </button>
+                </div>
+              </Card>
             ))}
           </div>
         )}

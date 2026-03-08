@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { ArrowLeft, User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
 
 function SettingsPage() {
   const { user, setUser } = useAuth()
@@ -101,47 +103,36 @@ function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="blue-gradient-bg pb-6 pt-4 px-4">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <h1 className="text-2xl font-black text-white">Ayarlar</h1>
-        </div>
-      </div>
+    <div className="bg-gray-50">
+      <PageHeader title="Ayarlar" onBack={() => navigate(-1)} />
 
-      <div className="px-4 py-6 space-y-4">
+      <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle size={20} className="text-rose-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-red-700">Hata</p>
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="font-bold text-rose-700">Hata</p>
+              <p className="text-sm text-rose-600">{error}</p>
             </div>
           </div>
         )}
 
         {/* Success Alert */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+            <CheckCircle size={20} className="text-emerald-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-green-700">Başarılı</p>
-              <p className="text-sm text-green-600">{success}</p>
+              <p className="font-bold text-emerald-700">Başarılı</p>
+              <p className="text-sm text-emerald-600">{success}</p>
             </div>
           </div>
         )}
 
         {/* Hesap Bilgileri */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
+        <Card padding="p-6">
           <h3 className="font-bold text-gray-900 mb-4">Hesap Bilgileri</h3>
-          
+
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <User size={20} className="text-gray-600" />
@@ -169,15 +160,15 @@ function SettingsPage() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Aktif/Pasif Durum (Sadece Usta için) */}
         {user?.role === 'professional' && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <Card padding="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 ${isActive ? 'bg-green-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
-                  <Power size={24} className={isActive ? 'text-green-600' : 'text-gray-400'} />
+                <div className={`w-12 h-12 ${isActive ? 'bg-emerald-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
+                  <Power size={24} className={isActive ? 'text-emerald-600' : 'text-gray-400'} />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">İş Alma Durumu</h3>
@@ -190,7 +181,7 @@ function SettingsPage() {
                 onClick={handleToggleActive}
                 disabled={loading}
                 className={`relative w-16 h-8 rounded-full transition ${
-                  isActive ? 'bg-green-500' : 'bg-gray-300'
+                  isActive ? 'bg-emerald-500' : 'bg-gray-300'
                 } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
@@ -198,30 +189,29 @@ function SettingsPage() {
                 }`}></div>
               </button>
             </div>
-          </div>
+          </Card>
         )}
-
 
         {/* Doğrulama (Usta için) */}
         {user?.role === 'professional' && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <Card padding="p-6">
             <h3 className="font-bold text-gray-900 mb-4">🆔 Doğrulama</h3>
             <div className="space-y-3">
               <div className={`p-4 rounded-xl border-2 ${
-                user?.verificationStatus === 'verified' ? 'border-green-300 bg-green-50' :
-                user?.verificationStatus === 'pending' ? 'border-yellow-300 bg-yellow-50' :
-                'border-gray-300 bg-gray-50'
+                user?.verificationStatus === 'verified' ? 'border-emerald-300 bg-emerald-50' :
+                user?.verificationStatus === 'pending' ? 'border-amber-300 bg-amber-50' :
+                'border-gray-200 bg-gray-50'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {user?.verificationStatus === 'verified' ? (
                     <>
-                      <CheckCircle size={20} className="text-green-600" />
-                      <span className="font-bold text-green-700">Doğrulanmış</span>
+                      <CheckCircle size={20} className="text-emerald-600" />
+                      <span className="font-bold text-emerald-700">Doğrulanmış</span>
                     </>
                   ) : user?.verificationStatus === 'pending' ? (
                     <>
-                      <Clock size={20} className="text-yellow-600" />
-                      <span className="font-bold text-yellow-700">İnceleme Bekleniyor</span>
+                      <Clock size={20} className="text-amber-600" />
+                      <span className="font-bold text-amber-700">İnceleme Bekleniyor</span>
                     </>
                   ) : (
                     <>
@@ -241,10 +231,10 @@ function SettingsPage() {
 
               {user?.verificationStatus !== 'verified' && (
                 <label className="block">
-                  <div className={`border-2 border-dashed border-blue-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition ${
+                  <div className={`border-2 border-dashed border-primary-300 rounded-xl p-4 text-center cursor-pointer hover:border-primary-500 transition ${
                     certificateLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}>
-                    <Upload size={24} className="mx-auto mb-2 text-blue-600" />
+                    <Upload size={24} className="mx-auto mb-2 text-primary-500" />
                     <p className="text-sm font-bold text-gray-900">
                       {certificateLoading ? 'Yükleniyor...' : 'Sertifika Yükle'}
                     </p>
@@ -260,11 +250,11 @@ function SettingsPage() {
                 </label>
               )}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Şifre Değiştir */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
+        <Card padding="p-6">
           {!showPasswordChange ? (
             <button
               onClick={() => setShowPasswordChange(true)}
@@ -287,7 +277,7 @@ function SettingsPage() {
                   İptal
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 <input
                   type="password"
@@ -295,7 +285,7 @@ function SettingsPage() {
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 disabled:opacity-50"
                 />
                 <input
                   type="password"
@@ -303,7 +293,7 @@ function SettingsPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 disabled:opacity-50"
                 />
                 <input
                   type="password"
@@ -311,47 +301,41 @@ function SettingsPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 disabled:opacity-50"
                 />
                 <button
                   onClick={handlePasswordChange}
                   disabled={loading}
-                  className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-primary-500 text-white rounded-xl font-bold hover:bg-primary-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
                 </button>
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Yardım & Destek */}
-        <div className="bg-white rounded-2xl p-4 shadow-lg">
-          <button
-            onClick={() => navigate('/help')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
-          >
+        <Card onClick={() => navigate('/help')} padding="p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-xl">💬</span>
               <span className="font-semibold text-gray-900">Yardım & Destek</span>
             </div>
             <span className="text-gray-400">→</span>
-          </button>
-        </div>
+          </div>
+        </Card>
 
         {/* Hakkında */}
-        <div className="bg-white rounded-2xl p-4 shadow-lg">
-          <button
-            onClick={() => navigate('/about')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
-          >
+        <Card onClick={() => navigate('/about')} padding="p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-xl">ℹ️</span>
               <span className="font-semibold text-gray-900">Hakkında</span>
             </div>
             <span className="text-gray-400">→</span>
-          </button>
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   )

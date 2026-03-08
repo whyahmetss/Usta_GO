@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { ArrowLeft, X, ZoomIn, AlertCircle, Loader, Trash2 } from 'lucide-react'
+import { X, ZoomIn, Loader, Trash2, MapPin, Calendar, Tag } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
+import Card from '../components/Card'
+import StatusBadge from '../components/StatusBadge'
+import EmptyState from '../components/EmptyState'
 
 function AdminJobsPage() {
   const navigate = useNavigate()
@@ -18,7 +22,6 @@ function AdminJobsPage() {
     fetchJobs()
   }, [])
 
-
   const fetchJobs = async () => {
     try {
       setLoading(true);
@@ -29,13 +32,11 @@ function AdminJobsPage() {
       ]);
       const raw = Array.isArray(jobsRes) ? jobsRes : jobsRes.data || []
       const usersRaw = Array.isArray(usersRes) ? usersRes : usersRes.data || []
-      // Build a phone lookup map keyed by user id (handle both id and _id)
       const phoneMap = {}
       usersRaw.forEach(u => {
         const uid = u.id || u._id
         if (uid) phoneMap[String(uid)] = u.phone || u.phoneNumber || u.tel || ''
       })
-      // Map jobs and inject phone into nested customer/professional
       const mapped = mapJobsFromBackend(raw).map(job => ({
         ...job,
         customer: job.customer ? {
@@ -72,7 +73,6 @@ function AdminJobsPage() {
   }
 
   useEffect(() => {
-    // Refetch when filter changes
     if (!loading) {
       const timer = setTimeout(() => fetchJobs(), 300)
       return () => clearTimeout(timer)
@@ -88,59 +88,42 @@ function AdminJobsPage() {
     completed: 'Tamamlandı',
     cancelled: 'İptal Edildi'
   }
-  const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    accepted: 'bg-blue-100 text-blue-700',
-    in_progress: 'bg-purple-100 text-purple-700',
-    completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700'
-  }
 
-// After mapJobsFromBackend, statuses are lowercase; filterStatus is also lowercase
-const filteredJobs = filterStatus === 'all'
-  ? jobs
-  : jobs.filter(j => j.status === filterStatus)
+  const filteredJobs = filterStatus === 'all'
+    ? jobs
+    : jobs.filter(j => j.status === filterStatus)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate('/admin')}
-            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">İş Yönetimi</h1>
-            <p className="text-sm text-gray-500">Toplam {jobs.length} iş</p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="İş Yönetimi"
+        onBack={() => navigate('/admin')}
+      />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        <p className="text-xs text-gray-500 font-medium px-1">Toplam {jobs.length} iş</p>
+
         {error && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-yellow-700">Uyarı</p>
-              <p className="text-sm text-yellow-600">{error}</p>
+          <Card className="!border-amber-200 !bg-amber-50">
+            <div className="flex items-start gap-2">
+              <span className="text-amber-500 mt-0.5">⚠️</span>
+              <p className="text-xs text-amber-700">{error}</p>
             </div>
-          </div>
+          </Card>
         )}
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+        {/* Filter tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {statuses.map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
               disabled={loading}
-              className={`px-4 py-2 rounded-xl font-bold transition whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all active:scale-[0.97] ${
                 filterStatus === status
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
-              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-white border border-gray-200 text-gray-600'
+              } ${loading ? 'opacity-50' : ''}`}
             >
               {statusLabels[status]}
               {status !== 'all' && ` (${jobs.filter(j => j.status === status).length})`}
@@ -148,159 +131,134 @@ const filteredJobs = filterStatus === 'all'
           ))}
         </div>
 
-        {/* Jobs Grid */}
         {loading ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <Loader size={40} className="mx-auto mb-3 text-blue-600 animate-spin" />
-            <p className="text-gray-600 font-semibold">İşler yükleniyor...</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader size={32} className="text-primary-500 animate-spin mb-3" />
+            <p className="text-sm text-gray-500 font-medium">İşler yükleniyor...</p>
           </div>
         ) : filteredJobs.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <div className="text-6xl mb-4">📋</div>
-            <p className="text-gray-600 text-lg">Bu durumdaki iş yok</p>
-          </div>
+          <EmptyState
+            icon="📋"
+            title="Bu durumda iş yok"
+            description="Farklı bir filtre deneyin."
+          />
         ) : (
-          <>
-            {filteredJobs.length > 0 && (
-              <p className="text-sm text-gray-500 mb-4">
-                Toplam {filteredJobs.length} iş gösteriliyor
-              </p>
-            )}
-            <div className="space-y-4">
-              {filteredJobs.map(job => (
-              <div key={job.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
-                {/* Job Header */}
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{job.title}</h3>
-                      <p className="text-sm text-gray-600 mb-3">{job.location || job.address || 'Adres belirtilmedi'}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-4 py-2 rounded-lg font-bold text-sm ${statusColors[job.status]}`}>
-                        {statusLabels[job.status]}
-                      </span>
-                      <button
-                        onClick={() => deleteJob(job.id)}
-                        disabled={deletingId === job.id}
-                        className="w-9 h-9 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg flex items-center justify-center transition"
-                        title="İşi Sil"
-                      >
-                        {deletingId === job.id
-                          ? <Loader size={16} className="animate-spin" />
-                          : <Trash2 size={16} />}
-                      </button>
+          <div className="space-y-3">
+            {filteredJobs.map(job => (
+              <Card key={job.id}>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 truncate">{job.title}</h3>
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                      <MapPin size={12} className="text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{job.location || job.address || 'Adres belirtilmedi'}</span>
                     </div>
                   </div>
-
-                 <div className="grid grid-cols-4 gap-4 mb-4">
-  <div>
-    <p className="text-xs text-gray-600 mb-1">Fiyat</p>
-    {/* Backend verisinde 'budget' olduğu için onu çekiyoruz */}
-    <p className="text-2xl font-black text-gray-900">{job.budget || job.price || 0} TL</p>
-  </div>
-  <div>
-    <p className="text-xs text-gray-600 mb-1">Kategori</p>
-    {/* Kategori kaymasını engellemek için job.category kullanıyoruz */}
-    <p className="text-lg font-bold text-gray-900">{job.category || 'Elektrikçi'}</p>
-  </div>
-  <div>
-    <p className="text-xs text-gray-600 mb-1">Tarih</p>
-    <p className="text-sm font-bold text-gray-900">
-      {new Date(job.createdAt).toLocaleDateString('tr-TR')}
-    </p>
-  </div>
-  <div>
-    <p className="text-xs text-gray-600 mb-1">Aciliyet</p>
-    <p className="text-lg font-bold">{job.urgent ? '🔴 Acil' : '🟢 Normal'}</p>
-  </div>
-</div>
-                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
-                    {job.description}
-                  </p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <StatusBadge status={job.status} />
+                    <button
+                      onClick={() => deleteJob(job.id)}
+                      disabled={deletingId === job.id}
+                      className="w-8 h-8 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl flex items-center justify-center transition-colors"
+                    >
+                      {deletingId === job.id
+                        ? <Loader size={14} className="animate-spin" />
+                        : <Trash2 size={14} />}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Customer & Professional Info */}
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Customer */}
-                    <div>
-                      <p className="text-xs text-gray-600 mb-2 font-bold">MÜŞTERİ BİLGİLERİ</p>
-                      <div className="flex items-center gap-3">
-                        <div className="text-3xl">{job.customer?.avatar || '👤'}</div>
-                        <div>
-                          <p className="font-bold text-gray-900">{job.customer?.name}</p>
-                          <p className="text-sm text-gray-600">{job.customer?.email}</p>
-                          {job.customer?.phone && <p className="text-sm text-gray-600">{job.customer.phone}</p>}
-                        </div>
-                      </div>
-                    </div>
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="bg-gray-50 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Fiyat</p>
+                    <p className="text-sm font-bold text-gray-900">{job.budget || job.price || 0} TL</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Kategori</p>
+                    <p className="text-xs font-semibold text-gray-900 truncate">{job.category || 'Elektrikçi'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Tarih</p>
+                    <p className="text-xs font-semibold text-gray-900">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                </div>
 
-                    {/* Professional */}
-                    <div>
-                      <p className="text-xs text-gray-600 mb-2 font-bold">USTA BİLGİLERİ</p>
+                {job.urgent && (
+                  <div className="mb-3 px-2.5 py-1 bg-rose-50 rounded-lg inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-rose-400 rounded-full" />
+                    <span className="text-[11px] font-medium text-rose-700">Acil</span>
+                  </div>
+                )}
+
+                {/* Description */}
+                <p className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-3">{job.description}</p>
+
+                {/* Customer & Professional */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 p-2.5 bg-primary-50/50 rounded-xl">
+                    <div className="text-lg">{job.customer?.avatar || '👤'}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-900">{job.customer?.name}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{job.customer?.email}</p>
+                      {job.customer?.phone && <p className="text-[11px] text-gray-500">{job.customer.phone}</p>}
+                    </div>
+                    <span className="text-[10px] font-medium text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">Müşteri</span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2.5 bg-accent-50/50 rounded-xl">
+                    <div className="text-lg">{job.professional?.avatar || '⚡'}</div>
+                    <div className="flex-1 min-w-0">
                       {job.professional ? (
-                        <div className="flex items-center gap-3">
-                          <div className="text-3xl">{job.professional?.avatar || '⚡'}</div>
-                          <div>
-                            <p className="font-bold text-gray-900">{job.professional?.name}</p>
-                            <p className="text-sm text-gray-600">{job.professional?.email}</p>
-                            {job.professional?.phone && <p className="text-sm text-gray-600">{job.professional.phone}</p>}
-                          </div>
-                        </div>
+                        <>
+                          <p className="text-xs font-semibold text-gray-900">{job.professional?.name}</p>
+                          <p className="text-[11px] text-gray-500 truncate">{job.professional?.email}</p>
+                          {job.professional?.phone && <p className="text-[11px] text-gray-500">{job.professional.phone}</p>}
+                        </>
                       ) : (
-                        <p className="text-gray-500 italic">Henüz kabul edilmedi</p>
+                        <p className="text-xs text-gray-400 italic">Henüz kabul edilmedi</p>
                       )}
                     </div>
+                    <span className="text-[10px] font-medium text-accent-600 bg-accent-100 px-2 py-0.5 rounded-full">Usta</span>
                   </div>
                 </div>
 
                 {/* Photos */}
                 {(job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
-                  <div className="px-6 py-4">
-                    {/* Before Photos */}
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
                     {job.beforePhotos?.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm font-bold text-gray-900 mb-3">BAŞLANGIÇ FOTOĞRAFLARI ({job.beforePhotos.length})</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase mb-2">Başlangıç ({job.beforePhotos.length})</p>
+                        <div className="grid grid-cols-4 gap-2">
                           {job.beforePhotos.map((photo, idx) => (
                             <button
                               key={idx}
                               onClick={() => setSelectedImage(photo)}
-                              className="relative group rounded-lg overflow-hidden"
+                              className="relative group rounded-xl overflow-hidden aspect-square"
                             >
-                              <img
-                                src={photo}
-                                alt={`Before ${idx}`}
-                                className="w-full h-24 object-cover"
-                              />
+                              <img src={photo} alt={`Before ${idx}`} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
-                                <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100" />
+                                <ZoomIn size={16} className="text-white opacity-0 group-hover:opacity-100" />
                               </div>
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
-
-                    {/* After Photos */}
                     {job.afterPhotos?.length > 0 && (
                       <div>
-                        <p className="text-sm font-bold text-gray-900 mb-3">BİTİŞ FOTOĞRAFLARI ({job.afterPhotos.length})</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase mb-2">Bitiş ({job.afterPhotos.length})</p>
+                        <div className="grid grid-cols-4 gap-2">
                           {job.afterPhotos.map((photo, idx) => (
                             <button
                               key={idx}
                               onClick={() => setSelectedImage(photo)}
-                              className="relative group rounded-lg overflow-hidden"
+                              className="relative group rounded-xl overflow-hidden aspect-square"
                             >
-                              <img
-                                src={photo}
-                                alt={`After ${idx}`}
-                                className="w-full h-24 object-cover"
-                              />
+                              <img src={photo} alt={`After ${idx}`} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
-                                <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100" />
+                                <ZoomIn size={16} className="text-white opacity-0 group-hover:opacity-100" />
                               </div>
                             </button>
                           ))}
@@ -309,10 +267,9 @@ const filteredJobs = filterStatus === 'all'
                     )}
                   </div>
                 )}
-              </div>
-              ))}
-            </div>
-          </>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
 
@@ -322,17 +279,17 @@ const filteredJobs = filterStatus === 'all'
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative max-w-2xl max-h-[90vh]">
+          <div className="relative max-w-sm w-full">
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-10 -right-10 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition"
+              className="absolute -top-12 right-0 w-9 h-9 bg-white/20 backdrop-blur rounded-full flex items-center justify-center"
             >
-              <X size={20} className="text-gray-900" />
+              <X size={18} className="text-white" />
             </button>
             <img
               src={selectedImage}
               alt="Preview"
-              className="max-w-full max-h-[90vh] rounded-xl"
+              className="w-full max-h-[80vh] object-contain rounded-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
