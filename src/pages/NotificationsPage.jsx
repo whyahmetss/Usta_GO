@@ -51,7 +51,7 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, i
         {/* Actions behind (left - sag kaydirinca acilir) */}
         <div className="absolute left-0 top-0 bottom-0 flex" style={{ width: actionW }}>
           <button
-            onClick={() => { isPinned ? onUnpin(notif.id) : onPin(notif.id); setSwipe(0) }}
+            onClick={() => { (isPinned ? onUnpin : onPin)(notif?.id); setSwipe(0) }}
             className={`flex-1 flex flex-col items-center justify-center gap-1 min-w-[40px] active:opacity-80 ${isPinned ? 'bg-primary-500 text-white' : 'bg-gray-600 text-white'}`}
           >
             {isPinned ? <PinOff size={18} /> : <Pin size={18} />}
@@ -65,7 +65,7 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, i
             <span className="text-[10px] font-medium">Arsivle</span>
           </button>
           <button
-            onClick={() => { onDelete(notif.id); setSwipe(0) }}
+            onClick={() => { onDelete(notif?.id); setSwipe(0) }}
             className="flex-1 flex flex-col items-center justify-center gap-1 bg-rose-500 text-white min-w-[40px] active:bg-rose-600"
           >
             <Trash2 size={18} />
@@ -81,17 +81,17 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, i
           className="flex-1 flex items-start gap-3 p-4 cursor-pointer active:bg-gray-200/50 dark:active:bg-white/5 transition-colors min-w-0 relative z-10 bg-white dark:bg-[#141414]"
           style={{ transform: `translateX(${swipe}px)` }}
         >
-          <NotifIcon type={notif.icon || notif.type} />
+          <NotifIcon type={notif?.icon || notif?.type || 'bell'} />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-0.5">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{notif.title}</h3>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {isPinned && <Pin size={12} className="text-primary-500" fill="currentColor" />}
-                {!notif.read && <span className="w-2 h-2 bg-primary-500 rounded-full" />}
+                {!notif?.read && <span className="w-2 h-2 bg-primary-500 rounded-full" />}
               </div>
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 line-clamp-2">{notif.message}</p>
-            <p className="text-[10px] text-gray-400">{formatTime(notif.time)}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{notif?.message || ''}</p>
+            <p className="text-[10px] text-gray-400">{formatTime(notif?.time)}</p>
           </div>
         </div>
       </div>
@@ -101,22 +101,22 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onPin, onUnpin, i
 
 function NotificationsPage() {
   const navigate = useNavigate()
-  const {
-    getUserNotifications,
-    markNotificationRead,
-    markAllNotificationsRead,
-    removeNotification,
-    archiveNotification,
-    pinNotification,
-    unpinNotification,
-    notifPinned = [],
-  } = useAuth()
+  const auth = useAuth()
+  const getUserNotifications = auth?.getUserNotifications
+  const markNotificationRead = auth?.markNotificationRead
+  const markAllNotificationsRead = auth?.markAllNotificationsRead
+  const removeNotification = auth?.removeNotification ?? (() => {})
+  const archiveNotification = auth?.archiveNotification ?? (() => {})
+  const pinNotification = auth?.pinNotification ?? (() => {})
+  const unpinNotification = auth?.unpinNotification ?? (() => {})
+  const notifPinned = auth?.notifPinned ?? []
 
-  const notifications = getUserNotifications()
-  const unreadCount = notifications.filter(n => !n.read).length
-  const pinnedIds = new Set(notifPinned)
+  const notifications = typeof getUserNotifications === 'function' ? getUserNotifications() : []
+  const unreadCount = (notifications || []).filter(n => !n.read).length
+  const pinnedIds = new Set(Array.isArray(notifPinned) ? notifPinned : [])
 
   const formatTime = (isoString) => {
+    if (!isoString) return ''
     const date = new Date(isoString)
     const now = new Date()
     const diffMs = now - date
@@ -159,16 +159,16 @@ function NotificationsPage() {
           />
         ) : (
           <div className="space-y-0">
-            {notifications.map(notif => (
+            {notifications.filter(Boolean).map((notif, i) => (
               <SwipeableNotif
-                key={notif.id}
+                key={notif?.id || `n-${i}`}
                 notif={notif}
                 onPress={handleNotificationClick}
                 onDelete={removeNotification}
                 onArchive={archiveNotification}
                 onPin={pinNotification}
                 onUnpin={unpinNotification}
-                isPinned={pinnedIds.has(notif.id)}
+                isPinned={pinnedIds.has(notif?.id)}
                 formatTime={formatTime}
                 NotifIcon={NotifIcon}
               />
