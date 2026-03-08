@@ -405,6 +405,21 @@ model Notification {
   @@index([read])
 }
 
+// Kampanya / Etkinlik — Admin yönetir, ana sayfada gösterilir
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  badgeText   String?  @map("badge_text")
+  buttonText  String?  @map("button_text")
+  bgColor     String   @default("#111827") @map("bg_color")
+  badgeColor  String   @default("#34d399") @map("badge_color")
+  textColor   String   @default("#ffffff") @map("text_color")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // Usta Sertifika - Admin onayı için
 model UserCertificate {
   id          String   @id @default(cuid())
