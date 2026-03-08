@@ -3,9 +3,9 @@ export default function EmptyState({ icon: Icon, title, description, action }) {
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       {Icon && (
         <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-[#1f1f1f] flex items-center justify-center mb-4">
-          {typeof Icon === 'function'
-            ? <Icon size={28} className="text-gray-400" />
-            : <span className="text-2xl text-gray-400">{Icon}</span>
+          {typeof Icon === 'string'
+            ? <span className="text-2xl text-gray-400">{Icon}</span>
+            : <Icon size={28} className="text-gray-400" />
           }
         </div>
       )}
