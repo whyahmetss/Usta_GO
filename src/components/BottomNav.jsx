@@ -42,12 +42,12 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="bg-white dark:bg-[#1f2937] border-t border-gray-100 dark:border-[#374151] relative">
+      <div className="bg-white dark:bg-[#141414] border-t border-gray-100 dark:border-[#262626] relative">
         {/* Center action button for customers */}
         {userRole === 'customer' && (
           <button
             onClick={() => navigate('/create-job')}
-            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform z-10"
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
           >
             <Plus size={24} strokeWidth={2.5} className="text-white" />
           </button>
@@ -77,7 +77,7 @@ export default function BottomNav() {
                   <Icon
                     size={22}
                     strokeWidth={isActive ? 2 : 1.5}
-                    className={isActive ? 'text-primary-500 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'}
+                    className={isActive ? 'text-primary-500' : 'text-gray-400'}
                   />
                   {badge > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1">
@@ -85,7 +85,7 @@ export default function BottomNav() {
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] mt-1 ${isActive ? 'text-primary-600 dark:text-primary-400 font-semibold' : 'text-gray-500 dark:text-gray-400 font-medium'}`}>
+                <span className={`text-[10px] mt-1 ${isActive ? 'text-primary-500 font-semibold' : 'text-gray-400 font-medium'}`}>
                   {tab.label}
                 </span>
               </button>

@@ -45,12 +45,12 @@ function HomePage() {
   }, [])
 
   const allServices = [
-    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-primary-50 dark:bg-primary-900/30', iconColor: 'text-primary-600 dark:text-primary-400', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
-    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
-    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
-    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
-    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
-    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-gray-100 dark:bg-gray-700/50', iconColor: 'text-gray-500 dark:text-gray-400', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
+    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconColor: 'text-blue-600', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconColor: 'text-green-600', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
 
   const filteredServices = searchQuery.trim()
@@ -64,7 +64,7 @@ function HomePage() {
   const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
-    <div className="bg-gray-50 dark:bg-[#111827] min-h-screen">
+    <div className="bg-[#f5f7ff] dark:bg-[#0c0c0c] min-h-screen">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between mb-5">
@@ -95,7 +95,7 @@ function HomePage() {
             </button>
             <button
               onClick={() => navigate('/settings')}
-              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center"
             >
               <Settings size={18} strokeWidth={1.8} className="text-gray-700" />
             </button>
@@ -105,9 +105,9 @@ function HomePage() {
         {/* Search trigger */}
         <button
           onClick={() => setShowSearch(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600 text-left"
+          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200/60 dark:border-[#262626] shadow-sm text-left"
         >
-          <Search size={18} strokeWidth={1.8} className="text-gray-400 flex-shrink-0" />
+          <Search size={17} strokeWidth={1.8} className="text-primary-400 flex-shrink-0" />
           <span className="text-[13px] text-gray-400">Hangi hizmete ihtiyacınız var?</span>
         </button>
       </div>
@@ -155,20 +155,23 @@ function HomePage() {
         ) : !campaignLoading && (
           <div
             onClick={() => navigate('/create-job')}
-            className="bg-primary-600 dark:bg-primary-700 rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+            className="rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform min-h-[150px]"
+            style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0369a1 60%, #0c4a6e 100%)' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-3xl" />
-            <div className="absolute right-4 bottom-3 opacity-10">
-              <Zap size={80} className="text-white" />
+            {/* decorative circles */}
+            <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-white/10" />
+            <div className="absolute -right-2 top-12 w-20 h-20 rounded-full bg-white/5" />
+            <div className="absolute right-8 bottom-3 opacity-[0.12]">
+              <Zap size={72} className="text-white" />
             </div>
             <div className="relative z-10">
-              <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-[11px] font-semibold text-white mb-3 tracking-wide">
-                %20 İNDİRİM
+              <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-[11px] font-semibold text-white mb-3 tracking-wide">
+                ✨ HOŞ GELDİN FIRSATI
               </span>
-              <h2 className="text-lg font-bold text-white mb-1 leading-snug">İlk Siparişinizde!</h2>
-              <p className="text-gray-400 text-[13px] mb-4">Hemen ilan açın, profesyonel hizmet alın</p>
-              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-gray-900 rounded-xl text-[13px] font-semibold">
-                Hemen Başla
+              <h2 className="text-xl font-bold text-white mb-1.5 leading-snug">İlk Siparişe <br />%20 İndirim!</h2>
+              <p className="text-blue-100 text-[13px] mb-4">Profesyonel ustaları hemen keşfet</p>
+              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-primary-700 rounded-xl text-[13px] font-bold shadow-md">
+                Hemen Başla →
               </span>
             </div>
           </div>
@@ -178,7 +181,7 @@ function HomePage() {
       {/* Categories */}
       <div className="px-5 pb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[15px] font-semibold text-gray-900">Kategoriler</h3>
+          <h3 className="text-[15px] font-semibold text-gray-900">Hizmetler</h3>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -189,21 +192,21 @@ function HomePage() {
                 key={svc.id}
                 onClick={() => svc.active ? navigate('/create-job') : null}
                 disabled={!svc.active}
-                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square ${
+                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border shadow-sm ${
                   svc.active
-                    ? `${svc.bgColor} active:scale-95`
-                    : 'bg-gray-50 opacity-50'
+                    ? 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] active:scale-95'
+                    : 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] opacity-50'
                 }`}
               >
                 {!svc.active && (
-                  <span className="absolute top-2 right-2 bg-gray-500/80 dark:bg-gray-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                  <span className="absolute top-1.5 right-1.5 bg-gray-400 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded-full">
                     Yakında
                   </span>
                 )}
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.active ? svc.bgColor : 'bg-gray-100'}`}>
-                  <CatIcon size={24} className={svc.active ? svc.iconColor : 'text-gray-400'} />
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.active ? svc.bgColor : 'bg-gray-100 dark:bg-[#1f1f1f]'}`}>
+                  <CatIcon size={24} className={svc.active ? svc.iconColor : 'text-gray-400'} strokeWidth={1.8} />
                 </div>
-                <span className={`text-[12px] font-medium ${svc.active ? 'text-gray-700' : 'text-gray-400'}`}>
+                <span className={`text-[12px] font-semibold ${svc.active ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400'}`}>
                   {svc.name}
                 </span>
               </button>

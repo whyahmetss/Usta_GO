@@ -135,29 +135,121 @@ function AdminDashboard() {
   ).length
 
   const statsList = [
-    { label: 'Toplam Kullanıcı', value: stats.totalUsers.toString(), icon: Users, color: 'primary' },
-    { label: 'Aktif İşler', value: stats.activeJobs.toString(), icon: Briefcase, color: 'primary' },
-    { label: 'Toplam Gelir', value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`, icon: DollarSign, color: 'primary' },
-    { label: 'Toplam İş', value: stats.totalJobs.toString(), icon: TrendingUp, color: 'primary' },
+    {
+      label: 'Toplam Kullanıcı',
+      value: stats.totalUsers.toString(),
+      icon: Users,
+      color: 'primary',
+    },
+    {
+      label: 'Aktif İşler',
+      value: stats.activeJobs.toString(),
+      icon: Briefcase,
+      color: 'emerald',
+    },
+    {
+      label: 'Toplam Gelir',
+      value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`,
+      icon: DollarSign,
+      color: 'accent',
+    },
+    {
+      label: 'Toplam İş',
+      value: stats.totalJobs.toString(),
+      icon: TrendingUp,
+      color: 'violet',
+    },
   ]
 
   const managementItems = [
-    { path: '/admin/users', icon: Users, title: 'Kullanıcı Yönetimi', desc: 'Müşteri ve Usta hesaplarını yönet', badge: null },
-    { path: '/admin/pending-ustas', icon: UserCheck, title: 'Onay Bekleyen Ustalar', desc: 'Yeni usta kayıtlarını onayla', badge: pendingUstas > 0 ? `${pendingUstas} Bekliyor` : null },
-    { path: '/admin/jobs', icon: Briefcase, title: 'İş Yönetimi', desc: 'Tüm işleri görüntüle ve yönet', badge: null },
-    { path: '/admin/withdrawals', icon: Wallet, title: 'Para Çekme Talepleri', desc: 'Usta ödemelerini onayla', badge: pendingWithdrawals > 0 ? `${pendingWithdrawals} Bekliyor` : null },
-    { path: '/admin/complaints', icon: AlertCircle, title: 'Şikayet Yönetimi', desc: 'Müşteri şikayetlerini yönet', badge: openComplaints > 0 ? `${openComplaints} Açık` : null },
-    { path: '/admin/messages', icon: MessageSquare, title: 'Mesaj Sistemi', desc: 'Toplu mesaj gönder', badge: null },
-    { path: '/admin/coupons', icon: Ticket, title: 'Kupon Yönetimi', desc: 'Kupon oluştur ve yönet', badge: null },
-    { path: '/admin/pricing', icon: Coins, title: 'AI Fiyat Listesi', desc: 'Hizmet bazlı temel ücretleri yönet', badge: null },
-    { path: '/admin/certificates', icon: Award, title: 'Sertifika Onayları', desc: 'Usta sertifikalarını onayla', badge: null },
-    { path: '/admin/campaigns', icon: Megaphone, title: 'Kampanyalar', desc: 'Ana sayfa etkinlik ve kampanya yönet', badge: null },
+    {
+      path: '/admin/users',
+      icon: Users,
+      title: 'Kullanıcı Yönetimi',
+      desc: 'Müşteri ve Usta hesaplarını yönet',
+      color: 'primary',
+    },
+    {
+      path: '/admin/pending-ustas',
+      icon: UserCheck,
+      title: 'Onay Bekleyen Ustalar',
+      desc: 'Yeni usta kayıtlarını onayla',
+      color: 'amber',
+      badge: pendingUstas > 0 ? `${pendingUstas} Bekliyor` : null,
+    },
+    {
+      path: '/admin/jobs',
+      icon: Briefcase,
+      title: 'İş Yönetimi',
+      desc: 'Tüm işleri görüntüle ve yönet',
+      color: 'emerald',
+    },
+    {
+      path: '/admin/withdrawals',
+      icon: Wallet,
+      title: 'Para Çekme Talepleri',
+      desc: 'Usta ödemelerini onayla',
+      color: 'amber',
+      badge: pendingWithdrawals > 0 ? `${pendingWithdrawals} Bekliyor` : null,
+    },
+    {
+      path: '/admin/complaints',
+      icon: AlertCircle,
+      title: 'Şikayet Yönetimi',
+      desc: 'Müşteri şikayetlerini yönet',
+      color: 'rose',
+      badge: openComplaints > 0 ? `${openComplaints} Açık` : null,
+    },
+    {
+      path: '/admin/messages',
+      icon: MessageSquare,
+      title: 'Mesaj Sistemi',
+      desc: 'Toplu mesaj gönder',
+      color: 'violet',
+    },
+    {
+      path: '/admin/coupons',
+      icon: Ticket,
+      title: 'Kupon Yönetimi',
+      desc: 'Kupon oluştur ve yönet',
+      color: 'accent',
+    },
+    {
+      path: '/admin/pricing',
+      icon: Coins,
+      title: 'AI Fiyat Listesi',
+      desc: 'Hizmet bazlı temel ücretleri yönet',
+      color: 'violet',
+    },
+    {
+      path: '/admin/certificates',
+      icon: Award,
+      title: 'Sertifika Onayları',
+      desc: 'Usta sertifikalarını onayla',
+      color: 'amber',
+    },
+    {
+      path: '/admin/campaigns',
+      icon: Megaphone,
+      title: 'Kampanyalar',
+      desc: 'Ana sayfa etkinlik ve kampanya yönet',
+      color: 'rose',
+    },
   ]
+
+  const colorMap = {
+    primary: 'bg-primary-50 text-primary-600',
+    accent: 'bg-accent-50 text-accent-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    rose: 'bg-rose-50 text-rose-600',
+    violet: 'bg-violet-50 text-violet-600',
+  }
 
   if (loading) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-[#f5f7ff]">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-600">Admin paneli yükleniyor...</p>
@@ -170,7 +262,7 @@ function AdminDashboard() {
   if (error) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-[#f5f7ff]">
           <div className="text-center">
             <p className="text-sm text-rose-600 mb-4">{error}</p>
             <button
@@ -187,14 +279,14 @@ function AdminDashboard() {
 
   return (
     <Layout hideNav>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#f5f7ff]">
         <PageHeader
           title="Admin Paneli"
           onBack={false}
           rightAction={
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-[0.98] transition"
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition"
             >
               <LogOut size={18} /> Çıkış
             </button>
@@ -207,20 +299,32 @@ function AdminDashboard() {
           </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {statsList.map((stat, idx) => (
-              <StatCard
-                key={idx}
-                icon={stat.icon}
-                label={stat.label}
-                value={stat.value}
-                color={stat.color}
-              />
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {statsList.map((stat, idx) => {
+              const gradients = [
+                'from-primary-500 to-primary-600',
+                'from-emerald-500 to-emerald-600',
+                'from-violet-500 to-violet-600',
+                'from-amber-500 to-amber-600',
+              ]
+              const StatIcon = stat.icon
+              return (
+                <div
+                  key={idx}
+                  className={`bg-gradient-to-br ${gradients[idx % gradients.length]} rounded-2xl p-4 text-white shadow-md`}
+                >
+                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center mb-3">
+                    <StatIcon size={18} className="text-white" />
+                  </div>
+                  <p className="text-xl font-bold leading-tight">{stat.value}</p>
+                  <p className="text-[11px] mt-0.5 text-white/80 font-medium">{stat.label}</p>
+                </div>
+              )
+            })}
           </div>
 
           {/* Management Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
             {managementItems.map((item, idx) => {
               const Icon = item.icon
               return (
@@ -230,20 +334,24 @@ function AdminDashboard() {
                   padding="p-4"
                 >
                   <div className="flex flex-col">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
+                    <div className="flex items-start justify-between mb-3">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          colorMap[item.color] || colorMap.primary
+                        }`}
+                      >
                         <Icon size={20} />
                       </div>
                       {item.badge && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
+                        <span className="text-[10px] px-2 py-1 rounded-full font-bold bg-rose-500 text-white">
                           {item.badge}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-0.5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-gray-500">{item.desc}</p>
+                    <p className="text-[11px] text-gray-500 leading-snug">{item.desc}</p>
                   </div>
                 </Card>
               )
@@ -266,7 +374,7 @@ function AdminDashboard() {
                 {recentJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -320,7 +428,7 @@ function AdminDashboard() {
                         </div>
                         <div className="flex gap-0.5 shrink-0">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-primary-500 fill-primary-500' : 'text-gray-300 dark:text-gray-600'} />
+                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
                           ))}
                         </div>
                       </div>
@@ -356,7 +464,7 @@ function AdminDashboard() {
                     onClick={() => setComplaintFilter(tab.key)}
                     className={`text-[11px] px-2.5 py-1 rounded-full font-medium transition ${
                       complaintFilter === tab.key
-                        ? 'bg-gray-900 text-white'
+                        ? 'bg-primary-500 text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -385,10 +493,10 @@ function AdminDashboard() {
                       key={complaint.id}
                       className={`p-3 rounded-xl border ${
                         complaint.status === 'resolved'
-                          ? 'bg-primary-50/50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
+                          ? 'bg-emerald-50/50 border-emerald-100'
                           : complaint.status === 'rejected'
-                          ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
-                          : 'bg-primary-50/30 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'
+                          ? 'bg-rose-50/50 border-rose-100'
+                          : 'bg-amber-50/50 border-amber-100'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">

@@ -5,7 +5,7 @@ export default function PageHeader({ title, onBack, rightAction, className = '' 
   const navigate = useNavigate()
 
   return (
-    <header className={`sticky top-0 z-40 bg-white/90 dark:bg-[#1f2937]/95 backdrop-blur-lg border-b border-gray-100 dark:border-[#374151] ${className}`}>
+    <header className={`sticky top-0 z-40 bg-white/80 dark:bg-[#141414]/80 backdrop-blur-lg border-b border-gray-100 dark:border-[#262626] ${className}`}>
       <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {onBack !== false ? (
           <button
