@@ -19,6 +19,14 @@ function ProfessionalDashboard() {
 
   const unreadNotifs = getUnreadNotificationCount()
 
+  const greeting = (() => {
+    const h = parseInt(new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }).format(new Date()), 10)
+    if (h >= 5 && h < 12) return 'Günaydın'
+    if (h >= 12 && h < 18) return 'Tünaydın'
+    if (h >= 18 && h < 22) return 'İyi Akşamlar'
+    return 'İyi Geceler'
+  })()
+
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
@@ -100,8 +108,8 @@ function ProfessionalDashboard() {
               )}
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-medium">Usta Paneli</p>
-              <h1 className="text-[15px] font-semibold text-gray-900">{user?.name}</h1>
+              <p className="text-[11px] text-gray-400 font-medium leading-none mb-0.5">{greeting}</p>
+              <h1 className="text-[15px] font-semibold text-gray-900 leading-tight">{user?.name || 'Usta'}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
