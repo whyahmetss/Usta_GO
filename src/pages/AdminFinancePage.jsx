@@ -64,10 +64,129 @@ export default function AdminFinancePage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetchAPI('/admin/finance')
-        setData(res.data)
+        const COMMISSION_RATE = 0.12
+        const now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+        // Var olan çalışan endpointlerden veri çek
+        const [jobsRes, usersRes, withdrawalsRes] = await Promise.allSettled([
+          fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?limit=1000`),
+          fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
+          fetchAPI('/wallet/admin/withdrawals'),
+        ])
+
+        const allJobsRaw = jobsRes.status === 'fulfilled' && Array.isArray(jobsRes.value?.data)
+          ? jobsRes.value.data : []
+        const allUsers = usersRes.status === 'fulfilled' && Array.isArray(usersRes.value?.data)
+          ? usersRes.value.data : []
+        const allWithdrawals = withdrawalsRes.status === 'fulfilled' && Array.isArray(withdrawalsRes.value?.data)
+          ? withdrawalsRes.value.data : []
+
+        // İş hacmi hesapla (tamamlanan işler)
+        const completedJobs = allJobsRaw.filter(j => {
+          const s = j.status?.toLowerCase()
+          return s === 'completed' || s === 'rated'
+        })
+
+        const totalVolume = completedJobs.reduce((s, j) => s + (Number(j.budget) || 0), 0)
+        const monthVolume = completedJobs
+          .filter(j => new Date(j.completedAt || j.updatedAt || j.createdAt) >= startOfMonth)
+          .reduce((s, j) => s + (Number(j.budget) || 0), 0)
+
+        const totalCommission = totalVolume * COMMISSION_RATE
+        const monthCommission = monthVolume * COMMISSION_RATE
+
+        const todayJobs = completedJobs.filter(j =>
+          new Date(j.completedAt || j.updatedAt || j.createdAt) >= startOfToday
+        )
+        const todayCommission = todayJobs.reduce((s, j) => s + (Number(j.budget) || 0), 0) * COMMISSION_RATE
+
+        // Bekleyen çekimler
+        const pendingW = allWithdrawals.filter(w => w.status === 'pending' || w.status === 'PENDING')
+        const pendingWithdrawalsAmount = pendingW.reduce((s, w) => s + Math.abs(Number(w.amount) || 0), 0)
+
+        // Son 12 ay aylık kırılım
+        const monthlyData = []
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
+          const label = d.toLocaleString('tr-TR', { month: 'short', year: '2-digit' })
+          const vol = completedJobs
+            .filter(j => {
+              const cd = new Date(j.completedAt || j.updatedAt || j.createdAt)
+              return cd >= d && cd < end
+            })
+            .reduce((s, j) => s + (Number(j.budget) || 0), 0)
+          monthlyData.push({ label, volume: Math.round(vol), commission: Math.round(vol * COMMISSION_RATE), topup: 0 })
+        }
+
+        // Son 30 gün günlük kırılım
+        const dailyData = []
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+          const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i + 1)
+          const label = `${d.getDate()}/${d.getMonth() + 1}`
+          const vol = completedJobs
+            .filter(j => {
+              const cd = new Date(j.completedAt || j.updatedAt || j.createdAt)
+              return cd >= d && cd < end
+            })
+            .reduce((s, j) => s + (Number(j.budget) || 0), 0)
+          dailyData.push({ label, volume: Math.round(vol), topup: 0 })
+        }
+
+        // Son işlemler olarak tamamlanan işleri göster
+        const recentTransactions = [...completedJobs]
+          .sort((a, b) => new Date(b.completedAt || b.updatedAt || b.createdAt) - new Date(a.completedAt || a.updatedAt || a.createdAt))
+          .slice(0, 50)
+          .map(j => ({
+            id: j.id,
+            amount: Number(j.budget) || 0,
+            type: 'EARNING',
+            status: 'COMPLETED',
+            description: j.title,
+            userName: j.customer?.name || j.usta?.name || '—',
+            userRole: j.customer ? 'CUSTOMER' : 'USTA',
+            createdAt: j.completedAt || j.updatedAt || j.createdAt,
+          }))
+
+        // Bekleyen çekim işlemlerini de ekle
+        allWithdrawals.slice(0, 20).forEach(w => {
+          recentTransactions.push({
+            id: w.id,
+            amount: -Math.abs(Number(w.amount) || 0),
+            type: 'WITHDRAWAL',
+            status: w.status?.toUpperCase() || 'PENDING',
+            description: `Para çekme talebi`,
+            userName: w.user?.name || w.userName || '—',
+            userRole: 'USTA',
+            createdAt: w.createdAt,
+          })
+        })
+
+        recentTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+        setData({
+          summary: {
+            totalVolume: Math.round(totalVolume),
+            monthVolume: Math.round(monthVolume),
+            todayCommission: Math.round(todayCommission),
+            totalCommission: Math.round(totalCommission),
+            monthCommission: Math.round(monthCommission),
+            totalTopup: 0,
+            monthTopup: 0,
+            pendingWithdrawalsAmount: Math.round(pendingWithdrawalsAmount),
+            pendingWithdrawalsCount: pendingW.length,
+            totalUsers: allUsers.length,
+            completedJobsCount: completedJobs.length,
+          },
+          monthlyData,
+          dailyData,
+          recentTransactions,
+        })
       } catch (e) {
-        console.error(e)
+        console.error('Finance load error:', e)
       } finally {
         setLoading(false)
       }
