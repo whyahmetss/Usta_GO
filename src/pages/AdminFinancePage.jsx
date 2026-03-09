@@ -22,17 +22,21 @@ const TYPE_LABELS = {
 
 function MiniBar({ data, field, color, max }) {
   return (
-    <div className="flex items-end gap-0.5 h-16 mt-2">
+    <div className="flex items-end gap-[2px] mt-2 rounded-lg overflow-hidden" style={{ height: 72 }}>
       {data.map((d, i) => {
-        const pct = max > 0 ? (d[field] / max) * 100 : 0
+        const val = Number(d[field]) || 0
+        const pct = max > 0 ? (val / max) * 100 : 0
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-            <div
-              className="w-full rounded-sm min-h-[2px] transition-all"
-              style={{ height: `${Math.max(pct, 2)}%`, backgroundColor: color, opacity: 0.8 + (i / data.length) * 0.2 }}
-              title={`${d.label}: ${d[field].toLocaleString('tr-TR')} TL`}
-            />
-          </div>
+          <div
+            key={i}
+            className="flex-1 rounded-t-sm transition-all"
+            style={{
+              height: val > 0 ? `${Math.max(pct, 8)}%` : '2px',
+              backgroundColor: color,
+              opacity: val > 0 ? 0.85 : 0.18,
+            }}
+            title={`${d.label}: ${val.toLocaleString('tr-TR')} TL`}
+          />
         )
       })}
     </div>
