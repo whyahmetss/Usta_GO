@@ -105,13 +105,16 @@ function HelpPage() {
                 <p className="text-xs text-gray-500">+90 535 273 7638</p>
               </div>
             </a>
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <MessageCircle size={20} className="text-primary-500" />
+            <button
+              onClick={() => navigate('/live-support')}
+              className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition w-full text-left active:scale-[0.99]"
+            >
+              <MessageCircle size={20} className="text-blue-500" />
               <div>
                 <p className="text-sm font-semibold text-gray-900">Canlı Sohbet</p>
                 <p className="text-xs text-gray-500">Pazartesi-Pazar, 09:00-23:00</p>
               </div>
-            </div>
+            </button>
           </div>
         </Card>
       </div>
