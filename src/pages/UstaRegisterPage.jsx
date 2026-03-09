@@ -5,7 +5,7 @@ import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import {
   User, Phone, Mail, Lock, Gift, Eye, EyeOff,
-  IdCard, FileText, MapPin, Building2, Camera,
+  CreditCard, FileText, MapPin, Building2, Camera,
   CheckCircle, ChevronLeft, Upload, AlertCircle,
 } from 'lucide-react'
 
@@ -15,7 +15,7 @@ const DOC_FIELDS = [
     id: 'kimlikOn',
     label: 'TC Kimlik Ön Yüz',
     desc: 'Kimliğinizin ön yüzünün fotoğrafı',
-    icon: IdCard,
+    icon: CreditCard,
     color: 'blue',
     required: true,
   },
@@ -23,7 +23,7 @@ const DOC_FIELDS = [
     id: 'kimlikArka',
     label: 'TC Kimlik Arka Yüz',
     desc: 'Kimliğinizin arka yüzünün fotoğrafı',
-    icon: IdCard,
+    icon: CreditCard,
     color: 'blue',
     required: true,
   },
