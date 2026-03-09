@@ -42,7 +42,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="bg-white dark:bg-[#141414] border-t border-gray-100 dark:border-[#262626] relative">
+      <div className="bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#2A2A2A] relative">
         {/* Center action button for customers */}
         {userRole === 'customer' && (
           <button

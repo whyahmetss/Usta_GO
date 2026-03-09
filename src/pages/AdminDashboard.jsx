@@ -249,7 +249,7 @@ function AdminDashboard() {
   if (loading) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#f5f7ff]">
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-600">Admin paneli yükleniyor...</p>
@@ -262,7 +262,7 @@ function AdminDashboard() {
   if (error) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#f5f7ff]">
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
           <div className="text-center">
             <p className="text-sm text-rose-600 mb-4">{error}</p>
             <button
@@ -279,7 +279,7 @@ function AdminDashboard() {
 
   return (
     <Layout hideNav>
-      <div className="min-h-screen bg-[#f5f7ff]">
+      <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0d0d0d]">
         <PageHeader
           title="Admin Paneli"
           onBack={false}

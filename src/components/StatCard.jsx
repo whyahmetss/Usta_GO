@@ -11,7 +11,7 @@ export default function StatCard({ icon: Icon, label, value, subtitle, color = '
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl border border-gray-100 shadow-card p-4 ${onClick ? 'cursor-pointer hover:shadow-card-hover active:scale-[0.98] transition-all' : ''}`}
+      className={`bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2A2A2A] shadow-card p-4 ${onClick ? 'cursor-pointer hover:shadow-card-hover active:scale-[0.98] transition-all' : ''}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${colorMap[color] || colorMap.primary}`}>
         {Icon && <Icon size={20} />}

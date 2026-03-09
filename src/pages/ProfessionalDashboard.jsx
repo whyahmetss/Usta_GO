@@ -114,8 +114,8 @@ function ProfessionalDashboard() {
   return (
     <div>
       {isPendingApproval && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm font-medium text-amber-700">
-          Hesabınız admin onayı bekliyor. Onaylandıktan sonra iş alabileceksiniz.
+        <div className="bg-amber-50 dark:bg-[#1F1F1F] border-b border-amber-200/60 dark:border-[#2A2A2A] px-4 py-3 text-center text-sm font-medium text-amber-700 dark:text-amber-400">
+          ⏳ Hesabınız admin onayı bekliyor. Onaylandıktan sonra iş alabileceksiniz.
         </div>
       )}
 

@@ -64,7 +64,7 @@ function HomePage() {
   const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
-    <div className="bg-[#f5f7ff] dark:bg-[#0c0c0c] min-h-screen">
+    <div className="bg-[#F5F7FB] dark:bg-[#0d0d0d] min-h-screen">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between mb-5">
