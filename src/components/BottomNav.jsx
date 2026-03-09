@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Briefcase, MessageCircle, User, LayoutDashboard, Plus } from 'lucide-react'
+import { Home, Briefcase, MessageCircle, User, LayoutDashboard, Plus, MapPin } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const customerTabs = [
@@ -50,6 +50,16 @@ export default function BottomNav() {
             className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
           >
             <Plus size={24} strokeWidth={2.5} className="text-white" />
+          </button>
+        )}
+
+        {/* Center map button for professionals */}
+        {userRole === 'professional' && (
+          <button
+            onClick={() => navigate('/professional/map')}
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
+          >
+            <MapPin size={24} strokeWidth={2} className="text-white" />
           </button>
         )}
 

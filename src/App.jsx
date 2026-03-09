@@ -8,6 +8,7 @@ import AuthPage from './pages/AuthPage'
 import UstaRegisterPage from './pages/UstaRegisterPage'
 import HomePage from './pages/HomePage'
 import ProfessionalDashboard from './pages/ProfessionalDashboard'
+import ProfessionalMapPage from './pages/ProfessionalMapPage'
 import AdminDashboard from './pages/AdminDashboard'
 import ProfilePage from './pages/ProfilePage'
 import MyJobsPage from './pages/MyJobsPage'
@@ -96,6 +97,7 @@ function AppRoutes() {
 
       {/* Professional */}
       <Route path="/professional" element={<ProtectedRoute roleRequired="professional"><Layout><ProfessionalDashboard /></Layout></ProtectedRoute>} />
+      <Route path="/professional/map" element={<ProtectedRoute roleRequired="professional"><ProfessionalMapPage /></ProtectedRoute>} />
 
       {/* Shared - with layout */}
       <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
