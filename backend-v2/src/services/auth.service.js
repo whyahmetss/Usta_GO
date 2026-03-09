@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
+import { getReferralBonus } from "./config.service.js";
 
 const prisma = new PrismaClient();
 
@@ -64,20 +65,21 @@ export const registerUser = async (data) => {
     },
   });
 
-  // Handle referral bonus: give 50 TL to referrer and new user
+  // Handle referral bonus: configurable amounts from AppConfig
   if (referralCode) {
     const referrer = await prisma.user.findUnique({ where: { referralCode: referralCode.toUpperCase() } });
     if (referrer && referrer.id !== user.id) {
+      const bonusConfig = await getReferralBonus();
+      const referrerAmt = bonusConfig.referrerBonus || 50;
+      const newUserAmt = bonusConfig.newUserBonus || 50;
       await prisma.$transaction([
-        // Give 50 TL to referrer
-        prisma.user.update({ where: { id: referrer.id }, data: { balance: { increment: 50 } } }),
+        prisma.user.update({ where: { id: referrer.id }, data: { balance: { increment: referrerAmt } } }),
         prisma.transaction.create({
-          data: { userId: referrer.id, amount: 50, type: "REFERRAL", status: "COMPLETED", description: `Davet bonusu: ${user.name} kayıt oldu` },
+          data: { userId: referrer.id, amount: referrerAmt, type: "REFERRAL", status: "COMPLETED", description: `Davet bonusu: ${user.name} kayıt oldu` },
         }),
-        // Give 50 TL to new user
-        prisma.user.update({ where: { id: user.id }, data: { balance: { increment: 50 } } }),
+        prisma.user.update({ where: { id: user.id }, data: { balance: { increment: newUserAmt } } }),
         prisma.transaction.create({
-          data: { userId: user.id, amount: 50, type: "REFERRAL", status: "COMPLETED", description: `Hoş geldin bonusu: davet kodu kullanıldı` },
+          data: { userId: user.id, amount: newUserAmt, type: "REFERRAL", status: "COMPLETED", description: `Hoş geldin bonusu: davet kodu kullanıldı` },
         }),
       ]);
     }

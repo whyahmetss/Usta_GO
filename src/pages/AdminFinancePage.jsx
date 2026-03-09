@@ -64,6 +64,11 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('monthly') // 'monthly' | 'daily'
   const [txFilter, setTxFilter] = useState('all')
+  const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'withdrawals'
+  const [withdrawals, setWithdrawals] = useState([])
+  const [wFilter, setWFilter] = useState('PENDING')
+  const [wLoading, setWLoading] = useState(false)
+  const [processingId, setProcessingId] = useState(null)
 
   useEffect(() => {
     const load = async () => {
@@ -184,6 +189,36 @@ export default function AdminFinancePage() {
     load()
   }, [])
 
+  const loadWithdrawals = async () => {
+    setWLoading(true)
+    try {
+      const res = await fetchAPI('/wallet/admin/withdrawals')
+      setWithdrawals(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])
+    } catch (e) { console.error(e) }
+    finally { setWLoading(false) }
+  }
+
+  const handleWApprove = async (id) => {
+    if (!confirm('Bu çekim talebini onaylamak istediğinize emin misiniz?')) return
+    setProcessingId(id)
+    try {
+      await fetchAPI(`/wallet/withdraw/${id}/approve`, { method: 'PATCH', body: {} })
+      setWithdrawals(prev => prev.map(w => w.id === id ? { ...w, status: 'COMPLETED' } : w))
+    } catch (e) { alert(e.message) }
+    finally { setProcessingId(null) }
+  }
+
+  const handleWReject = async (id) => {
+    const reason = prompt('Red nedeni (opsiyonel):')
+    if (reason === null) return
+    setProcessingId(id)
+    try {
+      await fetchAPI(`/wallet/withdraw/${id}/reject`, { method: 'PATCH', body: { rejectionReason: reason || 'Belirtilmedi' } })
+      setWithdrawals(prev => prev.map(w => w.id === id ? { ...w, status: 'FAILED' } : w))
+    } catch (e) { alert(e.message) }
+    finally { setProcessingId(null) }
+  }
+
   if (loading) {
     return (
       <Layout hideNav>
@@ -210,8 +245,130 @@ export default function AdminFinancePage() {
       <PageHeader title="Muhasebe" />
       <div className="max-w-2xl mx-auto px-4 pb-10">
 
+        {/* Tab navigation */}
+        <div className="flex gap-2 mt-4 mb-5">
+          {[
+            { key: 'overview', label: 'Genel Özet' },
+            { key: 'withdrawals', label: 'Para Çekme' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key)
+                if (tab.key === 'withdrawals' && withdrawals.length === 0) loadWithdrawals()
+              }}
+              className={`px-4 py-2 rounded-2xl text-sm font-semibold transition ${
+                activeTab === tab.key
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'withdrawals' ? (
+          <div className="space-y-4">
+            {/* Filter */}
+            <div className="flex gap-2">
+              {[
+                { key: 'PENDING', label: 'Bekleyen' },
+                { key: 'COMPLETED', label: 'Onaylanan' },
+                { key: 'FAILED', label: 'Reddedilen' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setWFilter(f.key)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                    wFilter === f.key
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+              <button
+                onClick={loadWithdrawals}
+                className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+              >
+                Yenile
+              </button>
+            </div>
+
+            {wLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {withdrawals.filter(w => (w.status?.toUpperCase() || 'PENDING') === wFilter).length === 0 ? (
+                  <div className="text-center py-12 text-gray-400 text-sm">Bu kategoride talep yok</div>
+                ) : withdrawals
+                  .filter(w => (w.status?.toUpperCase() || 'PENDING') === wFilter)
+                  .map(w => (
+                    <Card key={w.id} padding="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          wFilter === 'COMPLETED' ? 'bg-emerald-50' : wFilter === 'FAILED' ? 'bg-rose-50' : 'bg-amber-50'
+                        }`}>
+                          <ArrowDownLeft size={18} className={
+                            wFilter === 'COMPLETED' ? 'text-emerald-600' : wFilter === 'FAILED' ? 'text-rose-600' : 'text-amber-600'
+                          } />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{w.user?.name || '—'}</p>
+                          <p className="text-xs text-gray-500 truncate">{w.user?.email || w.description || '—'}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {w.createdAt ? new Date(w.createdAt).toLocaleString('tr-TR') : '—'}
+                          </p>
+                          {w.rejectionReason && (
+                            <p className="text-[11px] text-rose-500 mt-1">Red: {w.rejectionReason}</p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-base font-bold text-rose-600">
+                            {Math.abs(Number(w.amount) || 0).toLocaleString('tr-TR')} TL
+                          </p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            wFilter === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700'
+                            : wFilter === 'FAILED' ? 'bg-rose-100 text-rose-700'
+                            : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {wFilter === 'COMPLETED' ? 'Onaylandı' : wFilter === 'FAILED' ? 'Reddedildi' : 'Bekliyor'}
+                          </span>
+                        </div>
+                      </div>
+                      {wFilter === 'PENDING' && (
+                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                          <button
+                            onClick={() => handleWApprove(w.id)}
+                            disabled={processingId === w.id}
+                            className="flex-1 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold disabled:opacity-50 active:scale-[0.98] transition"
+                          >
+                            {processingId === w.id ? '...' : 'Onayla'}
+                          </button>
+                          <button
+                            onClick={() => handleWReject(w.id)}
+                            disabled={processingId === w.id}
+                            className="flex-1 py-2 bg-rose-500 text-white rounded-xl text-xs font-semibold disabled:opacity-50 active:scale-[0.98] transition"
+                          >
+                            {processingId === w.id ? '...' : 'Reddet'}
+                          </button>
+                        </div>
+                      )}
+                    </Card>
+                  ))
+                }
+              </div>
+            )}
+          </div>
+        ) : (
+        <>
+
         {/* Özet kartlar */}
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3 mt-4">Genel Özet</p>
+        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">Genel Özet</p>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <StatBox
             label="Toplam İş Hacmi"
@@ -356,6 +513,8 @@ export default function AdminFinancePage() {
             })}
           </div>
         </Card>
+        </>
+        )}
       </div>
     </Layout>
   )

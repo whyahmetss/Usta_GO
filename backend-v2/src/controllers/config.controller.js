@@ -18,3 +18,22 @@ export const setCancellationRates = async (req, res) => {
     res.status(500).json({ success: false, error: e.message })
   }
 }
+
+export const getReferralBonus = async (req, res) => {
+  try {
+    const bonus = await configService.getReferralBonus()
+    res.json({ success: true, data: bonus })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
+}
+
+export const setReferralBonus = async (req, res) => {
+  try {
+    const { referrerBonus, newUserBonus } = req.body || {}
+    const bonus = await configService.setReferralBonus({ referrerBonus, newUserBonus })
+    res.json({ success: true, data: bonus })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
+}

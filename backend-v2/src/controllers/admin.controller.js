@@ -349,3 +349,5 @@ export const deleteCampaign = async (req, res, next) => {
 
 export const getCancellationRates = configController.getCancellationRates;
 export const setCancellationRates = configController.setCancellationRates;
+export const getReferralBonus = configController.getReferralBonus;
+export const setReferralBonus = configController.setReferralBonus;

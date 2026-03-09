@@ -8,6 +8,10 @@ const router = Router();
 router.get("/config/cancellation", adminController.getCancellationRates);
 router.patch("/config/cancellation", authMiddleware, adminMiddleware, adminController.setCancellationRates);
 
+// Davet bonusu
+router.get("/config/referral", adminController.getReferralBonus);
+router.patch("/config/referral", authMiddleware, adminMiddleware, adminController.setReferralBonus);
+
 // All other routes require ADMIN role
 router.use(authMiddleware, adminMiddleware);
 
