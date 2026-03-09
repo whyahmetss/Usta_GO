@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
+import { API_ENDPOINTS } from '../config'
 import { connectSocket } from '../utils/socket'
 import { useAuth } from '../context/AuthContext'
 import {
   MessageCircle, UserCheck, UserX, Loader, Users,
   FileText, ExternalLink, RefreshCw, AlertCircle, CheckCircle2,
   Clock, ChevronDown, ChevronUp, Headphones, ChevronRight,
+  Check, X, ShieldCheck, User,
 } from 'lucide-react'
 
 const DOC_LABELS = {
@@ -99,7 +101,7 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
 export default function SupportDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('ustas') // 'ustas' | 'chats'
+  const [activeTab, setActiveTab] = useState('ustas') // 'ustas' | 'chats' | 'complaints' | 'docs'
   const [ustas, setUstas] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -109,6 +111,19 @@ export default function SupportDashboard() {
   // Conversations state
   const [conversations, setConversations] = useState([])
   const [convLoading, setConvLoading] = useState(false)
+
+  // Complaints state
+  const [complaints, setComplaints] = useState([])
+  const [complaintLoading, setComplaintLoading] = useState(false)
+  const [complaintFilter, setComplaintFilter] = useState('open')
+  const [complaintActioning, setComplaintActioning] = useState(null)
+
+  // Documents/Certificates state
+  const [certs, setCerts] = useState([])
+  const [certLoading, setCertLoading] = useState(false)
+  const [certFilter, setCertFilter] = useState('PENDING')
+  const [certRoleFilter, setCertRoleFilter] = useState('all')
+  const [certActioning, setCertActioning] = useState(null)
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -154,7 +169,50 @@ export default function SupportDashboard() {
 
   useEffect(() => {
     if (activeTab === 'chats' && conversations.length === 0) loadConversations()
+    if (activeTab === 'complaints' && complaints.length === 0) loadComplaints()
+    if (activeTab === 'docs' && certs.length === 0) loadCerts()
   }, [activeTab])
+
+  const loadComplaints = useCallback(async () => {
+    setComplaintLoading(true)
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.COMPLAINTS.LIST)
+      setComplaints(Array.isArray(res?.data) ? res.data : [])
+    } catch (e) { showToast('Şikayetler yüklenemedi: ' + e.message, 'error') }
+    finally { setComplaintLoading(false) }
+  }, [])
+
+  const handleComplaintAction = async (id, action) => {
+    setComplaintActioning(id)
+    try {
+      const endpoint = action === 'resolve'
+        ? API_ENDPOINTS.COMPLAINTS.RESOLVE(id)
+        : API_ENDPOINTS.COMPLAINTS.REJECT(id)
+      await fetchAPI(endpoint, { method: 'PUT' })
+      setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: action === 'resolve' ? 'resolved' : 'rejected' } : c))
+      showToast(action === 'resolve' ? 'Şikayet çözüldü' : 'Şikayet reddedildi', action === 'resolve' ? 'success' : 'error')
+    } catch (e) { showToast('İşlem başarısız: ' + e.message, 'error') }
+    finally { setComplaintActioning(null) }
+  }
+
+  const loadCerts = useCallback(async () => {
+    setCertLoading(true)
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.CERTIFICATES.ADMIN_LIST)
+      setCerts(Array.isArray(res?.data) ? res.data : [])
+    } catch (e) { showToast('Belgeler yüklenemedi: ' + e.message, 'error') }
+    finally { setCertLoading(false) }
+  }, [])
+
+  const handleCertAction = async (id, status) => {
+    setCertActioning(id)
+    try {
+      await fetchAPI(API_ENDPOINTS.CERTIFICATES.ADMIN_UPDATE(id), { method: 'PATCH', body: { status } })
+      setCerts(prev => prev.map(c => c.id === id ? { ...c, status } : c))
+      showToast(status === 'APPROVED' ? 'Belge onaylandı' : 'Belge reddedildi', status === 'APPROVED' ? 'success' : 'error')
+    } catch (e) { showToast('İşlem başarısız: ' + e.message, 'error') }
+    finally { setCertActioning(null) }
+  }
 
   const handleApprove = async (userId) => {
     if (!confirm('Bu ustayı onaylamak istediğinize emin misiniz?')) return
@@ -228,23 +286,36 @@ export default function SupportDashboard() {
               </div>
             </div>
             <button
-              onClick={() => activeTab === 'ustas' ? load(true) : loadConversations()}
-              disabled={refreshing || convLoading}
+              onClick={() => {
+                if (activeTab === 'ustas') load(true)
+                else if (activeTab === 'chats') loadConversations()
+                else if (activeTab === 'complaints') loadComplaints()
+                else loadCerts()
+              }}
+              disabled={refreshing || convLoading || complaintLoading || certLoading}
               className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
             >
-              <RefreshCw size={16} className={`text-white ${(refreshing || convLoading) ? 'animate-spin' : ''}`} />
+              <RefreshCw size={16} className={`text-white ${(refreshing || convLoading || complaintLoading || certLoading) ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 mt-5">
-            <div className="bg-white/15 backdrop-blur rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">{ustas.length}</p>
-              <p className="text-xs text-blue-100 mt-0.5">Bekleyen Başvuru</p>
+          <div className="grid grid-cols-4 gap-2 mt-5">
+            <div className="bg-white/15 backdrop-blur rounded-2xl p-2.5 text-center">
+              <p className="text-xl font-black text-white">{ustas.length}</p>
+              <p className="text-[10px] text-blue-100 mt-0.5">Başvuru</p>
             </div>
-            <div className="bg-white/15 backdrop-blur rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">{conversations.length}</p>
-              <p className="text-xs text-blue-100 mt-0.5">Aktif Konuşma</p>
+            <div className="bg-white/15 backdrop-blur rounded-2xl p-2.5 text-center">
+              <p className="text-xl font-black text-white">{conversations.length}</p>
+              <p className="text-[10px] text-blue-100 mt-0.5">Konuşma</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur rounded-2xl p-2.5 text-center">
+              <p className="text-xl font-black text-white">{complaints.filter(c => c.status === 'open').length}</p>
+              <p className="text-[10px] text-blue-100 mt-0.5">Şikayet</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur rounded-2xl p-2.5 text-center">
+              <p className="text-xl font-black text-white">{certs.filter(c => c.status === 'PENDING').length}</p>
+              <p className="text-[10px] text-blue-100 mt-0.5">Belge</p>
             </div>
           </div>
         </div>
@@ -252,15 +323,17 @@ export default function SupportDashboard() {
 
       {/* Tabs */}
       <div className="max-w-lg mx-auto px-4 mt-4">
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {[
-            { key: 'ustas', label: 'Usta Başvuruları', badge: ustas.length },
-            { key: 'chats', label: 'Konuşmalar', badge: conversations.filter(c => c.unread > 0).reduce((s, c) => s + c.unread, 0) },
+            { key: 'ustas', label: 'Başvurular', badge: ustas.length },
+            { key: 'chats', label: 'Mesajlar', badge: conversations.filter(c => c.unread > 0).reduce((s, c) => s + c.unread, 0) },
+            { key: 'complaints', label: 'Şikayetler', badge: complaints.filter(c => c.status === 'open').length },
+            { key: 'docs', label: 'Belgeler', badge: certs.filter(c => c.status === 'PENDING').length },
           ].map(t => (
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 rounded-2xl text-[11px] font-semibold transition ${
                 activeTab === t.key
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
@@ -268,7 +341,7 @@ export default function SupportDashboard() {
             >
               {t.label}
               {t.badge > 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                   activeTab === t.key ? 'bg-white/30 text-white' : 'bg-rose-500 text-white'
                 }`}>{t.badge}</span>
               )}
@@ -295,6 +368,184 @@ export default function SupportDashboard() {
             ) : ustas.map(u => (
               <UstaCard key={u.id} u={u} onApprove={handleApprove} onReject={handleReject} actioning={actioning} />
             ))}
+          </div>
+        )}
+
+        {/* Şikayetler */}
+        {activeTab === 'complaints' && (
+          <div className="space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { key: 'open', label: 'Bekleyen' },
+                { key: 'resolved', label: 'Çözüldü' },
+                { key: 'rejected', label: 'Reddedildi' },
+              ].map(f => (
+                <button key={f.key} onClick={() => setComplaintFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${complaintFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {complaintLoading ? (
+              <div className="flex flex-col items-center py-16">
+                <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+                <p className="text-sm text-slate-400">Yükleniyor...</p>
+              </div>
+            ) : complaints.filter(c => c.status === complaintFilter).length === 0 ? (
+              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+                <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Bu kategoride şikayet yok</p>
+              </div>
+            ) : complaints
+              .filter(c => c.status === complaintFilter)
+              .map(complaint => (
+                <div key={complaint.id} className={`bg-white dark:bg-[#1a2332] rounded-2xl border shadow-sm overflow-hidden ${
+                  complaint.status === 'open' ? 'border-amber-200 dark:border-amber-500/30' :
+                  complaint.status === 'resolved' ? 'border-emerald-200 dark:border-emerald-500/30' :
+                  'border-rose-200 dark:border-rose-500/30'
+                }`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                          {complaint.customerName || complaint.filedBy?.name || 'Kullanıcı'}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">{complaint.jobTitle || complaint.reason}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                        complaint.status === 'open' ? 'bg-amber-100 text-amber-700' :
+                        complaint.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' :
+                        'bg-rose-100 text-rose-700'
+                      }`}>
+                        {complaint.status === 'open' ? 'Bekliyor' : complaint.status === 'resolved' ? 'Çözüldü' : 'Reddedildi'}
+                      </span>
+                    </div>
+                    {complaint.details && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-white/5 rounded-xl p-2.5 mb-3">
+                        {complaint.details}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-slate-400">
+                      {complaint.filedAt ? new Date(complaint.filedAt).toLocaleString('tr-TR') : ''}
+                    </p>
+                    {complaint.status === 'open' && (
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
+                        <button
+                          onClick={() => handleComplaintAction(complaint.id, 'resolve')}
+                          disabled={complaintActioning === complaint.id}
+                          className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-[0.98] transition"
+                        >
+                          {complaintActioning === complaint.id ? <Loader size={13} className="animate-spin" /> : <Check size={13} />}
+                          Çözüldü
+                        </button>
+                        <button
+                          onClick={() => handleComplaintAction(complaint.id, 'reject')}
+                          disabled={complaintActioning === complaint.id}
+                          className="flex-1 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-[0.98] transition"
+                        >
+                          <X size={13} />
+                          Reddet
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        )}
+
+        {/* Belgeler */}
+        {activeTab === 'docs' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex gap-2 flex-wrap">
+                {[{ key: 'all', label: 'Tümü' }, { key: 'CUSTOMER', label: 'Müşteri' }, { key: 'USTA', label: 'Usta' }].map(f => (
+                  <button key={f.key} onClick={() => setCertRoleFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certRoleFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {[{ key: 'PENDING', label: 'Bekleyen' }, { key: 'APPROVED', label: 'Onaylı' }, { key: 'REJECTED', label: 'Reddedildi' }].map(f => (
+                  <button key={f.key} onClick={() => setCertFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certFilter === f.key ? 'bg-slate-700 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {certLoading ? (
+              <div className="flex flex-col items-center py-16">
+                <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+                <p className="text-sm text-slate-400">Yükleniyor...</p>
+              </div>
+            ) : certs
+              .filter(c => {
+                const roleMatch = certRoleFilter === 'all' || c.user?.role?.toUpperCase() === certRoleFilter
+                const statusMatch = c.status === certFilter
+                return roleMatch && statusMatch
+              }).length === 0 ? (
+              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+                <FileText size={32} className="text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Belge bulunamadı</p>
+              </div>
+            ) : certs
+              .filter(c => {
+                const roleMatch = certRoleFilter === 'all' || c.user?.role?.toUpperCase() === certRoleFilter
+                const statusMatch = c.status === certFilter
+                return roleMatch && statusMatch
+              })
+              .map(c => (
+                <div key={c.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+                  <div className="flex items-start gap-3 p-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-50 dark:bg-violet-500/10">
+                      {c.user?.role?.toUpperCase() === 'USTA'
+                        ? <ShieldCheck size={18} className="text-amber-600" />
+                        : <User size={18} className="text-blue-600" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{c.user?.name || '—'}</p>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${c.user?.role?.toUpperCase() === 'USTA' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {c.user?.role?.toUpperCase() === 'USTA' ? 'Usta' : 'Müşteri'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{c.user?.email}</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-1">
+                        {c.label || c.docType || 'Belge'}
+                      </p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                      c.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
+                      c.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {c.status === 'APPROVED' ? 'Onaylı' : c.status === 'REJECTED' ? 'Reddedildi' : 'Bekliyor'}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 px-4 pb-4">
+                    <a href={c.fileUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition">
+                      <ExternalLink size={12} /> Görüntüle
+                    </a>
+                    {c.status !== 'APPROVED' && (
+                      <button onClick={() => handleCertAction(c.id, 'APPROVED')} disabled={certActioning === c.id}
+                        className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-[0.98] transition">
+                        {certActioning === c.id ? <Loader size={12} className="animate-spin" /> : <Check size={12} />} Onayla
+                      </button>
+                    )}
+                    {c.status !== 'REJECTED' && (
+                      <button onClick={() => handleCertAction(c.id, 'REJECTED')} disabled={certActioning === c.id}
+                        className="flex-1 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-[0.98] transition">
+                        <X size={12} /> Reddet
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
           </div>
         )}
 
