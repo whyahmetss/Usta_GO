@@ -10,32 +10,32 @@ function HelpPage() {
 
   const faqs = [
     {
-      q: 'Usta bulma nasıl çalışıyor?',
-      a: 'Yeni bir iş talebinde sorunuzu açıklayın, AI fiyat tahmin eder, ustalara gönderilir ve teklif verirler.'
+      q: 'UstaGo Nedir?',
+      a: 'Ustago, hizmet almak isteyen kullanıcılar ile güvenilir ve doğrulanmış ustaları teklif sistemi üzerinden buluşturan yapay zeka destekli güvenilir bir platformdur'
     },
     {
-      q: 'İş ücretim nasıl ödenir?',
-      a: 'İş kabul edilince paranız escrow\'da tutulur, tamamlandığında ustaya gönderilir, müşteri puanladığında.'
+      q: 'Talep oluşturmak ücretli mi?',
+      a: 'Hayır. Ustago’da talep oluşturmak tamamen ücretsizdir.'
     },
     {
-      q: 'İş iptal edebilir miyim?',
-      a: 'Evet, işin statüsüne göre iptal etme seçeneği vardır. Tamamlanmışsa para iade edilmez.'
+      q: 'Teklifleri kabul etmek zorunda mıyım?',
+      a: 'Hayır. Gelen teklifleri inceleyip dilediğiniz gibi kabul edebilirsiniz veya rededebilirsiniz.'
     },
     {
       q: 'Referans sisteminde ne kazanırım?',
       a: 'Arkadaşınızı davet edin, kaydolunca her biriniz ₺50 kupon alırsınız.'
     },
     {
-      q: 'Kuponlar ne kadar geçerli?',
-      a: 'Kuponlar 1 yıl boyunca geçerlidir. Profil→Cüzdan\'da aktif kuponlarınız görebilirsiniz.'
+      q: 'Ustago’da usta olmak ücretli mi?',
+      a: 'Usta olarak kayıt olmak tamamen ücretsizdir ve iş almak için herhangi bir ücret ödemeniz gerekmez.'
     },
     {
       q: 'Şikayet nasıl yapabilirim?',
-      a: 'İş detayında "Şikayet Et" butonuyla hızlı şikayet yapabilirsiniz. Admin tarafından incelenecektir.'
+      a: 'İş detayında "Şikayet Et" butonuyla hızlı şikayet yapabilirsiniz. Yetkili tarafından en kısa sürede özenle incelenecektir.'
     },
     {
-      q: 'Bölgesel fiyat farklılığı nedir?',
-      a: 'Premium bölgeler (Kadıköy, Beşiktaş) +30%, diğer bölgeler standart fiyatla hizmet verir.'
+      q: 'Ustago güvenli midir?',
+      a: 'UstaGo Yapay zeka destekli Yorum, puanlama ve işlem kayıtları ile güvenli bir hizmet deneyimi sunmayı amaçlar.'
     },
     {
       q: 'Usta doğrulamayı nasıl sağlarım?',
