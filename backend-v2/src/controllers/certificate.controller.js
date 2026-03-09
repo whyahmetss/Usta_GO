@@ -20,10 +20,10 @@ export const uploadCertificate = async (req, res) => {
 
 export const listCertificates = async (req, res) => {
   try {
-    if (req.user.role !== 'ADMIN') return res.status(403).json({ success: false, message: 'Yetkisiz' });
+    const role = (req.user.role || '').toUpperCase()
+    if (role !== 'ADMIN' && role !== 'SUPPORT') return res.status(403).json({ success: false, message: 'Yetkisiz' });
     const certs = await prisma.userCertificate.findMany({
-      where: { status: 'PENDING' },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true, email: true, role: true } } },
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, data: certs });
@@ -34,7 +34,8 @@ export const listCertificates = async (req, res) => {
 
 export const updateCertificateStatus = async (req, res) => {
   try {
-    if (req.user.role !== 'ADMIN') return res.status(403).json({ success: false, message: 'Yetkisiz' });
+    const role = (req.user.role || '').toUpperCase()
+    if (role !== 'ADMIN' && role !== 'SUPPORT') return res.status(403).json({ success: false, message: 'Yetkisiz' });
     const { status, adminNote } = req.body; // status: APPROVED | REJECTED
     if (!['APPROVED', 'REJECTED'].includes(status)) {
       return res.status(400).json({ success: false, message: 'status APPROVED veya REJECTED olmalı' });
