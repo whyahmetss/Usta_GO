@@ -69,41 +69,45 @@ export default function AdminFinancePage() {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-        // Var olan çalışan endpointlerden veri çek
-        const [jobsRes, usersRes, withdrawalsRes] = await Promise.allSettled([
+        const [jobsRes, usersRes, txRes] = await Promise.allSettled([
           fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?limit=1000`),
           fetchAPI(API_ENDPOINTS.ADMIN.GET_USERS),
-          fetchAPI('/wallet/admin/withdrawals'),
+          fetchAPI(`${API_ENDPOINTS.WALLET.ADMIN_TRANSACTIONS}?limit=2000`),
         ])
 
         const allJobsRaw = jobsRes.status === 'fulfilled' && Array.isArray(jobsRes.value?.data)
           ? jobsRes.value.data : []
         const allUsers = usersRes.status === 'fulfilled' && Array.isArray(usersRes.value?.data)
           ? usersRes.value.data : []
-        const allWithdrawals = withdrawalsRes.status === 'fulfilled' && Array.isArray(withdrawalsRes.value?.data)
-          ? withdrawalsRes.value.data : []
+        const allTransactions = txRes.status === 'fulfilled' && Array.isArray(txRes.value?.data)
+          ? txRes.value.data : []
 
-        // İş hacmi hesapla (tamamlanan işler)
+        // İş hacmi (tamamlanan işler)
         const completedJobs = allJobsRaw.filter(j => {
           const s = j.status?.toLowerCase()
           return s === 'completed' || s === 'rated'
         })
-
         const totalVolume = completedJobs.reduce((s, j) => s + (Number(j.budget) || 0), 0)
         const monthVolume = completedJobs
           .filter(j => new Date(j.completedAt || j.updatedAt || j.createdAt) >= startOfMonth)
           .reduce((s, j) => s + (Number(j.budget) || 0), 0)
-
         const totalCommission = totalVolume * COMMISSION_RATE
         const monthCommission = monthVolume * COMMISSION_RATE
-
         const todayJobs = completedJobs.filter(j =>
           new Date(j.completedAt || j.updatedAt || j.createdAt) >= startOfToday
         )
         const todayCommission = todayJobs.reduce((s, j) => s + (Number(j.budget) || 0), 0) * COMMISSION_RATE
 
-        // Bekleyen çekimler
-        const pendingW = allWithdrawals.filter(w => w.status === 'pending' || w.status === 'PENDING')
+        // TOPUP işlemleri (gerçek veriler)
+        const topupTx = allTransactions.filter(t => t.type === 'TOPUP' && t.status === 'COMPLETED')
+        const totalTopup = topupTx.reduce((s, t) => s + (Number(t.amount) || 0), 0)
+        const monthTopup = topupTx
+          .filter(t => new Date(t.createdAt) >= startOfMonth)
+          .reduce((s, t) => s + (Number(t.amount) || 0), 0)
+
+        // Bekleyen çekimler (transaction tablosundan)
+        const withdrawalTx = allTransactions.filter(t => t.type === 'WITHDRAWAL')
+        const pendingW = withdrawalTx.filter(w => w.status === 'PENDING')
         const pendingWithdrawalsAmount = pendingW.reduce((s, w) => s + Math.abs(Number(w.amount) || 0), 0)
 
         // Son 12 ay aylık kırılım
@@ -113,12 +117,12 @@ export default function AdminFinancePage() {
           const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
           const label = d.toLocaleString('tr-TR', { month: 'short', year: '2-digit' })
           const vol = completedJobs
-            .filter(j => {
-              const cd = new Date(j.completedAt || j.updatedAt || j.createdAt)
-              return cd >= d && cd < end
-            })
+            .filter(j => { const cd = new Date(j.completedAt || j.updatedAt || j.createdAt); return cd >= d && cd < end })
             .reduce((s, j) => s + (Number(j.budget) || 0), 0)
-          monthlyData.push({ label, volume: Math.round(vol), commission: Math.round(vol * COMMISSION_RATE), topup: 0 })
+          const tp = topupTx
+            .filter(t => { const cd = new Date(t.createdAt); return cd >= d && cd < end })
+            .reduce((s, t) => s + (Number(t.amount) || 0), 0)
+          monthlyData.push({ label, volume: Math.round(vol), commission: Math.round(vol * COMMISSION_RATE), topup: Math.round(tp) })
         }
 
         // Son 30 gün günlük kırılım
@@ -128,44 +132,26 @@ export default function AdminFinancePage() {
           const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i + 1)
           const label = `${d.getDate()}/${d.getMonth() + 1}`
           const vol = completedJobs
-            .filter(j => {
-              const cd = new Date(j.completedAt || j.updatedAt || j.createdAt)
-              return cd >= d && cd < end
-            })
+            .filter(j => { const cd = new Date(j.completedAt || j.updatedAt || j.createdAt); return cd >= d && cd < end })
             .reduce((s, j) => s + (Number(j.budget) || 0), 0)
-          dailyData.push({ label, volume: Math.round(vol), topup: 0 })
+          const tp = topupTx
+            .filter(t => { const cd = new Date(t.createdAt); return cd >= d && cd < end })
+            .reduce((s, t) => s + (Number(t.amount) || 0), 0)
+          dailyData.push({ label, volume: Math.round(vol), topup: Math.round(tp) })
         }
 
-        // Son işlemler olarak tamamlanan işleri göster
-        const recentTransactions = [...completedJobs]
-          .sort((a, b) => new Date(b.completedAt || b.updatedAt || b.createdAt) - new Date(a.completedAt || a.updatedAt || a.createdAt))
-          .slice(0, 50)
-          .map(j => ({
-            id: j.id,
-            amount: Number(j.budget) || 0,
-            type: 'EARNING',
-            status: 'COMPLETED',
-            description: j.title,
-            userName: j.customer?.name || j.usta?.name || '—',
-            userRole: j.customer ? 'CUSTOMER' : 'USTA',
-            createdAt: j.completedAt || j.updatedAt || j.createdAt,
+        // Son işlemler — gerçek transaction kayıtları
+        const recentTransactions = allTransactions
+          .slice(0, 100)
+          .map(t => ({
+            id: t.id,
+            amount: t.type === 'WITHDRAWAL' ? -Math.abs(Number(t.amount) || 0) : Number(t.amount) || 0,
+            type: t.type,
+            status: t.status,
+            description: t.description || '—',
+            userName: t.user?.name || '—',
+            createdAt: t.createdAt,
           }))
-
-        // Bekleyen çekim işlemlerini de ekle
-        allWithdrawals.slice(0, 20).forEach(w => {
-          recentTransactions.push({
-            id: w.id,
-            amount: -Math.abs(Number(w.amount) || 0),
-            type: 'WITHDRAWAL',
-            status: w.status?.toUpperCase() || 'PENDING',
-            description: `Para çekme talebi`,
-            userName: w.user?.name || w.userName || '—',
-            userRole: 'USTA',
-            createdAt: w.createdAt,
-          })
-        })
-
-        recentTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
         setData({
           summary: {
@@ -174,8 +160,8 @@ export default function AdminFinancePage() {
             todayCommission: Math.round(todayCommission),
             totalCommission: Math.round(totalCommission),
             monthCommission: Math.round(monthCommission),
-            totalTopup: 0,
-            monthTopup: 0,
+            totalTopup: Math.round(totalTopup),
+            monthTopup: Math.round(monthTopup),
             pendingWithdrawalsAmount: Math.round(pendingWithdrawalsAmount),
             pendingWithdrawalsCount: pendingW.length,
             totalUsers: allUsers.length,

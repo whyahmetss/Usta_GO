@@ -257,6 +257,24 @@ export const walletController = {
     }
   },
 
+  // GET /wallet/admin/transactions - admin için tüm işlemler
+  getAllTransactions: async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 500;
+      const type = req.query.type; // opsiyonel filtre
+      const where = type ? { type } : {};
+      const transactions = await prisma.transaction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        include: { user: { select: { id: true, name: true, email: true, role: true } } },
+      });
+      res.json({ success: true, data: transactions });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
   // GET /wallet/admin/withdrawals
   getAllWithdrawals: async (req, res) => {
     try {

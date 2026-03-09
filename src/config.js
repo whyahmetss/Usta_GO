@@ -70,6 +70,7 @@ export const API_ENDPOINTS = {
     GET: '/wallet',
     GET_TRANSACTIONS: '/wallet/transactions',
     GET_EARNINGS: '/wallet/earnings',
+    ADMIN_TRANSACTIONS: '/wallet/admin/transactions',
     TOPUP: '/wallet/topup',
     TOPUP_INIT: '/wallet/topup/init',
     WITHDRAW: '/wallet/withdraw',

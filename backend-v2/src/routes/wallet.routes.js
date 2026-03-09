@@ -10,6 +10,7 @@ router.post('/topup/init', authMiddleware, walletController.topupInit);
 router.get('/topup/callback', walletController.topupCallback);
 router.post('/topup/callback', walletController.topupCallback);
 router.get('/transactions', authMiddleware, walletController.getTransactions);
+router.get('/admin/transactions', authMiddleware, walletController.getAllTransactions);
 router.get('/admin/withdrawals', authMiddleware, walletController.getAllWithdrawals);
 router.post('/withdraw', authMiddleware, walletController.createWithdrawal);
 router.post('/coupon', authMiddleware, walletController.redeemCoupon);
