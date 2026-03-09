@@ -437,7 +437,7 @@ function AdminDashboard() {
                           "{job.ratingReview}"
                         </p>
                       )}
-                      <p className="text-[10px] text-gray-500 mt-1">
+                      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-2 font-medium">
                         {new Date(job.createdAt).toLocaleDateString('tr-TR')}
                       </p>
                     </div>
