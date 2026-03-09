@@ -36,6 +36,8 @@ import AdminVerificationPage from './pages/AdminVerificationPage'
 import CancelJobPage from './pages/CancelJobPage'
 import CustomerRegisterPage from './pages/CustomerRegisterPage'
 import SupportDashboard from './pages/SupportDashboard'
+import LiveSupportChatPage from './pages/LiveSupportChatPage'
+import SupportChatPage from './pages/SupportChatPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
 import AboutPage from './pages/AboutPage'
@@ -141,6 +143,8 @@ function AppRoutes() {
       <Route path="/admin/finance" element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
 
       <Route path="/support" element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
+      <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
+      <Route path="/live-support" element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
       <Route path="/track/:id" element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
       <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />

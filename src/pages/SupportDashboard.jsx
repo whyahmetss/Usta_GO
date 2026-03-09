@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
+import { connectSocket } from '../utils/socket'
+import { useAuth } from '../context/AuthContext'
 import {
-  MessageCircle, UserCheck, UserX, Phone, Loader, Users,
+  MessageCircle, UserCheck, UserX, Loader, Users,
   FileText, ExternalLink, RefreshCw, AlertCircle, CheckCircle2,
-  Clock, ChevronDown, ChevronUp, Headphones,
+  Clock, ChevronDown, ChevronUp, Headphones, ChevronRight,
 } from 'lucide-react'
-
-const SUPPORT_PHONE = import.meta.env.VITE_SUPPORT_WHATSAPP || ''
-const WHATSAPP_URL = SUPPORT_PHONE
-  ? `https://wa.me/${SUPPORT_PHONE.replace(/\D/g, '')}`
-  : null
 
 const DOC_LABELS = {
   kimlikOn: 'Kimlik Ön',
@@ -101,11 +98,17 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
 
 export default function SupportDashboard() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState('ustas') // 'ustas' | 'chats'
   const [ustas, setUstas] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [actioning, setActioning] = useState(null)
   const [toast, setToast] = useState(null)
+
+  // Conversations state
+  const [conversations, setConversations] = useState([])
+  const [convLoading, setConvLoading] = useState(false)
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -126,7 +129,32 @@ export default function SupportDashboard() {
     }
   }, [])
 
+  const loadConversations = useCallback(async () => {
+    setConvLoading(true)
+    try {
+      const r = await fetchAPI('/support/conversations')
+      setConversations(Array.isArray(r?.data) ? r.data : [])
+    } catch (e) {
+      console.error('Conv load error:', e)
+    } finally {
+      setConvLoading(false)
+    }
+  }, [])
+
   useEffect(() => { load() }, [load])
+
+  // Real-time: new message → refresh conv list
+  useEffect(() => {
+    if (!user?.id) return
+    const socket = connectSocket(user.id)
+    const onReceive = () => { if (activeTab === 'chats') loadConversations() }
+    socket.on('receive_message', onReceive)
+    return () => socket.off('receive_message', onReceive)
+  }, [user, activeTab, loadConversations])
+
+  useEffect(() => {
+    if (activeTab === 'chats' && conversations.length === 0) loadConversations()
+  }, [activeTab])
 
   const handleApprove = async (userId) => {
     if (!confirm('Bu ustayı onaylamak istediğinize emin misiniz?')) return
@@ -156,6 +184,24 @@ export default function SupportDashboard() {
     }
   }
 
+  const roleLabel = (role) => {
+    const r = (role || '').toUpperCase()
+    if (r === 'CUSTOMER') return 'Müşteri'
+    if (r === 'USTA') return 'Usta'
+    return role
+  }
+
+  const fmt = (d) => {
+    if (!d) return ''
+    const date = new Date(d)
+    const now = new Date()
+    const diff = now - date
+    if (diff < 60000) return 'Az önce'
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} dk`
+    if (diff < 86400000) return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628]">
       {/* Toast */}
@@ -182,11 +228,11 @@ export default function SupportDashboard() {
               </div>
             </div>
             <button
-              onClick={() => load(true)}
-              disabled={refreshing}
+              onClick={() => activeTab === 'ustas' ? load(true) : loadConversations()}
+              disabled={refreshing || convLoading}
               className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
             >
-              <RefreshCw size={16} className={`text-white ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw size={16} className={`text-white ${(refreshing || convLoading) ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
@@ -197,73 +243,112 @@ export default function SupportDashboard() {
               <p className="text-xs text-blue-100 mt-0.5">Bekleyen Başvuru</p>
             </div>
             <div className="bg-white/15 backdrop-blur rounded-2xl p-3 text-center">
-              <Clock size={20} className="text-white mx-auto mb-1" />
-              <p className="text-xs text-blue-100">Aktif Destek</p>
+              <p className="text-2xl font-black text-white">{conversations.length}</p>
+              <p className="text-xs text-blue-100 mt-0.5">Aktif Konuşma</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-5">
-        {/* WhatsApp / Destek hattı */}
-        {WHATSAPP_URL && (
-          <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-4 flex items-center gap-3 shadow-sm">
-            <div className="w-11 h-11 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <MessageCircle size={22} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-slate-800 dark:text-white text-sm">WhatsApp Destek</p>
-              <p className="text-xs text-slate-500">Müşterilerle direkt iletişim</p>
-            </div>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm transition"
+      {/* Tabs */}
+      <div className="max-w-lg mx-auto px-4 mt-4">
+        <div className="flex gap-2">
+          {[
+            { key: 'ustas', label: 'Usta Başvuruları', badge: ustas.length },
+            { key: 'chats', label: 'Konuşmalar', badge: conversations.filter(c => c.unread > 0).reduce((s, c) => s + c.unread, 0) },
+          ].map(t => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition ${
+                activeTab === t.key
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
+              }`}
             >
-              <Phone size={15} /> Aç
-            </a>
+              {t.label}
+              {t.badge > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  activeTab === t.key ? 'bg-white/30 text-white' : 'bg-rose-500 text-white'
+                }`}>{t.badge}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 py-4">
+        {/* Usta Başvuruları */}
+        {activeTab === 'ustas' && (
+          <div className="space-y-3">
+            {loading ? (
+              <div className="flex flex-col items-center py-16">
+                <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+                <p className="text-sm text-slate-400">Yükleniyor...</p>
+              </div>
+            ) : ustas.length === 0 ? (
+              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+                <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
+                <p className="text-xs text-slate-400 mt-1">Yeni usta başvuruları burada görünür</p>
+              </div>
+            ) : ustas.map(u => (
+              <UstaCard key={u.id} u={u} onApprove={handleApprove} onReject={handleReject} actioning={actioning} />
+            ))}
           </div>
         )}
 
-        {/* Bekleyen Ustalar */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Users size={15} /> Onay Bekleyen Ustalar
-            </h2>
-            {ustas.length > 0 && (
-              <span className="text-xs bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-2.5 py-1 rounded-full">
-                {ustas.length} bekliyor
-              </span>
-            )}
+        {/* Konuşmalar */}
+        {activeTab === 'chats' && (
+          <div className="space-y-2">
+            {convLoading ? (
+              <div className="flex flex-col items-center py-16">
+                <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+                <p className="text-sm text-slate-400">Konuşmalar yükleniyor...</p>
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+                <MessageCircle size={32} className="text-blue-400 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Henüz konuşma yok</p>
+                <p className="text-xs text-slate-400 mt-1">Kullanıcılar mesaj gönderdiğinde burada görünür</p>
+              </div>
+            ) : conversations.map(conv => (
+              <button
+                key={conv.user.id}
+                onClick={() => navigate(`/support/chat/${conv.user.id}`)}
+                className="w-full bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-4 flex items-center gap-3 shadow-sm text-left hover:border-blue-300 active:scale-[0.99] transition"
+              >
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-lg text-white bg-gradient-to-br ${
+                  conv.user.role?.toUpperCase() === 'USTA'
+                    ? 'from-amber-400 to-orange-500'
+                    : 'from-blue-400 to-indigo-500'
+                }`}>
+                  {conv.user.name?.[0]?.toUpperCase() || '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{conv.user.name}</p>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                      conv.user.role?.toUpperCase() === 'USTA'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>{roleLabel(conv.user.role)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">{conv.lastMessage || '—'}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <span className="text-[10px] text-slate-400">{fmt(conv.lastMessageAt)}</span>
+                  {conv.unread > 0 && (
+                    <span className="w-5 h-5 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {conv.unread > 9 ? '9+' : conv.unread}
+                    </span>
+                  )}
+                  {!conv.unread && <ChevronRight size={14} className="text-slate-300" />}
+                </div>
+              </button>
+            ))}
           </div>
-
-          {loading ? (
-            <div className="flex flex-col items-center py-16">
-              <Loader size={28} className="text-blue-500 animate-spin mb-3" />
-              <p className="text-sm text-slate-400">Yükleniyor...</p>
-            </div>
-          ) : ustas.length === 0 ? (
-            <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
-              <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
-              <p className="text-xs text-slate-400 mt-1">Yeni usta başvuruları burada görünür</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {ustas.map(u => (
-                <UstaCard
-                  key={u.id}
-                  u={u}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  actioning={actioning}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign, User } from 'lucide-react'
+import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign, User, Headphones } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
@@ -241,6 +241,21 @@ function ProfilePage() {
             </div>
           </Card>
         )}
+
+        {/* Canlı Destek */}
+        <button
+          onClick={() => navigate('/live-support')}
+          className="w-full flex items-center gap-3 p-3.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl font-semibold hover:bg-blue-100 transition text-sm border border-blue-100 dark:border-blue-500/20"
+        >
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Headphones size={16} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold">Canlı Destek</p>
+            <p className="text-[11px] text-blue-400 font-normal">Destek ekibiyle sohbet et</p>
+          </div>
+          <ChevronRight size={16} className="text-blue-400" />
+        </button>
 
         {/* Logout */}
         <button
