@@ -10,6 +10,7 @@ import Card from '../components/Card'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
+import JobsMap from '../components/JobsMap'
 
 function ProfessionalDashboard() {
   const { user, getUnreadNotificationCount } = useAuth()
@@ -168,6 +169,11 @@ function ProfessionalDashboard() {
           {jobRequests.length > 0 && (
             <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[11px] font-semibold">{jobRequests.length} Yeni</span>
           )}
+        </div>
+
+        {/* Harita */}
+        <div className="mb-4">
+          <JobsMap jobs={jobRequests} />
         </div>
 
         {loading ? (
