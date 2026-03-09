@@ -110,6 +110,8 @@ export const API_ENDPOINTS = {
 
   // Reviews
   REVIEWS: {
+    ADMIN_ALL: '/reviews/admin/all',
+    ADMIN_DELETE: (id) => `/reviews/admin/${id}`,
     BY_USTA: (ustaId) => `/reviews/usta/${ustaId}`,
   },
 

@@ -33,3 +33,21 @@ export const getReviewsByJob = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllReviews = async (req, res, next) => {
+  try {
+    const reviews = await reviewService.getAllReviews();
+    successResponse(res, reviews, "All reviews fetched");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteReview = async (req, res, next) => {
+  try {
+    await reviewService.deleteReview(req.params.id);
+    successResponse(res, null, "Değerlendirme silindi");
+  } catch (error) {
+    next(error);
+  }
+};

@@ -97,3 +97,28 @@ export const getReviewsByJob = async (jobId) => {
 
   return reviews;
 };
+
+export const getAllReviews = async () => {
+  return prisma.review.findMany({
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+      job: { select: { id: true, title: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const deleteReview = async (id) => {
+  const review = await prisma.review.findUnique({ where: { id } });
+  if (!review) { const e = new Error('Review not found'); e.status = 404; throw e; }
+
+  await prisma.review.delete({ where: { id } });
+
+  // Recalculate usta average
+  const remaining = await prisma.review.findMany({ where: { ustaId: review.ustaId } });
+  const avg = remaining.length > 0
+    ? remaining.reduce((s, r) => s + r.rating, 0) / remaining.length
+    : 0;
+  await prisma.user.update({ where: { id: review.ustaId }, data: { ratings: avg } });
+};
