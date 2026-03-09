@@ -115,6 +115,15 @@ export const API_ENDPOINTS = {
     BY_USTA: (ustaId) => `/reviews/usta/${ustaId}`,
   },
 
+  // Support Sessions
+  SUPPORT_SESSIONS: {
+    OPEN: '/support/sessions/open',
+    CLOSE: '/support/sessions/close',
+    RATE: '/support/sessions/rate',
+    MINE: '/support/sessions/mine',
+    ALL: '/support/sessions',
+  },
+
   // Complaints
   COMPLAINTS: {
     LIST: '/complaints',

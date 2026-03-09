@@ -7,16 +7,17 @@ import { getSocket, connectSocket, emitEvent } from '../utils/socket'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import {
-  Send, Headphones, Loader, CheckCheck, Check, RefreshCw,
+  Send, Headphones, Loader, CheckCheck, Check, RefreshCw, PhoneOff, Star,
 } from 'lucide-react'
 
 export default function LiveSupportChatPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [agent, setAgent] = useState(null)       // support agent user object
+  const [agent, setAgent] = useState(null)
   const [agentLoading, setAgentLoading] = useState(true)
   const [agentError, setAgentError] = useState(null)
+  const [session, setSession] = useState(null) // SupportSession
 
   const [messages, setMessages] = useState([])
   const [msgLoading, setMsgLoading] = useState(false)
@@ -24,22 +25,46 @@ export default function LiveSupportChatPage() {
   const [sending, setSending] = useState(false)
   const [typing, setTyping] = useState(false)
 
+  // Close + rating flow
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false)
+  const [chatClosed, setChatClosed] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [ratingDone, setRatingDone] = useState(false)
+  const [closingSession, setClosingSession] = useState(false)
+
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const typingTimerRef = useRef(null)
 
-  // Load support agents, pick first available
+  // Load support agents + open/resume session
   useEffect(() => {
     const load = async () => {
       setAgentLoading(true)
       setAgentError(null)
       try {
+        // Check for existing open session first
+        const sessionRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.MINE)
+        const existingSession = sessionRes?.data
+        if (existingSession) {
+          setSession(existingSession)
+          setAgent(existingSession.agent)
+          setAgentLoading(false)
+          return
+        }
+        // Otherwise pick an available agent
         const res = await fetchAPI('/support/agents')
         const agents = Array.isArray(res?.data) ? res.data : []
         if (agents.length === 0) {
           setAgentError('Şu an müsait bir destek temsilcisi yok. Lütfen daha sonra tekrar deneyin.')
         } else {
-          setAgent(agents[0])
+          const picked = agents[0]
+          setAgent(picked)
+          // Open a new session
+          const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
+            method: 'POST',
+            body: { agentId: picked.id },
+          })
+          if (sRes?.data) setSession(sRes.data)
         }
       } catch (e) {
         setAgentError('Bağlantı hatası: ' + e.message)
@@ -105,16 +130,22 @@ export default function LiveSupportChatPage() {
       if (tid === agent?.id) setTyping(false)
     }
 
+    const onSessionClose = ({ sessionId }) => {
+      if (session?.id === sessionId) setChatClosed(true)
+    }
+
     socket.on('receive_message', onReceive)
     socket.on('user_typing', onTyping)
     socket.on('user_stop_typing', onStopTyping)
+    socket.on('support_session_closed', onSessionClose)
 
     return () => {
       socket.off('receive_message', onReceive)
       socket.off('user_typing', onTyping)
       socket.off('user_stop_typing', onStopTyping)
+      socket.off('support_session_closed', onSessionClose)
     }
-  }, [user, agent])
+  }, [user, agent, session])
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -169,6 +200,38 @@ export default function LiveSupportChatPage() {
       e.preventDefault()
       handleSend()
     }
+  }
+
+  const handleCloseChat = async () => {
+    if (!session) { setChatClosed(true); setShowCloseConfirm(false); return }
+    setClosingSession(true)
+    try {
+      await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.CLOSE, {
+        method: 'POST',
+        body: { sessionId: session.id },
+      })
+      // Notify agent via socket
+      emitEvent('support_session_closed', { sessionId: session.id, userId: user?.id, agentId: agent?.id })
+      setChatClosed(true)
+      setShowCloseConfirm(false)
+    } catch (e) {
+      setChatClosed(true)
+      setShowCloseConfirm(false)
+    } finally {
+      setClosingSession(false)
+    }
+  }
+
+  const handleRate = async (stars) => {
+    setRating(stars)
+    if (!session) { setRatingDone(true); return }
+    try {
+      await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.RATE, {
+        method: 'POST',
+        body: { sessionId: session.id, rating: stars },
+      })
+    } catch (e) { /* silent */ }
+    setRatingDone(true)
   }
 
   const fmt = (dateStr) => {
@@ -237,15 +300,83 @@ export default function LiveSupportChatPage() {
             </div>
           )}
 
-          <button
-            onClick={loadMessages}
-            disabled={msgLoading || !agent}
-            className="ml-auto w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition"
-          >
-            <RefreshCw size={16} className={`text-gray-400 ${msgLoading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="ml-auto flex items-center gap-1">
+            <button onClick={loadMessages} disabled={msgLoading || !agent}
+              className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition">
+              <RefreshCw size={16} className={`text-gray-400 ${msgLoading ? 'animate-spin' : ''}`} />
+            </button>
+            {agent && !chatClosed && (
+              <button onClick={() => setShowCloseConfirm(true)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition">
+                <PhoneOff size={16} className="text-rose-400" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Close confirm modal */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1a2332] rounded-3xl p-6 max-w-xs w-full shadow-2xl">
+            <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <PhoneOff size={24} className="text-rose-500" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white text-center mb-1">Sohbeti Kapat</h3>
+            <p className="text-xs text-slate-500 text-center mb-5">Destek sohbetini kapatmak istediğinizden emin misiniz? Konuşma sona erecek.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowCloseConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-sm font-semibold">
+                Vazgeç
+              </button>
+              <button onClick={handleCloseChat} disabled={closingSession}
+                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50">
+                {closingSession ? <Loader size={14} className="animate-spin" /> : null}
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat closed + rating screen */}
+      {chatClosed && (
+        <div className="fixed inset-0 z-40 bg-white dark:bg-[#0a1628] flex flex-col items-center justify-center p-6 text-center">
+          {!ratingDone ? (
+            <>
+              <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
+                <Headphones size={36} className="text-emerald-500" />
+              </div>
+              <h2 className="text-lg font-black text-slate-800 dark:text-white mb-2">Sohbet Sona Erdi</h2>
+              <p className="text-sm text-slate-500 mb-8 max-w-xs">Destek ekibimize puan vererek deneyiminizi paylaşın.</p>
+              <div className="flex gap-3 justify-center mb-8">
+                {[1,2,3,4,5].map(s => (
+                  <button key={s} onClick={() => handleRate(s)}
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center transition active:scale-90 ${
+                      s <= rating ? 'bg-amber-400' : 'bg-slate-100 dark:bg-white/10'
+                    }`}
+                    onMouseEnter={() => setRating(s)}
+                    onMouseLeave={() => setRating(0)}
+                  >
+                    <Star size={24} className={s <= rating ? 'text-white' : 'text-slate-400'} fill={s <= rating ? 'currentColor' : 'none'} />
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setRatingDone(true)} className="text-xs text-slate-400 underline">Atla</button>
+            </>
+          ) : (
+            <>
+              <div className="w-20 h-20 bg-blue-100 dark:bg-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
+                <CheckCheck size={36} className="text-blue-500" />
+              </div>
+              <h2 className="text-lg font-black text-slate-800 dark:text-white mb-2">Teşekkürler!</h2>
+              <p className="text-sm text-slate-500 mb-8 max-w-xs">Geri bildiriminiz için teşekkür ederiz.</p>
+              <button onClick={() => navigate(-1)} className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-semibold text-sm">
+                Kapat
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Messages area */}
       <div className="pt-[60px] pb-[72px] max-w-lg mx-auto px-4 min-h-screen flex flex-col">

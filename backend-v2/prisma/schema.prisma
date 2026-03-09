@@ -45,7 +45,9 @@ model User {
   complaints   Complaint[]    @relation("complaintsFiled")
   couponUsages CouponUsage[]
   packages     UserPackage[]
-  certificates UserCertificate[]
+  certificates     UserCertificate[]
+  supportSessions  SupportSession[]  @relation("UserSessions")
+  agentSessions    SupportSession[]  @relation("AgentSessions")
   notifications Notification[]
 
   createdAt DateTime   @default(now())
@@ -463,5 +465,23 @@ model UserCertificate {
   reviewedAt  DateTime?
 
   @@index([userId])
+  @@index([status])
+}
+
+// Canlı Destek Oturumu
+model SupportSession {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      User      @relation("AgentSessions", fields: [agentId], references: [id], onDelete: Cascade)
+  status     String    @default("OPEN")   // OPEN | CLOSED
+  rating     Int?
+  ratingNote String?
+  openedAt   DateTime  @default(now())
+  closedAt   DateTime?
+
+  @@index([userId])
+  @@index([agentId])
   @@index([status])
 }

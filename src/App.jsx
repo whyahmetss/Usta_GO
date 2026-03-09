@@ -33,6 +33,7 @@ import AdminCampaignsPage from './pages/AdminCampaignsPage'
 import AdminFinancePage from './pages/AdminFinancePage'
 import AdminPromotionsPage from './pages/AdminPromotionsPage'
 import AdminVerificationPage from './pages/AdminVerificationPage'
+import AdminSupportMonitorPage from './pages/AdminSupportMonitorPage'
 import CancelJobPage from './pages/CancelJobPage'
 import CustomerRegisterPage from './pages/CustomerRegisterPage'
 import SupportDashboard from './pages/SupportDashboard'
@@ -136,6 +137,7 @@ function AppRoutes() {
       <Route path="/admin/coupons" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/promotions" element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
       <Route path="/admin/verification" element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
+      <Route path="/admin/support-monitor" element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
       <Route path="/admin/pricing" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/pending-ustas" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />

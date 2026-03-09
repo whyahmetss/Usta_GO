@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import * as adminController from '../controllers/admin.controller.js'
+import * as sessionCtrl from '../controllers/supportSession.controller.js'
 import { authMiddleware, supportMiddleware } from '../middlewares/auth.middleware.js'
 import { PrismaClient } from '@prisma/client'
 
@@ -71,5 +72,14 @@ router.get('/conversations', async (req, res) => {
     res.status(500).json({ success: false, error: e.message })
   }
 })
+
+// Session endpoints (any authenticated user)
+router.post('/sessions/open', authMiddleware, sessionCtrl.openSession)
+router.post('/sessions/close', authMiddleware, sessionCtrl.closeSession)
+router.post('/sessions/rate', authMiddleware, sessionCtrl.rateSession)
+router.get('/sessions/mine', authMiddleware, sessionCtrl.getMySession)
+
+// Admin/Support monitoring
+router.get('/sessions', authMiddleware, supportMiddleware, sessionCtrl.getAllSessions)
 
 export default router

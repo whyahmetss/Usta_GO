@@ -22,6 +22,7 @@ import {
   Inbox,
   Megaphone,
   BarChart2,
+  Headphones,
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
@@ -221,6 +222,13 @@ function AdminDashboard() {
       desc: 'Hizmet bazlı temel ücretleri yönet',
       color: 'violet',
     },
+    {
+      path: '/admin/support-monitor',
+      icon: Headphones,
+      title: 'Canlı Destek Takibi',
+      desc: 'Temsilci performansı, oturumlar ve puanlar',
+      color: 'teal',
+    },
   ]
 
   const colorMap = {
@@ -230,6 +238,7 @@ function AdminDashboard() {
     amber: 'bg-amber-50 text-amber-600',
     rose: 'bg-rose-50 text-rose-600',
     violet: 'bg-violet-50 text-violet-600',
+    teal: 'bg-teal-50 text-teal-600',
   }
 
   if (loading) {
@@ -280,7 +289,7 @@ function AdminDashboard() {
         />
 
         <div className="max-w-2xl mx-auto px-4 pb-8">
-          <p className="text-sm text-gray-500 -mt-2 mb-6">
+          <p className="text-sm text-gray-500 font-medium mt-2 mb-6">
             Hoş geldin, {user?.name}
           </p>
 
