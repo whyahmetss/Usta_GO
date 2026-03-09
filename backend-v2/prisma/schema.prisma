@@ -434,6 +434,20 @@ model Campaign {
   updatedAt   DateTime @updatedAt
 }
 
+// E-posta OTP doğrulama
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   @default("EMAIL_VERIFY") // EMAIL_VERIFY | PASSWORD_RESET
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([code])
+}
+
 // Usta/Müşteri belge — Admin onayı için
 model UserCertificate {
   id          String   @id @default(cuid())

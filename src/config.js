@@ -142,6 +142,14 @@ export const API_ENDPOINTS = {
     CANCELLATION: '/admin/config/cancellation',
   },
 
+  // OTP - E-posta ve SMS doğrulama
+  OTP: {
+    SEND: '/otp/send',
+    VERIFY: '/otp/verify',
+    SMS_SEND: '/otp/sms/send',
+    SMS_VERIFY: '/otp/sms/verify',
+  },
+
   // Bakım Paketleri
   PACKAGES: {
     MY:               '/packages/my',

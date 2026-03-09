@@ -46,7 +46,7 @@ export const getPendingUstas = async () => {
   const users = await prisma.user.findMany({
     where: { role: "USTA", status: "PENDING_APPROVAL" },
     include: {
-      certificates: { where: { status: "PENDING" }, orderBy: { createdAt: "desc" }, take: 1 },
+      certificates: { orderBy: { createdAt: "desc" } },
     },
     orderBy: { createdAt: "desc" },
   });
