@@ -97,6 +97,11 @@ html.dark .shadow-nav  { box-shadow: 0 -1px 14px rgba(0,0,0,.5); }
   100% { transform: scale(1.9); opacity: 0;   }
 }
 
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
 .leaflet-pane { z-index: 1 !important; }
 .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
 

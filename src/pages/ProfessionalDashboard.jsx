@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle, Zap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -17,6 +17,8 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true)
   const [allJobs, setAllJobs] = useState([])
   const [ownJobs, setOwnJobs] = useState([])
+  const [newJobFlash, setNewJobFlash] = useState(null) // { title, id }
+  const flashTimer = useRef(null)
 
   const unreadNotifs = getUnreadNotificationCount()
 
@@ -77,22 +79,45 @@ function ProfessionalDashboard() {
   useEffect(() => {
     if (user?.role !== 'professional') return
     const socket = connectSocket(user?.id)
+
+    const addJob = (rawJob) => {
+      if (!rawJob?.id) return
+      const mapped = mapJobsFromBackend([rawJob])[0]
+      const normalized = normalizeJob(mapped)
+      setAllJobs(prev => {
+        if (prev.some(j => j.id === normalized.id)) return prev
+        return [normalized, ...prev]
+      })
+      // Bildirim flash göster
+      clearTimeout(flashTimer.current)
+      setNewJobFlash({ title: rawJob.title || 'Yeni İş', id: rawJob.id })
+      flashTimer.current = setTimeout(() => setNewJobFlash(null), 6000)
+    }
+
     const handleNewJob = async (jobData) => {
+      // Önce socket datasını direkt kullan (hız için)
+      if (jobData?.title) {
+        addJob(jobData)
+        return
+      }
+      // Sadece id geldiyse fetch et
       try {
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(jobData.id))
-        const fullJob = response?.data
-        if (!fullJob) return
-        setAllJobs(prev => {
-          if (prev.some(j => j.id === fullJob.id)) return prev
-          const mapped = mapJobsFromBackend([fullJob])[0]
-          return [{ ...mapped, location: typeof mapped.location === 'string' ? { address: mapped.location } : (mapped.location || { address: 'Adres belirtilmedi' }) }, ...prev]
-        })
-      } catch (err) { console.error('Fetch new job error:', err) }
+        if (response?.data) addJob(response.data)
+      } catch (err) {
+        // Fetch başarısız olursa tüm listeyi yenile
+        loadDashboardData()
+      }
     }
+
     const handleConnect = () => loadDashboardData()
     socket.on('new_job_available', handleNewJob)
     socket.on('connect', handleConnect)
-    return () => { socket.off('new_job_available', handleNewJob); socket.off('connect', handleConnect) }
+    return () => {
+      socket.off('new_job_available', handleNewJob)
+      socket.off('connect', handleConnect)
+      clearTimeout(flashTimer.current)
+    }
   }, [user?.id, user?.role, loadDashboardData])
 
   // Bekleyen genel işler (iş talepleri listesi) - kendi kabul etmedikleri
@@ -113,6 +138,31 @@ function ProfessionalDashboard() {
 
   return (
     <div>
+      {/* Yeni iş flash bildirimi */}
+      {newJobFlash && (
+        <div
+          onClick={() => { navigate(`/job/${newJobFlash.id}`); setNewJobFlash(null) }}
+          className="fixed top-4 left-4 right-4 z-[9999] cursor-pointer"
+          style={{ animation: 'slideDown 0.35s ease' }}
+        >
+          <div className="bg-primary-500 text-white rounded-2xl px-4 py-3.5 shadow-2xl flex items-center gap-3">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Zap size={18} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm">Yeni İş Talebi!</p>
+              <p className="text-[12px] text-white/80 truncate">{newJobFlash.title}</p>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); setNewJobFlash(null) }}
+              className="text-white/60 hover:text-white text-lg leading-none px-1"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {isPendingApproval && (
         <div className="bg-amber-50 dark:bg-[#1F1F1F] border-b border-amber-200/60 dark:border-[#2A2A2A] px-4 py-3 text-center text-sm font-medium text-amber-700 dark:text-amber-400">
           ⏳ Hesabınız admin onayı bekliyor. Onaylandıktan sonra iş alabileceksiniz.
