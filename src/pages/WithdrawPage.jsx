@@ -217,7 +217,7 @@ function WithdrawPage() {
           {submitting ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Isleniyor...
+              İşleniyor...
             </>
           ) : (
             'Para Çekme Talebi Oluştur'
