@@ -14,6 +14,7 @@ export const getAllUsers = async (skip = 0, take = 10) => {
         role: true,
         status: true,
         ratings: true,
+        completedJobs: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -21,7 +22,10 @@ export const getAllUsers = async (skip = 0, take = 10) => {
     prisma.user.count(),
   ]);
 
-  return { users, total };
+  return {
+    users: users.map(u => ({ ...u, rating: u.ratings ?? 0 })),
+    total,
+  };
 };
 
 export const banUser = async (userId) => {
