@@ -4,8 +4,9 @@ export const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["CUSTOMER", "USTA"]).default("CUSTOMER"),
+  role: z.enum(["CUSTOMER", "USTA", "ADMIN", "SUPPORT"]).default("CUSTOMER"),
   phone: z.string().optional(),
+  birthDate: z.string().optional(),
   referralCode: z.preprocess(
     (v) => {
       if (v === null || v === undefined) return undefined;
@@ -14,7 +15,7 @@ export const registerSchema = z.object({
     },
     z.string().optional()
   ),
-});
+}).passthrough();
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
