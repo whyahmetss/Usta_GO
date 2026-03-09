@@ -76,38 +76,31 @@ function ProfessionalDashboard() {
     }
   }, [user?.role, loadDashboardData])
 
+  // Yeni iş gelince listeye ekle + flash göster
+  const addJobToList = useCallback((rawJob) => {
+    if (!rawJob?.id) return
+    const mapped = mapJobsFromBackend([rawJob])[0]
+    const normalized = normalizeJob(mapped)
+    setAllJobs(prev => {
+      if (prev.some(j => j.id === normalized.id)) return prev
+      clearTimeout(flashTimer.current)
+      setNewJobFlash({ title: rawJob.title || 'Yeni İş', id: rawJob.id })
+      flashTimer.current = setTimeout(() => setNewJobFlash(null), 6000)
+      return [normalized, ...prev]
+    })
+  }, [])
+
+  // WebSocket — anlık bildirim
   useEffect(() => {
     if (user?.role !== 'professional') return
     const socket = connectSocket(user?.id)
 
-    const addJob = (rawJob) => {
-      if (!rawJob?.id) return
-      const mapped = mapJobsFromBackend([rawJob])[0]
-      const normalized = normalizeJob(mapped)
-      setAllJobs(prev => {
-        if (prev.some(j => j.id === normalized.id)) return prev
-        return [normalized, ...prev]
-      })
-      // Bildirim flash göster
-      clearTimeout(flashTimer.current)
-      setNewJobFlash({ title: rawJob.title || 'Yeni İş', id: rawJob.id })
-      flashTimer.current = setTimeout(() => setNewJobFlash(null), 6000)
-    }
-
     const handleNewJob = async (jobData) => {
-      // Önce socket datasını direkt kullan (hız için)
-      if (jobData?.title) {
-        addJob(jobData)
-        return
-      }
-      // Sadece id geldiyse fetch et
+      if (jobData?.title) { addJobToList(jobData); return }
       try {
         const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(jobData.id))
-        if (response?.data) addJob(response.data)
-      } catch (err) {
-        // Fetch başarısız olursa tüm listeyi yenile
-        loadDashboardData()
-      }
+        if (response?.data) addJobToList(response.data)
+      } catch { loadDashboardData() }
     }
 
     const handleConnect = () => loadDashboardData()
@@ -116,9 +109,33 @@ function ProfessionalDashboard() {
     return () => {
       socket.off('new_job_available', handleNewJob)
       socket.off('connect', handleConnect)
-      clearTimeout(flashTimer.current)
     }
-  }, [user?.id, user?.role, loadDashboardData])
+  }, [user?.id, user?.role, loadDashboardData, addJobToList])
+
+  // Polling fallback — her 20 saniyede yeni iş var mı kontrol et
+  useEffect(() => {
+    if (user?.role !== 'professional' || user?.status === 'PENDING_APPROVAL') return
+    const poll = async () => {
+      try {
+        const res = await fetchAPI(`${API_ENDPOINTS.JOBS.LIST}?status=PENDING&limit=50`)
+        const raw = Array.isArray(res?.data) ? res.data : []
+        const mapped = mapJobsFromBackend(raw).map(normalizeJob)
+        setAllJobs(prev => {
+          const prevIds = new Set(prev.map(j => j.id))
+          const newOnes = mapped.filter(j => !prevIds.has(j.id))
+          if (newOnes.length === 0) return prev
+          // En yeni iş için flash göster
+          const newest = newOnes[0]
+          clearTimeout(flashTimer.current)
+          setNewJobFlash({ title: newest.title || 'Yeni İş', id: newest.id })
+          flashTimer.current = setTimeout(() => setNewJobFlash(null), 6000)
+          return [...newOnes, ...prev]
+        })
+      } catch { /* ignore */ }
+    }
+    const interval = setInterval(poll, 20000)
+    return () => { clearInterval(interval); clearTimeout(flashTimer.current) }
+  }, [user?.role, user?.status])
 
   // Bekleyen genel işler (iş talepleri listesi) - kendi kabul etmedikleri
   const jobRequests = allJobs.filter(j => j.status === 'pending')
