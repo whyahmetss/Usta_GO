@@ -19,8 +19,8 @@ model User {
   phone     String?
   bio       String?
 
-  // Role: CUSTOMER, USTA, ADMIN
-  role      UserRole   @default(CUSTOMER)
+  birthDate DateTime?  // 18+ doğrulama için
+  role      UserRole   @default(CUSTOMER)  // CUSTOMER, USTA, ADMIN, SUPPORT
 
   // Account status
   status    UserStatus @default(ACTIVE)
@@ -327,6 +327,16 @@ model CouponUsage {
   @@index([couponId])
 }
 
+// Sistem konfigürasyonu — iptal oranları vb.
+model AppConfig {
+  id    String   @id @default(cuid())
+  key   String   @unique
+  value String   @db.Text  // JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([key])
+}
+
 // AI Fiyat Servisleri — Admin CRUD, AI sınıflandırma için kullanılır
 model Service {
   id        String   @id @default(cuid())
@@ -423,12 +433,14 @@ model Campaign {
   updatedAt   DateTime @updatedAt
 }
 
-// Usta Sertifika - Admin onayı için
+// Usta/Müşteri belge — Admin onayı için
 model UserCertificate {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   fileUrl     String
+  docType     String?  // kimlikOn, kimlikArka, ikametgah, meslek, adliSicil, vergi, profil vb.
+  label       String?
   status      String   @default("PENDING")  // PENDING | APPROVED | REJECTED
   adminNote   String?
 

@@ -22,6 +22,7 @@ import packageRoutes from "./routes/package.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import certificateRoutes from "./routes/certificate.routes.js";
 import campaignRoutes from "./routes/campaign.routes.js";
+import supportRoutes from "./routes/support.routes.js";
 import { PrismaClient } from "@prisma/client";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
@@ -101,6 +102,7 @@ app.get("/api/campaigns/active", async (req, res) => {
   }
 });
 app.use("/api/campaigns", campaignRoutes);
+app.use("/api/support", supportRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

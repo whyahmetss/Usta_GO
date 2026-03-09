@@ -32,6 +32,8 @@ import AdminPendingUstasPage from './pages/AdminPendingUstasPage'
 import AdminCampaignsPage from './pages/AdminCampaignsPage'
 import AdminFinancePage from './pages/AdminFinancePage'
 import CancelJobPage from './pages/CancelJobPage'
+import CustomerRegisterPage from './pages/CustomerRegisterPage'
+import SupportDashboard from './pages/SupportDashboard'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
 import AboutPage from './pages/AboutPage'
@@ -64,6 +66,7 @@ function ProtectedRoute({ children, roleRequired = null }) {
   if (requiredRole && userRole !== requiredRole) {
     if (userRole === 'admin') return <Navigate to="/admin" />
     if (userRole === 'professional') return <Navigate to="/professional" />
+    if (userRole === 'support') return <Navigate to="/support" />
     return <Navigate to="/home" />
   }
 
@@ -85,6 +88,7 @@ function AppRoutes() {
           user ? (
             userRole === 'admin' ? <Navigate to="/admin" /> :
             userRole === 'professional' ? <Navigate to="/professional" /> :
+            userRole === 'support' ? <Navigate to="/support" /> :
             <Navigate to="/home" />
           ) : (
             <AuthPage />
@@ -92,6 +96,7 @@ function AppRoutes() {
         }
       />
       <Route path="/register/usta" element={user ? <Navigate to="/professional" /> : <UstaRegisterPage />} />
+      <Route path="/register/customer" element={<ProtectedRoute roleRequired="customer"><CustomerRegisterPage /></ProtectedRoute>} />
 
       {/* Customer */}
       <Route path="/home" element={<ProtectedRoute roleRequired="customer"><Layout><HomePage /></Layout></ProtectedRoute>} />
@@ -131,6 +136,7 @@ function AppRoutes() {
       <Route path="/admin/campaigns" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/finance" element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
 
+      <Route path="/support" element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
       <Route path="/track/:id" element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
       <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />

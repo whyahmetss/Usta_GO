@@ -12,8 +12,24 @@ const generateReferralCode = () => {
   return code;
 };
 
+const isAtLeast18 = (birthDate) => {
+  if (!birthDate) return true // opsiyonel alan
+  const d = new Date(birthDate)
+  const today = new Date()
+  let age = today.getFullYear() - d.getFullYear()
+  const m = today.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--
+  return age >= 18
+}
+
 export const registerUser = async (data) => {
-  const { name, email, password, role, phone, referralCode } = data;
+  const { name, email, password, role, phone, referralCode, birthDate } = data;
+
+  if (birthDate && !isAtLeast18(birthDate)) {
+    const err = new Error('18 yaş altı kayıt olamaz')
+    err.status = 400
+    throw err
+  }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -42,6 +58,7 @@ export const registerUser = async (data) => {
       password: hashedPassword,
       role: role || "CUSTOMER",
       phone,
+      birthDate: birthDate ? new Date(birthDate) : null,
       referralCode: newReferralCode,
       status: isUsta ? "PENDING_APPROVAL" : "ACTIVE",
     },

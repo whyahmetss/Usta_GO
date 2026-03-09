@@ -26,6 +26,9 @@ const PKG_COLORS = {
 function AdminPricingPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('services')
+  const [cancelRates, setCancelRates] = useState({ pending: 5, accepted: 25, inProgress: 50 })
+  const [cancelSaving, setCancelSaving] = useState(false)
+  const [cancelError, setCancelError] = useState(null)
 
   const [services, setServices]   = useState([])
   const [loading, setLoading]     = useState(true)
@@ -66,8 +69,27 @@ function AdminPricingPage() {
     }
   }
 
+  const loadCancelRates = async () => {
+    try {
+      const r = await fetchAPI(API_ENDPOINTS.CONFIG.CANCELLATION)
+      if (r?.data) setCancelRates(r.data)
+    } catch { /* ignore */ }
+  }
+  const saveCancelRates = async () => {
+    setCancelSaving(true); setCancelError(null)
+    try {
+      await fetchAPI(API_ENDPOINTS.CONFIG.CANCELLATION, {
+        method: 'PATCH',
+        body: cancelRates,
+      })
+      setCancelError(null)
+    } catch (e) { setCancelError(e.message || 'Kaydetme başarısız') }
+    finally { setCancelSaving(false) }
+  }
+
   useEffect(() => { loadServices() }, [])
   useEffect(() => { if (activeTab === 'packages') loadPackages() }, [activeTab])
+  useEffect(() => { if (activeTab === 'cancellation') loadCancelRates() }, [activeTab])
 
   const openCreate = () => {
     setEditingId(null)
@@ -195,6 +217,12 @@ function AdminPricingPage() {
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'packages' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
           >
             Bakım Paketleri
+          </button>
+          <button
+            onClick={() => setActiveTab('cancellation')}
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'cancellation' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
+          >
+            İptal Oranları
           </button>
         </div>
       </div>
@@ -347,6 +375,46 @@ function AdminPricingPage() {
               </>
             )}
           </>
+        )}
+
+        {/* ── CANCELLATION TAB ── */}
+        {activeTab === 'cancellation' && (
+          <Card>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Sadakatsizlik Bedeli Oranları</h3>
+            <p className="text-[11px] text-gray-500 mb-4">Usta iş iptal ettiğinde iş bütçesinin yüzdesi olarak kesilecek ceza. Müşteri iptalinde 0 TL.</p>
+            {cancelError && <p className="text-xs text-rose-600 mb-3">{cancelError}</p>}
+            <div className="space-y-4">
+              {[
+                { key: 'pending', label: 'Beklemede (PENDING)', desc: 'Teklif verilmeden önce' },
+                { key: 'accepted', label: 'Kabul Sonrası (ACCEPTED)', desc: 'İş kabul edildi, henüz başlamadı' },
+                { key: 'inProgress', label: 'Devam Eden (IN_PROGRESS)', desc: 'İş başladı' },
+              ].map(({ key, label, desc }) => (
+                <div key={key}>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">{label}</label>
+                  <p className="text-[10px] text-gray-400 mb-1">{desc}</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={cancelRates[key] ?? 0}
+                      onChange={e => setCancelRates(p => ({ ...p, [key]: Number(e.target.value) || 0 }))}
+                      className="w-24 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm"
+                    />
+                    <span className="text-sm text-gray-500">%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={saveCancelRates}
+              disabled={cancelSaving}
+              className="mt-4 w-full py-2.5 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {cancelSaving ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
+              {cancelSaving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </Card>
         )}
 
         {/* ── SERVICES TAB ── */}

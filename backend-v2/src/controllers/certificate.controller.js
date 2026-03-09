@@ -4,12 +4,13 @@ const prisma = new PrismaClient();
 
 export const uploadCertificate = async (req, res) => {
   try {
-    const { fileUrl } = req.body;
+    const { fileUrl, type: docType, label } = req.body;
     if (!fileUrl?.trim()) return res.status(400).json({ success: false, message: 'fileUrl gerekli' });
-    if (req.user.role !== 'USTA') return res.status(403).json({ success: false, message: 'Sadece ustalar sertifika yükleyebilir' });
+    const role = (req.user.role || '').toUpperCase();
+    if (role !== 'USTA' && role !== 'CUSTOMER') return res.status(403).json({ success: false, message: 'Belge yükleme yetkisi yok' });
 
     const cert = await prisma.userCertificate.create({
-      data: { userId: req.user.id, fileUrl: fileUrl.trim(), status: 'PENDING' },
+      data: { userId: req.user.id, fileUrl: fileUrl.trim(), docType: docType || null, label: label || null, status: 'PENDING' },
     });
     res.status(201).json({ success: true, data: cert, message: 'Sertifika yüklendi, admin onayı bekleniyor' });
   } catch (error) {

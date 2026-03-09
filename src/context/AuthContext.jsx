@@ -199,7 +199,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const register = useCallback(async (email, password, name, role, phone = '', referralCode) => {
+  const register = useCallback(async (email, password, name, role, phone = '', referralCode, birthDate) => {
     try {
       setError(null)
       const cleanedReferralCode =
@@ -213,6 +213,7 @@ export function AuthProvider({ children }) {
         role: role?.toUpperCase() || 'CUSTOMER',
         phone,
         ...(cleanedReferralCode ? { referralCode: cleanedReferralCode } : {}),
+        ...(birthDate ? { birthDate } : {}),
       }
       const response = await fetchAPI(API_ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',

@@ -31,13 +31,14 @@ export const roleMiddleware = (...allowedRoles) => {
 };
 
 export const adminMiddleware = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+  if (req.user.role !== "ADMIN") return res.status(403).json({ error: "Admin access required" });
+  next();
+};
 
-  if (req.user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-
+export const supportMiddleware = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+  const role = (req.user.role || "").toUpperCase();
+  if (role !== "ADMIN" && role !== "SUPPORT") return res.status(403).json({ error: "Destek yetkisi gerekli" });
   next();
 };

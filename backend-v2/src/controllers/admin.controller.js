@@ -1,4 +1,5 @@
 import * as adminService from "../services/admin.service.js";
+import * as configController from "./config.controller.js";
 import { successResponse, paginatedResponse } from "../utils/response.js";
 
 export const getAllUsers = async (req, res, next) => {
@@ -345,3 +346,6 @@ export const deleteCampaign = async (req, res, next) => {
     res.json({ data: null, message: "Kampanya kaldirildi" });
   } catch (error) { next(error); }
 };
+
+export const getCancellationRates = configController.getCancellationRates;
+export const setCancellationRates = configController.setCancellationRates;

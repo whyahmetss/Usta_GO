@@ -19,6 +19,17 @@ function CancelJobPage() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [cancellationCount, setCancellationCount] = useState(0)
+  const [cancelRates, setCancelRates] = useState({ pending: 5, accepted: 25, inProgress: 50 })
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetchAPI('/admin/config/cancellation')
+        if (r?.data) setCancelRates(r.data)
+      } catch { /* default rates */ }
+    }
+    load()
+  }, [])
 
   useEffect(() => {
     const loadJob = async () => {
@@ -124,7 +135,7 @@ function CancelJobPage() {
       try {
         const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
           method: 'PUT',
-          body: { reason: finalReason, penalty }
+          body: { reason: finalReason, penalty: 0 }
         })
 
         if (response.data || response.success !== false) {

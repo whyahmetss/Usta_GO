@@ -137,6 +137,11 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/services/${id}`,
   },
 
+  // Config (admin)
+  CONFIG: {
+    CANCELLATION: '/admin/config/cancellation',
+  },
+
   // Bakım Paketleri
   PACKAGES: {
     MY:               '/packages/my',

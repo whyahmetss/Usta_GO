@@ -4,7 +4,11 @@ import { authMiddleware, adminMiddleware } from "../middlewares/auth.middleware.
 
 const router = Router();
 
-// All routes require ADMIN role
+// İptal oranları — herkes okuyabilir (usta iptal cezası görmek için)
+router.get("/config/cancellation", adminController.getCancellationRates);
+router.patch("/config/cancellation", authMiddleware, adminMiddleware, adminController.setCancellationRates);
+
+// All other routes require ADMIN role
 router.use(authMiddleware, adminMiddleware);
 
 /**
@@ -68,6 +72,7 @@ router.patch("/coupons/:couponId/toggle", adminController.toggleCoupon);
 
 // Finans
 router.get("/finance", adminController.getFinanceReport);
+
 
 // Kampanya
 router.get("/campaigns/active", adminController.getActiveCampaign);

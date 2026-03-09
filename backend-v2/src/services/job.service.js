@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { getCancellationRates } from "./config.service.js";
 
 const prisma = new PrismaClient();
 
@@ -416,18 +417,16 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     throw error;
   }
 
-  // Ceza: Müşteri iptal ederse 0, Usta iptal ederse durum bazlı
+  // Ceza: Müşteri iptal ederse 0, Usta iptal ederse config oranlarından
   let finalPenalty = penalty
   if (isCustomer) {
     finalPenalty = 0
   } else if (finalPenalty === 0 && job.budget > 0) {
-    if (job.status === "IN_PROGRESS") {
-      finalPenalty = Math.round(job.budget * 0.5)
-    } else if (job.status === "ACCEPTED") {
-      finalPenalty = Math.round(job.budget * 0.25)
-    } else if (job.status === "PENDING") {
-      finalPenalty = Math.round(job.budget * 0.05)
-    }
+    const rates = await getCancellationRates()
+    const pct = job.status === "IN_PROGRESS" ? (rates.inProgress || 50) / 100
+      : job.status === "ACCEPTED" ? (rates.accepted || 25) / 100
+      : (rates.pending || 5) / 100
+    finalPenalty = Math.round(job.budget * pct)
   }
 
   const refundAmount = Math.max(0, (job.budget || 0) - finalPenalty)

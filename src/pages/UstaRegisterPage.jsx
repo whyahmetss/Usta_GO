@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import {
-  User, Phone, Mail, Lock, Gift, Eye, EyeOff,
+  User, Phone, Mail, Lock, Gift, Eye, EyeOff, Calendar,
   CreditCard, FileText, MapPin, Building2, Camera,
   CheckCircle, ChevronLeft, Upload, AlertCircle,
 } from 'lucide-react'
@@ -148,6 +148,7 @@ function UstaRegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [phone, setPhone] = useState('')
   const [referralCode, setReferralCode] = useState('')
+  const [birthDate, setBirthDate] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [docs, setDocs] = useState({}) // { kimlikOn: File, kimlikArka: File, ... }
   const [error, setError] = useState('')
@@ -167,9 +168,21 @@ function UstaRegisterPage() {
     setPhone(fmt)
   }
 
+  const isUnder18 = () => {
+    if (!birthDate) return false
+    const d = new Date(birthDate)
+    const today = new Date()
+    let age = today.getFullYear() - d.getFullYear()
+    const m = today.getMonth() - d.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--
+    return age < 18
+  }
+
   const handleNextStep = () => {
     setError('')
     if (!name.trim()) { setError('Ad Soyad gerekli'); return }
+    if (!birthDate) { setError('Doğum tarihi zorunludur'); return }
+    if (isUnder18()) { setError('18 yaş altı kayıt olamaz'); return }
     if (!phone.trim()) { setError('Telefon gerekli'); return }
     if (!email.trim()) { setError('E-posta gerekli'); return }
     if (password.length < 6) { setError('Şifre en az 6 karakter olmalı'); return }
@@ -195,7 +208,7 @@ function UstaRegisterPage() {
     setLoading(true)
     try {
       // 1. Kullanıcı kaydı
-      const result = await register(email, password, name, 'USTA', phone, referralCode?.trim() || undefined)
+      const result = await register(email, password, name, 'USTA', phone, referralCode?.trim() || undefined, birthDate)
       if (!result?.success) {
         setError(result?.error || 'Kayıt başarısız')
         setLoading(false)
