@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const authMiddleware = (req, res, next) => {
   try {
@@ -30,15 +33,32 @@ export const roleMiddleware = (...allowedRoles) => {
   };
 };
 
-export const adminMiddleware = (req, res, next) => {
+export const adminMiddleware = async (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-  if (req.user.role !== "ADMIN") return res.status(403).json({ error: "Admin access required" });
-  next();
+  // Check DB for current role (JWT role might be stale after role change)
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id }, select: { role: true } });
+    const role = (dbUser?.role || req.user.role || "").toUpperCase();
+    if (role !== "ADMIN") return res.status(403).json({ error: "Admin access required" });
+    next();
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 };
 
-export const supportMiddleware = (req, res, next) => {
+export const supportMiddleware = async (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-  const role = (req.user.role || "").toUpperCase();
-  if (role !== "ADMIN" && role !== "SUPPORT") return res.status(403).json({ error: "Destek yetkisi gerekli" });
-  next();
+  // Check DB for current role (JWT role might be stale after role change)
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id }, select: { role: true } });
+    const role = (dbUser?.role || req.user.role || "").toUpperCase();
+    if (role !== "ADMIN" && role !== "SUPPORT") {
+      return res.status(403).json({ error: "Destek yetkisi gerekli" });
+    }
+    // Sync req.user.role with DB value so downstream handlers see correct role
+    if (dbUser) req.user = { ...req.user, role: dbUser.role };
+    next();
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 };

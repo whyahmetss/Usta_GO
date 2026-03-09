@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import * as adminController from '../controllers/admin.controller.js'
-import * as messageService from '../services/message.service.js'
 import { authMiddleware, supportMiddleware } from '../middlewares/auth.middleware.js'
 import { PrismaClient } from '@prisma/client'
 
