@@ -44,6 +44,14 @@ const DOC_FIELDS = [
     required: true,
   },
   {
+    id: 'adliSicil',
+    label: 'Adli Sicil Kaydı',
+    desc: 'E-devlet\'ten alınan güncel adli sicil kaydı belgesi',
+    icon: FileText,
+    color: 'rose',
+    required: true,
+  },
+  {
     id: 'vergi',
     label: 'Vergi Levhası',
     desc: 'Vergi levhanız (opsiyonel)',
@@ -56,7 +64,7 @@ const DOC_FIELDS = [
     label: 'Profil Fotoğrafı',
     desc: 'Net, yüzünüzün göründüğü bir fotoğraf',
     icon: Camera,
-    color: 'rose',
+    color: 'cyan',
     required: false,
   },
 ]
@@ -67,6 +75,7 @@ const COLOR_MAP = {
   violet:  { bg: 'bg-violet-50 dark:bg-violet-950/30', icon: 'bg-violet-500', text: 'text-violet-600', border: 'border-violet-200 dark:border-violet-800' },
   amber:   { bg: 'bg-amber-50 dark:bg-amber-950/30', icon: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-200 dark:border-amber-800' },
   rose:    { bg: 'bg-rose-50 dark:bg-rose-950/30', icon: 'bg-rose-500', text: 'text-rose-600', border: 'border-rose-200 dark:border-rose-800' },
+  cyan:    { bg: 'bg-cyan-50 dark:bg-cyan-950/30', icon: 'bg-cyan-500', text: 'text-cyan-600', border: 'border-cyan-200 dark:border-cyan-800' },
 }
 
 function DocUploadCard({ field, file, onChange }) {
