@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapUsersFromBackend } from '../utils/fieldMapper'
-import { LogOut, Trash2, Shield, AlertCircle, Loader, Star, Briefcase, Users, User, Headphones, TrendingUp, TrendingDown } from 'lucide-react'
+import { LogOut, Trash2, Shield, AlertCircle, Loader, Star, Briefcase, Users, User, Headphones, TrendingUp, TrendingDown, BarChart2 } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -49,6 +49,7 @@ function AdminUsersPage() {
   const [error, setError] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [roleFilter, setRoleFilter] = useState('all')
+  const [view, setView] = useState('users') // 'users' | 'ratings'
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -92,12 +93,12 @@ function AdminUsersPage() {
     })
   }, [users, roleFilter])
 
-  // Top/bottom rated (only users with rating > 0)
-  const ratedUsers = useMemo(() =>
-    [...users].filter(u => (u.rating || 0) > 0).sort((a, b) => b.rating - a.rating)
+  // Ratings: top uses only rated>0, bottom includes all (0 rating = lowest)
+  const allSortedDesc = useMemo(() =>
+    [...users].sort((a, b) => (b.rating || 0) - (a.rating || 0))
   , [users])
-  const topRated = ratedUsers.slice(0, 3)
-  const bottomRated = [...ratedUsers].reverse().slice(0, 3)
+  const topRated = allSortedDesc.filter(u => (u.rating || 0) > 0).slice(0, 3)
+  const bottomRated = [...allSortedDesc].reverse().slice(0, 3)
 
   const counts = useMemo(() => ({
     all: users.length,
@@ -139,35 +140,37 @@ function AdminUsersPage() {
           ))}
         </div>
 
-        {/* Top/Bottom rated */}
-        {ratedUsers.length > 0 && (
+        {/* Top/Bottom rated summary */}
+        {(topRated.length > 0 || bottomRated.length > 0) && (
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
               <div className="flex items-center gap-1.5 mb-2">
                 <TrendingUp size={14} className="text-emerald-500" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Yüksek Puan</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Yüksek</p>
               </div>
-              {topRated.map((u, i) => (
-                <div key={u.id} className="flex items-center gap-2 py-1">
-                  <span className="text-[10px] font-black text-slate-400 w-3">{i + 1}.</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{u.name}</p>
-                  <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
-                    <Star size={10} fill="currentColor" />{(u.rating || 0).toFixed(1)}
-                  </span>
-                </div>
-              ))}
+              {topRated.length === 0
+                ? <p className="text-xs text-slate-400 italic">Henüz puan yok</p>
+                : topRated.map((u, i) => (
+                  <div key={u.id} className="flex items-center gap-2 py-1">
+                    <span className="text-[10px] font-black text-slate-400 w-3">{i + 1}.</span>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{u.name}</p>
+                    <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
+                      <Star size={10} fill="currentColor" />{(u.rating || 0).toFixed(1)}
+                    </span>
+                  </div>
+                ))}
             </div>
             <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
               <div className="flex items-center gap-1.5 mb-2">
                 <TrendingDown size={14} className="text-rose-500" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Düşük Puan</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Düşük</p>
               </div>
               {bottomRated.map((u, i) => (
                 <div key={u.id} className="flex items-center gap-2 py-1">
                   <span className="text-[10px] font-black text-slate-400 w-3">{i + 1}.</span>
                   <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{u.name}</p>
                   <span className="flex items-center gap-0.5 text-[11px] font-bold text-rose-400">
-                    <Star size={10} fill="currentColor" />{(u.rating || 0).toFixed(1)}
+                    <Star size={10} fill={(u.rating||0) > 0 ? 'currentColor' : 'none'} />{(u.rating || 0).toFixed(1)}
                   </span>
                 </div>
               ))}
@@ -176,14 +179,62 @@ function AdminUsersPage() {
         )}
 
         {error && (
-          <Card className="!border-amber-200 !bg-amber-50">
-            <div className="flex items-start gap-3">
-              <AlertCircle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-600">{error}</p>
-            </div>
-          </Card>
+          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-3">
+            <AlertCircle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 dark:text-amber-300">{error}</p>
+          </div>
         )}
 
+        {/* View toggle */}
+        <div className="flex gap-2">
+          <button onClick={() => setView('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'users' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            <Users size={13} /> Kullanıcılar
+          </button>
+          <button onClick={() => setView('ratings')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'ratings' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            <BarChart2 size={13} /> Puan Listesi
+          </button>
+        </div>
+
+        {/* Ratings view */}
+        {view === 'ratings' && !loading && (
+          <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.05] flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Tüm Kullanıcılar — Puana Göre</p>
+              <p className="text-[10px] text-slate-400">{allSortedDesc.length} kullanıcı</p>
+            </div>
+            {allSortedDesc.map((u, i) => {
+              const rating = u.rating || 0
+              const pct = (rating / 5) * 100
+              return (
+                <div key={u.id} className={`flex items-center gap-3 px-4 py-3 ${i !== allSortedDesc.length - 1 ? 'border-b border-slate-50 dark:border-white/[0.04]' : ''}`}>
+                  <span className="text-xs font-black text-slate-400 w-5 text-right flex-shrink-0">{i + 1}</span>
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-[11px] font-black text-slate-500 dark:text-slate-300">
+                    {u.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{u.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${rating >= 4 ? 'bg-emerald-400' : rating >= 3 ? 'bg-amber-400' : rating > 0 ? 'bg-rose-400' : 'bg-slate-200 dark:bg-white/10'}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className={`text-[11px] font-bold w-7 text-right flex-shrink-0 ${rating >= 4 ? 'text-emerald-500' : rating >= 3 ? 'text-amber-500' : rating > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                        {rating.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  {roleBadge(u.role)}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Users list view */}
+        {view === 'users' && (
+          <>
         {/* Role filter tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {ROLE_FILTERS.map(f => (
@@ -197,16 +248,9 @@ function AdminUsersPage() {
               }`}
             >
               {f.label}
-              {f.key !== 'all' && counts[f.key] > 0 && (
-                <span className={`ml-1.5 text-[10px] font-bold ${roleFilter === f.key ? 'opacity-70' : 'text-slate-400'}`}>
-                  {counts[f.key]}
-                </span>
-              )}
-              {f.key === 'all' && (
-                <span className={`ml-1.5 text-[10px] font-bold ${roleFilter === f.key ? 'opacity-70' : 'text-slate-400'}`}>
-                  {counts.all}
-                </span>
-              )}
+              <span className={`ml-1.5 text-[10px] font-bold ${roleFilter === f.key ? 'opacity-70' : 'text-slate-400'}`}>
+                {counts[f.key] ?? counts.all}
+              </span>
             </button>
           ))}
         </div>
@@ -259,6 +303,8 @@ function AdminUsersPage() {
               </div>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
