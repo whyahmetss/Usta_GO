@@ -82,6 +82,34 @@ export const rejectUsta = async (userId, reason) => {
   });
 };
 
+export const getPendingCustomers = async () => {
+  return prisma.user.findMany({
+    where: { role: "CUSTOMER", status: "PENDING_APPROVAL" },
+    include: { certificates: { orderBy: { createdAt: "desc" } } },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const approveCustomer = async (userId) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "CUSTOMER") {
+    const err = new Error("User not found or not CUSTOMER");
+    err.status = 404;
+    throw err;
+  }
+  return prisma.user.update({ where: { id: userId }, data: { status: "ACTIVE" } });
+};
+
+export const rejectCustomer = async (userId) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "CUSTOMER") {
+    const err = new Error("User not found or not CUSTOMER");
+    err.status = 404;
+    throw err;
+  }
+  return prisma.user.update({ where: { id: userId }, data: { status: "BANNED" } });
+};
+
 export const deleteUser = async (userId) => {
   // Cascade delete via Prisma schema
   await prisma.user.delete({

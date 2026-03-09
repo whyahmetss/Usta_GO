@@ -64,6 +64,27 @@ export const rejectUsta = async (req, res, next) => {
   }
 };
 
+export const getPendingCustomers = async (req, res, next) => {
+  try {
+    const customers = await adminService.getPendingCustomers();
+    successResponse(res, customers, "Pending customers fetched");
+  } catch (error) { next(error); }
+};
+
+export const approveCustomer = async (req, res, next) => {
+  try {
+    const user = await adminService.approveCustomer(req.params.userId);
+    successResponse(res, user, "Müşteri onaylandı");
+  } catch (error) { next(error); }
+};
+
+export const rejectCustomer = async (req, res, next) => {
+  try {
+    const user = await adminService.rejectCustomer(req.params.userId);
+    successResponse(res, user, "Müşteri reddedildi");
+  } catch (error) { next(error); }
+};
+
 export const deleteUser = async (req, res, next) => {
   try {
     const { userId } = req.params;

@@ -38,6 +38,10 @@ router.get("/pending-ustas", adminController.getPendingUstas);
 router.patch("/users/:userId/approve-usta", adminController.approveUsta);
 router.patch("/users/:userId/reject-usta", adminController.rejectUsta);
 
+router.get("/pending-customers", adminController.getPendingCustomers);
+router.patch("/users/:userId/approve-customer", adminController.approveCustomer);
+router.patch("/users/:userId/reject-customer", adminController.rejectCustomer);
+
 /**
  * @route DELETE /api/admin/users/:userId
  * @desc Delete a user
