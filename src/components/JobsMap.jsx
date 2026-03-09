@@ -2,6 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useNavigate } from 'react-router-dom'
+import { MapPin } from 'lucide-react'
+
+function FlyToUserLocation({ position }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!position) return
+    map.flyTo(position, 13, { duration: 0.6 })
+  }, [position, map])
+  return position ? <Marker position={position} icon={MY_LOCATION_ICON} /> : null
+}
 
 function FitBounds({ markers }) {
   const map = useMap()
@@ -29,6 +39,13 @@ const JOB_PIN = L.divIcon({
   </svg>`,
 })
 
+const MY_LOCATION_ICON = L.divIcon({
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  html: `<div style="width:24px;height:24px;border-radius:50%;background:#22c55e;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>`,
+})
+
 async function geocodeAddress(address) {
   if (!address || typeof address !== 'string') return null
   const q = address.includes('Türkiye') ? address : `${address}, Türkiye`
@@ -48,6 +65,28 @@ async function geocodeAddress(address) {
 export default function JobsMap({ jobs = [], onJobClick }) {
   const navigate = useNavigate()
   const [coords, setCoords] = useState({})
+  const [myPosition, setMyPosition] = useState(null)
+  const [locating, setLocating] = useState(false)
+
+  const handleLocate = useCallback(() => {
+    setLocating(true)
+    if (!navigator.geolocation) {
+      alert('Konum özelliği desteklenmiyor')
+      setLocating(false)
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMyPosition([pos.coords.latitude, pos.coords.longitude])
+        setLocating(false)
+      },
+      () => {
+        alert('Konum alınamadı. Lütfen tarayıcı iznini verin.')
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }, [])
 
   const geocodeJobs = useCallback(async () => {
     const next = {}
@@ -77,7 +116,7 @@ export default function JobsMap({ jobs = [], onJobClick }) {
     .map(j => ({ ...j, pos: coords[j.id] }))
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" style={{ height: 220 }}>
+    <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative" style={{ height: 220 }}>
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={markers.length > 0 ? 11 : 10}
@@ -89,6 +128,7 @@ export default function JobsMap({ jobs = [], onJobClick }) {
           attribution='© OpenStreetMap'
         />
         <FitBounds markers={markers} />
+        <FlyToUserLocation position={myPosition} />
         {markers.map((job) => (
           <Marker
             key={job.id}
@@ -112,6 +152,14 @@ export default function JobsMap({ jobs = [], onJobClick }) {
           </Marker>
         ))}
       </MapContainer>
+      <button
+        onClick={handleLocate}
+        disabled={locating}
+        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg font-semibold text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
+      >
+        <MapPin size={18} className="text-primary-500" />
+        {locating ? 'Konum alınıyor...' : 'Yakınımdaki İşler'}
+      </button>
     </div>
   )
 }
