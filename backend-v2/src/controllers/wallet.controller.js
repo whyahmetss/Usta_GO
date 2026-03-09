@@ -103,7 +103,7 @@ export const walletController = {
       if (!user) return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı' });
 
       const baseUrl = getCallbackBaseUrl().replace(/\/$/, '');
-      const callbackUrl = `${baseUrl}/api/wallet/topup/callback`;
+      const callbackUrl = `${baseUrl}/api/wallet/topup/callback?uid=${req.user.id}&amt=${amt}`;
 
       const result = await iyzicoService.initializeCheckoutForm(
         { userId: req.user.id, amount: amt, user: { name: user.name, email: user.email, phone: user.phone } },
@@ -149,23 +149,35 @@ export const walletController = {
       const token = req.query.token || req.body?.token;
       if (!token) return sendHtml(false, 0, 'Token bulunamadı.');
 
+      // uid ve amt query param'dan al (fallback olarak conversationId parse da dene)
+      const uidFromQuery = req.query.uid || req.body?.uid;
+      const amtFromQuery = parseFloat(req.query.amt || req.body?.amt || 0);
+
       const result = await iyzicoService.retrieveCheckoutForm(token);
+      console.log('topupCallback result:', JSON.stringify(result, null, 2));
+
       const payOk = result?.status === 'success' && (
         result.paymentStatus === 'SUCCESS' ||
         result.paymentStatus === '1' ||
-        result.fraudStatus === 1
+        result.fraudStatus === 1 ||
+        result.fraudStatus === '1'
       );
       if (!result || !payOk) {
-        console.log('topupCallback iyzico result:', JSON.stringify(result, null, 2));
         return sendHtml(false, 0, result?.errorMessage || 'Ödeme başarısız.');
       }
 
+      // userId: önce query param, yoksa conversationId'den parse et
       const conversationId = result.conversationId || '';
       const match = conversationId.match(/^topup-(.+?)-(\d+)$/);
-      const userId = match ? match[1] : null;
-      const paidPrice = parseFloat(result.paidPrice || result.price || 0);
+      const userId = uidFromQuery || (match ? match[1] : null);
 
-      if (!userId || paidPrice <= 0) return sendHtml(false, 0, 'Geçersiz işlem sonucu.');
+      // paidPrice: iyzico result'tan al, yoksa query'den al
+      const paidPrice = parseFloat(result.paidPrice || result.price || 0) || amtFromQuery;
+
+      if (!userId || paidPrice <= 0) {
+        console.error('topupCallback: userId veya paidPrice eksik', { userId, paidPrice, conversationId, uidFromQuery, amtFromQuery });
+        return sendHtml(false, 0, 'Geçersiz işlem sonucu.');
+      }
 
       await prisma.$transaction([
         prisma.user.update({
