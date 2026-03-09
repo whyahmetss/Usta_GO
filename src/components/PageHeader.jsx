@@ -5,12 +5,12 @@ export default function PageHeader({ title, onBack, rightAction, className = '' 
   const navigate = useNavigate()
 
   return (
-    <header className={`sticky top-0 z-40 bg-white/80 dark:bg-[#1A1A1A]/90 backdrop-blur-lg border-b border-gray-100 dark:border-[#2A2A2A] ${className}`}>
+    <header className={`sticky top-0 z-40 bg-white/90 dark:bg-[#0a1628]/95 backdrop-blur-lg border-b border-gray-100 dark:border-white/[0.07] ${className}`}>
       <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {onBack !== false ? (
           <button
             onClick={onBack || (() => navigate(-1))}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-[#1f1f1f] transition-colors -ml-1"
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.07] transition-colors -ml-1"
           >
             <ArrowLeft size={20} className="text-gray-700 dark:text-gray-300" />
           </button>

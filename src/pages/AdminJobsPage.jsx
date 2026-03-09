@@ -5,7 +5,6 @@ import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import { X, ZoomIn, Loader, Trash2, MapPin, Calendar, Tag, AlertTriangle, ClipboardList, User, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
-import Card from '../components/Card'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
 
@@ -94,7 +93,7 @@ function AdminJobsPage() {
     : jobs.filter(j => j.status === filterStatus)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628]">
       <PageHeader title="İş Yönetimi" onBack={() => navigate('/admin')} />
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">

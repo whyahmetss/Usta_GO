@@ -299,7 +299,7 @@ function AdminComplaintsPage() {
   const [tab, setTab] = useState('complaints') // 'complaints' | 'reviews'
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628]">
       <PageHeader title="Şikayet & Değerlendirme" onBack={() => navigate('/admin')} />
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
