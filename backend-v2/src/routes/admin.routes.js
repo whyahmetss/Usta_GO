@@ -66,6 +66,9 @@ router.post("/coupons", adminController.createCoupon);
 router.delete("/coupons/:couponId", adminController.deleteCoupon);
 router.patch("/coupons/:couponId/toggle", adminController.toggleCoupon);
 
+// Finans
+router.get("/finance", adminController.getFinanceReport);
+
 // Kampanya
 router.get("/campaigns/active", adminController.getActiveCampaign);
 router.post("/campaigns", adminController.setCampaign);

@@ -30,6 +30,7 @@ import AdminPricingPage from './pages/AdminPricingPage'
 import AdminCertificatesPage from './pages/AdminCertificatesPage'
 import AdminPendingUstasPage from './pages/AdminPendingUstasPage'
 import AdminCampaignsPage from './pages/AdminCampaignsPage'
+import AdminFinancePage from './pages/AdminFinancePage'
 import CancelJobPage from './pages/CancelJobPage'
 import LiveTrackingPage from './pages/LiveTrackingPage'
 import HelpPage from './pages/HelpPage'
@@ -128,6 +129,7 @@ function AppRoutes() {
       <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/pending-ustas" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
       <Route path="/admin/campaigns" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
+      <Route path="/admin/finance" element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
 
       <Route path="/track/:id" element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
       <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />

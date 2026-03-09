@@ -21,6 +21,7 @@ import {
   Star,
   Inbox,
   Megaphone,
+  BarChart2,
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
@@ -227,6 +228,13 @@ function AdminDashboard() {
       title: 'Sertifika Onayları',
       desc: 'Usta sertifikalarını onayla',
       color: 'amber',
+    },
+    {
+      path: '/admin/finance',
+      icon: BarChart2,
+      title: 'Muhasebe',
+      desc: 'Ciro, komisyon, yükleme ve işlem geçmişi',
+      color: 'emerald',
     },
     {
       path: '/admin/campaigns',

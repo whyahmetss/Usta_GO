@@ -159,6 +159,120 @@ export const toggleCoupon = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// Finans raporu
+export const getFinanceReport = async (req, res, next) => {
+  try {
+    const COMMISSION_RATE = 0.12
+
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const [
+      allTransactions,
+      completedJobs,
+      pendingWithdrawals,
+      totalUsers,
+    ] = await Promise.all([
+      _prisma.transaction.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+        include: {
+          user: { select: { id: true, name: true, role: true } },
+        },
+      }),
+      _prisma.job.findMany({
+        where: { status: { in: ['COMPLETED', 'RATED'] } },
+        select: { id: true, budget: true, completedAt: true, createdAt: true },
+      }),
+      _prisma.transaction.aggregate({
+        where: { type: 'WITHDRAWAL', status: 'PENDING' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      _prisma.user.count(),
+    ])
+
+    // Komisyon (tamamlanan işlerin %12'si)
+    const totalCommission = completedJobs.reduce((s, j) => s + (j.budget * COMMISSION_RATE), 0)
+    const monthCommission = completedJobs
+      .filter(j => new Date(j.completedAt || j.createdAt) >= startOfMonth)
+      .reduce((s, j) => s + (j.budget * COMMISSION_RATE), 0)
+    const todayCommission = completedJobs
+      .filter(j => new Date(j.completedAt || j.createdAt) >= startOfToday)
+      .reduce((s, j) => s + (j.budget * COMMISSION_RATE), 0)
+
+    // Müşteri bakiye yüklemeleri
+    const topups = allTransactions.filter(t => t.type === 'TOPUP' && t.status === 'COMPLETED')
+    const totalTopup = topups.reduce((s, t) => s + t.amount, 0)
+    const monthTopup = topups.filter(t => new Date(t.createdAt) >= startOfMonth).reduce((s, t) => s + t.amount, 0)
+
+    // Toplam iş hacmi (tamamlanan işlerin toplam değeri)
+    const totalVolume = completedJobs.reduce((s, j) => s + j.budget, 0)
+    const monthVolume = completedJobs
+      .filter(j => new Date(j.completedAt || j.createdAt) >= startOfMonth)
+      .reduce((s, j) => s + j.budget, 0)
+
+    // Son 12 ay günlük / aylık kırılım
+    const monthlyData = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
+      const label = d.toLocaleString('tr-TR', { month: 'short', year: '2-digit' })
+      const vol = completedJobs
+        .filter(j => { const cd = new Date(j.completedAt || j.createdAt); return cd >= d && cd < end })
+        .reduce((s, j) => s + j.budget, 0)
+      const comm = vol * COMMISSION_RATE
+      const tp = topups.filter(t => { const cd = new Date(t.createdAt); return cd >= d && cd < end }).reduce((s, t) => s + t.amount, 0)
+      monthlyData.push({ label, volume: Math.round(vol), commission: Math.round(comm), topup: Math.round(tp) })
+    }
+
+    // Son 30 gün günlük kırılım
+    const dailyData = []
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i + 1)
+      const label = `${d.getDate()}/${d.getMonth() + 1}`
+      const vol = completedJobs
+        .filter(j => { const cd = new Date(j.completedAt || j.createdAt); return cd >= d && cd < end })
+        .reduce((s, j) => s + j.budget, 0)
+      const tp = topups.filter(t => { const cd = new Date(t.createdAt); return cd >= d && cd < end }).reduce((s, t) => s + t.amount, 0)
+      dailyData.push({ label, volume: Math.round(vol), topup: Math.round(tp) })
+    }
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalVolume: Math.round(totalVolume),
+          monthVolume: Math.round(monthVolume),
+          todayCommission: Math.round(todayCommission),
+          totalCommission: Math.round(totalCommission),
+          monthCommission: Math.round(monthCommission),
+          totalTopup: Math.round(totalTopup),
+          monthTopup: Math.round(monthTopup),
+          pendingWithdrawalsAmount: Math.round(Math.abs(pendingWithdrawals._sum.amount || 0)),
+          pendingWithdrawalsCount: pendingWithdrawals._count,
+          totalUsers,
+          completedJobsCount: completedJobs.length,
+        },
+        monthlyData,
+        dailyData,
+        recentTransactions: allTransactions.slice(0, 50).map(t => ({
+          id: t.id,
+          amount: t.amount,
+          type: t.type,
+          status: t.status,
+          description: t.description,
+          userName: t.user?.name,
+          userRole: t.user?.role,
+          createdAt: t.createdAt,
+        })),
+      },
+    })
+  } catch (error) { next(error) }
+}
+
 // Kampanya
 export const getActiveCampaign = async (req, res, next) => {
   try {
