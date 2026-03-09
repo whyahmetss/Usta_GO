@@ -249,7 +249,7 @@ function AdminDashboard() {
   if (loading) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0F172A]">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-600">Admin paneli yükleniyor...</p>
@@ -262,7 +262,7 @@ function AdminDashboard() {
   if (error) {
     return (
       <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0F172A]">
           <div className="text-center">
             <p className="text-sm text-rose-600 mb-4">{error}</p>
             <button
@@ -279,7 +279,7 @@ function AdminDashboard() {
 
   return (
     <Layout hideNav>
-      <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0d0d0d]">
+      <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0F172A]">
         <PageHeader
           title="Admin Paneli"
           onBack={false}
@@ -301,23 +301,25 @@ function AdminDashboard() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {statsList.map((stat, idx) => {
-              const gradients = [
-                'from-primary-500 to-primary-600',
-                'from-emerald-500 to-emerald-600',
-                'from-violet-500 to-violet-600',
-                'from-amber-500 to-amber-600',
+              const palettes = [
+                { from: '#2563EB', to: '#1D4ED8' }, // mavi — toplam kullanıcı
+                { from: '#8B5CF6', to: '#7C3AED' }, // mor — aktif işler
+                { from: '#22C55E', to: '#16A34A' }, // yeşil — gelir
+                { from: '#F59E0B', to: '#D97706' }, // turuncu — toplam iş
               ]
+              const p = palettes[idx % palettes.length]
               const StatIcon = stat.icon
               return (
                 <div
                   key={idx}
-                  className={`bg-gradient-to-br ${gradients[idx % gradients.length]} rounded-2xl p-4 text-white shadow-md`}
+                  className="rounded-2xl p-4 text-white shadow-md"
+                  style={{ background: `linear-gradient(135deg, ${p.from} 0%, ${p.to} 100%)` }}
                 >
                   <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center mb-3">
                     <StatIcon size={18} className="text-white" />
                   </div>
                   <p className="text-xl font-bold leading-tight">{stat.value}</p>
-                  <p className="text-[11px] mt-0.5 text-white/80 font-medium">{stat.label}</p>
+                  <p className="text-[11px] mt-0.5 text-white/75 font-medium">{stat.label}</p>
                 </div>
               )
             })}

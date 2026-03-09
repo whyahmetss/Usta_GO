@@ -64,7 +64,7 @@ function HomePage() {
   const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
-    <div className="bg-[#F5F7FB] dark:bg-[#0d0d0d] min-h-screen">
+    <div className="bg-[#F5F7FB] dark:bg-[#0F172A] min-h-screen">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between mb-5">
@@ -105,7 +105,7 @@ function HomePage() {
         {/* Search trigger */}
         <button
           onClick={() => setShowSearch(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200/60 dark:border-[#262626] shadow-sm text-left"
+          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] shadow-sm text-left"
         >
           <Search size={17} strokeWidth={1.8} className="text-primary-400 flex-shrink-0" />
           <span className="text-[13px] text-gray-400">Hangi hizmete ihtiyacınız var?</span>
@@ -194,8 +194,8 @@ function HomePage() {
                 disabled={!svc.active}
                 className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border shadow-sm ${
                   svc.active
-                    ? 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] active:scale-95'
-                    : 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] opacity-50'
+                    ? 'bg-white dark:bg-[#1E293B] border-[#E5E7EB] dark:border-[#334155] active:scale-95'
+                    : 'bg-white dark:bg-[#1E293B] border-[#E5E7EB] dark:border-[#334155] opacity-50'
                 }`}
               >
                 {!svc.active && (
@@ -217,13 +217,13 @@ function HomePage() {
 
       {/* Search Overlay */}
       {showSearch && (
-        <div className="fixed inset-0 z-[60] bg-white dark:bg-[#0c0c0c]">
+        <div className="fixed inset-0 z-[60] bg-[#F5F7FB] dark:bg-[#0F172A]">
           {/* Search Header */}
-          <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-[#262626]">
+          <div className="px-4 pt-4 pb-3 border-b border-[#E5E7EB] dark:border-[#334155]">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => { setShowSearch(false); setSearchQuery('') }}
-                className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-full bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] flex items-center justify-center flex-shrink-0"
               >
                 <X size={20} className="text-gray-600" />
               </button>
@@ -235,7 +235,7 @@ function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Sorununu yaz veya hizmet ara..."
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] text-sm text-[#111827] dark:text-[#F1F5F9] placeholder:text-[#6B7280] dark:placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-primary-500/30"
                 />
               </div>
             </div>
@@ -254,7 +254,7 @@ function HomePage() {
                     <button
                       key={q}
                       onClick={() => setSearchQuery(q)}
-                      className="px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl text-[13px] text-gray-600 font-medium hover:bg-gray-100 transition"
+                      className="px-4 py-2 bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-xl text-[13px] text-[#6B7280] dark:text-[#94A3B8] font-medium hover:bg-[#F5F7FB] dark:hover:bg-[#273548] transition"
                     >
                       {q}
                     </button>
@@ -290,10 +290,10 @@ function HomePage() {
                       }
                     }}
                     disabled={!svc.active}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all ${
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all border ${
                       svc.active
-                        ? 'bg-gray-50 dark:bg-[#141414] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] active:scale-[0.98]'
-                        : 'bg-gray-50/50 opacity-40'
+                        ? 'bg-white dark:bg-[#1E293B] border-[#E5E7EB] dark:border-[#334155] hover:bg-[#F5F7FB] dark:hover:bg-[#273548] active:scale-[0.98]'
+                        : 'bg-white dark:bg-[#1E293B] border-[#E5E7EB] dark:border-[#334155] opacity-40'
                     }`}
                   >
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.bgColor}`}>

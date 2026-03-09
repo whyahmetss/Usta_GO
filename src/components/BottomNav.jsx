@@ -42,12 +42,13 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#2A2A2A] relative">
+      <div className="bg-white dark:bg-[#1E293B] border-t border-[#E5E7EB] dark:border-[#334155] relative">
         {/* Center action button for customers */}
         {userRole === 'customer' && (
           <button
             onClick={() => navigate('/create-job')}
-            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform z-10"
+            style={{ background: '#2563EB', boxShadow: '0 4px 16px rgba(37,99,235,0.45)' }}
           >
             <Plus size={24} strokeWidth={2.5} className="text-white" />
           </button>
@@ -77,7 +78,8 @@ export default function BottomNav() {
                   <Icon
                     size={22}
                     strokeWidth={isActive ? 2 : 1.5}
-                    className={isActive ? 'text-primary-500' : 'text-gray-400'}
+                    style={isActive ? { color: '#2563EB' } : undefined}
+                  className={isActive ? '' : 'text-gray-400'}
                   />
                   {badge > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1">
@@ -85,7 +87,10 @@ export default function BottomNav() {
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] mt-1 ${isActive ? 'text-primary-500 font-semibold' : 'text-gray-400 font-medium'}`}>
+                <span
+                  className={`text-[10px] mt-1 font-medium ${isActive ? 'font-semibold' : 'text-gray-400'}`}
+                  style={isActive ? { color: '#2563EB' } : undefined}
+                >
                   {tab.label}
                 </span>
               </button>
