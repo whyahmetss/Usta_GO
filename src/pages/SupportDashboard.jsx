@@ -281,8 +281,15 @@ export default function SupportDashboard() {
                 <Headphones size={22} className="text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-black text-white">Müşteri Hizmetleri</h1>
-                <p className="text-xs text-blue-100">Destek Paneli</p>
+                <h1 className="text-lg font-black text-white">
+                  {(() => {
+                    const h = new Date().getHours()
+                    const greeting = h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar'
+                    const firstName = user?.name?.split(' ')[0] || ''
+                    return `${greeting}${firstName ? ', ' + firstName : ''}!`
+                  })()}
+                </h1>
+                <p className="text-xs text-blue-100">Müşteri Hizmetleri Paneli</p>
               </div>
             </div>
             <button
