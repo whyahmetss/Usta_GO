@@ -1,269 +1,237 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { User, Zap, Eye, EyeOff, Phone, Mail, Lock, Gift } from 'lucide-react'
+import {
+  User, Zap, Eye, EyeOff, Phone, Mail, Lock, Gift,
+  ShieldCheck, Clock, BadgeCheck,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [referralCode, setReferralCode] = useState('')
-  const [role, setRole] = useState('CUSTOMER')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+/* ─── küçük yardımcılar ─── */
+function InputField({ icon, suffix, ...props }) {
+  return (
+    <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl px-4 h-12 focus-within:border-white/50 focus-within:bg-white/15 transition-all backdrop-blur-sm">
+      <span className="text-white/50 flex-shrink-0">{icon}</span>
+      <input
+        {...props}
+        className="flex-1 bg-transparent text-sm text-white placeholder-white/40 outline-none h-full"
+      />
+      {suffix && <span className="flex-shrink-0">{suffix}</span>}
+    </div>
+  )
+}
 
-  const navigate = useNavigate()
+function TrustBadge({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-1.5 text-white/60">
+      <Icon size={13} className="text-white/50" />
+      <span className="text-[11px] font-medium">{text}</span>
+    </div>
+  )
+}
+
+export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail]     = useState('')
+  const [password, setPassword]           = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [name, setName]       = useState('')
+  const [phone, setPhone]     = useState('')
+  const [referralCode, setReferralCode]   = useState('')
+  const [role, setRole]       = useState('CUSTOMER')
+  const [error, setError]     = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPw, setShowPw]   = useState(false)
+
+  const navigate  = useNavigate()
   const { login, register } = useAuth()
-  const location = useLocation()
+  const location  = useLocation()
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const ref = params.get('ref')
-    if (ref) {
-      setReferralCode(ref.toUpperCase())
-      setIsLogin(false)
-    }
+    const ref = new URLSearchParams(location.search).get('ref')
+    if (ref) { setReferralCode(ref.toUpperCase()); setIsLogin(false) }
   }, [location])
 
   const handlePhoneChange = (e) => {
-    let val = e.target.value.replace(/\D/g, '')
-    if (val.length > 11) val = val.slice(0, 11)
-    let formatted = ''
-    if (val.length > 0) {
-      formatted = val.slice(0, 4)
-      if (val.length > 4) formatted += ' ' + val.slice(4, 7)
-      if (val.length > 7) formatted += ' ' + val.slice(7, 9)
-      if (val.length > 9) formatted += ' ' + val.slice(9, 11)
-    }
-    setPhone(formatted)
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11)
+    let f = v.slice(0, 4)
+    if (v.length > 4) f += ' ' + v.slice(4, 7)
+    if (v.length > 7) f += ' ' + v.slice(7, 9)
+    if (v.length > 9) f += ' ' + v.slice(9, 11)
+    setPhone(f)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
       if (isLogin) {
-        const result = await login(email, password)
-        if (result?.success) {
-          const r = result.role?.toLowerCase()
-          if (r === 'admin') navigate('/admin')
-          else if (r === 'usta' || r === 'professional') navigate('/professional')
+        const r = await login(email, password)
+        if (r?.success) {
+          const role = r.role?.toLowerCase()
+          if (role === 'admin') navigate('/admin')
+          else if (role === 'usta' || role === 'professional') navigate('/professional')
           else navigate('/home')
-        } else {
-          setError(result?.error || 'E-posta veya şifre hatalı')
-        }
+        } else setError(r?.error || 'E-posta veya şifre hatalı')
       } else {
-        if (!name || !email || !password || !confirmPassword || !phone) {
-          setError('Lütfen tüm alanları doldurun')
-          setLoading(false)
-          return
-        }
-        if (password.length < 6) { setError('Şifre en az 6 karakter olmalı'); setLoading(false); return }
-        if (password !== confirmPassword) { setError('Şifreler eşleşmiyor'); setLoading(false); return }
-        const phoneRegex = /^05\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/
-        if (!phoneRegex.test(phone.replace(/\s/g, ''))) { setError('Telefon formatı: 05XX XXX XX XX'); setLoading(false); return }
+        if (!name || !email || !password || !confirmPassword || !phone)
+          { setError('Lütfen tüm alanları doldurun'); setLoading(false); return }
+        if (password.length < 6)
+          { setError('Şifre en az 6 karakter olmalı'); setLoading(false); return }
+        if (password !== confirmPassword)
+          { setError('Şifreler eşleşmiyor'); setLoading(false); return }
+        if (!/^05\d{9}$/.test(phone.replace(/\s/g, '')))
+          { setError('Telefon formatı: 05XX XXX XX XX'); setLoading(false); return }
 
-        const result = await register(email, password, name, role, phone, referralCode?.trim() || undefined)
-        if (result?.success) {
-          if (role === 'USTA' || result.role === 'professional') navigate('/professional')
+        const r = await register(email, password, name, role, phone, referralCode?.trim() || undefined)
+        if (r?.success) {
+          if (role === 'USTA' || r.role === 'professional') navigate('/professional')
           else navigate('/home')
-        } else {
-          setError(result?.error || 'Kayıt başarısız')
-        }
+        } else setError(r?.error || 'Kayıt başarısız')
       }
-    } catch {
-      setError('Bir bağlantı hatası oluştu')
-    } finally {
-      setLoading(false)
-    }
+    } catch { setError('Bir bağlantı hatası oluştu') }
+    finally  { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F7FB] dark:bg-[#0F172A]">
-      {/* Hero üst bölüm */}
-      <div className="relative flex flex-col items-center justify-center pt-14 pb-10 px-6 overflow-hidden">
-        {/* Arka plan degrade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#2563EB] to-[#1d4ed8]" />
-        <div className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: "radial-gradient(circle at 30% 20%, #60a5fa 0%, transparent 60%), radial-gradient(circle at 80% 80%, #818cf8 0%, transparent 50%)" }} />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)' }}
+    >
+      {/* Dekoratif daireler */}
+      <div className="absolute -top-32 -right-32 w-72 h-72 rounded-full opacity-10"
+        style={{ background: 'radial-gradient(circle,#56CCF2,transparent)' }} />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full opacity-10"
+        style={{ background: 'radial-gradient(circle,#2F80ED,transparent)' }} />
 
-        {/* Logo dairesi */}
-        <div className="relative z-10 w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-5 shadow-xl border border-white/30">
-          <span className="text-3xl font-black text-white tracking-tight">UG</span>
+      {/* Kart */}
+      <div className="w-full max-w-[420px] relative z-10">
+
+        {/* ── Header ── */}
+        <div className="flex items-center gap-3 mb-7">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg,#2F80ED,#56CCF2)', boxShadow: '0 4px 16px rgba(47,128,237,0.45)' }}>
+            🔧
+          </div>
+          <div>
+            <h1 className="text-[18px] font-black text-white tracking-tight leading-tight">Usta Go</h1>
+            <p className="text-[11px] text-white/50 font-medium leading-tight">Profesyonel Ev Hizmetleri</p>
+          </div>
         </div>
 
-        <h1 className="relative z-10 text-2xl font-black text-white mb-1 tracking-tight">Usta Go</h1>
-        <p className="relative z-10 text-white/70 text-sm font-medium">Profesyonel Ev Hizmetleri</p>
-      </div>
-
-      {/* Form kartı */}
-      <div className="flex-1 -mt-6 bg-[#F5F7FB] dark:bg-[#0F172A] rounded-t-3xl px-5 pt-6 pb-10">
-        {/* Tab seçimi */}
-        <div className="flex p-1 bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-[#334155] mb-6">
-          {['Giriş Yap', 'Kayıt Ol'].map((label, i) => (
+        {/* ── Toggle ── */}
+        <div className="flex gap-2 mb-6">
+          {[{ label: 'Giriş Yap', val: true }, { label: 'Kayıt Ol', val: false }].map(t => (
             <button
-              key={label}
+              key={t.label}
               type="button"
-              onClick={() => { setIsLogin(i === 0); setError('') }}
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                (i === 0) === isLogin
-                  ? 'bg-[#2563EB] text-white shadow-md'
-                  : 'text-gray-500 dark:text-gray-400'
+              onClick={() => { setIsLogin(t.val); setError('') }}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                isLogin === t.val
+                  ? 'text-white border-2 border-transparent'
+                  : 'text-white/50 border-2 border-white/20 bg-transparent'
               }`}
+              style={isLogin === t.val
+                ? { background: 'linear-gradient(135deg,#2F80ED,#56CCF2)', boxShadow: '0 4px 16px rgba(47,128,237,0.35)' }
+                : {}}
             >
-              {label}
+              {t.label}
             </button>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        {/* ── Form ── */}
+        <form onSubmit={handleSubmit} className="space-y-3">
           {!isLogin && (
             <>
-              {/* Ad Soyad */}
-              <InputField
-                icon={<User size={16} className="text-gray-400" />}
-                type="text"
-                placeholder="Ad Soyad"
-                value={name}
-                onChange={e => setName(e.target.value)}
-              />
+              <InputField icon={<User size={16}/>} type="text" placeholder="Ad Soyad" value={name} onChange={e=>setName(e.target.value)} />
 
-              {/* Hesap tipi */}
-              <div>
-                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Hesap Türü</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole('CUSTOMER')}
-                    className={`flex flex-col items-center gap-2 py-4 px-3 rounded-2xl border-2 transition-all ${
-                      role === 'CUSTOMER'
-                        ? 'border-[#2563EB] bg-blue-50 dark:bg-blue-950/30'
-                        : 'border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B]'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'CUSTOMER' ? 'bg-[#2563EB]' : 'bg-gray-100 dark:bg-[#273548]'}`}>
-                      <User size={20} className={role === 'CUSTOMER' ? 'text-white' : 'text-gray-500'} />
-                    </div>
-                    <span className={`text-sm font-bold ${role === 'CUSTOMER' ? 'text-[#2563EB]' : 'text-gray-600 dark:text-gray-400'}`}>Müşteri</span>
-                    <span className="text-[10px] text-gray-400 text-center leading-tight">Hizmet talep edin</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/register/usta')}
-                    className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl border-2 border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] transition-all active:scale-[0.97]"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                      <Zap size={20} className="text-amber-500" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Usta</span>
-                    <span className="text-[10px] text-gray-400 text-center leading-tight">Hizmet verin</span>
-                  </button>
-                </div>
+              {/* Rol seçimi */}
+              <div className="grid grid-cols-2 gap-3 my-1">
+                {[
+                  { r: 'CUSTOMER', icon: '👤', label: 'Müşteri', sub: 'Hizmet Al', color: '#2F80ED' },
+                  { r: 'USTA',     icon: '⚡', label: 'Usta',    sub: 'Hizmet Ver', color: '#F59E0B', navigate: '/register/usta' },
+                ].map(item => {
+                  const active = role === item.r && !item.navigate
+                  return (
+                    <button
+                      key={item.r}
+                      type="button"
+                      onClick={() => item.navigate ? navigate(item.navigate) : setRole(item.r)}
+                      className={`flex flex-col items-center gap-2 py-5 rounded-2xl border-2 transition-all active:scale-[0.97] ${
+                        active
+                          ? 'border-[#56CCF2] bg-white/10'
+                          : 'border-white/15 bg-white/5 hover:bg-white/10'
+                      }`}
+                      style={active ? { boxShadow: `0 0 20px ${item.color}40` } : {}}
+                    >
+                      <span className="text-2xl">{item.icon}</span>
+                      <div className="text-center">
+                        <p className={`text-sm font-bold ${active ? 'text-white' : 'text-white/70'}`}>{item.label}</p>
+                        <p className="text-[10px] text-white/40 mt-0.5">{item.sub}</p>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
 
-              {/* Telefon */}
-              <InputField
-                icon={<Phone size={16} className="text-gray-400" />}
-                type="tel"
-                placeholder="05XX XXX XX XX"
-                value={phone}
-                onChange={handlePhoneChange}
-              />
-
-              {/* Davet kodu */}
-              <InputField
-                icon={<Gift size={16} className="text-gray-400" />}
-                type="text"
-                placeholder="Davet Kodu (İsteğe Bağlı)"
-                value={referralCode}
-                onChange={e => setReferralCode(e.target.value.toUpperCase())}
-              />
+              <InputField icon={<Phone size={16}/>} type="tel" placeholder="05XX XXX XX XX" value={phone} onChange={handlePhoneChange} />
+              <InputField icon={<Gift  size={16}/>} type="text" placeholder="Davet Kodu (İsteğe Bağlı)" value={referralCode} onChange={e=>setReferralCode(e.target.value.toUpperCase())} />
             </>
           )}
 
-          {/* E-posta */}
+          <InputField icon={<Mail size={16}/>} type="email" placeholder="E-posta adresi" value={email} onChange={e=>setEmail(e.target.value)} />
+
           <InputField
-            icon={<Mail size={16} className="text-gray-400" />}
-            type="email"
-            placeholder="E-posta adresi"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            icon={<Lock size={16}/>}
+            type={showPw ? 'text' : 'password'}
+            placeholder="Şifre"
+            value={password}
+            onChange={e=>setPassword(e.target.value)}
+            suffix={
+              <button type="button" onClick={()=>setShowPw(s=>!s)} className="text-white/40 hover:text-white/70 transition p-1">
+                {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+              </button>
+            }
           />
 
-          {/* Şifre */}
-          <div className="relative">
-            <InputField
-              icon={<Lock size={16} className="text-gray-400" />}
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Şifre"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              suffix={
-                <button type="button" onClick={() => setShowPassword(s => !s)} className="text-gray-400 hover:text-gray-600 p-1">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              }
-            />
-          </div>
-
           {!isLogin && (
-            <InputField
-              icon={<Lock size={16} className="text-gray-400" />}
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Şifre (Tekrar)"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-            />
+            <InputField icon={<Lock size={16}/>} type={showPw?'text':'password'} placeholder="Şifre (Tekrar)" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} />
           )}
 
           {error && (
-            <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-2xl p-3.5">
-              <p className="text-rose-600 dark:text-rose-400 text-sm font-medium text-center">{error}</p>
+            <div className="bg-rose-500/20 border border-rose-400/40 rounded-xl px-4 py-3 text-rose-300 text-sm font-medium text-center">
+              {error}
             </div>
           )}
 
+          {/* Buton */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-[#2563EB] hover:bg-blue-700 text-white rounded-2xl font-bold text-[15px] active:scale-[0.98] transition-all disabled:opacity-60 shadow-lg shadow-blue-500/25 mt-2"
+            className="w-full py-3.5 rounded-2xl text-white font-bold text-[15px] active:scale-[0.98] transition-all disabled:opacity-60 mt-1"
+            style={{
+              background: 'linear-gradient(135deg,#2F80ED,#56CCF2)',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
+            }}
           >
             {loading
-              ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />{isLogin ? 'Giriş yapılıyor...' : 'Kaydediliyor...'}</span>
+              ? <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
+                  {isLogin ? 'Giriş yapılıyor...' : 'Kaydediliyor...'}
+                </span>
               : isLogin ? 'Giriş Yap' : 'Kayıt Ol'
             }
           </button>
-
-          {isLogin && (
-            <p className="text-center text-[12px] text-gray-400 dark:text-gray-500 pt-1">
-              Hesabın yok mu?{' '}
-              <button type="button" onClick={() => { setIsLogin(false); setError('') }} className="text-[#2563EB] font-semibold">
-                Kayıt Ol
-              </button>
-            </p>
-          )}
         </form>
+
+        {/* ── Trust badges ── */}
+        <div className="flex items-center justify-center gap-5 mt-6 flex-wrap">
+          <TrustBadge icon={ShieldCheck}  text="Güvenli Giriş" />
+          <TrustBadge icon={Clock}        text="7/24 Hizmet" />
+          <TrustBadge icon={BadgeCheck}   text="Doğrulanmış Ustalar" />
+        </div>
       </div>
     </div>
   )
 }
-
-function InputField({ icon, suffix, ...props }) {
-  return (
-    <div className="flex items-center gap-3 bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl px-4 h-[52px] focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-      {icon}
-      <input
-        {...props}
-        className="flex-1 bg-transparent text-[14px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none h-full"
-      />
-      {suffix}
-    </div>
-  )
-}
-
-export default AuthPage
