@@ -196,8 +196,8 @@ function AdminDashboard() {
     {
       path: '/admin/complaints',
       icon: AlertCircle,
-      title: 'Şikayet Yönetimi',
-      desc: 'Müşteri şikayetlerini yönet',
+      title: 'Şikayetler ve Değerlendirmeler',
+      desc: 'Müşteri şikayetleri ve kullanıcı değerlendirmeleri',
       color: 'rose',
       badge: openComplaints > 0 ? `${openComplaints} Açık` : null,
     },
