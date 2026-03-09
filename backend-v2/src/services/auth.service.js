@@ -127,7 +127,7 @@ export const getUserProfile = async (userId) => {
     select: {
       id: true, name: true, email: true, role: true, phone: true,
       bio: true, profileImage: true, ratings: true, balance: true,
-      isActive: true, referralCode: true, status: true, createdAt: true, updatedAt: true,
+      isActive: true, referralCode: true, status: true, birthDate: true, createdAt: true, updatedAt: true,
     },
   });
 
@@ -162,7 +162,7 @@ export const getUserProfile = async (userId) => {
       select: {
         id: true, name: true, email: true, role: true, phone: true,
         bio: true, profileImage: true, ratings: true, balance: true,
-        isActive: true, referralCode: true, status: true, createdAt: true, updatedAt: true,
+        isActive: true, referralCode: true, status: true, birthDate: true, createdAt: true, updatedAt: true,
       },
     });
   }

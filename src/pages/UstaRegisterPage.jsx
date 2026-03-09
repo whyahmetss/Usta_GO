@@ -299,6 +299,19 @@ function UstaRegisterPage() {
               value={name}
               onChange={e => setName(e.target.value)}
             />
+            <div>
+              <InputField
+                icon={<Calendar size={16} className="text-gray-400 flex-shrink-0" />}
+                label="Doğum Tarihi *"
+                type="date"
+                value={birthDate}
+                onChange={e => setBirthDate(e.target.value)}
+                placeholder=""
+              />
+              {birthDate && isUnder18() && (
+                <p className="text-xs text-rose-500 mt-1 font-medium">18 yaş altı kayıt olamaz</p>
+              )}
+            </div>
             <InputField
               icon={<Phone size={16} className="text-gray-400 flex-shrink-0" />}
               label="Telefon"

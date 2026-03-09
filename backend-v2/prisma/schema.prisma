@@ -60,6 +60,7 @@ enum UserRole {
   CUSTOMER
   USTA
   ADMIN
+  SUPPORT
 }
 
 enum UserStatus {
