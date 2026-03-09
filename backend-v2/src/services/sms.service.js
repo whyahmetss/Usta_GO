@@ -6,11 +6,11 @@ const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000))
 
 // Twilio client - sadece env var varsa oluştur
 let twilioClient = null
-const getTwilioClient = () => {
+const getTwilioClient = async () => {
   if (twilioClient) return twilioClient
   const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env
   if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
-    const twilio = await import('twilio').then(m => m.default)
+    const twilio = (await import('twilio')).default
     twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
   }
   return twilioClient
