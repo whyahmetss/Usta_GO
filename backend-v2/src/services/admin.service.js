@@ -14,7 +14,6 @@ export const getAllUsers = async (skip = 0, take = 10) => {
         role: true,
         status: true,
         ratings: true,
-        completedJobs: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
