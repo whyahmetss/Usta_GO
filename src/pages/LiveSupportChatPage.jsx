@@ -17,6 +17,7 @@ export default function LiveSupportChatPage() {
   const [agent, setAgent] = useState(null)
   const [agentLoading, setAgentLoading] = useState(true)
   const [agentError, setAgentError] = useState(null)
+  const [offlineMode, setOfflineMode] = useState(false)
   const [session, setSession] = useState(null) // SupportSession
 
   const [messages, setMessages] = useState([])
@@ -31,6 +32,7 @@ export default function LiveSupportChatPage() {
   const [rating, setRating] = useState(0)
   const [ratingDone, setRatingDone] = useState(false)
   const [closingSession, setClosingSession] = useState(false)
+  const [autoReplied, setAutoReplied] = useState(false)
 
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -55,7 +57,13 @@ export default function LiveSupportChatPage() {
         const res = await fetchAPI('/support/agents')
         const agents = Array.isArray(res?.data) ? res.data : []
         if (agents.length === 0) {
-          setAgentError('Şu an müsait bir destek temsilcisi yok. Lütfen daha sonra tekrar deneyin.')
+          // Offline mod: gerçek destek temsilcisi yoksa bile kullanıcı talep açabilsin
+          setOfflineMode(true)
+          setAgent({
+            id: 'offline-support',
+            name: 'Destek Ekibi',
+            profileImage: null,
+          })
         } else {
           const picked = agents[0]
           setAgent(picked)
@@ -65,6 +73,11 @@ export default function LiveSupportChatPage() {
             body: { agentId: picked.id },
           })
           if (sRes?.data) setSession(sRes.data)
+        }
+        if (!agents.length) {
+          // Offline mod için de loading state'i kapatmamız gerekiyor
+          setAgentLoading(false)
+          return
         }
       } catch (e) {
         setAgentError('Bağlantı hatası: ' + e.message)
@@ -102,7 +115,7 @@ export default function LiveSupportChatPage() {
 
   // Socket.IO
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id || offlineMode) return
     const socket = connectSocket(user.id)
 
     const onReceive = (msg) => {
@@ -145,7 +158,7 @@ export default function LiveSupportChatPage() {
       socket.off('user_stop_typing', onStopTyping)
       socket.off('support_session_closed', onSessionClose)
     }
-  }, [user, agent, session])
+  }, [user, agent, session, offlineMode])
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -154,7 +167,7 @@ export default function LiveSupportChatPage() {
 
   const handleInputChange = (e) => {
     setText(e.target.value)
-    if (agent) {
+    if (agent && !offlineMode) {
       emitEvent('typing', { receiverId: agent.id, userId: user?.id })
       clearTimeout(typingTimerRef.current)
       typingTimerRef.current = setTimeout(() => {
@@ -178,6 +191,25 @@ export default function LiveSupportChatPage() {
       _optimistic: true,
     }
     setMessages(prev => [...prev, optimistic])
+
+    // Offline mod: sadece kullanıcının mesajını ve otomatik sistem yanıtını lokal olarak göster
+    if (offlineMode) {
+      setTimeout(() => {
+        const botMessage = {
+          id: `bot-${Date.now()}`,
+          content: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir. Lütfen sohbeti sonlandırmayınız.',
+          senderId: 'support-bot',
+          receiverId: user?.id,
+          isRead: true,
+          createdAt: new Date().toISOString(),
+          _system: true,
+        }
+        setMessages(prev => [...prev, botMessage])
+        setSending(false)
+        setAutoReplied(true)
+      }, 600)
+      return
+    }
     try {
       const res = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
         method: 'POST',
@@ -286,8 +318,10 @@ export default function LiveSupportChatPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{agent.name}</p>
-                <p className="text-[11px] text-emerald-500 font-medium">
-                  {typing ? 'yazıyor...' : 'Canlı Destek · Çevrimiçi'}
+                <p className="text-[11px] font-medium">
+                  {offlineMode
+                    ? <span className="text-amber-500">Destek ekibi şu an çevrimdışı, talebiniz kaydedilecektir.</span>
+                    : <span className="text-emerald-500">{typing ? 'yazıyor...' : 'Canlı Destek · Çevrimiçi'}</span>}
                 </p>
               </div>
             </div>

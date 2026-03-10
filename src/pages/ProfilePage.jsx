@@ -47,7 +47,12 @@ function ProfilePage() {
         } else {
           const userJobs = mapped
           const completedCount = userJobs.filter(j => j.status === 'completed' || j.status === 'rated').length
-          const activeCount = userJobs.filter(j => j.status === 'in_progress' || j.status === 'pending').length
+          // Usta için aktif işler: pending, accepted ve in_progress durumları
+          const activeCount = userJobs.filter(j =>
+            j.status === 'pending' ||
+            j.status === 'accepted' ||
+            j.status === 'in_progress'
+          ).length
           const offersCount = userJobs.filter(j => j.professional?.id === user?.id).length
           const ratings = userJobs.filter(j => j.rating).map(j => j.rating)
           const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b) / ratings.length).toFixed(1) : 0
