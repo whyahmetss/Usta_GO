@@ -1,8 +1,8 @@
 // API Configuration
-export const API_URL = 'https://usta-go-1.onrender.com/api';
+export const API_URL = 'https://usta-go-api.onrender.com/api';
 
 // Socket.IO Configuration
-export const SOCKET_URL = 'https://usta-go-1.onrender.com';
+export const SOCKET_URL = 'https://usta-go-api.onrender.com';
 
 // Storage Keys
 export const STORAGE_KEYS = {
