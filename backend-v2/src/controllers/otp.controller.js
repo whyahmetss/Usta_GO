@@ -23,6 +23,11 @@ export const verifyOtp = async (req, res) => {
     if (!email || !code) {
       return res.status(400).json({ success: false, error: 'E-posta ve kod zorunludur' })
     }
+    // Test bypass: OTP_BYPASS_CODE env var varsa o kodu kabul et (SMTP yokken test için)
+    const bypass = process.env.OTP_BYPASS_CODE
+    if (bypass && String(code).trim() === String(bypass).trim()) {
+      return res.json({ success: true, message: 'E-posta doğrulandı' })
+    }
     const result = await verifyEmailOtp(email, code)
     if (!result.valid) {
       return res.status(400).json({ success: false, error: result.error })
