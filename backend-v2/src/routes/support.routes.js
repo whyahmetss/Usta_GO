@@ -20,6 +20,12 @@ router.get('/agents', authMiddleware, async (req, res) => {
   }
 })
 
+// Session endpoints (any authenticated user)
+router.post('/sessions/open', authMiddleware, sessionCtrl.openSession)
+router.post('/sessions/close', authMiddleware, sessionCtrl.closeSession)
+router.post('/sessions/rate', authMiddleware, sessionCtrl.rateSession)
+router.get('/sessions/mine', authMiddleware, sessionCtrl.getMySession)
+
 // All routes below require SUPPORT or ADMIN role
 router.use(authMiddleware, supportMiddleware)
 
@@ -73,13 +79,7 @@ router.get('/conversations', async (req, res) => {
   }
 })
 
-// Session endpoints (any authenticated user)
-router.post('/sessions/open', authMiddleware, sessionCtrl.openSession)
-router.post('/sessions/close', authMiddleware, sessionCtrl.closeSession)
-router.post('/sessions/rate', authMiddleware, sessionCtrl.rateSession)
-router.get('/sessions/mine', authMiddleware, sessionCtrl.getMySession)
-
-// Admin/Support monitoring
-router.get('/sessions', authMiddleware, supportMiddleware, sessionCtrl.getAllSessions)
+// Admin/Support monitoring (supportMiddleware already applied above)
+router.get('/sessions', sessionCtrl.getAllSessions)
 
 export default router
