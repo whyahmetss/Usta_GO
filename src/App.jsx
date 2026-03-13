@@ -63,7 +63,7 @@ function PageLoader() {
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
-  if (isLoading) return <SplashScreen key="protected-splash" />
+  if (isLoading) return <PageLoader />
 
   if (!user) return <Navigate to="/" replace />
 
