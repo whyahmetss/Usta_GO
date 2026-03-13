@@ -1,5 +1,5 @@
+import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { MapsProvider } from './context/MapsContext'
@@ -7,167 +7,214 @@ import Layout from './components/Layout'
 import PageErrorBoundary from './components/PageErrorBoundary'
 import SplashScreen from './components/SplashScreen'
 import OnboardingScreen from './components/OnboardingScreen'
-import AuthPage from './pages/AuthPage'
-import UstaRegisterPage from './pages/UstaRegisterPage'
-import HomePage from './pages/HomePage'
-import ProfessionalDashboard from './pages/ProfessionalDashboard'
-import ProfessionalMapPage from './pages/ProfessionalMapPage'
-import AdminDashboard from './pages/AdminDashboard'
-import ProfilePage from './pages/ProfilePage'
-import MyJobsPage from './pages/MyJobsPage'
-import MessagesPage from './pages/MessagesPage'
-import JobDetailPage from './pages/JobDetailPage'
-import RateJobPage from './pages/RateJobPage'
-import SettingsPage from './pages/SettingsPage'
-import NotificationsPage from './pages/NotificationsPage'
-import CreateJobPage from './pages/CreateJobPage'
-import WalletPage from './pages/WalletPage'
-import WithdrawPage from './pages/WithdrawPage'
-import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage'
-import AdminUsersPage from './pages/AdminUsersPage'
-import AdminJobsPage from './pages/AdminJobsPage'
-import AdminComplaintsPage from './pages/AdminComplaintsPage'
-import AdminMessagesPage from './pages/AdminMessagesPage'
-import AdminCouponsPage from './pages/AdminCouponsPage'
-import AdminPricingPage from './pages/AdminPricingPage'
-import AdminCertificatesPage from './pages/AdminCertificatesPage'
-import AdminPendingUstasPage from './pages/AdminPendingUstasPage'
-import AdminCampaignsPage from './pages/AdminCampaignsPage'
-import AdminFinancePage from './pages/AdminFinancePage'
-import AdminPromotionsPage from './pages/AdminPromotionsPage'
-import AdminVerificationPage from './pages/AdminVerificationPage'
-import AdminSupportMonitorPage from './pages/AdminSupportMonitorPage'
-import CancelJobPage from './pages/CancelJobPage'
-import CustomerRegisterPage from './pages/CustomerRegisterPage'
-import SupportDashboard from './pages/SupportDashboard'
-import LiveSupportChatPage from './pages/LiveSupportChatPage'
-import SupportChatPage from './pages/SupportChatPage'
-import LiveTrackingPage from './pages/LiveTrackingPage'
-import HelpPage from './pages/HelpPage'
-import AboutPage from './pages/AboutPage'
-import Odeme from './pages/odeme'
-import PaymentResultPage from './pages/PaymentResultPage'
 
+/* ─────────────────────────────────────────────
+   EAGER  –  kritik ilk render yolu
+───────────────────────────────────────────── */
+import AuthPage from './pages/AuthPage'
+
+/* ─────────────────────────────────────────────
+   LAZY CHUNKS  –  sadece ihtiyaç duyulunca indirilir
+───────────────────────────────────────────── */
+
+/* Auth kayıt */
+const UstaRegisterPage      = lazy(() => import('./pages/UstaRegisterPage'))
+const CustomerRegisterPage  = lazy(() => import('./pages/CustomerRegisterPage'))
+
+/* Müşteri */
+const HomePage       = lazy(() => import('./pages/HomePage'))
+const CreateJobPage  = lazy(() => import('./pages/CreateJobPage'))
+
+/* Usta */
+const ProfessionalDashboard = lazy(() => import('./pages/ProfessionalDashboard'))
+const ProfessionalMapPage   = lazy(() => import('./pages/ProfessionalMapPage'))
+
+/* Ortak */
+const ProfilePage       = lazy(() => import('./pages/ProfilePage'))
+const SettingsPage      = lazy(() => import('./pages/SettingsPage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const MyJobsPage        = lazy(() => import('./pages/MyJobsPage'))
+const MessagesPage      = lazy(() => import('./pages/MessagesPage'))
+const JobDetailPage     = lazy(() => import('./pages/JobDetailPage'))
+const RateJobPage       = lazy(() => import('./pages/RateJobPage'))
+const WalletPage        = lazy(() => import('./pages/WalletPage'))
+const WithdrawPage      = lazy(() => import('./pages/WithdrawPage'))
+const CancelJobPage     = lazy(() => import('./pages/CancelJobPage'))
+const LiveSupportChatPage = lazy(() => import('./pages/LiveSupportChatPage'))
+const LiveTrackingPage  = lazy(() => import('./pages/LiveTrackingPage'))
+const HelpPage          = lazy(() => import('./pages/HelpPage'))
+const AboutPage         = lazy(() => import('./pages/AboutPage'))
+const Odeme             = lazy(() => import('./pages/odeme'))
+const PaymentResultPage = lazy(() => import('./pages/PaymentResultPage'))
+
+/* ─────────────────────────────────────────────
+   ADMIN CHUNK  –  admin olmayan kullanıcı ASLA indirmez
+   webpackChunkName / vite rollupOptions chunk: "admin"
+───────────────────────────────────────────── */
+const AdminDashboard         = lazy(() => import(/* @vite-ignore */ './pages/AdminDashboard'))
+const AdminWithdrawalsPage   = lazy(() => import(/* @vite-ignore */ './pages/AdminWithdrawalsPage'))
+const AdminUsersPage         = lazy(() => import(/* @vite-ignore */ './pages/AdminUsersPage'))
+const AdminJobsPage          = lazy(() => import(/* @vite-ignore */ './pages/AdminJobsPage'))
+const AdminComplaintsPage    = lazy(() => import(/* @vite-ignore */ './pages/AdminComplaintsPage'))
+const AdminMessagesPage      = lazy(() => import(/* @vite-ignore */ './pages/AdminMessagesPage'))
+const AdminCouponsPage       = lazy(() => import(/* @vite-ignore */ './pages/AdminCouponsPage'))
+const AdminPricingPage       = lazy(() => import(/* @vite-ignore */ './pages/AdminPricingPage'))
+const AdminCertificatesPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminCertificatesPage'))
+const AdminPendingUstasPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminPendingUstasPage'))
+const AdminCampaignsPage     = lazy(() => import(/* @vite-ignore */ './pages/AdminCampaignsPage'))
+const AdminFinancePage       = lazy(() => import(/* @vite-ignore */ './pages/AdminFinancePage'))
+const AdminPromotionsPage    = lazy(() => import(/* @vite-ignore */ './pages/AdminPromotionsPage'))
+const AdminVerificationPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminVerificationPage'))
+const AdminSupportMonitorPage = lazy(() => import(/* @vite-ignore */ './pages/AdminSupportMonitorPage'))
+
+/* ─────────────────────────────────────────────
+   SUPPORT CHUNK  –  destek personeli dışı ASLA indirmez
+───────────────────────────────────────────── */
+const SupportDashboard = lazy(() => import(/* @vite-ignore */ './pages/SupportDashboard'))
+const SupportChatPage  = lazy(() => import(/* @vite-ignore */ './pages/SupportChatPage'))
+
+/* ─────────────────────────────────────────────
+   Lazy yüklenirken gösterilecek minimal spinner
+───────────────────────────────────────────── */
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a1628]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-400 font-medium">Yükleniyor...</p>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   ProtectedRoute
+───────────────────────────────────────────── */
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
-  if (isLoading) {
-    return <SplashScreen key="protected-splash" />
-  }
+  if (isLoading) return <SplashScreen key="protected-splash" />
 
-  if (!user) {
-    return <Navigate to="/" />
-  }
+  if (!user) return <Navigate to="/" />
 
-  let userRole = user.role?.toLowerCase();
-  if (userRole === 'usta') userRole = 'professional';
+  let userRole = user.role?.toLowerCase()
+  if (userRole === 'usta') userRole = 'professional'
 
-  const requiredRole = roleRequired?.toLowerCase();
+  const requiredRole = roleRequired?.toLowerCase()
 
   if (requiredRole && userRole !== requiredRole) {
-    if (userRole === 'admin') return <Navigate to="/admin" />
+    if (userRole === 'admin')        return <Navigate to="/admin" />
     if (userRole === 'professional') return <Navigate to="/professional" />
-    if (userRole === 'support') return <Navigate to="/support" />
+    if (userRole === 'support')      return <Navigate to="/support" />
     return <Navigate to="/home" />
   }
 
   return children
 }
 
+/* ─────────────────────────────────────────────
+   AppRoutes  –  tüm route tanımları
+───────────────────────────────────────────── */
 function AppRoutes() {
   const { user } = useAuth()
-  
-  let userRole = user?.role?.toLowerCase();
-  if (userRole === 'usta') userRole = 'professional';
+
+  let userRole = user?.role?.toLowerCase()
+  if (userRole === 'usta') userRole = 'professional'
 
   return (
-    <Routes>
-      {/* Auth - no layout */}
-      <Route
-        path="/"
-        element={
-          user ? (
-            userRole === 'admin' ? <Navigate to="/admin" /> :
-            userRole === 'professional' ? <Navigate to="/professional" /> :
-            userRole === 'support' ? <Navigate to="/support" /> :
-            <Navigate to="/home" />
-          ) : (
-            <AuthPage />
-          )
-        }
-      />
-      <Route path="/register/usta" element={user ? <Navigate to="/professional" /> : <UstaRegisterPage />} />
-      <Route path="/register/customer" element={<ProtectedRoute roleRequired="customer"><CustomerRegisterPage /></ProtectedRoute>} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
 
-      {/* Customer */}
-      <Route path="/home" element={<ProtectedRoute roleRequired="customer"><Layout><HomePage /></Layout></ProtectedRoute>} />
+        {/* ── Auth ── */}
+        <Route
+          path="/"
+          element={
+            user ? (
+              userRole === 'admin'        ? <Navigate to="/admin" /> :
+              userRole === 'professional' ? <Navigate to="/professional" /> :
+              userRole === 'support'      ? <Navigate to="/support" /> :
+              <Navigate to="/home" />
+            ) : (
+              <AuthPage />
+            )
+          }
+        />
+        <Route path="/register/usta"     element={user ? <Navigate to="/professional" /> : <UstaRegisterPage />} />
+        <Route path="/register/customer" element={<ProtectedRoute roleRequired="customer"><CustomerRegisterPage /></ProtectedRoute>} />
 
-      {/* Professional */}
-      <Route path="/professional" element={<ProtectedRoute roleRequired="professional"><Layout><ProfessionalDashboard /></Layout></ProtectedRoute>} />
-      <Route path="/professional/map" element={<ProtectedRoute roleRequired="professional"><ProfessionalMapPage /></ProtectedRoute>} />
+        {/* ── Müşteri ── */}
+        <Route path="/home"       element={<ProtectedRoute roleRequired="customer"><Layout><HomePage /></Layout></ProtectedRoute>} />
+        <Route path="/create-job" element={<ProtectedRoute roleRequired="customer"><Layout><CreateJobPage /></Layout></ProtectedRoute>} />
 
-      {/* Shared - with layout */}
-      <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
-      <Route path="/help" element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
-      <Route path="/about" element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-      <Route path="/my-jobs" element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
-      <Route path="/messages/:jobId" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
-      <Route path="/job/:id" element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
-      <Route path="/rate/:id" element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
-      <Route path="/create-job" element={<ProtectedRoute roleRequired="customer"><Layout><CreateJobPage /></Layout></ProtectedRoute>} />
-      <Route path="/wallet" element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
-      <Route path="/withdraw" element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
-      <Route path="/odeme" element={<ProtectedRoute><Layout><Odeme /></Layout></ProtectedRoute>} />
-      <Route path="/payment-result" element={<PaymentResultPage />} />
+        {/* ── Usta ── */}
+        <Route path="/professional"     element={<ProtectedRoute roleRequired="professional"><Layout><ProfessionalDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/professional/map" element={<ProtectedRoute roleRequired="professional"><ProfessionalMapPage /></ProtectedRoute>} />
 
-      {/* Admin - with layout */}
-      <Route path="/admin" element={<ProtectedRoute roleRequired="admin"><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-      <Route path="/admin/withdrawals" element={<ProtectedRoute roleRequired="admin"><Layout><AdminWithdrawalsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/jobs" element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/complaints" element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/messages" element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-      <Route path="/admin/coupons" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/promotions" element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
-      <Route path="/admin/verification" element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
-      <Route path="/admin/support-monitor" element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
-      <Route path="/admin/pricing" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/certificates" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/pending-ustas" element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/campaigns" element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin/finance" element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
+        {/* ── Ortak ── */}
+        <Route path="/profile"       element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+        <Route path="/settings"      element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/help"          element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
+        <Route path="/about"         element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/my-jobs"       element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
+        <Route path="/messages"      element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
+        <Route path="/messages/:jobId" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
+        <Route path="/job/:id"       element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/rate/:id"      element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/wallet"        element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
+        <Route path="/withdraw"      element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
+        <Route path="/odeme"         element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
+        <Route path="/payment-result" element={<PaymentResultPage />} />
+        <Route path="/live-support"  element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
+        <Route path="/track/:id"     element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
+        <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
 
-      <Route path="/support" element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
-      <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
-      <Route path="/live-support" element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
-      <Route path="/track/:id" element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
-      <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+        {/* ── Admin (ayrı chunk, müşteri/usta yüklemez) ── */}
+        <Route path="/admin"                   element={<ProtectedRoute roleRequired="admin"><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/admin/withdrawals"       element={<ProtectedRoute roleRequired="admin"><Layout><AdminWithdrawalsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/users"             element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/jobs"              element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/complaints"        element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/messages"          element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/admin/coupons"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/promotions"        element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
+        <Route path="/admin/verification"      element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
+        <Route path="/admin/support-monitor"   element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
+        <Route path="/admin/pricing"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/certificates"      element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/pending-ustas"     element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/campaigns"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/finance"           element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
+
+        {/* ── Destek personeli (ayrı chunk) ── */}
+        <Route path="/support"             element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
+        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
+
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Suspense>
   )
 }
 
+/* ─────────────────────────────────────────────
+   Splash + Onboarding wrapper
+───────────────────────────────────────────── */
 function AppWithOnboarding() {
   const [splashDone, setSplashDone] = useState(false)
   const [onboardingDone, setOnboardingDone] = useState(
     () => !!localStorage.getItem('ug_onboarding_done')
   )
 
-  if (!splashDone) {
-    return <SplashScreen onDone={() => setSplashDone(true)} />
-  }
-
-  if (!onboardingDone) {
-    return <OnboardingScreen onDone={() => setOnboardingDone(true)} />
-  }
+  if (!splashDone)     return <SplashScreen onDone={() => setSplashDone(true)} />
+  if (!onboardingDone) return <OnboardingScreen onDone={() => setOnboardingDone(true)} />
 
   return <AppRoutes />
 }
 
-function App() {
+/* ─────────────────────────────────────────────
+   App root
+───────────────────────────────────────────── */
+export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
@@ -180,5 +227,3 @@ function App() {
     </BrowserRouter>
   )
 }
-
-export default App
