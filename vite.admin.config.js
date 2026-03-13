@@ -39,18 +39,10 @@ export default defineConfig({
 
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react-router')) return 'vendor-react'
-            if (id.includes('socket.io') || id.includes('engine.io'))    return 'vendor-socket'
-            if (id.includes('lucide'))                                    return 'vendor-icons'
-            if (id.includes('@capacitor'))                                return 'vendor-capacitor'
-            return 'vendor-misc'
+          if (id.includes('node_modules/socket.io-client') ||
+              id.includes('node_modules/engine.io-client')) {
+            return 'vendor-socket'
           }
-          if (id.includes('/pages/Admin'))                                return 'admin-pages'
-          if (
-            id.includes('/pages/SupportDashboard') ||
-            id.includes('/pages/SupportChatPage')
-          ) return 'support-pages'
         },
       },
     },
