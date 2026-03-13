@@ -1,3 +1,11 @@
+/**
+ * App — Usta Go Mobil Uygulama
+ *
+ * SADECE Müşteri + Usta rotalarını içerir.
+ * Admin ve Destek sayfaları bu bundle'a girmez.
+ * → Bakınız: src/AdminApp.jsx + vite.admin.config.js
+ */
+
 import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -8,28 +16,20 @@ import PageErrorBoundary from './components/PageErrorBoundary'
 import SplashScreen from './components/SplashScreen'
 import OnboardingScreen from './components/OnboardingScreen'
 
-/* ─────────────────────────────────────────────
-   EAGER  –  kritik ilk render yolu
-───────────────────────────────────────────── */
+/* ── Eager: kritik ilk render ── */
 import AuthPage from './pages/AuthPage'
 
-/* ─────────────────────────────────────────────
-   LAZY CHUNKS  –  sadece ihtiyaç duyulunca indirilir
-───────────────────────────────────────────── */
-
-/* Auth kayıt */
-const UstaRegisterPage      = lazy(() => import('./pages/UstaRegisterPage'))
+/* ── Lazy: müşteri ── */
+const HomePage              = lazy(() => import('./pages/HomePage'))
+const CreateJobPage         = lazy(() => import('./pages/CreateJobPage'))
 const CustomerRegisterPage  = lazy(() => import('./pages/CustomerRegisterPage'))
 
-/* Müşteri */
-const HomePage       = lazy(() => import('./pages/HomePage'))
-const CreateJobPage  = lazy(() => import('./pages/CreateJobPage'))
-
-/* Usta */
+/* ── Lazy: usta ── */
 const ProfessionalDashboard = lazy(() => import('./pages/ProfessionalDashboard'))
 const ProfessionalMapPage   = lazy(() => import('./pages/ProfessionalMapPage'))
+const UstaRegisterPage      = lazy(() => import('./pages/UstaRegisterPage'))
 
-/* Ortak */
+/* ── Lazy: ortak sayfalar ── */
 const ProfilePage       = lazy(() => import('./pages/ProfilePage'))
 const SettingsPage      = lazy(() => import('./pages/SettingsPage'))
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
@@ -47,35 +47,7 @@ const AboutPage         = lazy(() => import('./pages/AboutPage'))
 const Odeme             = lazy(() => import('./pages/odeme'))
 const PaymentResultPage = lazy(() => import('./pages/PaymentResultPage'))
 
-/* ─────────────────────────────────────────────
-   ADMIN CHUNK  –  admin olmayan kullanıcı ASLA indirmez
-   webpackChunkName / vite rollupOptions chunk: "admin"
-───────────────────────────────────────────── */
-const AdminDashboard         = lazy(() => import(/* @vite-ignore */ './pages/AdminDashboard'))
-const AdminWithdrawalsPage   = lazy(() => import(/* @vite-ignore */ './pages/AdminWithdrawalsPage'))
-const AdminUsersPage         = lazy(() => import(/* @vite-ignore */ './pages/AdminUsersPage'))
-const AdminJobsPage          = lazy(() => import(/* @vite-ignore */ './pages/AdminJobsPage'))
-const AdminComplaintsPage    = lazy(() => import(/* @vite-ignore */ './pages/AdminComplaintsPage'))
-const AdminMessagesPage      = lazy(() => import(/* @vite-ignore */ './pages/AdminMessagesPage'))
-const AdminCouponsPage       = lazy(() => import(/* @vite-ignore */ './pages/AdminCouponsPage'))
-const AdminPricingPage       = lazy(() => import(/* @vite-ignore */ './pages/AdminPricingPage'))
-const AdminCertificatesPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminCertificatesPage'))
-const AdminPendingUstasPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminPendingUstasPage'))
-const AdminCampaignsPage     = lazy(() => import(/* @vite-ignore */ './pages/AdminCampaignsPage'))
-const AdminFinancePage       = lazy(() => import(/* @vite-ignore */ './pages/AdminFinancePage'))
-const AdminPromotionsPage    = lazy(() => import(/* @vite-ignore */ './pages/AdminPromotionsPage'))
-const AdminVerificationPage  = lazy(() => import(/* @vite-ignore */ './pages/AdminVerificationPage'))
-const AdminSupportMonitorPage = lazy(() => import(/* @vite-ignore */ './pages/AdminSupportMonitorPage'))
-
-/* ─────────────────────────────────────────────
-   SUPPORT CHUNK  –  destek personeli dışı ASLA indirmez
-───────────────────────────────────────────── */
-const SupportDashboard = lazy(() => import(/* @vite-ignore */ './pages/SupportDashboard'))
-const SupportChatPage  = lazy(() => import(/* @vite-ignore */ './pages/SupportChatPage'))
-
-/* ─────────────────────────────────────────────
-   Lazy yüklenirken gösterilecek minimal spinner
-───────────────────────────────────────────── */
+/* ── Sayfa geçişlerinde minimal spinner ── */
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a1628]">
@@ -87,34 +59,51 @@ function PageLoader() {
   )
 }
 
-/* ─────────────────────────────────────────────
-   ProtectedRoute
-───────────────────────────────────────────── */
+/* ── Route koruma ── */
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
   if (isLoading) return <SplashScreen key="protected-splash" />
 
-  if (!user) return <Navigate to="/" />
+  if (!user) return <Navigate to="/" replace />
 
   let userRole = user.role?.toLowerCase()
   if (userRole === 'usta') userRole = 'professional'
 
+  /* Admin / Support bu uygulamaya gelirse, admin paneline yönlendir */
+  if (userRole === 'admin' || userRole === 'support') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a1628] px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🛠️</span>
+          </div>
+          <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Yönetim Paneli</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            Admin ve destek hesapları için lütfen <strong>Yönetim Paneli</strong>'ni kullanın.
+          </p>
+          <a
+            href={import.meta.env.VITE_ADMIN_URL || 'https://usta-go-admin.onrender.com'}
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition"
+          >
+            Yönetim Paneline Git →
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   const requiredRole = roleRequired?.toLowerCase()
 
   if (requiredRole && userRole !== requiredRole) {
-    if (userRole === 'admin')        return <Navigate to="/admin" />
-    if (userRole === 'professional') return <Navigate to="/professional" />
-    if (userRole === 'support')      return <Navigate to="/support" />
-    return <Navigate to="/home" />
+    if (userRole === 'professional') return <Navigate to="/professional" replace />
+    return <Navigate to="/home" replace />
   }
 
   return children
 }
 
-/* ─────────────────────────────────────────────
-   AppRoutes  –  tüm route tanımları
-───────────────────────────────────────────── */
+/* ── Tüm uygulama rotaları ── */
 function AppRoutes() {
   const { user } = useAuth()
 
@@ -125,80 +114,56 @@ function AppRoutes() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
 
-        {/* ── Auth ── */}
+        {/* Auth */}
         <Route
           path="/"
           element={
             user ? (
-              userRole === 'admin'        ? <Navigate to="/admin" /> :
-              userRole === 'professional' ? <Navigate to="/professional" /> :
-              userRole === 'support'      ? <Navigate to="/support" /> :
-              <Navigate to="/home" />
+              userRole === 'professional' ? <Navigate to="/professional" replace /> :
+              userRole === 'admin' || userRole === 'support' ? <Navigate to="/professional" replace /> :
+              <Navigate to="/home" replace />
             ) : (
               <AuthPage />
             )
           }
         />
-        <Route path="/register/usta"     element={user ? <Navigate to="/professional" /> : <UstaRegisterPage />} />
+        <Route path="/register/usta"     element={user ? <Navigate to="/professional" replace /> : <UstaRegisterPage />} />
         <Route path="/register/customer" element={<ProtectedRoute roleRequired="customer"><CustomerRegisterPage /></ProtectedRoute>} />
 
-        {/* ── Müşteri ── */}
+        {/* Müşteri */}
         <Route path="/home"       element={<ProtectedRoute roleRequired="customer"><Layout><HomePage /></Layout></ProtectedRoute>} />
         <Route path="/create-job" element={<ProtectedRoute roleRequired="customer"><Layout><CreateJobPage /></Layout></ProtectedRoute>} />
 
-        {/* ── Usta ── */}
+        {/* Usta */}
         <Route path="/professional"     element={<ProtectedRoute roleRequired="professional"><Layout><ProfessionalDashboard /></Layout></ProtectedRoute>} />
         <Route path="/professional/map" element={<ProtectedRoute roleRequired="professional"><ProfessionalMapPage /></ProtectedRoute>} />
 
-        {/* ── Ortak ── */}
-        <Route path="/profile"       element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-        <Route path="/settings"      element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
-        <Route path="/help"          element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
-        <Route path="/about"         element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-        <Route path="/my-jobs"       element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
-        <Route path="/messages"      element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
+        {/* Ortak */}
+        <Route path="/profile"        element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+        <Route path="/settings"       element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/help"           element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
+        <Route path="/about"          element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
+        <Route path="/notifications"  element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/my-jobs"        element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
+        <Route path="/messages"       element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
         <Route path="/messages/:jobId" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
-        <Route path="/job/:id"       element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
-        <Route path="/rate/:id"      element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
-        <Route path="/wallet"        element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
-        <Route path="/withdraw"      element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
-        <Route path="/odeme"         element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
+        <Route path="/job/:id"        element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/rate/:id"       element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/wallet"         element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
+        <Route path="/withdraw"       element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
+        <Route path="/odeme"          element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
         <Route path="/payment-result" element={<PaymentResultPage />} />
-        <Route path="/live-support"  element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
-        <Route path="/track/:id"     element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
+        <Route path="/live-support"   element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
+        <Route path="/track/:id"      element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
         <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
 
-        {/* ── Admin (ayrı chunk, müşteri/usta yüklemez) ── */}
-        <Route path="/admin"                   element={<ProtectedRoute roleRequired="admin"><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-        <Route path="/admin/withdrawals"       element={<ProtectedRoute roleRequired="admin"><Layout><AdminWithdrawalsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/users"             element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/jobs"              element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/complaints"        element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/messages"          element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-        <Route path="/admin/coupons"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/promotions"        element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
-        <Route path="/admin/verification"      element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
-        <Route path="/admin/support-monitor"   element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
-        <Route path="/admin/pricing"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/certificates"      element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/pending-ustas"     element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/campaigns"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/finance"           element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
-
-        {/* ── Destek personeli (ayrı chunk) ── */}
-        <Route path="/support"             element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
-        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
-
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   )
 }
 
-/* ─────────────────────────────────────────────
-   Splash + Onboarding wrapper
-───────────────────────────────────────────── */
+/* ── Splash + Onboarding ── */
 function AppWithOnboarding() {
   const [splashDone, setSplashDone] = useState(false)
   const [onboardingDone, setOnboardingDone] = useState(
@@ -211,9 +176,7 @@ function AppWithOnboarding() {
   return <AppRoutes />
 }
 
-/* ─────────────────────────────────────────────
-   App root
-───────────────────────────────────────────── */
+/* ── Root ── */
 export default function App() {
   return (
     <BrowserRouter>
