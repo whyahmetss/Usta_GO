@@ -74,6 +74,8 @@ function ProtectedRoute({ children, roleRequired = null }) {
 
   if (requiredRole && userRole !== requiredRole) {
     if (userRole === 'professional') return <Navigate to="/professional" replace />
+    /* admin / support → test sırasında müşteri sayfalarına erişebilsin */
+    if (userRole === 'admin' || userRole === 'support') return children
     return <Navigate to="/home" replace />
   }
 
@@ -96,7 +98,8 @@ function AppRoutes() {
           path="/"
           element={
             user ? (
-              userRole === 'professional' ? <Navigate to="/professional" replace /> :
+              userRole === 'professional'              ? <Navigate to="/professional" replace /> :
+              userRole === 'admin' || userRole === 'support' ? <Navigate to="/home" replace /> :
               <Navigate to="/home" replace />
             ) : (
               <AuthPage />
