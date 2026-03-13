@@ -2,36 +2,40 @@
  * Usta Go — Admin Panel Vite Config
  *
  * `npm run dev:admin`   → port 5174'te admin paneli başlatır
- * `npm run build:admin` → dist-admin/ klasörüne build eder
+ * `npm run build:admin` → dist-admin/ klasörüne düz olarak build eder
  *
- * Backend URL: src/config.js ile ortak (aynı API_URL)
- * Kaynak dosyalar: src/ ile ortak (components, utils, context, pages)
+ * Render ayarları:
+ *   Build Command  : npm install && npm run build:admin
+ *   Publish Dir    : dist-admin
+ *   Redirect rule  : /* → /index.html (Rewrite)
  */
 
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
 
-  /* Admin panel'in HTML entry noktası */
-  root: '.',
+  /* root = admin-panel klasörü → index.html oradan alınır */
+  root: resolve(__dirname, 'admin-panel'),
+  base: '/',
 
   server: {
     port: 5174,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { 'Access-Control-Allow-Origin': '*' },
   },
 
   build: {
-    /* Ayrı output klasörü — mobil dist/ ile karışmasın */
-    outDir: 'dist-admin',
+    /* dist-admin/ → düz yapı: index.html + assets/ */
+    outDir: resolve(__dirname, 'dist-admin'),
     emptyOutDir: true,
 
     rollupOptions: {
-      /* Admin panel için HTML entry */
-      input: 'admin-panel/index.html',
+      input: resolve(__dirname, 'admin-panel/index.html'),
 
       output: {
         manualChunks(id) {
@@ -42,8 +46,7 @@ export default defineConfig({
             if (id.includes('@capacitor'))                                return 'vendor-capacitor'
             return 'vendor-misc'
           }
-          /* Admin sayfaları tek chunk'ta toplanabilir ya da ayrı ayrı yüklenir */
-          if (id.includes('/pages/Admin')) return 'admin-pages'
+          if (id.includes('/pages/Admin'))                                return 'admin-pages'
           if (
             id.includes('/pages/SupportDashboard') ||
             id.includes('/pages/SupportChatPage')
@@ -54,10 +57,7 @@ export default defineConfig({
 
     minify: 'terser',
     terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
+      compress: { drop_console: true, drop_debugger: true },
     },
   },
 

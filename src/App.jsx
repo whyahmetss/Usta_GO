@@ -70,29 +70,6 @@ function ProtectedRoute({ children, roleRequired = null }) {
   let userRole = user.role?.toLowerCase()
   if (userRole === 'usta') userRole = 'professional'
 
-  /* Admin / Support bu uygulamaya gelirse, admin paneline yönlendir */
-  if (userRole === 'admin' || userRole === 'support') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a1628] px-6">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🛠️</span>
-          </div>
-          <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Yönetim Paneli</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-            Admin ve destek hesapları için lütfen <strong>Yönetim Paneli</strong>'ni kullanın.
-          </p>
-          <a
-            href={import.meta.env.VITE_ADMIN_URL || 'https://usta-go-admin.onrender.com'}
-            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition"
-          >
-            Yönetim Paneline Git →
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   const requiredRole = roleRequired?.toLowerCase()
 
   if (requiredRole && userRole !== requiredRole) {
@@ -120,7 +97,6 @@ function AppRoutes() {
           element={
             user ? (
               userRole === 'professional' ? <Navigate to="/professional" replace /> :
-              userRole === 'admin' || userRole === 'support' ? <Navigate to="/professional" replace /> :
               <Navigate to="/home" replace />
             ) : (
               <AuthPage />
