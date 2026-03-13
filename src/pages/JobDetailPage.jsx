@@ -11,6 +11,7 @@ import { connectSocket, getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import StatusBadge from '../components/StatusBadge'
+import CarConfirmButton from '../components/CarConfirmButton'
 
 const STORAGE_KEY = (jobId) => `usta_sharing_${jobId}`
 
@@ -900,14 +901,12 @@ function JobDetailPage() {
           </div>
         )}
 
-        {/* Customer rate */}
+        {/* Customer rate - animated car confirm button */}
         {isCustomer && job.status === 'completed' && !job.rating && (
-          <button
-            onClick={() => navigate(`/rate/${job.id}`)}
-            className="w-full py-4 bg-amber-500 text-white rounded-2xl font-semibold text-base hover:bg-amber-600 active:scale-[0.98] transition"
-          >
-            Değerlendir
-          </button>
+          <CarConfirmButton
+            label="İşi Onayla & Değerlendir"
+            onConfirm={() => navigate(`/rate/${job.id}`)}
+          />
         )}
 
         {/* Message Button */}
