@@ -42,6 +42,7 @@ function AdminDashboard() {
     activeJobs: 0,
     totalRevenue: 0,
     totalJobs: 0,
+    activeUstas: 0,
   })
   const [savedUsers, setSavedUsers] = useState([])
   const [allJobs, setAllJobs] = useState([])
@@ -106,11 +107,16 @@ function AdminDashboard() {
             j.status !== 'rated'
         ).length
 
+        const activeUstaCount = usersData.filter(
+          (u) => (u.role === 'USTA' || u.role === 'professional') && u.status === 'ACTIVE' && u.isActive !== false
+        ).length
+
         setStats({
           totalUsers: usersData.length,
           activeJobs: activeJobsCount,
           totalRevenue,
           totalJobs: jobsRaw.length,
+          activeUstas: activeUstaCount,
         })
       } catch (err) {
         console.error('Load dashboard error:', err)
@@ -160,6 +166,12 @@ function AdminDashboard() {
       value: stats.totalJobs.toString(),
       icon: TrendingUp,
       color: 'violet',
+    },
+    {
+      label: 'Aktif Usta',
+      value: stats.activeUstas.toString(),
+      icon: UserCheck,
+      color: 'emerald',
     },
   ]
 

@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { MapsProvider } from './context/MapsContext'
 import Layout from './components/Layout'
 import PageErrorBoundary from './components/PageErrorBoundary'
+import SplashScreen from './components/SplashScreen'
+import OnboardingScreen from './components/OnboardingScreen'
 import AuthPage from './pages/AuthPage'
 import UstaRegisterPage from './pages/UstaRegisterPage'
 import HomePage from './pages/HomePage'
@@ -49,14 +52,7 @@ function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm text-gray-500 font-medium">Yükleniyor...</p>
-        </div>
-      </div>
-    )
+    return <SplashScreen key="protected-splash" />
   }
 
   if (!user) {
@@ -154,13 +150,30 @@ function AppRoutes() {
   )
 }
 
+function AppWithOnboarding() {
+  const [splashDone, setSplashDone] = useState(false)
+  const [onboardingDone, setOnboardingDone] = useState(
+    () => !!localStorage.getItem('ug_onboarding_done')
+  )
+
+  if (!splashDone) {
+    return <SplashScreen onDone={() => setSplashDone(true)} />
+  }
+
+  if (!onboardingDone) {
+    return <OnboardingScreen onDone={() => setOnboardingDone(true)} />
+  }
+
+  return <AppRoutes />
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <MapsProvider>
-            <AppRoutes />
+            <AppWithOnboarding />
           </MapsProvider>
         </AuthProvider>
       </ThemeProvider>

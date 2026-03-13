@@ -1,10 +1,18 @@
 import * as messageService from "../services/message.service.js";
 import { successResponse } from "../utils/response.js";
 import { io } from "../index.js";
+import { analyzeMessage } from "../utils/messageFilter.js";
 
 export const sendMessage = async (req, res, next) => {
   try {
     const { receiverId, content } = req.body;
+
+    // Güvenlik kontrolü
+    const check = analyzeMessage(content);
+    if (check.blocked) {
+      return res.status(400).json({ success: false, error: check.reason });
+    }
+
     const message = await messageService.sendMessage(req.user.id, receiverId, content);
     // Notify recipient in real-time
     io.to(`user_${receiverId}`).emit("receive_message", message);
