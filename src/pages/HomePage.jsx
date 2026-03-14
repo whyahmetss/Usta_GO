@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper, Loader, Droplets, Wind, ShieldCheck, Cpu, Package } from 'lucide-react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper } from 'lucide-react'
 
 const CAMPAIGN_ICONS = { flower: Flower, zap: Zap, gift: Gift, sparkles: Sparkles, heart: Heart, star: Star, party: PartyPopper }
 import { useAuth } from '../context/AuthContext'
@@ -8,26 +8,15 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import Logo from '../components/Logo'
 
-// Map service category/label to icon + color (keyword-based, no DB changes needed)
-const SERVICE_ICON_MAP = [
-  { keys: ['elektrik','electric','sigorta','priz','kablo','aydın'],   Icon: Zap,        bg: 'bg-amber-100 dark:bg-amber-900/30',  color: 'text-amber-500' },
-  { keys: ['tesisat','plumb','su','kaçak','musluk','tıkan','boru'],    Icon: Droplets,   bg: 'bg-blue-100 dark:bg-blue-900/30',    color: 'text-blue-500' },
-  { keys: ['tadilat','renov','duvar','zemin','kapı','pencere'],        Icon: Hammer,     bg: 'bg-orange-100 dark:bg-orange-900/30',color: 'text-orange-500' },
-  { keys: ['temizlik','clean','hijyen','dezenfek'],                    Icon: Sparkles,   bg: 'bg-purple-100 dark:bg-purple-900/30',color: 'text-purple-500' },
-  { keys: ['boya','paint','badana','cephe'],                          Icon: Paintbrush, bg: 'bg-green-100 dark:bg-green-900/30',  color: 'text-green-500' },
-  { keys: ['marangoz','carp','mobilya','dolap','ahşap'],              Icon: Axe,        bg: 'bg-yellow-100 dark:bg-yellow-900/30',color: 'text-yellow-600' },
-  { keys: ['klima','hvac','havaland','ısıtma','soğutma','kombi'],     Icon: Wind,       bg: 'bg-cyan-100 dark:bg-cyan-900/30',    color: 'text-cyan-500' },
-  { keys: ['güvenlik','alarm','kamera','kilit','kasa'],               Icon: ShieldCheck,bg: 'bg-rose-100 dark:bg-rose-900/30',   color: 'text-rose-500' },
-  { keys: ['elektronik','bilgisayar','teknik','yazıcı','cpu'],        Icon: Cpu,        bg: 'bg-indigo-100 dark:bg-indigo-900/30',color: 'text-indigo-500' },
+// Müşteri anasayfası: sabit hizmet listesi (admin fiyat listesi burayı değiştirmez)
+const allServices = [
+  { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50 dark:bg-amber-900/20', iconColor: 'text-amber-600 dark:text-amber-400', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+  { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-blue-50 dark:bg-blue-900/20', iconColor: 'text-blue-600 dark:text-blue-400', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+  { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-orange-50 dark:bg-orange-900/20', iconColor: 'text-orange-600 dark:text-orange-400', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+  { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+  { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-green-50 dark:bg-green-900/20', iconColor: 'text-green-600 dark:text-green-400', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+  { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-yellow-50 dark:bg-yellow-900/20', iconColor: 'text-yellow-700 dark:text-yellow-400', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
 ]
-
-function getServiceStyle(label = '', category = '') {
-  const haystack = (label + ' ' + category).toLowerCase()
-  for (const entry of SERVICE_ICON_MAP) {
-    if (entry.keys.some(k => haystack.includes(k))) return entry
-  }
-  return { Icon: Package, bg: 'bg-gray-100 dark:bg-gray-800', color: 'text-gray-500' }
-}
 
 function HomePage() {
   const { user, getUnreadNotificationCount } = useAuth()
@@ -36,8 +25,6 @@ function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [campaign, setCampaign] = useState(null)
   const [campaignLoading, setCampaignLoading] = useState(true)
-  const [services, setServices] = useState([])
-  const [servicesLoading, setServicesLoading] = useState(true)
 
   const unreadNotifs = getUnreadNotificationCount()
 
@@ -53,37 +40,32 @@ function HomePage() {
     try {
       setCampaignLoading(true)
       const res = await fetchAPI(API_ENDPOINTS.CAMPAIGNS.ACTIVE + '?t=' + Date.now(), { includeAuth: false })
-      if (res.data && res.data.title) setCampaign(res.data)
+      const c = res.data
+      // Test / boş / anlamsız kampanya gösterme — varsayılan mavi banner
+      const validTitle = c?.title && String(c.title).trim().length > 2 && !/^test$/i.test(String(c.title).trim())
+      if (c && validTitle) setCampaign(c)
       else setCampaign(null)
     } catch { setCampaign(null) }
     finally { setCampaignLoading(false) }
   }
 
-  const loadServices = async () => {
-    try {
-      setServicesLoading(true)
-      const res = await fetchAPI(API_ENDPOINTS.SERVICES.LIST)
-      setServices(Array.isArray(res?.data) ? res.data : [])
-    } catch { setServices([]) }
-    finally { setServicesLoading(false) }
-  }
-
-  useEffect(() => { loadCampaign(); loadServices() }, [])
+  useEffect(() => { loadCampaign() }, [])
 
   useEffect(() => {
-    const onVisible = () => { if (document.visibilityState === 'visible') { loadCampaign(); loadServices() } }
+    const onVisible = () => { if (document.visibilityState === 'visible') loadCampaign() }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   const filteredServices = searchQuery.trim()
-    ? services.filter(s =>
-        s.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    ? allServices.filter(s =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.keywords.some(k => k.includes(searchQuery.toLowerCase()))
       )
-    : services
+    : allServices
 
-  const popularSearches = services.filter(s => s.isActive).slice(0, 4).map(s => s.label)
+  const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
 
   return (
     <div className="bg-[#F5F7FB] dark:bg-[#0d0d0d] min-h-screen">
@@ -206,41 +188,35 @@ function HomePage() {
           <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">Hizmetler</h3>
         </div>
 
-        {servicesLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader size={24} className="text-primary-400 animate-spin" />
-          </div>
-        ) : services.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">Henüz hizmet eklenmemiş</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-3">
-            {filteredServices.map(svc => {
-              const { Icon: CatIcon, bg, color } = getServiceStyle(svc.label, svc.category)
-              return (
-                <button
-                  key={svc.id}
-                  onClick={() => svc.isActive ? navigate('/create-job') : null}
-                  disabled={!svc.isActive}
-                  className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none ${
-                    svc.isActive ? 'active:scale-95' : 'opacity-50'
-                  }`}
-                >
-                  {!svc.isActive && (
-                    <span className="absolute top-1.5 right-1.5 bg-gray-400 dark:bg-gray-600 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded-full">
-                      Bakımda
-                    </span>
-                  )}
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.isActive ? bg : 'bg-gray-100 dark:bg-[#1f1f1f]'}`}>
-                    <CatIcon size={24} className={svc.isActive ? color : 'text-gray-400'} strokeWidth={1.8} />
-                  </div>
-                  <span className={`text-[12px] font-semibold text-center leading-tight ${svc.isActive ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400'}`}>
-                    {svc.label}
+        <div className="grid grid-cols-3 gap-3">
+          {filteredServices.map(svc => {
+            const CatIcon = svc.Icon
+            return (
+              <button
+                key={svc.id}
+                onClick={() => svc.active ? navigate('/create-job') : null}
+                disabled={!svc.active}
+                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border ${
+                  svc.active
+                    ? 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none active:scale-95'
+                    : 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none opacity-50'
+                }`}
+              >
+                {!svc.active && (
+                  <span className="absolute top-1.5 right-1.5 bg-gray-400 dark:bg-gray-600 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded-full">
+                    Yakında
                   </span>
-                </button>
-              )
-            })}
-          </div>
-        )}
+                )}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.active ? svc.bgColor : 'bg-gray-100 dark:bg-[#1f1f1f]'}`}>
+                  <CatIcon size={24} className={svc.active ? svc.iconColor : 'text-gray-400'} strokeWidth={1.8} />
+                </div>
+                <span className={`text-[12px] font-semibold ${svc.active ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400'}`}>
+                  {svc.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Search Overlay */}
@@ -306,37 +282,37 @@ function HomePage() {
             {/* Service list */}
             <div className="space-y-2">
               {filteredServices.map(svc => {
-                const { Icon: SvcIcon, bg, color } = getServiceStyle(svc.label, svc.category)
+                const SvcIcon = svc.Icon
                 return (
                   <button
                     key={svc.id}
                     onClick={() => {
-                      if (svc.isActive) {
+                      if (svc.active) {
                         setShowSearch(false)
                         setSearchQuery('')
                         navigate('/create-job')
                       }
                     }}
-                    disabled={!svc.isActive}
+                    disabled={!svc.active}
                     className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all ${
-                      svc.isActive
+                      svc.active
                         ? 'bg-gray-50 dark:bg-[#141414] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] active:scale-[0.98]'
-                        : 'bg-gray-50/50 opacity-40'
+                        : 'bg-gray-50/50 dark:bg-[#141414]/50 opacity-40'
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.isActive ? bg : 'bg-gray-100 dark:bg-[#1f1f1f]'}`}>
-                      <SvcIcon size={22} className={svc.isActive ? color : 'text-gray-400'} />
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.bgColor}`}>
+                      <SvcIcon size={22} className={svc.iconColor} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{svc.label}</h3>
-                        {!svc.isActive && (
-                          <span className="bg-gray-200 dark:bg-gray-700 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded-full">Bakımda</span>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{svc.name}</h3>
+                        {!svc.active && (
+                          <span className="bg-gray-200 dark:bg-gray-700 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded-full">Yakında</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{svc.basePrice} TL'den başlayan fiyatlar</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{svc.desc}</p>
                     </div>
-                    {svc.isActive && <ArrowRight size={16} className="text-gray-300 flex-shrink-0" />}
+                    {svc.active && <ArrowRight size={16} className="text-gray-300 flex-shrink-0" />}
                   </button>
                 )
               })}
