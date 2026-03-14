@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const fs=require('fs'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('_redirects copied to dist/')\"",
+    "build": "vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('404.html + _redirects copied')\"",
     "preview": "vite preview",
     "build:mobile": "vite build && npx cap sync",
     "android": "npx cap open android",
