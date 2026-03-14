@@ -508,7 +508,13 @@ export default function AdminFinancePage() {
                       {tx.userName && <span className="text-gray-400 font-normal"> · {tx.userName}</span>}
                     </p>
                     <p className="text-[10px] text-gray-400 truncate">
-                      {tx.description || '—'} · {new Date(tx.createdAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {tx.type === 'WITHDRAWAL' ? 'Para çekme talebi'
+                        : tx.type === 'TOPUP' ? 'Bakiye yükleme'
+                        : tx.type === 'EARNING' ? 'Usta kazancı'
+                        : tx.type === 'REFUND' ? 'İade işlemi'
+                        : tx.type === 'COUPON' ? 'Kupon indirimi'
+                        : (tx.description || '—')
+                      } · {new Date(tx.createdAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <span className={`text-sm font-bold flex-shrink-0 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>

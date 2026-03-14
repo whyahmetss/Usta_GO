@@ -6,28 +6,56 @@ import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
 
 const ICON_MAP = {
-  message: { Icon: MessageCircle, bg: 'bg-blue-500/15', color: 'text-blue-400' },
-  bell: { Icon: Bell, bg: 'bg-amber-500/15', color: 'text-amber-400' },
-  check: { Icon: CheckCircle, bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
-  cancel: { Icon: XCircle, bg: 'bg-rose-500/15', color: 'text-rose-400' },
-  rocket: { Icon: Rocket, bg: 'bg-violet-500/15', color: 'text-violet-400' },
-  party: { Icon: Sparkles, bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
-  star: { Icon: Star, bg: 'bg-amber-500/15', color: 'text-amber-400' },
-  coins: { Icon: Coins, bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
-  sparkle: { Icon: Sparkles, bg: 'bg-primary-500/15', color: 'text-primary-400' },
-  new: { Icon: PlusCircle, bg: 'bg-blue-500/15', color: 'text-blue-400' },
-  job: { Icon: Briefcase, bg: 'bg-primary-500/15', color: 'text-primary-400' },
+  message:         { Icon: MessageCircle, bg: 'bg-blue-500/15',    color: 'text-blue-400' },
+  support_message: { Icon: MessageCircle, bg: 'bg-cyan-500/15',    color: 'text-cyan-400' },
+  bell:            { Icon: Bell,          bg: 'bg-amber-500/15',   color: 'text-amber-400' },
+  check:           { Icon: CheckCircle,   bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
+  cancel:          { Icon: XCircle,       bg: 'bg-rose-500/15',    color: 'text-rose-400' },
+  rocket:          { Icon: Rocket,        bg: 'bg-violet-500/15',  color: 'text-violet-400' },
+  party:           { Icon: Sparkles,      bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
+  star:            { Icon: Star,          bg: 'bg-amber-500/15',   color: 'text-amber-400' },
+  coins:           { Icon: Coins,         bg: 'bg-emerald-500/15', color: 'text-emerald-400' },
+  sparkle:         { Icon: Sparkles,      bg: 'bg-primary-500/15', color: 'text-primary-400' },
+  new:             { Icon: PlusCircle,    bg: 'bg-blue-500/15',    color: 'text-blue-400' },
+  job:             { Icon: Briefcase,     bg: 'bg-primary-500/15', color: 'text-primary-400' },
 }
 
-function NotifIcon({ type }) {
-  const key = typeof type === 'string' ? type : 'bell'
+const EMOJI_TO_KEY = {
+  '🔔': 'bell', '💬': 'message', '✅': 'check', '❌': 'cancel',
+  '🚀': 'rocket', '⭐': 'star', '💰': 'coins', '✨': 'sparkle',
+  '💼': 'job', '🆕': 'new', '🎉': 'party', '📩': 'message',
+}
+
+const TYPE_KEYWORDS = [
+  ['message', 'message'], ['support', 'support_message'],
+  ['job', 'job'], ['iş', 'job'], ['work', 'job'],
+  ['pay', 'coins'], ['wallet', 'coins'], ['topup', 'coins'], ['earn', 'coins'], ['para', 'coins'],
+  ['complete', 'check'], ['accept', 'check'], ['onay', 'check'], ['approv', 'check'],
+  ['cancel', 'cancel'], ['reject', 'cancel'], ['iptal', 'cancel'], ['red', 'cancel'],
+  ['review', 'star'], ['rating', 'star'], ['rate', 'star'], ['star', 'star'],
+  ['offer', 'rocket'], ['match', 'rocket'], ['new', 'new'], ['creat', 'new'],
+]
+
+function resolveIconKey(icon, type) {
+  const candidates = [icon, type].filter(Boolean)
+  for (const val of candidates) {
+    if (ICON_MAP[val]) return val
+    if (EMOJI_TO_KEY[val]) return EMOJI_TO_KEY[val]
+    const lower = String(val).toLowerCase()
+    for (const [kw, key] of TYPE_KEYWORDS) {
+      if (lower.includes(kw)) return key
+    }
+  }
+  return 'bell'
+}
+
+function NotifIcon({ type, icon }) {
+  const key = resolveIconKey(icon, type)
   const entry = ICON_MAP[key] || ICON_MAP.bell
-  const Icon = entry?.Icon || Bell
-  const bg = entry?.bg || 'bg-amber-500/15'
-  const color = entry?.color || 'text-amber-400'
+  const Icon = entry.Icon
   return (
-    <div className={`w-11 h-11 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0`}>
-      {typeof Icon === 'function' && <Icon size={22} className={color} strokeWidth={1.8} />}
+    <div className={`w-11 h-11 rounded-2xl ${entry.bg} flex items-center justify-center flex-shrink-0`}>
+      <Icon size={22} className={entry.color} strokeWidth={1.8} />
     </div>
   )
 }
@@ -99,7 +127,7 @@ function SwipeableNotif({ notif, onPress, onDelete, onArchive, onUnarchive, onPi
           borderRadius: '1rem',
         }}
       >
-        <NotifIcon type={notif?.icon || notif?.type || 'bell'} />
+        <NotifIcon icon={notif?.icon} type={notif?.type} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{notif.title}</h3>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -9,9 +9,44 @@ import MapPickerModal from '../components/MapPickerModal'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
+const SERVICE_META = {
+  electric:   {
+    label: 'Elektrik',
+    placeholder: 'Örn: Mutfak prizinden duman çıkıyor, hiçbir priz çalışmıyor...',
+    hints: ['Hangi oda etkilendi?', 'Sigorta atmış mı?', 'Ne zamandır var?'],
+  },
+  plumbing:   {
+    label: 'Tesisat',
+    placeholder: 'Örn: Mutfak musluğundan su sızıyor, tuvalet sürekli taşıyor...',
+    hints: ['Hangi oda/bölge?', 'Su kesik mi?', 'Ne zamandır var?'],
+  },
+  renovation: {
+    label: 'Tadilat',
+    placeholder: 'Örn: Banyo duvarında çatlak var, zemin kaplaması bozulmuş...',
+    hints: ['Hangi oda?', 'Kaç m² alan?', 'Sadece tamir mi, değişim mi?'],
+  },
+  cleaning:   {
+    label: 'Temizlik',
+    placeholder: 'Örn: 3+1 daire genel temizliği, mutfak ve banyo dahil...',
+    hints: ['Kaç odalı?', 'Derin temizlik mi?', 'Ne zaman?'],
+  },
+  painting:   {
+    label: 'Boyacı',
+    placeholder: 'Örn: Salon ve yatak odası duvarları boyanacak, yaklaşık 60m²...',
+    hints: ['Kaç m² alan?', 'İç mi dış mı?', 'Renk değişimi var mı?'],
+  },
+  carpentry:  {
+    label: 'Marangoz',
+    placeholder: 'Örn: Yatak odası dolabı kapısı kırık, menteşe tamiri gerekiyor...',
+    hints: ['Montaj mı tamir mi?', 'Malzeme var mı?', 'Boyut/ölçü?'],
+  },
+}
+
 function CreateJobPage() {
   const { user, createJob } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const serviceMeta = SERVICE_META[searchParams.get('service')] || null
   const [step, setStep]               = useState(1)
   const [description, setDescription] = useState('')
   const [photo, setPhoto]             = useState(null)
@@ -137,7 +172,7 @@ function CreateJobPage() {
 
   return (
     <div>
-      <PageHeader title="Yeni İş Talebi" />
+      <PageHeader title={serviceMeta ? `Yeni ${serviceMeta.label} Talebi` : 'Yeni İş Talebi'} />
 
       {/* Progress Steps */}
       <div className="px-6 py-4 max-w-lg mx-auto">
@@ -197,13 +232,22 @@ function CreateJobPage() {
             <Card>
               <h3 className="font-semibold text-gray-900 mb-1 text-sm">Sorunu Açıklayın <span className="text-rose-500">*</span></h3>
               <p className="text-xs text-gray-400 mb-3">AI bu açıklamayı analiz ederek tahmini fiyat sunacak.</p>
+              {serviceMeta?.hints && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {serviceMeta.hints.map(hint => (
+                    <span key={hint} className="text-[11px] px-2.5 py-1 bg-primary-50 text-primary-600 rounded-full font-medium">
+                      {hint}
+                    </span>
+                  ))}
+                </div>
+              )}
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={500}
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none resize-none text-sm"
                 rows={4}
-                placeholder="Örn: Mutfak prizinden duman çıkıyor, hiçbir priz çalışmıyor..."
+                placeholder={serviceMeta?.placeholder || 'Örn: Sorununuzu detaylıca açıklayın...'}
               />
               <p className="text-right text-xs text-gray-300 mt-1">{description.length}/500</p>
             </Card>

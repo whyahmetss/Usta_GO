@@ -205,7 +205,7 @@ function HomePage() {
             return (
               <button
                 key={svc.id}
-                onClick={() => svc.active ? navigate('/create-job') : null}
+                onClick={() => svc.active ? navigate('/create-job?service=' + svc.id) : null}
                 disabled={!svc.active}
                 className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border ${
                   svc.active
@@ -301,7 +301,7 @@ function HomePage() {
                       if (svc.active) {
                         setShowSearch(false)
                         setSearchQuery('')
-                        navigate('/create-job')
+                        navigate('/create-job?service=' + svc.id)
                       }
                     }}
                     disabled={!svc.active}
