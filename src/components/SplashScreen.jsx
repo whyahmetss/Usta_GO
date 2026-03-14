@@ -32,7 +32,7 @@ export default function SplashScreen({ onDone }) {
             style={{ animationDuration: '1s' }}
           />
           {/* İç beyaz kare */}
-          <div className="absolute inset-3 bg-white/15 backdrop-blur rounded-3xl flex items-center justify-center">
+          <div className="absolute inset-3 bg-white/15 backdrop-blur rounded-3xl flex items-center justify-center overflow-visible">
             <WrenchSvg phase={phase} />
           </div>
         </div>
@@ -62,19 +62,43 @@ export default function SplashScreen({ onDone }) {
 
 function WrenchSvg({ phase }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      className={`w-14 h-14 text-white transition-transform duration-300 ${phase >= 1 ? 'rotate-[20deg]' : 'rotate-0'}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {/* Anahtar (wrench) */}
-      <path d="M34 6a8 8 0 0 1 0 12l-4 4L14 38a4 4 0 1 1-4-4l16-16 4-4a8 8 0 0 1 4-8z" fill="white" stroke="none" opacity="0.2" />
-      <path d="M36 4c-3.3 0-6 2.7-6 6 0 1.2.4 2.4 1 3.3L10.3 33.7a5 5 0 1 0 4 4L34.7 17c.9.6 2.1 1 3.3 1 3.3 0 6-2.7 6-6 0-1-.3-2-.7-2.8L39 13a2 2 0 0 1-4 0V9.6L33.7 8.3A6 6 0 0 1 36 4z" />
-      <circle cx="11" cy="37" r="2" fill="white" stroke="none" />
-    </svg>
+    <div className="relative">
+      {/* Kıvılcım efekti (vuruş anında) */}
+      {phase >= 1 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="absolute w-20 h-20 rounded-full bg-yellow-300/40 animate-ping" style={{ animationDuration: '0.6s' }} />
+          <div className="absolute w-16 h-16 rounded-full bg-orange-400/30 animate-ping" style={{ animationDuration: '0.5s', animationDelay: '0.1s' }} />
+        </div>
+      )}
+
+      {/* Çekiç SVG - vuruş animasyonu */}
+      <svg
+        viewBox="0 0 48 48"
+        className={`w-14 h-14 text-white ${phase >= 1 ? 'animate-hammer-hit' : ''}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M34 6a8 8 0 0 1 0 12l-4 4L14 38a4 4 0 1 1-4-4l16-16 4-4a8 8 0 0 1 4-8z" fill="white" stroke="none" opacity="0.2" />
+        <path d="M36 4c-3.3 0-6 2.7-6 6 0 1.2.4 2.4 1 3.3L10.3 33.7a5 5 0 1 0 4 4L34.7 17c.9.6 2.1 1 3.3 1 3.3 0 6-2.7 6-6 0-1-.3-2-.7-2.8L39 13a2 2 0 0 1-4 0V9.6L33.7 8.3A6 6 0 0 1 36 4z" />
+        <circle cx="11" cy="37" r="2" fill="white" stroke="none" />
+      </svg>
+
+      {/* CSS animasyon tanımı */}
+      <style>{`
+        @keyframes hammer-hit {
+          0% { transform: rotate(0deg) translateY(0); }
+          15% { transform: rotate(-12deg) translateY(-4px) translateX(2px); }
+          35% { transform: rotate(8deg) translateY(3px); }
+          50% { transform: rotate(0deg) translateY(0); }
+          100% { transform: rotate(0deg) translateY(0); }
+        }
+        .animate-hammer-hit {
+          animation: hammer-hit 0.8s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
   )
 }
