@@ -88,15 +88,15 @@ export default function LiveSupportChatPage() {
     load()
   }, [])
 
-  // Load conversation once agent is set
+  // Load conversation once agent is set — only messages from current session
   const loadMessages = useCallback(async () => {
     if (!agent) return
     setMsgLoading(true)
     try {
-      const res = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(agent.id))
+      const sinceParam = session?.openedAt ? `?since=${encodeURIComponent(session.openedAt)}` : ''
+      const res = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(agent.id) + sinceParam)
       const list = Array.isArray(res?.data) ? res.data : []
       setMessages(list)
-      // mark unread as read
       list
         .filter(m => m.receiverId === user?.id && !m.isRead)
         .forEach(m => {
@@ -107,11 +107,11 @@ export default function LiveSupportChatPage() {
     } finally {
       setMsgLoading(false)
     }
-  }, [agent, user])
+  }, [agent, user, session])
 
   useEffect(() => {
-    if (agent) loadMessages()
-  }, [agent, loadMessages])
+    if (agent && (session || offlineMode)) loadMessages()
+  }, [agent, session, offlineMode, loadMessages])
 
   // Socket.IO
   useEffect(() => {

@@ -33,8 +33,9 @@ export const getMessages = async (req, res, next) => {
     const role = (req.user.role || "").toUpperCase();
     const asAgent = req.query.asAgent;
     const viewerId = (role === "ADMIN" && asAgent) ? asAgent : req.user.id;
+    const since = req.query.since || null;
 
-    const messages = await messageService.getMessages(viewerId, userId, skip, limit);
+    const messages = await messageService.getMessages(viewerId, userId, skip, limit, since);
     successResponse(res, messages, "Messages fetched successfully");
   } catch (error) {
     next(error);

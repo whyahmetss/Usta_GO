@@ -24,20 +24,24 @@ export const sendMessage = async (senderId, receiverId, content) => {
   return message;
 };
 
-export const getMessages = async (userId, otherUserId, skip = 0, take = 50) => {
+export const getMessages = async (userId, otherUserId, skip = 0, take = 50, since = null) => {
+  const where = {
+    OR: [
+      { senderId: userId, receiverId: otherUserId },
+      { senderId: otherUserId, receiverId: userId },
+    ],
+  };
+  if (since) {
+    where.createdAt = { gte: new Date(since) };
+  }
   const messages = await prisma.message.findMany({
-    where: {
-      OR: [
-        { senderId: userId, receiverId: otherUserId },
-        { senderId: otherUserId, receiverId: userId },
-      ],
-    },
+    where,
     skip,
     take,
     orderBy: { createdAt: "desc" },
   });
 
-  return messages.reverse(); // Show oldest first
+  return messages.reverse();
 };
 
 export const markMessageAsRead = async (messageId, userId) => {

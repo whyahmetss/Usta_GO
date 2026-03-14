@@ -8,7 +8,7 @@ import {
   MessageCircle, UserCheck, UserX, Loader, Users,
   FileText, ExternalLink, RefreshCw, AlertCircle, CheckCircle2,
   Clock, ChevronDown, ChevronUp, Headphones, ChevronRight,
-  Check, X, ShieldCheck, User,
+  Check, X, ShieldCheck, User, LogOut,
 } from 'lucide-react'
 
 const DOC_LABELS = {
@@ -100,7 +100,7 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
 
 export default function SupportDashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('ustas') // 'ustas' | 'chats' | 'complaints' | 'docs'
   const [ustas, setUstas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -310,18 +310,31 @@ export default function SupportDashboard() {
                 <p className="text-xs text-blue-100">Müşteri Hizmetleri Paneli</p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                if (activeTab === 'ustas') load(true)
-                else if (activeTab === 'chats') loadConversations()
-                else if (activeTab === 'complaints') loadComplaints()
-                else loadCerts()
-              }}
-              disabled={refreshing || convLoading || complaintLoading || certLoading}
-              className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
-            >
-              <RefreshCw size={16} className={`text-white ${(refreshing || convLoading || complaintLoading || certLoading) ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (activeTab === 'ustas') load(true)
+                  else if (activeTab === 'chats') loadConversations()
+                  else if (activeTab === 'complaints') loadComplaints()
+                  else loadCerts()
+                }}
+                disabled={refreshing || convLoading || complaintLoading || certLoading}
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
+              >
+                <RefreshCw size={16} className={`text-white ${(refreshing || convLoading || complaintLoading || certLoading) ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={async () => {
+                  if (window.confirm('Hesaptan çıkış yapmak istediğinize emin misiniz?')) {
+                    await logout()
+                    navigate('/', { replace: true })
+                  }
+                }}
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
+              >
+                <LogOut size={16} className="text-white" />
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
