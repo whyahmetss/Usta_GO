@@ -372,3 +372,5 @@ export const getCancellationRates = configController.getCancellationRates;
 export const setCancellationRates = configController.setCancellationRates;
 export const getReferralBonus = configController.getReferralBonus;
 export const setReferralBonus = configController.setReferralBonus;
+export const getHomeServices = configController.getHomeServices;
+export const setHomeServices = configController.setHomeServices;

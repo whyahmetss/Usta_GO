@@ -53,3 +53,40 @@ export const setReferralBonus = async ({ referrerBonus, newUserBonus }) => {
   })
   return getReferralBonus()
 }
+
+const HOME_SERVICES_KEY = 'home_services'
+const DEFAULT_HOME_SERVICES = {
+  electric:   { active: true },
+  plumbing:   { active: false },
+  renovation: { active: false },
+  cleaning:   { active: false },
+  painting:   { active: false },
+  carpentry:  { active: false },
+}
+
+export const getHomeServices = async () => {
+  const row = await prisma.appConfig.findUnique({ where: { key: HOME_SERVICES_KEY } })
+  if (!row?.value) return DEFAULT_HOME_SERVICES
+  try {
+    return { ...DEFAULT_HOME_SERVICES, ...JSON.parse(row.value) }
+  } catch {
+    return DEFAULT_HOME_SERVICES
+  }
+}
+
+export const setHomeServices = async (services) => {
+  const current = await getHomeServices()
+  const updated = { ...current }
+  for (const [id, val] of Object.entries(services)) {
+    if (id in DEFAULT_HOME_SERVICES && typeof val?.active === 'boolean') {
+      updated[id] = { active: val.active }
+    }
+  }
+  const value = JSON.stringify(updated)
+  await prisma.appConfig.upsert({
+    where: { key: HOME_SERVICES_KEY },
+    create: { key: HOME_SERVICES_KEY, value },
+    update: { value },
+  })
+  return getHomeServices()
+}

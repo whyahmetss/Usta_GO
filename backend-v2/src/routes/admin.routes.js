@@ -12,6 +12,10 @@ router.patch("/config/cancellation", authMiddleware, adminMiddleware, adminContr
 router.get("/config/referral", adminController.getReferralBonus);
 router.patch("/config/referral", authMiddleware, adminMiddleware, adminController.setReferralBonus);
 
+// Ana sayfa hizmet durumları — herkes okuyabilir, sadece admin yazabilir
+router.get("/config/home-services", adminController.getHomeServices);
+router.patch("/config/home-services", authMiddleware, adminMiddleware, adminController.setHomeServices);
+
 // All other routes require ADMIN role
 router.use(authMiddleware, adminMiddleware);
 

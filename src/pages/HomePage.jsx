@@ -15,6 +15,7 @@ function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [campaign, setCampaign] = useState(null)
   const [campaignLoading, setCampaignLoading] = useState(true)
+  const [svcStatus, setSvcStatus] = useState(null)
 
   const unreadNotifs = getUnreadNotificationCount()
 
@@ -36,7 +37,14 @@ function HomePage() {
     finally { setCampaignLoading(false) }
   }
 
-  useEffect(() => { loadCampaign() }, [])
+  const loadSvcStatus = async () => {
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.CONFIG.HOME_SERVICES, { includeAuth: false })
+      if (res?.data) setSvcStatus(res.data)
+    } catch { /* fallback to defaults */ }
+  }
+
+  useEffect(() => { loadCampaign(); loadSvcStatus() }, [])
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') loadCampaign() }
@@ -44,14 +52,21 @@ function HomePage() {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
-  const allServices = [
-    { id: 'electric', name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri', Icon: Zap, active: true, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
-    { id: 'plumbing', name: 'Tesisat', desc: 'Su kaçağı, tıkanıklık, musluk', Icon: Wrench, active: false, bgColor: 'bg-blue-50', iconColor: 'text-blue-600', keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
-    { id: 'renovation', name: 'Tadilat', desc: 'Duvar, zemin, kapı tamiri', Icon: Hammer, active: false, bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
-    { id: 'cleaning', name: 'Temizlik', desc: 'Ev, ofis, derin temizlik', Icon: Sparkles, active: false, bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
-    { id: 'painting', name: 'Boyacı', desc: 'İç cephe, dış cephe boyama', Icon: Paintbrush, active: false, bgColor: 'bg-green-50', iconColor: 'text-green-600', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
-    { id: 'carpentry', name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri', Icon: Axe, active: false, bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
+  const SERVICE_DEFS = [
+    { id: 'electric',   name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri',    Icon: Zap,       bgColor: 'bg-amber-50',  iconColor: 'text-amber-600',  keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+    { id: 'plumbing',   name: 'Tesisat',  desc: 'Su kaçağı, tıkanıklık, musluk',  Icon: Wrench,    bgColor: 'bg-blue-50',   iconColor: 'text-blue-600',   keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+    { id: 'renovation', name: 'Tadilat',  desc: 'Duvar, zemin, kapı tamiri',      Icon: Hammer,    bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+    { id: 'cleaning',   name: 'Temizlik', desc: 'Ev, ofis, derin temizlik',       Icon: Sparkles,  bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+    { id: 'painting',   name: 'Boyacı',   desc: 'İç cephe, dış cephe boyama',    Icon: Paintbrush,bgColor: 'bg-green-50',  iconColor: 'text-green-600',  keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+    { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
+
+  const FALLBACK_STATUS = { electric: true, plumbing: false, renovation: false, cleaning: false, painting: false, carpentry: false }
+
+  const allServices = SERVICE_DEFS.map(s => ({
+    ...s,
+    active: svcStatus ? (svcStatus[s.id]?.active ?? false) : FALLBACK_STATUS[s.id],
+  }))
 
   const filteredServices = searchQuery.trim()
     ? allServices.filter(s =>

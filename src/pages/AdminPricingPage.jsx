@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Plus, Pencil, Trash2, Check, X, Info, Users, TrendingUp, Loader, Coins, Wrench } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, X, Info, Users, TrendingUp, Loader, Coins, Wrench, Zap, Hammer, Sparkles, Paintbrush, Axe, LayoutGrid, Construction } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -45,6 +45,20 @@ function AdminPricingPage() {
   const [editingPkg, setEditingPkg]     = useState(null)
   const [pkgSaving, setPkgSaving]       = useState(false)
   const [pkgError, setPkgError]         = useState(null)
+
+  const HOME_SVC_META = [
+    { id: 'electric',   name: 'Elektrik', Icon: Zap,       bgColor: 'bg-amber-50',  iconColor: 'text-amber-600' },
+    { id: 'plumbing',   name: 'Tesisat',  Icon: Wrench,    bgColor: 'bg-blue-50',   iconColor: 'text-blue-600' },
+    { id: 'renovation', name: 'Tadilat',  Icon: Hammer,    bgColor: 'bg-orange-50', iconColor: 'text-orange-600' },
+    { id: 'cleaning',   name: 'Temizlik', Icon: Sparkles,  bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+    { id: 'painting',   name: 'Boyacı',   Icon: Paintbrush,bgColor: 'bg-green-50',  iconColor: 'text-green-600' },
+    { id: 'carpentry',  name: 'Marangoz', Icon: Axe,       bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700' },
+  ]
+
+  const [homeServices, setHomeServices]   = useState(null)
+  const [homeLoading, setHomeLoading]     = useState(false)
+  const [homeSaving, setHomeSaving]       = useState(false)
+  const [homeError, setHomeError]         = useState(null)
 
   const loadServices = async () => {
     try {
@@ -88,9 +102,37 @@ function AdminPricingPage() {
     finally { setCancelSaving(false) }
   }
 
+  const loadHomeServices = async () => {
+    try {
+      setHomeLoading(true)
+      const res = await fetchAPI(API_ENDPOINTS.CONFIG.HOME_SERVICES, { includeAuth: false })
+      setHomeServices(res.data || {})
+    } catch (e) {
+      setHomeError('Yüklenemedi: ' + e.message)
+    } finally {
+      setHomeLoading(false)
+    }
+  }
+
+  const saveHomeServices = async () => {
+    setHomeSaving(true); setHomeError(null)
+    try {
+      await fetchAPI(API_ENDPOINTS.CONFIG.HOME_SERVICES, { method: 'PATCH', body: homeServices })
+    } catch (e) {
+      setHomeError(e.message || 'Kaydetme başarısız')
+    } finally {
+      setHomeSaving(false)
+    }
+  }
+
+  const toggleHomeSvc = (id) => {
+    setHomeServices(prev => ({ ...prev, [id]: { active: !prev[id]?.active } }))
+  }
+
   useEffect(() => { loadServices() }, [])
   useEffect(() => { if (activeTab === 'packages') loadPackages() }, [activeTab])
   useEffect(() => { if (activeTab === 'cancellation') loadCancelRates() }, [activeTab])
+  useEffect(() => { if (activeTab === 'homeservices') loadHomeServices() }, [activeTab])
 
   const openCreate = () => {
     setEditingId(null)
@@ -225,10 +267,91 @@ function AdminPricingPage() {
           >
             İptal Oranları
           </button>
+          <button
+            onClick={() => setActiveTab('homeservices')}
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'homeservices' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
+          >
+            Ana Sayfa
+          </button>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        {/* ── HOME SERVICES TAB ── */}
+        {activeTab === 'homeservices' && (
+          <>
+            {homeError && (
+              <Card className="!bg-rose-50 !border-rose-200">
+                <p className="text-xs text-rose-600 font-medium">{homeError}</p>
+              </Card>
+            )}
+
+            {homeLoading ? (
+              <div className="flex flex-col items-center py-16">
+                <Loader size={28} className="text-primary-500 animate-spin mb-3" />
+                <p className="text-xs text-gray-500">Yükleniyor...</p>
+              </div>
+            ) : homeServices ? (
+              <>
+                <Card className="!bg-blue-50 !border-blue-100">
+                  <div className="flex items-center gap-2 mb-1">
+                    <LayoutGrid size={14} className="text-blue-500" />
+                    <p className="text-[11px] font-semibold text-blue-700">Ana Sayfa Hizmet Kartları</p>
+                  </div>
+                  <p className="text-[11px] text-blue-600 leading-relaxed">
+                    Aktif hizmetler müşteri ana sayfasında tıklanabilir görünür. Pasif olanlar &quot;Yakında&quot; etiketiyle soluk gösterilir.
+                  </p>
+                </Card>
+
+                <div className="space-y-3">
+                  {HOME_SVC_META.map(({ id, name, Icon, bgColor, iconColor }) => {
+                    const isActive = homeServices[id]?.active ?? false
+                    return (
+                      <Card key={id} className={!isActive ? 'opacity-60' : ''}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? bgColor : 'bg-gray-100'}`}>
+                            <Icon size={20} className={isActive ? iconColor : 'text-gray-400'} strokeWidth={1.8} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">{name}</p>
+                            <p className="text-[11px] text-gray-400">{isActive ? 'Aktif — müşteri kullanabilir' : 'Yakında — pasif'}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!isActive && (
+                              <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+                                <Construction size={11} /> Yakında
+                              </span>
+                            )}
+                            <button
+                              onClick={() => toggleHomeSvc(id)}
+                              className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                isActive ? 'bg-emerald-500' : 'bg-gray-200'
+                              }`}
+                            >
+                              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
+                                isActive ? 'left-[26px]' : 'left-0.5'
+                              }`} />
+                            </button>
+                          </div>
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
+
+                <button
+                  onClick={saveHomeServices}
+                  disabled={homeSaving}
+                  className="w-full py-2.5 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {homeSaving ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
+                  {homeSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                </button>
+              </>
+            ) : null}
+          </>
+        )}
+
         {/* ── PACKAGES TAB ── */}
         {activeTab === 'packages' && (
           <>

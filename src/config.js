@@ -157,7 +157,8 @@ export const API_ENDPOINTS = {
 
   // Config (admin)
   CONFIG: {
-    CANCELLATION: '/admin/config/cancellation',
+    CANCELLATION:  '/admin/config/cancellation',
+    HOME_SERVICES: '/admin/config/home-services',
   },
 
   // OTP - E-posta ve SMS doğrulama

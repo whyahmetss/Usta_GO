@@ -1,5 +1,23 @@
 import * as configService from '../services/config.service.js'
 
+export const getHomeServices = async (req, res) => {
+  try {
+    const data = await configService.getHomeServices()
+    res.json({ success: true, data })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
+}
+
+export const setHomeServices = async (req, res) => {
+  try {
+    const data = await configService.setHomeServices(req.body || {})
+    res.json({ success: true, data })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
+}
+
 export const getCancellationRates = async (req, res) => {
   try {
     const rates = await configService.getCancellationRates()
