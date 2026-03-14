@@ -97,13 +97,22 @@ export default function AuthPage() {
   const [formData, setFormData] = useState(null) // kayıt için saklanan veri
 
   const navigate = useNavigate()
-  const { login, register } = useAuth()
+  const { login, register, user } = useAuth()
   const location = useLocation()
+  const [pendingNav, setPendingNav] = useState(null)
 
   useEffect(() => {
     const ref = new URLSearchParams(location.search).get('ref')
     if (ref) { setReferralCode(ref.toUpperCase()); setIsLogin(false) }
   }, [location])
+
+  // user set olunca bekleyen navigate'i çalıştır (race condition fix)
+  useEffect(() => {
+    if (user && pendingNav) {
+      navigate(pendingNav, { replace: true })
+      setPendingNav(null)
+    }
+  }, [user, pendingNav, navigate])
 
   // OTP geri sayım
   useEffect(() => {
@@ -153,11 +162,7 @@ export default function AuthPage() {
       try {
         const r = await login(email, password)
         if (r?.success) {
-          const rl = r.role?.toLowerCase()
-          if (rl === 'admin') navigate('/admin')
-          else if (rl === 'usta' || rl === 'professional') navigate('/professional')
-          else if (rl === 'support') navigate('/support')
-          else navigate('/home')
+          // App.jsx root route handles redirect after user state updates
         } else setError(r?.error || 'E-posta veya şifre hatalı')
       } catch { setError('Bağlantı hatası oluştu') }
       finally { setLoading(false) }
@@ -203,9 +208,9 @@ export default function AuthPage() {
       )
       if (r?.success) {
         const rl = (r.role || formData.role).toLowerCase()
-        if (rl === 'usta' || rl === 'professional') navigate('/professional')
-        else if (rl === 'customer') navigate('/register/customer')
-        else navigate('/home')
+        if (rl === 'usta' || rl === 'professional') setPendingNav('/professional')
+        else if (rl === 'customer') setPendingNav('/register/customer')
+        else setPendingNav('/home')
       } else {
         setError(r?.error || 'Kayıt başarısız')
         setStep('form')
