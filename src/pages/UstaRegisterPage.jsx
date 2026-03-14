@@ -183,7 +183,7 @@ export default function UstaRegisterPage() {
       {/* Header */}
       <div className="relative pt-6 pb-8 px-5">
         <button
-          onClick={() => step === 2 ? setStep(1) : navigate('/auth')}
+          onClick={() => step === 2 ? setStep(1) : navigate('/')}
           className="w-10 h-10 rounded-xl bg-white/80 dark:bg-white/10 backdrop-blur flex items-center justify-center border border-slate-200/60 dark:border-white/10 shadow-sm mb-6"
         >
           <ChevronLeft size={20} className="text-slate-600 dark:text-slate-300" />

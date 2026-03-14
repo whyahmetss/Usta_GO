@@ -78,7 +78,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
       if (response.status === 401) {
         removeToken();
         removeStoredUser();
-        window.location.href = '/auth';
+        window.location.href = '/';
       }
 
       throw new Error(data.message || data.error || 'API Error');
@@ -116,7 +116,7 @@ export const uploadFile = async (endpoint, file, fieldName = 'photo') => {
       if (response.status === 401) {
         removeToken();
         removeStoredUser();
-        window.location.href = '/auth';
+        window.location.href = '/';
       }
       throw new Error(data.message || 'Upload failed');
     }
@@ -156,7 +156,7 @@ export const uploadFiles = async (endpoint, files, fieldName = 'photos') => {
       if (response.status === 401) {
         removeToken();
         removeStoredUser();
-        window.location.href = '/auth';
+        window.location.href = '/';
       }
       throw new Error(data.message || 'Upload failed');
     }
