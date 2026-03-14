@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
@@ -495,18 +496,13 @@ function AdminPricingPage() {
             ) : (
               <div className="space-y-3">
                 {services.map(svc => (
-                  <Card key={svc.id}>
+                  <Card key={svc.id} className={!svc.isActive ? 'opacity-50' : ''}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${svc.isActive ? 'bg-emerald-50' : 'bg-gray-100'}`}>
-                        <Wrench size={18} className={svc.isActive ? 'text-emerald-500' : 'text-gray-400'} />
+                      <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
+                        <Wrench size={18} className="text-gray-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-gray-900">{svc.label}</p>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${svc.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                            {svc.isActive ? 'Aktif' : 'Bakımda'}
-                          </span>
-                        </div>
+                        <p className="text-sm font-semibold text-gray-900">{svc.label}</p>
                         <p className="text-[11px] text-gray-400 font-mono">{svc.category}</p>
                       </div>
                       <div className="text-right shrink-0 mr-1">
@@ -516,9 +512,8 @@ function AdminPricingPage() {
                       <div className="flex gap-1.5 shrink-0">
                         <button
                           onClick={() => handleToggle(svc)}
-                          title={svc.isActive ? 'Bakıma Al' : 'Aktif Et'}
                           className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
-                            svc.isActive ? 'bg-emerald-50 text-emerald-600 hover:bg-amber-50 hover:text-amber-600' : 'bg-amber-50 text-amber-600 hover:bg-emerald-50 hover:text-emerald-600'
+                            svc.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
                           }`}
                         >
                           {svc.isActive ? <Check size={14} /> : <X size={14} />}
