@@ -54,12 +54,15 @@ const sendViaResend = async (to, subject, html) => {
 const getTransporter = () =>
   nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: process.env.SMTP_PORT ? process.env.SMTP_SECURE === 'true' : true, // 465 = SSL
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   })
 
 const sendViaSmtp = async (to, subject, html) => {
