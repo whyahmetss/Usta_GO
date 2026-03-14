@@ -168,10 +168,12 @@ export const initiate3DSPayment = (params, callbackUrl) => {
       if (result?.status !== 'success') {
         return reject(new Error(result?.errorMessage || '3DS başlatılamadı'));
       }
-      resolve({
-        htmlContent: result.htmlContent,
-        conversationId,
-      });
+      const html = result.htmlContent || result.threeDSHtmlContent || result.checkoutFormContent;
+      if (!html) {
+        console.error('3DS init result (no htmlContent):', JSON.stringify(result, null, 2));
+        return reject(new Error('3DS HTML içeriği alınamadı'));
+      }
+      resolve({ htmlContent: html, conversationId });
     });
   });
 };

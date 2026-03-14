@@ -41,8 +41,8 @@ function MastercardLogo() {
   );
 }
 
-/* ── Animated Virtual Card ── */
-function VirtualCard({ amount, holderName, cardNumber, expiry }) {
+/* ── Animated Virtual Card with Flip ── */
+function VirtualCard({ amount, holderName, cardNumber, expiry, cvc, flipped }) {
   const formatDisplay = (num) => {
     const clean = num.replace(/\D/g, '');
     const padded = clean.padEnd(16, '•');
@@ -52,60 +52,105 @@ function VirtualCard({ amount, holderName, cardNumber, expiry }) {
   const displayNum = formatDisplay(cardNumber);
   const displayAmount = amount > 0 ? `${amount.toLocaleString('tr-TR')} TL` : '— TL';
   const displayExpiry = expiry || '••/••';
+  const displayCvc = (cvc || '').padEnd(3, '•');
+
+  const cardBg = 'linear-gradient(135deg, #1a1040 0%, #2d1b6e 40%, #0f3460 80%, #16213e 100%)';
 
   return (
-    <div className="relative w-full max-w-sm mx-auto select-none" style={{ perspective: '1000px' }}>
+    <div className="relative w-full max-w-sm mx-auto select-none" style={{ perspective: '1200px' }}>
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-500/40 to-blue-500/40 blur-2xl scale-105" />
       <div
-        className="relative rounded-3xl overflow-hidden shadow-2xl"
+        className="relative"
         style={{
-          background: 'linear-gradient(135deg, #1a1040 0%, #2d1b6e 40%, #0f3460 80%, #16213e 100%)',
-          minHeight: '200px',
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.6s cubic-bezier(0.4,0,0.2,1)',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          minHeight: '210px',
         }}
       >
-        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%)' }} />
+        {/* ── FRONT ── */}
+        <div
+          className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl"
+          style={{ background: cardBg, backfaceVisibility: 'hidden' }}
+        >
+          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%)' }} />
 
-        <div className="relative flex items-start justify-between px-6 pt-5">
-          <div>
-            <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">Usta Go</p>
-            <p className="text-white font-black text-lg tracking-tight">Cüzdan</p>
+          <div className="relative flex items-start justify-between px-6 pt-5">
+            <div>
+              <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">Usta Go</p>
+              <p className="text-white font-black text-lg tracking-tight">Cüzdan</p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <ContactlessSVG />
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <ContactlessSVG />
+
+          <div className="relative flex items-center justify-between px-6 mt-3">
+            <ChipSVG />
+            <div className="text-right">
+              <p className="text-white/40 text-[9px] uppercase tracking-widest">Yüklenecek</p>
+              <p className="text-white font-black text-xl tabular-nums transition-all duration-300">{displayAmount}</p>
+            </div>
           </div>
+
+          <div className="relative px-6 mt-4">
+            <p className="text-white/70 text-base tracking-[0.2em] font-mono transition-all duration-150">{displayNum}</p>
+          </div>
+
+          <div className="relative flex items-end justify-between px-6 pt-2 pb-5">
+            <div className="flex-1 min-w-0 mr-4">
+              <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Kart Sahibi</p>
+              <p className="text-white font-semibold text-sm tracking-wide uppercase truncate">
+                {holderName || 'AD SOYAD'}
+              </p>
+            </div>
+            <div className="flex items-end gap-4">
+              <div className="flex flex-col items-end">
+                <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Son Kullanma</p>
+                <p className="text-white font-semibold text-sm font-mono">{displayExpiry}</p>
+              </div>
+              <MastercardLogo />
+            </div>
+          </div>
+
+          <div className="absolute top-[-40px] right-[-40px] w-40 h-40 rounded-full bg-purple-500/10" />
+          <div className="absolute bottom-[-30px] left-[-30px] w-32 h-32 rounded-full bg-blue-500/10" />
         </div>
 
-        <div className="relative flex items-center justify-between px-6 mt-4">
-          <ChipSVG />
-          <div className="text-right">
-            <p className="text-white/40 text-[9px] uppercase tracking-widest">Yüklenecek</p>
-            <p className="text-white font-black text-xl tabular-nums transition-all duration-300">{displayAmount}</p>
+        {/* ── BACK ── */}
+        <div
+          className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl"
+          style={{ background: cardBg, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        >
+          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 70% 80%, rgba(255,255,255,0.4) 0%, transparent 60%)' }} />
+
+          {/* Magnetic strip */}
+          <div className="mt-8 w-full h-12 bg-black/60" />
+
+          {/* CVV strip */}
+          <div className="flex items-center px-6 mt-6 gap-3">
+            <div className="flex-1 h-10 rounded-lg bg-white/10 flex items-center justify-end pr-4">
+              <p className="text-white font-mono text-lg tracking-[0.3em]">{displayCvc}</p>
+            </div>
+            <p className="text-white/40 text-xs font-semibold">CVV</p>
           </div>
-        </div>
 
-        <div className="relative px-6 mt-5">
-          <p className="text-white/70 text-base tracking-[0.2em] font-mono transition-all duration-150">{displayNum}</p>
-        </div>
-
-        <div className="relative flex items-end justify-between px-6 pt-3 pb-5">
-          <div>
-            <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Kart Sahibi</p>
-            <p className="text-white font-semibold text-sm tracking-wide uppercase">
-              {holderName || 'AD SOYAD'}
+          <div className="px-6 mt-6">
+            <p className="text-white/30 text-[10px] leading-relaxed">
+              Bu kart Usta Go Cüzdan bakiye yükleme işlemi için kullanılmaktadır. 
+              İşlem iyzico 3D Secure altyapısı ile güvence altındadır.
             </p>
           </div>
-          <div className="flex flex-col items-end">
-            <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Son Kullanma</p>
-            <p className="text-white font-semibold text-sm font-mono">{displayExpiry}</p>
+
+          <div className="absolute bottom-5 right-6">
+            <MastercardLogo />
           </div>
-        </div>
+          <div className="absolute bottom-5 left-6">
+            <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Usta Go</p>
+          </div>
 
-        <div className="absolute bottom-4 right-5">
-          <MastercardLogo />
+          <div className="absolute top-[-40px] left-[-40px] w-40 h-40 rounded-full bg-blue-500/10" />
         </div>
-
-        <div className="absolute top-[-40px] right-[-40px] w-40 h-40 rounded-full bg-purple-500/10" />
-        <div className="absolute bottom-[-30px] left-[-30px] w-32 h-32 rounded-full bg-blue-500/10" />
       </div>
     </div>
   );
@@ -177,6 +222,7 @@ const Odeme = () => {
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
   const [cardHolder, setCardHolder] = useState('');
+  const [cardFlipped, setCardFlipped] = useState(false);
 
   // 3DS
   const [threeDSContent, setThreeDSContent] = useState(null);
@@ -279,7 +325,7 @@ const Odeme = () => {
 
         {/* Virtual Card */}
         <div className="px-5 mt-2 mb-6">
-          <VirtualCard amount={finalAmount} holderName={holderName} cardNumber={cardNumber} expiry={expiry} />
+          <VirtualCard amount={finalAmount} holderName={holderName} cardNumber={cardNumber} expiry={expiry} cvc={cvc} flipped={cardFlipped} />
         </div>
 
         {/* Bottom sheet */}
@@ -365,6 +411,8 @@ const Odeme = () => {
                 maxLength={4}
                 value={cvc}
                 onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0,4))}
+                onFocus={() => setCardFlipped(true)}
+                onBlur={() => setCardFlipped(false)}
                 className="w-full h-[52px] pl-4 pr-10 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
               />
               <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />

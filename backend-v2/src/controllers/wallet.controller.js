@@ -235,7 +235,9 @@ export const walletController = {
         callbackUrl
       );
 
-      // htmlContent base64 ile dön (XSS safe taşıma)
+      if (!result?.htmlContent) {
+        return res.status(500).json({ success: false, error: '3DS HTML içeriği alınamadı. iyzico yapılandırmasını kontrol edin.' });
+      }
       const encoded = Buffer.from(result.htmlContent, 'utf8').toString('base64');
       res.json({ success: true, data: { htmlContent: encoded, conversationId: result.conversationId } });
     } catch (error) {
