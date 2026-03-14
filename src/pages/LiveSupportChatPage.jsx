@@ -119,12 +119,11 @@ export default function LiveSupportChatPage() {
     const socket = connectSocket(user.id)
 
     const onReceive = (msg) => {
-      if (msg.senderId === agent?.id) {
+      if (msg.senderId !== user?.id) {
         setMessages(prev => {
           if (prev.find(m => m.id === msg.id)) return prev
           return [...prev, { ...msg, isRead: false }]
         })
-        // mark as read immediately
         if (msg.id) {
           fetchAPI(API_ENDPOINTS.MESSAGES.MARK_READ(msg.id), { method: 'PATCH' }).catch(() => {})
         }
@@ -132,7 +131,7 @@ export default function LiveSupportChatPage() {
     }
 
     const onTyping = ({ userId: tid }) => {
-      if (tid === agent?.id) {
+      if (tid !== user?.id) {
         setTyping(true)
         clearTimeout(typingTimerRef.current)
         typingTimerRef.current = setTimeout(() => setTyping(false), 2500)
@@ -140,7 +139,7 @@ export default function LiveSupportChatPage() {
     }
 
     const onStopTyping = ({ userId: tid }) => {
-      if (tid === agent?.id) setTyping(false)
+      if (tid !== user?.id) setTyping(false)
     }
 
     const onSessionClose = ({ sessionId }) => {

@@ -24,6 +24,24 @@ export const sendMessage = async (senderId, receiverId, content) => {
   return message;
 };
 
+export const getMessagesMultiSender = async (senderIds, otherUserId, skip = 0, take = 50, since = null) => {
+  const orConditions = [];
+  for (const sid of senderIds) {
+    orConditions.push({ senderId: sid, receiverId: otherUserId });
+    orConditions.push({ senderId: otherUserId, receiverId: sid });
+  }
+  const where = { OR: orConditions };
+  if (since) where.createdAt = { gte: new Date(since) };
+
+  const messages = await prisma.message.findMany({
+    where,
+    skip,
+    take,
+    orderBy: { createdAt: "desc" },
+  });
+  return messages.reverse();
+};
+
 export const getMessages = async (userId, otherUserId, skip = 0, take = 50, since = null) => {
   const where = {
     OR: [
