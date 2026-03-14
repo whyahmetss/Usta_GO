@@ -23,7 +23,7 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
   const busy = actioning === u.id
 
   return (
-    <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
       <div className="flex items-center gap-3 p-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 text-white font-black text-lg">
           {u.name?.[0]?.toUpperCase() || '?'}
@@ -155,7 +155,7 @@ export default function AdminPendingUstasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0d]">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl text-white text-sm font-semibold ${
@@ -196,7 +196,7 @@ export default function AdminPendingUstasPage() {
             <p className="text-sm text-slate-400">Yükleniyor...</p>
           </div>
         ) : list.length === 0 ? (
-          <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center shadow-sm">
+          <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center shadow-sm">
             <CheckCircle2 size={36} className="text-emerald-400 mx-auto mb-3" />
             <p className="font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
             <p className="text-xs text-slate-400 mt-1">Yeni usta kayıtları burada görünecek</p>

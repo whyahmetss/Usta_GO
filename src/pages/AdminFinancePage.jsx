@@ -341,7 +341,7 @@ export default function AdminFinancePage() {
                         </div>
                       </div>
                       {wFilter === 'PENDING' && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                           <button
                             onClick={() => handleWApprove(w.id)}
                             disabled={processingId === w.id}

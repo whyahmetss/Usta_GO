@@ -224,7 +224,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-[#0a1628] dark:via-[#0f1d35] dark:to-[#0a1628]">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-[#0d0d0d] dark:via-[#111111] dark:to-[#0d0d0d]">
       {/* Decorative blobs */}
       <div className="absolute top-[-120px] right-[-80px] w-[300px] h-[300px] rounded-full bg-blue-400/20 dark:bg-blue-500/10 blur-3xl" />
       <div className="absolute bottom-[-100px] left-[-60px] w-[250px] h-[250px] rounded-full bg-indigo-400/20 dark:bg-indigo-500/10 blur-3xl" />
@@ -239,7 +239,7 @@ export default function AuthPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Profesyonel Ev Hizmetleri</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1a2332] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-7">
+        <div className="bg-white dark:bg-[#141414] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-7">
 
           {/* ── OTP Adımı ── */}
           {step === 'otp' ? (

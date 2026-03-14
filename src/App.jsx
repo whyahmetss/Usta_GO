@@ -52,7 +52,7 @@ const SupportChatPage        = lazy(() => import('./pages/SupportChatPage'))
 
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a1628]">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d0d0d]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-gray-400 font-medium">Yükleniyor...</p>

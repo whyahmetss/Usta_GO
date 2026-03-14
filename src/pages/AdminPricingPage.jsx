@@ -204,7 +204,7 @@ function AdminPricingPage() {
       />
 
       {/* Tab bar */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-lg mx-auto px-4 flex gap-1">
           <button
             onClick={() => setActiveTab('services')}

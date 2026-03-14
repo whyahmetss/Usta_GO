@@ -92,7 +92,7 @@ function MyJobsPage() {
               <div
                 key={job.id}
                 onClick={() => navigate(`/job/${job.id}`)}
-                className="bg-white rounded-2xl p-4 border border-gray-100 shadow-card cursor-pointer hover:shadow-card-hover active:scale-[0.99] transition-all"
+                className="bg-white rounded-2xl p-4 border border-gray-200 shadow-card cursor-pointer hover:shadow-card-hover active:scale-[0.99] transition-all"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-gray-900 text-sm flex-1 mr-2">{job.title}</h3>

@@ -76,7 +76,7 @@ function ComplaintsTab() {
       <div className="flex gap-2 flex-wrap mb-4">
         {filters.map(f => (
           <button key={f.id} onClick={() => setFilter(f.id)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${filter === f.id ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${filter === f.id ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
             {f.label}
             {f.id !== 'all' && ` (${complaints.filter(c => c.status === f.id).length})`}
           </button>
@@ -90,7 +90,7 @@ function ComplaintsTab() {
       ) : (
         <div className="space-y-3">
           {filtered.map((c, idx) => (
-            <div key={c.id || idx} className={`bg-white dark:bg-[#1a2332] rounded-2xl border shadow-sm overflow-hidden ${
+            <div key={c.id || idx} className={`bg-white dark:bg-[#141414] rounded-2xl border shadow-sm overflow-hidden ${
               c.status === 'open' ? 'border-amber-200 dark:border-amber-500/30' :
               c.status === 'resolved' ? 'border-emerald-200 dark:border-emerald-500/20' :
               'border-rose-200 dark:border-rose-500/20'
@@ -226,7 +226,7 @@ function ReviewsTab() {
         <div className="flex gap-1.5 flex-wrap">
           {['all', '5', '4', '3', '2', '1'].map(v => (
             <button key={v} onClick={() => setRatingFilter(v)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${ratingFilter === v ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${ratingFilter === v ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
               {v === 'all' ? 'Tümü' : `${'★'.repeat(Number(v))}`}
             </button>
           ))}
@@ -243,7 +243,7 @@ function ReviewsTab() {
       ) : (
         <div className="space-y-3">
           {filtered.map(r => (
-            <div key={r.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm p-4">
+            <div key={r.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm p-4">
               {/* Stars + date */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex gap-0.5">
@@ -299,18 +299,18 @@ function AdminComplaintsPage() {
   const [tab, setTab] = useState('complaints') // 'complaints' | 'reviews'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
       <PageHeader title="Şikayet & Değerlendirme" onBack={() => navigate('/admin')} />
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Tab toggle */}
         <div className="flex gap-2">
           <button onClick={() => setTab('complaints')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'complaints' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'complaints' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <AlertCircle size={14} /> Şikayetler
           </button>
           <button onClick={() => setTab('reviews')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'reviews' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'reviews' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <Star size={14} /> Değerlendirmeler
           </button>
         </div>

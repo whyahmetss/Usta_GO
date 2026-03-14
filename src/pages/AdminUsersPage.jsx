@@ -109,7 +109,7 @@ function AdminUsersPage() {
   }), [users])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
       <PageHeader
         title="Kullanıcı Yönetimi"
         onBack={() => navigate('/admin')}
@@ -143,7 +143,7 @@ function AdminUsersPage() {
         {/* Top/Bottom rated summary */}
         {(topRated.length > 0 || bottomRated.length > 0) && (
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
+            <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
               <div className="flex items-center gap-1.5 mb-2">
                 <TrendingUp size={14} className="text-emerald-500" />
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Yüksek</p>
@@ -160,7 +160,7 @@ function AdminUsersPage() {
                   </div>
                 ))}
             </div>
-            <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
+            <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
               <div className="flex items-center gap-1.5 mb-2">
                 <TrendingDown size={14} className="text-rose-500" />
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Düşük</p>
@@ -187,17 +187,17 @@ function AdminUsersPage() {
 
         {/* View toggle */}
         <div className="flex gap-2">
-          <button onClick={() => setView('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'users' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+          <button onClick={() => setView('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'users' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <Users size={13} /> Kullanıcılar
           </button>
-          <button onClick={() => setView('ratings')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'ratings' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+          <button onClick={() => setView('ratings')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'ratings' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <BarChart2 size={13} /> Puan Listesi
           </button>
         </div>
 
         {/* Ratings view */}
         {view === 'ratings' && !loading && (
-          <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.05] flex items-center justify-between">
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Tüm Kullanıcılar — Puana Göre</p>
               <p className="text-[10px] text-slate-400">{allSortedDesc.length} kullanıcı</p>
@@ -244,7 +244,7 @@ function AdminUsersPage() {
               className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 roleFilter === f.key
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
+                  : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
               }`}
             >
               {f.label}
@@ -265,7 +265,7 @@ function AdminUsersPage() {
         ) : (
           <div className="space-y-2">
             {filtered.map((user) => (
-              <div key={user.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm p-3.5 flex items-center gap-3">
+              <div key={user.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm p-3.5 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
                   {user.profileImage
                     ? <img src={user.profileImage} className="w-10 h-10 rounded-xl object-cover" alt="" />

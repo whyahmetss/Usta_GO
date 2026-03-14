@@ -93,7 +93,7 @@ function AdminJobsPage() {
     : jobs.filter(j => j.status === filterStatus)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
       <PageHeader title="İş Yönetimi" onBack={() => navigate('/admin')} />
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
@@ -116,7 +116,7 @@ function AdminJobsPage() {
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                 filterStatus === status
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'
+                  : 'bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'
               } ${loading ? 'opacity-50' : ''}`}
             >
               {statusLabels[status]}
@@ -135,7 +135,7 @@ function AdminJobsPage() {
         ) : (
           <div className="space-y-3">
             {filteredJobs.map(job => (
-              <div key={job.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
+              <div key={job.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 p-4 pb-3">
                   <div className="flex-1 min-w-0">

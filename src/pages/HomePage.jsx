@@ -77,16 +77,16 @@ function HomePage() {
               )}
             </div>
             <div>
-              <p className="text-[11px] text-gray-400 font-medium leading-none mb-0.5">{greeting}</p>
-              <h1 className="text-[15px] font-semibold text-gray-900 leading-tight">{user?.name || 'Müşteri'}</h1>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium leading-none mb-0.5">{greeting}</p>
+              <h1 className="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight">{user?.name || 'Müşteri'}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/notifications')}
-              className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center relative"
+              className="w-10 h-10 rounded-full bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#262626] shadow-sm flex items-center justify-center relative"
             >
-              <Bell size={18} strokeWidth={1.8} className="text-gray-700" />
+              <Bell size={18} strokeWidth={1.8} className="text-gray-700 dark:text-gray-300" />
               {unreadNotifs > 0 && (
                 <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1">
                   {unreadNotifs > 9 ? '9+' : unreadNotifs}
@@ -95,9 +95,9 @@ function HomePage() {
             </button>
             <button
               onClick={() => navigate('/settings')}
-              className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#262626] shadow-sm flex items-center justify-center"
             >
-              <Settings size={18} strokeWidth={1.8} className="text-gray-700" />
+              <Settings size={18} strokeWidth={1.8} className="text-gray-700 dark:text-gray-300" />
             </button>
           </div>
         </div>
@@ -105,7 +105,7 @@ function HomePage() {
         {/* Search trigger */}
         <button
           onClick={() => setShowSearch(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200/60 dark:border-[#262626] shadow-sm text-left"
+          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/50 dark:shadow-none text-left"
         >
           <Search size={17} strokeWidth={1.8} className="text-primary-400 flex-shrink-0" />
           <span className="text-[13px] text-gray-400">Hangi hizmete ihtiyacınız var?</span>
@@ -181,7 +181,7 @@ function HomePage() {
       {/* Categories */}
       <div className="px-5 pb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[15px] font-semibold text-gray-900">Hizmetler</h3>
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">Hizmetler</h3>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -192,10 +192,10 @@ function HomePage() {
                 key={svc.id}
                 onClick={() => svc.active ? navigate('/create-job') : null}
                 disabled={!svc.active}
-                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border shadow-sm ${
+                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border ${
                   svc.active
-                    ? 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] active:scale-95'
-                    : 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] opacity-50'
+                    ? 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none active:scale-95'
+                    : 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none opacity-50'
                 }`}
               >
                 {!svc.active && (
@@ -219,7 +219,7 @@ function HomePage() {
       {showSearch && (
         <div className="fixed inset-0 z-[60] bg-white dark:bg-[#0c0c0c]">
           {/* Search Header */}
-          <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-[#262626]">
+          <div className="px-4 pt-4 pb-3 border-b border-gray-200 dark:border-[#262626]">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => { setShowSearch(false); setSearchQuery('') }}

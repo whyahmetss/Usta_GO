@@ -82,15 +82,15 @@ export default function AdminSupportMonitorPage() {
         {/* Tab toggle */}
         <div className="flex gap-2 mb-5">
           <button onClick={() => setTab('overview')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'overview' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'overview' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <BarChart2 size={14} /> Temsilciler
           </button>
           <button onClick={() => setTab('sessions')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'sessions' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-semibold transition ${tab === 'sessions' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
             <MessageCircle size={14} /> Oturumlar
           </button>
           <button onClick={load} disabled={loading}
-            className="w-10 h-10 bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] rounded-2xl flex items-center justify-center flex-shrink-0">
+            className="w-10 h-10 bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] rounded-2xl flex items-center justify-center flex-shrink-0">
             <RefreshCw size={15} className={`text-slate-500 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
@@ -104,12 +104,12 @@ export default function AdminSupportMonitorPage() {
           /* Agent cards */
           <div className="space-y-3">
             {agentStats.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center">
                 <Headphones size={32} className="text-slate-300 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-500">Henüz oturum yok</p>
               </div>
             ) : agentStats.map(a => (
-              <div key={a.agent.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
+              <div key={a.agent.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
                 <div className="flex items-center gap-3 p-4">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center flex-shrink-0 text-white font-black text-lg">
                     {a.agent.name?.[0]?.toUpperCase() || '?'}
@@ -148,13 +148,13 @@ export default function AdminSupportMonitorPage() {
             <div className="flex gap-2 flex-wrap">
               {[{ k: 'all', l: 'Tümü' }, { k: 'OPEN', l: 'Açık' }, { k: 'CLOSED', l: 'Kapalı' }].map(f => (
                 <button key={f.k} onClick={() => setStatusFilter(f.k)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${statusFilter === f.k ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${statusFilter === f.k ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'}`}>
                   {f.l}
                 </button>
               ))}
               {agentStats.length > 1 && (
                 <select value={selectedAgent} onChange={e => setSelectedAgent(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#1a2332] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400">
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400">
                   <option value="all">Tüm Temsilciler</option>
                   {agentStats.map(a => (
                     <option key={a.agent.id} value={a.agent.id}>{a.agent.name}</option>
@@ -166,12 +166,12 @@ export default function AdminSupportMonitorPage() {
             <p className="text-xs text-slate-500">{filteredSessions.length} oturum</p>
 
             {filteredSessions.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center">
                 <MessageCircle size={28} className="text-slate-300 mx-auto mb-2" />
                 <p className="text-sm font-bold text-slate-500">Oturum bulunamadı</p>
               </div>
             ) : filteredSessions.map(s => (
-              <div key={s.id} className={`bg-white dark:bg-[#1a2332] rounded-2xl border shadow-sm overflow-hidden ${
+              <div key={s.id} className={`bg-white dark:bg-[#141414] rounded-2xl border shadow-sm overflow-hidden ${
                 s.status === 'OPEN' ? 'border-emerald-200 dark:border-emerald-500/30' : 'border-slate-200 dark:border-white/[0.07]'
               }`}>
                 <div className="p-4">

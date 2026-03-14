@@ -601,7 +601,7 @@ function JobDetailPage() {
             <MapPin size={16} />
             <span className="text-sm">{job.address || job.location || 'Adres belirtilmedi'}</span>
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
             <span className="text-sm font-semibold text-gray-600">Durum</span>
             <StatusBadge status={job.status} size="md" />
           </div>
@@ -611,7 +611,7 @@ function JobDetailPage() {
         <Card padding="p-5">
           <h3 className="font-bold text-gray-900 mb-3">İş Detayları</h3>
           <p className="text-gray-700 mb-4">{job.description}</p>
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-3 border-t border-gray-200">
             <span className="text-sm text-gray-600">Ücret</span>
             <span className="text-2xl font-black text-emerald-600">{job.price ?? job.budget ?? 0} TL</span>
           </div>

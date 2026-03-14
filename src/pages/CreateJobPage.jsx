@@ -321,7 +321,7 @@ function CreateJobPage() {
                       className={`w-full p-3 rounded-xl border-2 text-left transition ${
                         selectedCoupon?.id === c.id
                           ? 'bg-amber-50 border-amber-400'
-                          : 'bg-gray-50 border-gray-100'
+                          : 'bg-gray-50 border-gray-200'
                       }`}
                     >
                       <div className="flex justify-between items-center">

@@ -66,7 +66,7 @@ const SUPPORT_NAV = [
 /* ── Page loader ── */
 function PageLoader() {
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[#0a1628]">
+    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-gray-400 font-medium">Yükleniyor...</p>
@@ -82,7 +82,7 @@ function Unauthorized() {
   const handleLogout = () => { logout(); navigate('/') }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
       <div className="text-center p-8 max-w-sm">
         <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldCheck size={36} className="text-red-500" />
@@ -127,7 +127,7 @@ function AdminSidebar({ open, onClose, role }) {
       <aside
         className={`
           fixed top-0 left-0 h-full z-40 w-64
-          bg-white dark:bg-[#0d1b2e] border-r border-gray-100 dark:border-white/[0.07]
+          bg-white dark:bg-[#0d1b2e] border-r border-gray-200 dark:border-white/[0.07]
           flex flex-col shadow-xl
           transition-transform duration-300
           ${open ? 'translate-x-0' : '-translate-x-full'}
@@ -135,7 +135,7 @@ function AdminSidebar({ open, onClose, role }) {
         `}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100 dark:border-white/[0.07]">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-200 dark:border-white/[0.07]">
           <div>
             <p className="font-black text-lg text-gray-900 dark:text-white">Usta Go</p>
             <p className="text-xs text-gray-400 font-medium">
@@ -173,7 +173,7 @@ function AdminSidebar({ open, onClose, role }) {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-3 border-t border-gray-100 dark:border-white/[0.07] space-y-1">
+        <div className="px-3 py-3 border-t border-gray-200 dark:border-white/[0.07] space-y-1">
           <button
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white transition"
@@ -199,12 +199,12 @@ function AdminLayout({ children, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#0a1628] overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-[#0d0d0d] overflow-hidden">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} role={role} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#0d1b2e] border-b border-gray-100 dark:border-white/[0.07]">
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#0d1b2e] border-b border-gray-200 dark:border-white/[0.07]">
           <button
             onClick={() => setSidebarOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition"

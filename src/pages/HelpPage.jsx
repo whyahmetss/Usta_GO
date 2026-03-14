@@ -68,12 +68,12 @@ function HelpPage() {
 
         <div className="space-y-3 mb-8">
           {filtered.map((faq, idx) => (
-            <details key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden group">
+            <details key={idx} className="bg-white rounded-2xl border border-gray-200 shadow-card overflow-hidden group">
               <summary className="px-4 py-4 cursor-pointer hover:bg-gray-50 font-bold text-gray-900 flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden">
                 <HelpCircle size={18} className="text-primary-500" />
                 <span className="flex-1">{faq.q}</span>
               </summary>
-              <div className="px-4 pb-4 pt-0 text-gray-600 bg-gray-50 border-t border-gray-100">
+              <div className="px-4 pb-4 pt-0 text-gray-600 bg-gray-50 border-t border-gray-200">
                 <p className="pt-3">{faq.a}</p>
               </div>
             </details>
@@ -87,7 +87,7 @@ function HelpPage() {
           <div className="space-y-3">
             <a
               href="mailto:support@ustagochannel.com"
-              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-100"
+              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-200"
             >
               <Mail size={20} className="text-primary-500" />
               <div>
@@ -97,7 +97,7 @@ function HelpPage() {
             </a>
             <a
               href="tel:+905324445566"
-              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-100"
+              className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-200"
             >
               <Phone size={20} className="text-primary-500" />
               <div>

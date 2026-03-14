@@ -232,7 +232,7 @@ function MessagesPage() {
                   <button
                     key={job.id}
                     onClick={() => setSelectedJobId(job.id)}
-                    className="w-full bg-white dark:bg-[#141414] rounded-2xl p-4 border border-gray-100 dark:border-[#262626] flex items-center gap-3 text-left active:scale-[0.98] transition-all"
+                    className="w-full bg-white dark:bg-[#141414] rounded-2xl p-4 border border-gray-200 dark:border-[#262626] flex items-center gap-3 text-left active:scale-[0.98] transition-all"
                   >
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {otherPerson?.profileImage ? (
@@ -266,7 +266,7 @@ function MessagesPage() {
   return (
     <div className="fixed inset-0 z-[55] flex flex-col bg-[#f0f2f5] dark:bg-[#0b141a]">
       {/* Chat Header */}
-      <header className="bg-white dark:bg-[#141414] border-b border-gray-100 dark:border-[#262626] flex-shrink-0">
+      <header className="bg-white dark:bg-[#141414] border-b border-gray-200 dark:border-[#262626] flex-shrink-0">
         <div className="flex items-center gap-3 h-16 px-4">
           <button
             onClick={() => setSelectedJobId(null)}
@@ -353,7 +353,7 @@ function MessagesPage() {
             key={idx}
             onClick={() => handleSendQuickMessage(qm)}
             disabled={isSending}
-            className="px-3.5 py-2 bg-white dark:bg-[#1f2c34] rounded-full text-[12px] font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap active:scale-95 transition disabled:opacity-50 border border-gray-100 dark:border-[#2a3942]"
+            className="px-3.5 py-2 bg-white dark:bg-[#1f2c34] rounded-full text-[12px] font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap active:scale-95 transition disabled:opacity-50 border border-gray-200 dark:border-[#2a3942]"
           >
             {qm}
           </button>
@@ -363,7 +363,7 @@ function MessagesPage() {
       {/* Input Area */}
       <div className="px-3 py-2.5 bg-[#f0f2f5] dark:bg-[#0b141a] flex-shrink-0 safe-bottom">
         <div className="flex items-end gap-2">
-          <div className="flex-1 bg-white dark:bg-[#1f2c34] rounded-3xl border border-gray-100 dark:border-[#2a3942] overflow-hidden">
+          <div className="flex-1 bg-white dark:bg-[#1f2c34] rounded-3xl border border-gray-200 dark:border-[#2a3942] overflow-hidden">
             <input
               type="text"
               value={messageText}

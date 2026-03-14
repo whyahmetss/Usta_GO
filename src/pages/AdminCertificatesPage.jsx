@@ -86,7 +86,7 @@ function AdminCertificatesPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
                   <a
                     href={c.fileUrl}
                     target="_blank"

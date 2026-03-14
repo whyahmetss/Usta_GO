@@ -381,7 +381,7 @@ function AdminDashboard() {
                 {recentJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -422,7 +422,7 @@ function AdminDashboard() {
                   .map((job) => (
                     <div
                       key={job.id}
-                      className="p-3 rounded-xl bg-primary-50/50 border border-gray-100"
+                      className="p-3 rounded-xl bg-primary-50/50 border border-gray-200"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="min-w-0 flex-1">

@@ -346,7 +346,7 @@ function LiveTrackingPage() {
 
         {/* ETA badge */}
         {trackingStatus !== 'completed' && trackingStatus !== 'in_progress' && (
-          <div className="absolute top-4 right-4 z-[400] bg-white rounded-2xl border border-gray-100 shadow-card px-4 py-2">
+          <div className="absolute top-4 right-4 z-[400] bg-white rounded-2xl border border-gray-200 shadow-card px-4 py-2">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-primary-500" />
               <span className="text-lg font-black text-primary-600">{formatEta(eta)}</span>
@@ -360,7 +360,7 @@ function LiveTrackingPage() {
         {/* Usta arrived overlay */}
         {trackingStatus === 'arrived' && (
           <div className="absolute inset-0 z-[400] bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-card px-8 py-6 text-center mx-4">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-card px-8 py-6 text-center mx-4">
               <div className="mb-3"><PartyPopper size={48} className="text-emerald-500" /></div>
               <h3 className="text-xl font-black text-gray-900">Usta Geldi!</h3>
               <p className="text-gray-600 text-sm mt-1">Ustanız kapınızda</p>
@@ -423,7 +423,7 @@ function LiveTrackingPage() {
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto" />
 
           {/* Status steps */}
-          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               {STATUS_STEPS.map((step, i) => (
                 <div key={step.key} className="flex flex-col items-center flex-1">

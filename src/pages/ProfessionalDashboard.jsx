@@ -205,7 +205,7 @@ function ProfessionalDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate('/notifications')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center relative transition-colors hover:bg-gray-100">
+            <button onClick={() => navigate('/notifications')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center relative transition-colors hover:bg-gray-100">
               <Bell size={18} className="text-gray-600" />
               {unreadNotifs > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-rose-500 text-white text-[10px] font-bold rounded-full px-1">
@@ -213,7 +213,7 @@ function ProfessionalDashboard() {
                 </span>
               )}
             </button>
-            <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center transition-colors hover:bg-gray-100">
+            <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center transition-colors hover:bg-gray-100">
               <Settings size={18} className="text-gray-600" />
             </button>
           </div>

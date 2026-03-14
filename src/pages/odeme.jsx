@@ -355,7 +355,7 @@ const Odeme = () => {
               type="number" min="10" value={customAmount}
               onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); }}
               placeholder="Farklı tutar girin..."
-              className="w-full pl-4 pr-14 py-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm focus:outline-none focus:border-purple-500 transition dark:placeholder-gray-500"
+              className="w-full pl-4 pr-14 py-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm focus:outline-none focus:border-purple-500 transition dark:placeholder-gray-500"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">TL</span>
           </div>
@@ -367,7 +367,7 @@ const Odeme = () => {
 
           {/* Kart Numarası */}
           <div className="mb-3">
-            <div className="flex items-center gap-3 h-[52px] rounded-2xl px-4 bg-gray-50 dark:bg-white/5 border-2 border-gray-100 dark:border-white/10 focus-within:border-purple-500 transition">
+            <div className="flex items-center gap-3 h-[52px] rounded-2xl px-4 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 focus-within:border-purple-500 transition">
               <CreditCard size={18} className="text-gray-400 flex-shrink-0" />
               <input
                 type="text"
@@ -388,7 +388,7 @@ const Odeme = () => {
               placeholder="Kart Üzerindeki Ad Soyad"
               value={cardHolder}
               onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-              className="w-full h-[52px] px-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-semibold tracking-wide focus:outline-none focus:border-purple-500 transition uppercase"
+              className="w-full h-[52px] px-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-semibold tracking-wide focus:outline-none focus:border-purple-500 transition uppercase"
             />
           </div>
 
@@ -401,7 +401,7 @@ const Odeme = () => {
               maxLength={5}
               value={expiry}
               onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-              className="h-[52px] px-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
+              className="h-[52px] px-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
             />
             <div className="relative">
               <input
@@ -413,7 +413,7 @@ const Odeme = () => {
                 onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0,4))}
                 onFocus={() => setCardFlipped(true)}
                 onBlur={() => setCardFlipped(false)}
-                className="w-full h-[52px] pl-4 pr-10 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
+                className="w-full h-[52px] pl-4 pr-10 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
               />
               <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>

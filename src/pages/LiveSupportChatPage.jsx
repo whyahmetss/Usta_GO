@@ -318,7 +318,7 @@ export default function LiveSupportChatPage() {
   return (
     <Layout hideNav>
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-b border-gray-100 dark:border-white/10">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-b border-gray-200 dark:border-white/10">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 h-[60px]">
           <button
             onClick={() => navigate(-1)}
@@ -384,7 +384,7 @@ export default function LiveSupportChatPage() {
       {/* Close confirm modal */}
       {showCloseConfirm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1a2332] rounded-3xl p-6 max-w-xs w-full shadow-2xl">
+          <div className="bg-white dark:bg-[#141414] rounded-3xl p-6 max-w-xs w-full shadow-2xl">
             <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <PhoneOff size={24} className="text-rose-500" />
             </div>
@@ -406,7 +406,7 @@ export default function LiveSupportChatPage() {
 
       {/* Chat closed + rating screen */}
       {chatClosed && (
-        <div className="fixed inset-0 z-40 bg-white dark:bg-[#0a1628] flex flex-col items-center justify-center p-6 text-center">
+        <div className="fixed inset-0 z-40 bg-white dark:bg-[#0d0d0d] flex flex-col items-center justify-center p-6 text-center">
           {!ratingDone ? (
             <>
               <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
@@ -505,7 +505,7 @@ export default function LiveSupportChatPage() {
                       className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         isMine
                           ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
-                          : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-white/10 rounded-bl-sm shadow-sm'
+                          : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
                       }`}
                     >
                       {msg.content}
@@ -533,7 +533,7 @@ export default function LiveSupportChatPage() {
                 <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mr-2 mt-1">
                   <Headphones size={12} className="text-white" />
                 </div>
-                <div className="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                <div className="bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                   <div className="flex gap-1 items-center">
                     {[0, 1, 2].map(i => (
                       <div
@@ -578,7 +578,7 @@ export default function LiveSupportChatPage() {
 
       {/* Input bar */}
       {agent && !agentError && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-t border-gray-100 dark:border-white/10">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10">
           <div className="max-w-lg mx-auto flex items-end gap-2 px-4 py-3">
             <textarea
               ref={inputRef}

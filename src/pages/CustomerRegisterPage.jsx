@@ -92,7 +92,7 @@ export default function CustomerRegisterPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-[#0a1628] dark:via-[#0f1d35] dark:to-[#0a1628]">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-[#0d0d0d] dark:via-[#111111] dark:to-[#0d0d0d]">
       {/* Decorative */}
       <div className="absolute top-[-100px] right-[-60px] w-[280px] h-[280px] rounded-full bg-blue-400/20 dark:bg-blue-500/10 blur-3xl" />
       <div className="absolute bottom-[-80px] left-[-40px] w-[220px] h-[220px] rounded-full bg-indigo-400/20 dark:bg-indigo-500/10 blur-3xl" />
@@ -119,7 +119,7 @@ export default function CustomerRegisterPage() {
 
       {/* Content */}
       <div className="relative px-5 pb-10">
-        <div className="bg-white dark:bg-[#1a2332] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-6">
+        <div className="bg-white dark:bg-[#141414] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-6">
 
           {/* Info */}
           <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 mb-5 flex gap-3">

@@ -175,7 +175,7 @@ export default function UstaRegisterPage() {
   const allRequiredDone = requiredUploaded === requiredTotal
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-amber-50 to-orange-100 dark:from-[#0a1628] dark:via-[#1a1a0e] dark:to-[#0a1628]">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-amber-50 to-orange-100 dark:from-[#0d0d0d] dark:via-[#111111] dark:to-[#0d0d0d]">
       {/* Decorative */}
       <div className="absolute top-[-100px] right-[-60px] w-[280px] h-[280px] rounded-full bg-amber-400/20 dark:bg-amber-500/10 blur-3xl" />
       <div className="absolute bottom-[-80px] left-[-40px] w-[220px] h-[220px] rounded-full bg-orange-400/20 dark:bg-orange-500/10 blur-3xl" />
@@ -221,7 +221,7 @@ export default function UstaRegisterPage() {
 
       {/* Content */}
       <div className="relative px-5 pb-10">
-        <div className="bg-white dark:bg-[#1a2332] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-6">
+        <div className="bg-white dark:bg-[#141414] rounded-3xl shadow-2xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-white/[0.06] p-6">
 
           {step === 1 ? (
             <div className="space-y-4">

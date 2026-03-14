@@ -57,7 +57,7 @@ export default function OnboardingScreen({ onDone }) {
   const Icon = slide.icon
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-white dark:bg-[#0a1628] flex flex-col items-center justify-between px-6 py-10 select-none">
+    <div className="fixed inset-0 z-[9998] bg-white dark:bg-[#0d0d0d] flex flex-col items-center justify-between px-6 py-10 select-none">
 
       {/* Atla butonu */}
       <div className="w-full flex justify-end">

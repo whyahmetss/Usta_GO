@@ -26,7 +26,7 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
   const busy = actioning === u.id
 
   return (
-    <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 p-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 text-white font-black text-lg">
@@ -279,7 +279,7 @@ export default function SupportDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0d]">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl text-white text-sm font-semibold transition-all ${
@@ -374,7 +374,7 @@ export default function SupportDashboard() {
               className={`flex flex-col items-center justify-center gap-1 py-2 rounded-2xl text-[11px] font-semibold transition ${
                 activeTab === t.key
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-[#1a2332] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
+                  : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
               }`}
             >
               {t.label}
@@ -398,7 +398,7 @@ export default function SupportDashboard() {
                 <p className="text-sm text-slate-400">Yükleniyor...</p>
               </div>
             ) : ustas.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
                 <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
                 <p className="text-xs text-slate-400 mt-1">Yeni usta başvuruları burada görünür</p>
@@ -418,7 +418,7 @@ export default function SupportDashboard() {
                 { key: 'resolved', label: 'Çözüldü' },
                 { key: 'rejected', label: 'Reddedildi' },
               ].map(f => (
-                <button key={f.key} onClick={() => setComplaintFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${complaintFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                <button key={f.key} onClick={() => setComplaintFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${complaintFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
                   {f.label}
                 </button>
               ))}
@@ -430,14 +430,14 @@ export default function SupportDashboard() {
                 <p className="text-sm text-slate-400">Yükleniyor...</p>
               </div>
             ) : complaints.filter(c => c.status === complaintFilter).length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
                 <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Bu kategoride şikayet yok</p>
               </div>
             ) : complaints
               .filter(c => c.status === complaintFilter)
               .map(complaint => (
-                <div key={complaint.id} className={`bg-white dark:bg-[#1a2332] rounded-2xl border shadow-sm overflow-hidden ${
+                <div key={complaint.id} className={`bg-white dark:bg-[#141414] rounded-2xl border shadow-sm overflow-hidden ${
                   complaint.status === 'open' ? 'border-amber-200 dark:border-amber-500/30' :
                   complaint.status === 'resolved' ? 'border-emerald-200 dark:border-emerald-500/30' :
                   'border-rose-200 dark:border-rose-500/30'
@@ -499,14 +499,14 @@ export default function SupportDashboard() {
             <div className="space-y-2">
               <div className="flex gap-2 flex-wrap">
                 {[{ key: 'all', label: 'Tümü' }, { key: 'CUSTOMER', label: 'Müşteri' }, { key: 'USTA', label: 'Usta' }].map(f => (
-                  <button key={f.key} onClick={() => setCertRoleFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certRoleFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                  <button key={f.key} onClick={() => setCertRoleFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certRoleFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
                     {f.label}
                   </button>
                 ))}
               </div>
               <div className="flex gap-2 flex-wrap">
                 {[{ key: 'PENDING', label: 'Bekleyen' }, { key: 'APPROVED', label: 'Onaylı' }, { key: 'REJECTED', label: 'Reddedildi' }].map(f => (
-                  <button key={f.key} onClick={() => setCertFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certFilter === f.key ? 'bg-slate-700 text-white' : 'bg-white dark:bg-[#1a2332] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
+                  <button key={f.key} onClick={() => setCertFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${certFilter === f.key ? 'bg-slate-700 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 border border-slate-200 dark:border-white/[0.07]'}`}>
                     {f.label}
                   </button>
                 ))}
@@ -524,7 +524,7 @@ export default function SupportDashboard() {
                 const statusMatch = c.status === certFilter
                 return roleMatch && statusMatch
               }).length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
                 <FileText size={32} className="text-slate-300 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Belge bulunamadı</p>
               </div>
@@ -535,7 +535,7 @@ export default function SupportDashboard() {
                 return roleMatch && statusMatch
               })
               .map(c => (
-                <div key={c.id} className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+                <div key={c.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
                   <div className="flex items-start gap-3 p-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-50 dark:bg-violet-500/10">
                       {c.user?.role?.toUpperCase() === 'USTA'
@@ -596,7 +596,7 @@ export default function SupportDashboard() {
                 <p className="text-sm text-slate-400">Konuşmalar yükleniyor...</p>
               </div>
             ) : conversations.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
+              <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-8 text-center shadow-sm">
                 <MessageCircle size={32} className="text-blue-400 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Henüz konuşma yok</p>
                 <p className="text-xs text-slate-400 mt-1">Kullanıcılar mesaj gönderdiğinde burada görünür</p>
@@ -605,7 +605,7 @@ export default function SupportDashboard() {
               <button
                 key={conv.user.id}
                 onClick={() => navigate(`/support/chat/${conv.user.id}`)}
-                className="w-full bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-4 flex items-center gap-3 shadow-sm text-left hover:border-blue-300 active:scale-[0.99] transition"
+                className="w-full bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-4 flex items-center gap-3 shadow-sm text-left hover:border-blue-300 active:scale-[0.99] transition"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-lg text-white bg-gradient-to-br ${
                   conv.user.role?.toUpperCase() === 'USTA'
