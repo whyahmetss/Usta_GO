@@ -153,9 +153,8 @@ export default function AuthPage() {
       try {
         const r = await login(email, password)
         if (r?.success) {
-          const rl = r.role?.toLowerCase()
-          if (rl === 'usta' || rl === 'professional') navigate('/professional')
-          else navigate('/home')   // admin, support, customer → /home (her iki app da yakalar)
+          // navigate() çağırmıyoruz — setUser state güncellenince
+          // App.jsx'teki "/" route'u kullanıcıyı otomatik doğru sayfaya yönlendirir
         } else setError(r?.error || 'E-posta veya şifre hatalı')
       } catch { setError('Bağlantı hatası oluştu') }
       finally { setLoading(false) }
