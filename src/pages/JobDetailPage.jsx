@@ -964,13 +964,10 @@ function JobDetailPage() {
               <p className="text-orange-800 font-semibold text-center mb-1">Usta işi tamamladı!</p>
               <p className="text-orange-600 text-sm text-center">Fotoğrafları kontrol edip işi onaylayın veya reddedin.</p>
             </div>
-            <button
-              onClick={handleApproveJob}
-              className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-[0.98] transition"
-            >
-              <CheckCircle size={20} />
-              İşi Onayla
-            </button>
+            <CarConfirmButton
+              label="İşi Onayla"
+              onConfirm={handleApproveJob}
+            />
             <button
               onClick={() => setShowRejectModal(true)}
               className="w-full py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl font-semibold hover:bg-rose-100 active:scale-[0.98] transition"
