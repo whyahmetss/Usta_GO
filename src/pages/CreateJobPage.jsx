@@ -133,36 +133,38 @@ function CreateJobPage() {
     }
   }
 
+  const stepLabels = ['Bilgiler', 'Analiz', 'Onay']
+
   return (
     <div>
       <PageHeader title="Yeni İş Talebi" />
 
       {/* Progress Steps */}
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {[1, 2, 3].map((num) => (
-            <div key={num} className="flex items-center flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                step > num ? 'bg-accent-500 text-white' :
-                step === num ? 'bg-primary-500 text-white' :
-                'bg-gray-100 text-gray-400'
-              }`}>
-                {step > num ? <Check size={16} /> : num}
+      <div className="px-6 py-4 max-w-lg mx-auto">
+        <div className="flex items-center">
+          {[1, 2, 3].map((num, idx) => (
+            <div key={num} className={`flex items-center ${idx < 2 ? 'flex-1' : ''}`}>
+              <div className="flex flex-col items-center gap-1">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                  step > num ? 'bg-accent-500 text-white' :
+                  step === num ? 'bg-primary-500 text-white' :
+                  'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                }`}>
+                  {step > num ? <Check size={16} /> : num}
+                </div>
+                <span className={`text-[10px] font-medium whitespace-nowrap ${
+                  step === num ? 'text-primary-500' : 'text-gray-400'
+                }`}>{stepLabels[idx]}</span>
               </div>
-              {num < 3 && (
-                <div className={`flex-1 h-0.5 mx-2 rounded-full transition-colors ${step > num ? 'bg-accent-500' : 'bg-gray-100'}`} />
+              {idx < 2 && (
+                <div className={`flex-1 h-0.5 mx-2 mb-4 rounded-full transition-colors ${step > num ? 'bg-accent-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
               )}
             </div>
           ))}
         </div>
-        <div className="flex justify-between mt-2">
-          <span className="text-[10px] text-gray-400 font-medium">Bilgiler</span>
-          <span className="text-[10px] text-gray-400 font-medium">Analiz</span>
-          <span className="text-[10px] text-gray-400 font-medium">Onay</span>
-        </div>
       </div>
 
-      <div className="px-4 pb-10">
+      <div className="px-4 pb-10 max-w-lg mx-auto">
         {/* STEP 1 */}
         {step === 1 && (
           <div className="space-y-4">
