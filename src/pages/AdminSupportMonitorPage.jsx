@@ -216,7 +216,7 @@ export default function AdminSupportMonitorPage() {
 
                 {s.status === 'OPEN' && (
                   <div className="px-4 pb-3">
-                    <button onClick={() => navigate(`/support/chat/${s.userId}`)}
+                    <button onClick={() => navigate(`/support/chat/${s.userId}?agentId=${s.agentId}`)}
                       className="w-full py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
                       <MessageCircle size={12} /> Sohbeti Görüntüle
                     </button>

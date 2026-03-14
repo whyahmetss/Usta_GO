@@ -156,7 +156,7 @@ function AppRoutes() {
         <Route path="/admin/finance"         element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
 
         {/* Destek */}
-        <Route path="/support"              element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
+        <Route path="/support"              element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportDashboard /></ProtectedRoute>} />
         <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportChatPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

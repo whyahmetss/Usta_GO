@@ -37,16 +37,35 @@ router.get('/pending-customers', adminController.getPendingCustomers)
 router.patch('/users/:userId/approve-customer', adminController.approveCustomer)
 router.patch('/users/:userId/reject-customer', adminController.rejectCustomer)
 
-// Support conversations: list all unique users who messaged this support agent
+// Support conversations: list unique users who messaged support agents
 router.get('/conversations', async (req, res) => {
   try {
-    const agentId = req.user.id
+    const role = (req.user.role || '').toUpperCase()
+    const isAdmin = role === 'ADMIN'
 
-    // Get all messages involving this support agent
+    let whereClause
+    if (isAdmin) {
+      // Admin sees ALL conversations involving any SUPPORT role user
+      const supportAgents = await prisma.user.findMany({
+        where: { role: 'SUPPORT' },
+        select: { id: true },
+      })
+      const agentIds = supportAgents.map(a => a.id)
+      agentIds.push(req.user.id) // include admin's own convos too
+      whereClause = {
+        OR: [
+          { senderId: { in: agentIds } },
+          { receiverId: { in: agentIds } },
+        ],
+      }
+    } else {
+      whereClause = {
+        OR: [{ senderId: req.user.id }, { receiverId: req.user.id }],
+      }
+    }
+
     const msgs = await prisma.message.findMany({
-      where: {
-        OR: [{ senderId: agentId }, { receiverId: agentId }],
-      },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
         sender: { select: { id: true, name: true, profileImage: true, role: true } },
@@ -54,22 +73,32 @@ router.get('/conversations', async (req, res) => {
       },
     })
 
-    // Build unique conversations keyed by the OTHER user's id
+    // Build unique conversations keyed by the non-support user's id
     const convMap = new Map()
     for (const msg of msgs) {
-      const otherUser = msg.senderId === agentId ? msg.receiver : msg.sender
-      if (!otherUser || otherUser.id === agentId) continue
-      if (!convMap.has(otherUser.id)) {
-        convMap.set(otherUser.id, {
-          user: otherUser,
+      // Identify the "customer" side
+      const senderRole = (msg.sender?.role || '').toUpperCase()
+      const receiverRole = (msg.receiver?.role || '').toUpperCase()
+      let customerUser
+      if (senderRole !== 'SUPPORT' && senderRole !== 'ADMIN') {
+        customerUser = msg.sender
+      } else if (receiverRole !== 'SUPPORT' && receiverRole !== 'ADMIN') {
+        customerUser = msg.receiver
+      } else {
+        continue
+      }
+      if (!customerUser) continue
+
+      if (!convMap.has(customerUser.id)) {
+        convMap.set(customerUser.id, {
+          user: customerUser,
           lastMessage: msg.content,
           lastMessageAt: msg.createdAt,
           unread: 0,
         })
       }
-      // Count unread from this user
-      if (msg.senderId === otherUser.id && !msg.isRead) {
-        convMap.get(otherUser.id).unread += 1
+      if (!msg.isRead && (msg.receiverId === req.user.id || isAdmin)) {
+        convMap.get(customerUser.id).unread += 1
       }
     }
 

@@ -29,7 +29,12 @@ export const getMessages = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
-    const messages = await messageService.getMessages(req.user.id, userId, skip, limit);
+    // Admin can view conversations between other users via ?asAgent=<agentId>
+    const role = (req.user.role || "").toUpperCase();
+    const asAgent = req.query.asAgent;
+    const viewerId = (role === "ADMIN" && asAgent) ? asAgent : req.user.id;
+
+    const messages = await messageService.getMessages(viewerId, userId, skip, limit);
     successResponse(res, messages, "Messages fetched successfully");
   } catch (error) {
     next(error);

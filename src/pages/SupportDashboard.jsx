@@ -158,20 +158,21 @@ export default function SupportDashboard() {
 
   useEffect(() => { load() }, [load])
 
-  // Real-time: new message + new session → refresh conv list
+  // Real-time: HER zaman dinle (hangi sekmede olursa olsun)
   useEffect(() => {
     if (!user?.id) return
     const socket = connectSocket(user.id)
     
-    const onReceive = () => { 
-      if (activeTab === 'chats') loadConversations() 
+    const onReceive = (msg) => {
+      loadConversations()
+      if (activeTab !== 'chats') {
+        showToast('Yeni mesaj geldi!')
+      }
     }
     
     const onNewSession = (data) => {
-      console.log('[Support] New session opened:', data)
-      if (activeTab === 'chats') loadConversations()
-      // Show toast notification
-      showToast(`Yeni destek talebi: ${data.userName || 'Kullanıcı'}`)
+      loadConversations()
+      showToast(`Yeni destek talebi: ${data?.userName || 'Kullanıcı'}`)
     }
     
     socket.on('receive_message', onReceive)
@@ -183,8 +184,9 @@ export default function SupportDashboard() {
     }
   }, [user, activeTab, loadConversations])
 
+  // Her tab geçişinde ilgili veriyi yeniden yükle
   useEffect(() => {
-    if (activeTab === 'chats' && conversations.length === 0) loadConversations()
+    if (activeTab === 'chats') loadConversations()
     if (activeTab === 'complaints' && complaints.length === 0) loadComplaints()
     if (activeTab === 'docs' && certs.length === 0) loadCerts()
   }, [activeTab])

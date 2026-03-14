@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -11,8 +11,12 @@ import {
 
 export default function SupportChatPage() {
   const { userId } = useParams()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN'
+  const agentId = searchParams.get('agentId')
 
   const [otherUser, setOtherUser] = useState(null)
   const [messages, setMessages] = useState([])
@@ -29,7 +33,10 @@ export default function SupportChatPage() {
     if (!userId) return
     setLoading(true)
     try {
-      const msgsRes = await fetchAPI(API_ENDPOINTS.MESSAGES.GET_CONVERSATION(userId)).catch(() => null)
+      const url = (isAdmin && agentId)
+        ? `${API_ENDPOINTS.MESSAGES.GET_CONVERSATION(userId)}?asAgent=${agentId}`
+        : API_ENDPOINTS.MESSAGES.GET_CONVERSATION(userId)
+      const msgsRes = await fetchAPI(url).catch(() => null)
       const msgs = Array.isArray(msgsRes?.data) ? msgsRes.data : []
       setMessages(msgs)
 
@@ -52,7 +59,7 @@ export default function SupportChatPage() {
     } finally {
       setLoading(false)
     }
-  }, [userId, user])
+  }, [userId, user, isAdmin, agentId])
 
   useEffect(() => { loadMessages() }, [loadMessages])
 
