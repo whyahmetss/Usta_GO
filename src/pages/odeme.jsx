@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, CheckCircle, Wifi, CreditCard } from 'lucide-react';
+import { ShieldCheck, CheckCircle, CreditCard, Lock } from 'lucide-react';
 import { fetchAPI } from '../utils/api';
 import { API_ENDPOINTS } from '../config';
 import { useAuth } from '../context/AuthContext';
-import PageHeader from '../components/PageHeader';
 
 const PRESET_AMOUNTS = [100, 200, 500, 1000];
 
@@ -43,16 +42,20 @@ function MastercardLogo() {
 }
 
 /* ── Animated Virtual Card ── */
-function VirtualCard({ amount, holderName }) {
-  const displayNum = '•••• •••• •••• 4242';
+function VirtualCard({ amount, holderName, cardNumber, expiry }) {
+  const formatDisplay = (num) => {
+    const clean = num.replace(/\D/g, '');
+    const padded = clean.padEnd(16, '•');
+    return `${padded.slice(0,4)} ${padded.slice(4,8)} ${padded.slice(8,12)} ${padded.slice(12,16)}`;
+  };
+
+  const displayNum = formatDisplay(cardNumber);
   const displayAmount = amount > 0 ? `${amount.toLocaleString('tr-TR')} TL` : '— TL';
+  const displayExpiry = expiry || '••/••';
 
   return (
     <div className="relative w-full max-w-sm mx-auto select-none" style={{ perspective: '1000px' }}>
-      {/* Glow */}
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-500/40 to-blue-500/40 blur-2xl scale-105" />
-
-      {/* Card face */}
       <div
         className="relative rounded-3xl overflow-hidden shadow-2xl"
         style={{
@@ -60,15 +63,8 @@ function VirtualCard({ amount, holderName }) {
           minHeight: '200px',
         }}
       >
-        {/* Shiny overlay */}
-        <div
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%)',
-          }}
-        />
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%)' }} />
 
-        {/* Top row */}
         <div className="relative flex items-start justify-between px-6 pt-5">
           <div>
             <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">Usta Go</p>
@@ -79,42 +75,35 @@ function VirtualCard({ amount, holderName }) {
           </div>
         </div>
 
-        {/* Chip row */}
         <div className="relative flex items-center justify-between px-6 mt-4">
           <ChipSVG />
           <div className="text-right">
             <p className="text-white/40 text-[9px] uppercase tracking-widest">Yüklenecek</p>
-            <p className="text-white font-black text-xl tabular-nums transition-all duration-300">
-              {displayAmount}
-            </p>
+            <p className="text-white font-black text-xl tabular-nums transition-all duration-300">{displayAmount}</p>
           </div>
         </div>
 
-        {/* Card number */}
         <div className="relative px-6 mt-5">
-          <p className="text-white/70 text-base tracking-[0.25em] font-mono">{displayNum}</p>
+          <p className="text-white/70 text-base tracking-[0.2em] font-mono transition-all duration-150">{displayNum}</p>
         </div>
 
-        {/* Bottom row */}
         <div className="relative flex items-end justify-between px-6 pt-3 pb-5">
           <div>
             <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Kart Sahibi</p>
             <p className="text-white font-semibold text-sm tracking-wide uppercase">
-              {holderName || 'USTA GO USER'}
+              {holderName || 'AD SOYAD'}
             </p>
           </div>
           <div className="flex flex-col items-end">
-            <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Geçerlilik</p>
-            <p className="text-white font-semibold text-sm">12/28</p>
+            <p className="text-white/40 text-[9px] uppercase tracking-widest mb-0.5">Son Kullanma</p>
+            <p className="text-white font-semibold text-sm font-mono">{displayExpiry}</p>
           </div>
         </div>
 
-        {/* Bottom-right logo */}
         <div className="absolute bottom-4 right-5">
           <MastercardLogo />
         </div>
 
-        {/* Decorative circles */}
         <div className="absolute top-[-40px] right-[-40px] w-40 h-40 rounded-full bg-purple-500/10" />
         <div className="absolute bottom-[-30px] left-[-30px] w-32 h-32 rounded-full bg-blue-500/10" />
       </div>
@@ -122,11 +111,60 @@ function VirtualCard({ amount, holderName }) {
   );
 }
 
+/* ── 3DS iframe overlay ── */
+function ThreeDSOverlay({ htmlContent, onClose }) {
+  const iframeRef = useRef(null);
+
+  useEffect(() => {
+    if (iframeRef.current && htmlContent) {
+      const decoded = atob(htmlContent);
+      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(decoded);
+        doc.close();
+      }
+    }
+  }, [htmlContent]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#000' }}>
+      <div className="flex items-center justify-between px-4 py-3 bg-[#1a1040]">
+        <div className="flex items-center gap-2 text-white text-sm font-semibold">
+          <Lock size={14} className="text-green-400" />
+          Güvenli 3D Doğrulama
+        </div>
+        <button onClick={onClose} className="text-white/60 text-xs border border-white/20 rounded-lg px-3 py-1.5 active:opacity-70">
+          İptal
+        </button>
+      </div>
+      <iframe
+        ref={iframeRef}
+        className="flex-1 w-full border-0 bg-white"
+        title="3D Secure Doğrulama"
+      />
+    </div>
+  );
+}
+
+/* ── Kart numarası formatlayıcı ── */
+const formatCardNumber = (val) => {
+  const clean = val.replace(/\D/g, '').slice(0, 16);
+  return clean.replace(/(.{4})/g, '$1 ').trim();
+};
+
+const formatExpiry = (val) => {
+  const clean = val.replace(/\D/g, '').slice(0, 4);
+  if (clean.length >= 3) return `${clean.slice(0,2)}/${clean.slice(2)}`;
+  return clean;
+};
+
 /* ── Main Page ── */
 const Odeme = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+
   const [selectedAmount, setSelectedAmount] = useState(200);
   const [customAmount, setCustomAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -134,8 +172,17 @@ const Odeme = () => {
   const [success, setSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
 
+  // Kart alanları
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
+
+  // 3DS
+  const [threeDSContent, setThreeDSContent] = useState(null);
+
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
-  const holderName = user ? `${user.name || ''}`.toUpperCase() : '';
+  const holderName = cardHolder || (user ? user.name?.toUpperCase() : '');
 
   useEffect(() => {
     const status = searchParams.get('status');
@@ -149,20 +196,37 @@ const Odeme = () => {
     }
   }, [searchParams]);
 
+  const parseExpiry = (val) => {
+    const parts = val.split('/');
+    return { month: parts[0] || '', year: parts[1] ? `20${parts[1]}` : '' };
+  };
+
   const handlePay = async () => {
-    if (!finalAmount || finalAmount < 10) {
-      setError('Minimum yükleme tutarı 10 TL');
-      return;
-    }
+    if (!finalAmount || finalAmount < 10) { setError('Minimum yükleme tutarı 10 TL'); return; }
+
+    const rawCard = cardNumber.replace(/\s/g, '');
+    if (rawCard.length < 16) { setError('Geçerli bir kart numarası girin (16 hane)'); return; }
+    const { month, year } = parseExpiry(expiry);
+    if (!month || !year || month.length < 2) { setError('Geçerli bir son kullanma tarihi girin (AA/YY)'); return; }
+    if (cvc.length < 3) { setError('Geçerli bir CVC girin (3 hane)'); return; }
+
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_INIT, {
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_3DS, {
         method: 'POST',
-        body: { amount: finalAmount },
+        body: {
+          amount: finalAmount,
+          cardHolderName: cardHolder || user?.name || 'Müşteri',
+          cardNumber: rawCard,
+          expireMonth: month,
+          expireYear: year,
+          cvc,
+        },
       });
-      if (res?.success && res?.data?.paymentPageUrl) {
-        window.location.href = res.data.paymentPageUrl;
+
+      if (res?.success && res?.data?.htmlContent) {
+        setThreeDSContent(res.data.htmlContent);
         return;
       }
       setError(res?.error || 'Ödeme başlatılamadı.');
@@ -172,6 +236,10 @@ const Odeme = () => {
       setLoading(false);
     }
   };
+
+  if (threeDSContent) {
+    return <ThreeDSOverlay htmlContent={threeDSContent} onClose={() => setThreeDSContent(null)} />;
+  }
 
   if (success) {
     return (
@@ -185,10 +253,7 @@ const Odeme = () => {
             {(successAmount || finalAmount).toLocaleString('tr-TR')} TL hesabınıza yüklendi
           </p>
           <p className="text-white/40 text-sm mb-10">Bakiyeniz güncellendi</p>
-          <button
-            onClick={() => navigate('/wallet')}
-            className="px-10 py-4 bg-white text-[#1a103d] rounded-2xl font-bold text-base shadow-xl active:scale-95 transition"
-          >
+          <button onClick={() => navigate('/wallet')} className="px-10 py-4 bg-white text-[#1a103d] rounded-2xl font-bold text-base shadow-xl active:scale-95 transition">
             Cüzdana Dön
           </button>
         </div>
@@ -199,36 +264,31 @@ const Odeme = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444]">
       <div className="relative">
-        {/* Custom header for dark background */}
+        {/* Header */}
         <div className="flex items-center px-4 pt-12 pb-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 text-white mr-3 active:scale-90 transition"
-          >
+          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 text-white mr-3 active:scale-90 transition">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
           <div>
             <h1 className="text-white font-black text-xl">Bakiye Yükle</h1>
-            <p className="text-white/40 text-xs">iyzico ile güvenli ödeme</p>
+            <p className="text-white/40 text-xs">iyzico 3D Secure ile güvenli ödeme</p>
           </div>
         </div>
 
-        {/* Card */}
-        <div className="px-5 mt-2 mb-8">
-          <VirtualCard amount={finalAmount} holderName={holderName} />
+        {/* Virtual Card */}
+        <div className="px-5 mt-2 mb-6">
+          <VirtualCard amount={finalAmount} holderName={holderName} cardNumber={cardNumber} expiry={expiry} />
         </div>
 
         {/* Bottom sheet */}
         <div className="mx-2 rounded-t-[32px] bg-white dark:bg-[#1a1a2e] shadow-2xl px-5 pt-6 pb-10">
 
-          {/* Amount label */}
+          {/* Tutar */}
           <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Yüklenecek Tutar
           </p>
-
-          {/* Preset grid */}
           <div className="grid grid-cols-4 gap-2 mb-4">
             {PRESET_AMOUNTS.map((tutar) => (
               <button
@@ -237,25 +297,78 @@ const Odeme = () => {
                 className={`py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 ${
                   selectedAmount === tutar && !customAmount
                     ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                    : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/15'
+                    : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {tutar}₺
               </button>
             ))}
           </div>
-
-          {/* Custom input */}
           <div className="relative mb-5">
             <input
-              type="number"
-              min="10"
-              value={customAmount}
+              type="number" min="10" value={customAmount}
               onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); }}
               placeholder="Farklı tutar girin..."
               className="w-full pl-4 pr-14 py-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm focus:outline-none focus:border-purple-500 transition dark:placeholder-gray-500"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">TL</span>
+          </div>
+
+          {/* Kart Bilgileri */}
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            Kart Bilgileri
+          </p>
+
+          {/* Kart Numarası */}
+          <div className="mb-3">
+            <div className="flex items-center gap-3 h-[52px] rounded-2xl px-4 bg-gray-50 dark:bg-white/5 border-2 border-gray-100 dark:border-white/10 focus-within:border-purple-500 transition">
+              <CreditCard size={18} className="text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Kart Numarası"
+                maxLength={19}
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                className="flex-1 bg-transparent text-sm font-mono text-gray-800 dark:text-white placeholder-gray-400 outline-none tracking-widest"
+              />
+            </div>
+          </div>
+
+          {/* Kart Sahibi */}
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Kart Üzerindeki Ad Soyad"
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+              className="w-full h-[52px] px-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-semibold tracking-wide focus:outline-none focus:border-purple-500 transition uppercase"
+            />
+          </div>
+
+          {/* Son Kullanma + CVC */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="AA/YY"
+              maxLength={5}
+              value={expiry}
+              onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+              className="h-[52px] px-4 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
+            />
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="CVC"
+                maxLength={4}
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0,4))}
+                className="w-full h-[52px] pl-4 pr-10 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
+              />
+              <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
 
           {error && (
@@ -269,16 +382,9 @@ const Odeme = () => {
             onClick={handlePay}
             disabled={loading || finalAmount < 10}
             className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)',
-              boxShadow: '0 8px 32px rgba(124,58,237,0.4)',
-            }}
+            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
           >
-            {/* Shine */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }}
-            />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -286,16 +392,15 @@ const Odeme = () => {
               </div>
             ) : (
               <span className="flex items-center justify-center gap-2">
-                <CreditCard size={18} />
-                {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL Öde` : 'Öde'}
+                <Lock size={16} />
+                {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL — 3D Öde` : '3D Öde'}
               </span>
             )}
           </button>
 
-          {/* Security badge */}
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 dark:text-gray-500 text-xs font-medium">
             <ShieldCheck size={13} />
-            256-bit SSL · iyzico güvencesi ile korunmaktadır
+            256-bit SSL · iyzico 3D Secure korumalı
           </div>
         </div>
       </div>

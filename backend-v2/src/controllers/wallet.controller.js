@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as iyzicoService from '../services/iyzico.service.js';
+import { Buffer } from 'buffer';
 
 const prisma = new PrismaClient();
 
@@ -198,6 +199,112 @@ export const walletController = {
       return sendHtml(true, paidPrice);
     } catch (error) {
       console.error('topupCallback error:', error);
+      return sendHtml(false, 0, error.message || 'Beklenmeyen hata.');
+    }
+  },
+
+  // POST /wallet/topup/3ds - 3D Secure ile ödeme başlat (kart bilgileriyle)
+  topup3DSInit: async (req, res) => {
+    try {
+      if (!process.env.IYZIPAY_API_KEY || !process.env.IYZIPAY_SECRET_KEY) {
+        return res.status(503).json({ success: false, error: 'iyzico entegrasyonu yapılandırılmamış.' });
+      }
+      const { amount, cardHolderName, cardNumber, expireMonth, expireYear, cvc } = req.body;
+      if (!amount || amount < 10) return res.status(400).json({ success: false, error: 'Minimum 10 TL yükleyebilirsiniz' });
+      if (!cardNumber || !expireMonth || !expireYear || !cvc) {
+        return res.status(400).json({ success: false, error: 'Kart bilgileri eksik' });
+      }
+
+      const amt = Number(amount);
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { id: true, name: true, email: true, phone: true },
+      });
+      if (!user) return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı' });
+
+      const baseUrl = getCallbackBaseUrl().replace(/\/$/, '');
+      const callbackUrl = `${baseUrl}/api/wallet/topup/3ds/callback?uid=${req.user.id}&amt=${amt}`;
+
+      const result = await iyzicoService.initiate3DSPayment(
+        {
+          userId: req.user.id,
+          amount: amt,
+          user: { name: user.name, email: user.email, phone: user.phone },
+          card: { cardHolderName: cardHolderName || user.name, cardNumber, expireMonth, expireYear, cvc },
+        },
+        callbackUrl
+      );
+
+      // htmlContent base64 ile dön (XSS safe taşıma)
+      const encoded = Buffer.from(result.htmlContent, 'utf8').toString('base64');
+      res.json({ success: true, data: { htmlContent: encoded, conversationId: result.conversationId } });
+    } catch (error) {
+      console.error('topup3DSInit error:', error);
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('api') && (msg.includes('key') || msg.includes('geçersiz') || msg.includes('bulunamadı'))) {
+        return res.status(503).json({ success: false, error: 'iyzico API anahtarları hatalı.' });
+      }
+      res.status(500).json({ success: false, error: error.message || '3DS başlatılamadı' });
+    }
+  },
+
+  // POST /wallet/topup/3ds/callback - 3DS doğrulama sonrası iyzico çağırır
+  topup3DSCallback: async (req, res) => {
+    const walletUrl = getFrontendUrl().replace(/\/$/, '') + '/wallet';
+    const odemeUrl = getFrontendUrl().replace(/\/$/, '') + '/odeme';
+    const sendHtml = (success, amount, errorMsg) => {
+      res.set('Cache-Control', 'no-store');
+      res.type('html');
+      const title = success ? 'Ödeme Başarılı' : 'Ödeme Başarısız';
+      const msg = success
+        ? `${Number(amount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.`
+        : (errorMsg || 'Ödeme işlemi tamamlanamadı.');
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
+      return res.send(html);
+    };
+
+    try {
+      const paymentId = req.body?.paymentId || req.query?.paymentId;
+      const conversationData = req.body?.conversationData || req.query?.conversationData;
+      const conversationId = req.body?.conversationId || req.query?.conversationId;
+
+      if (!paymentId) return sendHtml(false, 0, 'Ödeme ID bulunamadı.');
+
+      const uidFromQuery = req.query.uid || req.body?.uid;
+      const amtFromQuery = parseFloat(req.query.amt || req.body?.amt || 0);
+
+      const result = await iyzicoService.complete3DSPayment(paymentId, conversationData, conversationId);
+      console.log('topup3DSCallback result:', JSON.stringify(result, null, 2));
+
+      const payOk = result?.status === 'success' && (
+        result.paymentStatus === 'SUCCESS' ||
+        result.fraudStatus === 1 ||
+        result.fraudStatus === '1'
+      );
+
+      if (!payOk) return sendHtml(false, 0, result?.errorMessage || 'Ödeme başarısız.');
+
+      const paidPrice = parseFloat(result.paidPrice || result.price || 0) || amtFromQuery;
+      const userId = uidFromQuery;
+
+      if (!userId || paidPrice <= 0) return sendHtml(false, 0, 'Geçersiz işlem sonucu.');
+
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: userId }, data: { balance: { increment: paidPrice } } }),
+        prisma.transaction.create({
+          data: {
+            userId,
+            amount: paidPrice,
+            type: 'TOPUP',
+            status: 'COMPLETED',
+            description: `Bakiye yükleme (3DS): ${paidPrice} TL`,
+          },
+        }),
+      ]);
+
+      return sendHtml(true, paidPrice);
+    } catch (error) {
+      console.error('topup3DSCallback error:', error);
       return sendHtml(false, 0, error.message || 'Beklenmeyen hata.');
     }
   },

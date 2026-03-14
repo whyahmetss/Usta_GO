@@ -76,6 +76,7 @@ export const API_ENDPOINTS = {
     ADMIN_TRANSACTIONS: '/wallet/admin/transactions',
     TOPUP: '/wallet/topup',
     TOPUP_INIT: '/wallet/topup/init',
+    TOPUP_3DS: '/wallet/topup/3ds',
     WITHDRAW: '/wallet/withdraw',
     ADD_COUPON: '/wallet/coupon',
     RELEASE_ESCROW: (jobId) => `/wallet/escrow-release/${jobId}`,
