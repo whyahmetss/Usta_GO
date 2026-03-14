@@ -61,7 +61,7 @@ function PageLoader() {
   )
 }
 
-function ProtectedRoute({ children, roleRequired = null }) {
+function ProtectedRoute({ children, roleRequired = null, allowAdmin = false }) {
   const { user, isLoading } = useAuth()
 
   if (isLoading) return <PageLoader />
@@ -72,6 +72,9 @@ function ProtectedRoute({ children, roleRequired = null }) {
   if (userRole === 'usta') userRole = 'professional'
 
   const requiredRole = roleRequired?.toLowerCase()
+
+  // Admin her yere girebilir (allowAdmin=true ise)
+  if (allowAdmin && userRole === 'admin') return children
 
   if (requiredRole && userRole !== requiredRole) {
     if (userRole === 'admin')        return <Navigate to="/admin" replace />
@@ -154,7 +157,7 @@ function AppRoutes() {
 
         {/* Destek */}
         <Route path="/support"              element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
-        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
+        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportChatPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

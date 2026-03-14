@@ -12,12 +12,29 @@ export const openSession = async (req, res) => {
     let session = await prisma.supportSession.findFirst({
       where: { userId, agentId, status: 'OPEN' },
     })
+    
+    const isNewSession = !session
+    
     if (!session) {
       session = await prisma.supportSession.create({
         data: { userId, agentId },
       })
+      
+      // Socket.IO: Notify agent about new session
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, role: true } })
+      const io = req.app.get('io')
+      if (io && agentId !== 'offline-support') {
+        io.to(agentId).emit('new_support_session', {
+          sessionId: session.id,
+          userId,
+          userName: user?.name || 'Kullanıcı',
+          userRole: user?.role || 'CUSTOMER',
+          openedAt: session.openedAt,
+        })
+      }
     }
-    res.json({ success: true, data: session })
+    
+    res.json({ success: true, data: session, isNew: isNewSession })
   } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }

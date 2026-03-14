@@ -158,13 +158,29 @@ export default function SupportDashboard() {
 
   useEffect(() => { load() }, [load])
 
-  // Real-time: new message → refresh conv list
+  // Real-time: new message + new session → refresh conv list
   useEffect(() => {
     if (!user?.id) return
     const socket = connectSocket(user.id)
-    const onReceive = () => { if (activeTab === 'chats') loadConversations() }
+    
+    const onReceive = () => { 
+      if (activeTab === 'chats') loadConversations() 
+    }
+    
+    const onNewSession = (data) => {
+      console.log('[Support] New session opened:', data)
+      if (activeTab === 'chats') loadConversations()
+      // Show toast notification
+      showToast(`Yeni destek talebi: ${data.userName || 'Kullanıcı'}`)
+    }
+    
     socket.on('receive_message', onReceive)
-    return () => socket.off('receive_message', onReceive)
+    socket.on('new_support_session', onNewSession)
+    
+    return () => {
+      socket.off('receive_message', onReceive)
+      socket.off('new_support_session', onNewSession)
+    }
   }, [user, activeTab, loadConversations])
 
   useEffect(() => {
