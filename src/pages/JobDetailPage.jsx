@@ -325,6 +325,8 @@ function JobDetailPage() {
   const [complaintReason, setComplaintReason] = useState('')
   const [complaintDetails, setComplaintDetails] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
 
   // Fetch job details from API
   useEffect(() => {
@@ -549,9 +551,6 @@ function JobDetailPage() {
       alert('İş tamamlanırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
     }
   }
-
-  const [rejectReason, setRejectReason] = useState('')
-  const [showRejectModal, setShowRejectModal] = useState(false)
 
   const handleApproveJob = async () => {
     if (!confirm('İşi onaylıyor musunuz? Onayladığınızda ödeme ustaya aktarılacaktır.')) return
