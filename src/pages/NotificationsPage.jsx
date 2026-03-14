@@ -33,69 +33,83 @@ function NotifIcon({ type }) {
 }
 
 function SwipeableNotif({ notif, onPress, onDelete, onArchive, onUnarchive, onPin, onUnpin, isPinned, isArchived, formatTime, NotifIcon }) {
-  const [swipe, setSwipe] = useState(0)
-  const startX = useRef(0)
+  const [offset, setOffset] = useState(0)
+  const startXRef = useRef(0)
+  const isDraggingRef = useRef(false)
+  const ACTION_W = 120
 
   const handleTouchStart = (e) => {
-    startX.current = e.touches[0].clientX - swipe
-  }
-  const handleTouchMove = (e) => {
-    const x = e.touches[0].clientX - startX.current
-    setSwipe(Math.max(0, Math.min(140, x)))
-  }
-  const handleTouchEnd = () => {
-    setSwipe(swipe > 70 ? 120 : 0)
+    startXRef.current = e.touches[0].clientX
+    isDraggingRef.current = true
   }
 
-  const actionW = 120
+  const handleTouchMove = (e) => {
+    if (!isDraggingRef.current) return
+    const dx = e.touches[0].clientX - startXRef.current
+    // Sadece sola kaydırma (negatif dx)
+    const clamped = Math.max(-ACTION_W, Math.min(0, dx + offset))
+    setOffset(clamped)
+  }
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false
+    setOffset(offset < -ACTION_W / 2 ? -ACTION_W : 0)
+  }
+
   return (
-    <div className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#1a1a1a] mb-2">
-      <div className="relative flex" style={{ overflow: 'hidden' }}>
-        {/* Actions behind (left - sag kaydirinca acilir) */}
-        <div className="absolute left-0 top-0 bottom-0 flex" style={{ width: actionW }}>
-          <button
-            onClick={() => { (isPinned ? onUnpin : onPin)(notif?.id); setSwipe(0) }}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 min-w-[40px] active:opacity-80 ${isPinned ? 'bg-primary-500 text-white' : 'bg-gray-600 text-white'}`}
-          >
-            {isPinned ? <PinOff size={18} /> : <Pin size={18} />}
-            <span className="text-[10px] font-medium">{isPinned ? 'Coz' : 'Sabitle'}</span>
-          </button>
-          <button
-            onClick={() => { (isArchived ? onUnarchive : onArchive)(notif?.id); setSwipe(0) }}
-            className="flex-1 flex flex-col items-center justify-center gap-1 bg-amber-500 text-white min-w-[40px] active:bg-amber-600"
-          >
-            {isArchived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
-            <span className="text-[10px] font-medium">{isArchived ? 'Cikar' : 'Arsivle'}</span>
-          </button>
-          <button
-            onClick={() => { onDelete(notif?.id); setSwipe(0) }}
-            className="flex-1 flex flex-col items-center justify-center gap-1 bg-rose-500 text-white min-w-[40px] active:bg-rose-600"
-          >
-            <Trash2 size={18} />
-            <span className="text-[10px] font-medium">Sil</span>
-          </button>
-        </div>
-        {/* Card - saga kaydirinca sol butonlar acilir */}
-        <div
-          onClick={() => onPress(notif)}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="flex-1 flex items-start gap-3 p-4 cursor-pointer active:bg-gray-200/50 dark:active:bg-white/5 transition-colors min-w-0 relative z-10 bg-white dark:bg-[#141414]"
-          style={{ transform: `translateX(${swipe}px)` }}
+    <div className="rounded-2xl overflow-hidden mb-2" style={{ position: 'relative' }}>
+      {/* Actions - sağda sabit duruyor */}
+      <div
+        className="absolute right-0 top-0 bottom-0 flex"
+        style={{ width: ACTION_W }}
+      >
+        <button
+          onClick={() => { (isPinned ? onUnpin : onPin)(notif?.id); setOffset(0) }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 min-w-[40px] active:opacity-80 ${isPinned ? 'bg-primary-500' : 'bg-slate-500'} text-white`}
         >
-          <NotifIcon type={notif?.icon || notif?.type || 'bell'} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-0.5">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{notif.title}</h3>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {isPinned && <Pin size={12} className="text-primary-500" fill="currentColor" />}
-                {!notif?.read && <span className="w-2 h-2 bg-primary-500 rounded-full" />}
-              </div>
+          {isPinned ? <PinOff size={18} /> : <Pin size={18} />}
+          <span className="text-[10px] font-medium">{isPinned ? 'Çöz' : 'Sabitle'}</span>
+        </button>
+        <button
+          onClick={() => { (isArchived ? onUnarchive : onArchive)(notif?.id); setOffset(0) }}
+          className="flex-1 flex flex-col items-center justify-center gap-1 bg-amber-500 text-white min-w-[40px] active:bg-amber-600"
+        >
+          {isArchived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
+          <span className="text-[10px] font-medium">{isArchived ? 'Çıkar' : 'Arşivle'}</span>
+        </button>
+        <button
+          onClick={() => { onDelete(notif?.id); setOffset(0) }}
+          className="flex-1 flex flex-col items-center justify-center gap-1 bg-rose-500 text-white min-w-[40px] active:bg-rose-600"
+        >
+          <Trash2 size={18} />
+          <span className="text-[10px] font-medium">Sil</span>
+        </button>
+      </div>
+
+      {/* Kart - sola kayar, altındaki butonlar görünür */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={() => { if (offset === 0) onPress(notif) }}
+        className="flex items-start gap-3 p-4 cursor-pointer bg-white dark:bg-[#141414] relative z-10"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: isDraggingRef.current ? 'none' : 'transform 0.2s ease',
+          borderRadius: '1rem',
+        }}
+      >
+        <NotifIcon type={notif?.icon || notif?.type || 'bell'} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-0.5">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{notif.title}</h3>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isPinned && <Pin size={12} className="text-primary-500" fill="currentColor" />}
+              {!notif?.read && <span className="w-2 h-2 bg-primary-500 rounded-full" />}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{notif?.message || ''}</p>
-            <p className="text-[10px] text-gray-400">{formatTime(notif?.time)}</p>
           </div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{notif?.message || ''}</p>
+          <p className="text-[10px] text-gray-400">{formatTime(notif?.time)}</p>
         </div>
       </div>
     </div>

@@ -112,11 +112,15 @@ export function AuthProvider({ children }) {
         // Collapse message notifications: single unread notif per sender
         setNotifications(prev => {
           const senderId = message?.senderId || 'unknown'
+          const senderRole = (message?.sender?.role || '').toUpperCase()
+          const isSupport = senderRole === 'SUPPORT' || senderRole === 'ADMIN'
+          // Support/admin messages get 'support_message' type so they don't count in messages badge
+          const notifType = isSupport ? 'support_message' : 'message'
           const id = `msg_${senderId}`
           const baseNotif = {
             id,
-            type: 'message',
-            title: 'Yeni Mesaj',
+            type: notifType,
+            title: isSupport ? 'Destek Mesajı' : 'Yeni Mesaj',
             message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
             icon: 'message',
             read: false,

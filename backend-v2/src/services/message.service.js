@@ -16,8 +16,8 @@ export const sendMessage = async (senderId, receiverId, content) => {
       receiverId,
     },
     include: {
-      sender: { select: { id: true, name: true, profileImage: true } },
-      receiver: { select: { id: true, name: true, profileImage: true } },
+      sender: { select: { id: true, name: true, profileImage: true, role: true } },
+      receiver: { select: { id: true, name: true, profileImage: true, role: true } },
     },
   });
 
