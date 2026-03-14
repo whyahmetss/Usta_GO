@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -160,41 +160,39 @@ export default function SupportDashboard() {
 
   useEffect(() => { load() }, [load])
 
-  // Real-time: HER zaman dinle (hangi sekmede olursa olsun)
+  // Stable ref to loadConversations so socket listeners don't rebind on every render
+  const loadConvRef = useRef(loadConversations)
+  useEffect(() => { loadConvRef.current = loadConversations }, [loadConversations])
+
+  const activeTabRef = useRef(activeTab)
+  useEffect(() => { activeTabRef.current = activeTab }, [activeTab])
+
+  // Real-time: mount once, stay stable
   useEffect(() => {
     if (!user?.id) return
     const socket = connectSocket(user.id)
     joinSupportRoom()
-    
-    const onReceive = (msg) => {
-      loadConversations()
-      if (activeTab !== 'chats') {
-        showToast('Yeni mesaj geldi!')
-      }
-    }
 
-    const onSupportMsg = () => {
-      loadConversations()
-      if (activeTab !== 'chats') {
+    const onSupportMsg = (msg) => {
+      loadConvRef.current()
+      if (activeTabRef.current !== 'chats') {
         showToast('Yeni destek mesajı!')
       }
     }
-    
+
     const onNewSession = (data) => {
-      loadConversations()
+      loadConvRef.current()
       showToast(`Yeni destek talebi: ${data?.userName || 'Kullanıcı'}`)
     }
-    
-    socket.on('receive_message', onReceive)
+
     socket.on('support_new_message', onSupportMsg)
     socket.on('new_support_session', onNewSession)
-    
+
     return () => {
-      socket.off('receive_message', onReceive)
       socket.off('support_new_message', onSupportMsg)
       socket.off('new_support_session', onNewSession)
     }
-  }, [user, activeTab, loadConversations])
+  }, [user?.id])
 
   // Her tab geçişinde ilgili veriyi yeniden yükle
   useEffect(() => {
@@ -360,6 +358,10 @@ export default function SupportDashboard() {
               </button>
               <button
                 onClick={async () => {
+                  if (isOnline) {
+                    showToast('Çıkış yapmadan önce Çevrimdışı olun!', 'error')
+                    return
+                  }
                   if (window.confirm('Hesaptan çıkış yapmak istediğinize emin misiniz?')) {
                     await logout()
                     navigate('/', { replace: true })

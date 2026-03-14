@@ -16,6 +16,8 @@ export const sendMessage = async (req, res, next) => {
     const message = await messageService.sendMessage(req.user.id, receiverId, content);
     // Notify recipient in real-time
     io.to(`user_${receiverId}`).emit("receive_message", message);
+    // Notify support_room so all agents/admins see incoming messages in real-time
+    io.to("support_room").emit("support_new_message", message);
     successResponse(res, message, "Message sent successfully", 201);
   } catch (error) {
     next(error);
