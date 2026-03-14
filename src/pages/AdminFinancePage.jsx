@@ -150,17 +150,21 @@ export default function AdminFinancePage() {
           dailyData.push({ label, volume: Math.round(vol), topup: Math.round(tp) })
         }
 
-        // Son işlemler — JOB_PAYMENT: iş oluşturma; WITHDRAWAL: banka çekimi / paket vb.
+        // Son işlemler — JOB_PAYMENT: iş oluşturma; WITHDRAWAL: sadece usta banka çekimi
+        // Müşterinin WITHDRAWAL kayıtları (eski hata) → JOB_PAYMENT olarak göster
         const recentTransactions = allTransactions
           .slice(0, 100)
           .map(t => {
             const raw = Number(t.amount) || 0
-            const isDebit = t.type === 'WITHDRAWAL' || t.type === 'JOB_PAYMENT'
+            const userRole = t.user?.role || ''
+            const effectiveType =
+              t.type === 'WITHDRAWAL' && userRole === 'CUSTOMER' ? 'JOB_PAYMENT' : t.type
+            const isDebit = effectiveType === 'WITHDRAWAL' || effectiveType === 'JOB_PAYMENT'
             const amount = isDebit ? -Math.abs(raw) : raw
             return {
               id: t.id,
               amount,
-              type: t.type,
+              type: effectiveType,
               status: t.status,
               description: t.description || '—',
               userName: t.user?.name || '—',
