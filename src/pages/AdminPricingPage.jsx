@@ -37,7 +37,7 @@ function AdminPricingPage() {
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState(null)
-  const [form, setForm] = useState({ label: '', basePrice: '' })
+  const [form, setForm] = useState({ label: '', basePrice: '', homeCategory: '' })
   const generatedKey = toKey(form.label || '')
 
   const [packages, setPackages]         = useState([])
@@ -129,21 +129,20 @@ function AdminPricingPage() {
     setHomeServices(prev => ({ ...prev, [id]: { active: !prev[id]?.active } }))
   }
 
-  useEffect(() => { loadServices() }, [])
+  useEffect(() => { loadServices(); loadHomeServices() }, [])
   useEffect(() => { if (activeTab === 'packages') loadPackages() }, [activeTab])
   useEffect(() => { if (activeTab === 'cancellation') loadCancelRates() }, [activeTab])
-  useEffect(() => { if (activeTab === 'homeservices') loadHomeServices() }, [activeTab])
 
-  const openCreate = () => {
+  const openCreate = (catId = '') => {
     setEditingId(null)
-    setForm({ label: '', basePrice: '' })
+    setForm({ label: '', basePrice: '', homeCategory: catId })
     setError(null)
     setShowForm(true)
   }
 
   const openEdit = (svc) => {
     setEditingId(svc.id)
-    setForm({ label: svc.label, basePrice: String(svc.basePrice) })
+    setForm({ label: svc.label, basePrice: String(svc.basePrice), homeCategory: svc.homeCategory || '' })
     setError(null)
     setShowForm(true)
   }
@@ -165,15 +164,16 @@ function AdminPricingPage() {
     setSaving(true)
     setError(null)
     try {
+      const hc = form.homeCategory || null
       if (editingId) {
         await fetchAPI(API_ENDPOINTS.SERVICES.UPDATE(editingId), {
           method: 'PATCH',
-          body: { label: form.label.trim(), basePrice: price },
+          body: { label: form.label.trim(), basePrice: price, homeCategory: hc },
         })
       } else {
         await fetchAPI(API_ENDPOINTS.SERVICES.CREATE, {
           method: 'POST',
-          body: { category: generatedKey, label: form.label.trim(), basePrice: price },
+          body: { category: generatedKey, label: form.label.trim(), basePrice: price, homeCategory: hc },
         })
       }
       setShowForm(false)
@@ -267,91 +267,10 @@ function AdminPricingPage() {
           >
             İptal Oranları
           </button>
-          <button
-            onClick={() => setActiveTab('homeservices')}
-            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${activeTab === 'homeservices' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'}`}
-          >
-            Ana Sayfa
-          </button>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
-        {/* ── HOME SERVICES TAB ── */}
-        {activeTab === 'homeservices' && (
-          <>
-            {homeError && (
-              <Card className="!bg-rose-50 !border-rose-200">
-                <p className="text-xs text-rose-600 font-medium">{homeError}</p>
-              </Card>
-            )}
-
-            {homeLoading ? (
-              <div className="flex flex-col items-center py-16">
-                <Loader size={28} className="text-primary-500 animate-spin mb-3" />
-                <p className="text-xs text-gray-500">Yükleniyor...</p>
-              </div>
-            ) : homeServices ? (
-              <>
-                <Card className="!bg-blue-50 !border-blue-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <LayoutGrid size={14} className="text-blue-500" />
-                    <p className="text-[11px] font-semibold text-blue-700">Ana Sayfa Hizmet Kartları</p>
-                  </div>
-                  <p className="text-[11px] text-blue-600 leading-relaxed">
-                    Aktif hizmetler müşteri ana sayfasında tıklanabilir görünür. Pasif olanlar &quot;Yakında&quot; etiketiyle soluk gösterilir.
-                  </p>
-                </Card>
-
-                <div className="space-y-3">
-                  {HOME_SVC_META.map(({ id, name, Icon, bgColor, iconColor }) => {
-                    const isActive = homeServices[id]?.active ?? false
-                    return (
-                      <Card key={id} className={!isActive ? 'opacity-60' : ''}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? bgColor : 'bg-gray-100'}`}>
-                            <Icon size={20} className={isActive ? iconColor : 'text-gray-400'} strokeWidth={1.8} />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-900">{name}</p>
-                            <p className="text-[11px] text-gray-400">{isActive ? 'Aktif — müşteri kullanabilir' : 'Yakında — pasif'}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {!isActive && (
-                              <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
-                                <Construction size={11} /> Yakında
-                              </span>
-                            )}
-                            <button
-                              onClick={() => toggleHomeSvc(id)}
-                              className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                                isActive ? 'bg-emerald-500' : 'bg-gray-200'
-                              }`}
-                            >
-                              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
-                                isActive ? 'left-[26px]' : 'left-0.5'
-                              }`} />
-                            </button>
-                          </div>
-                        </div>
-                      </Card>
-                    )
-                  })}
-                </div>
-
-                <button
-                  onClick={saveHomeServices}
-                  disabled={homeSaving}
-                  className="w-full py-2.5 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {homeSaving ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
-                  {homeSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                </button>
-              </>
-            ) : null}
-          </>
-        )}
-
         {/* ── PACKAGES TAB ── */}
         {activeTab === 'packages' && (
           <>
@@ -584,6 +503,20 @@ function AdminPricingPage() {
                       disabled={saving}
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-500 mb-1">Ana Sayfa Kategorisi</label>
+                    <select
+                      value={form.homeCategory}
+                      onChange={(e) => setForm(prev => ({ ...prev, homeCategory: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none"
+                      disabled={saving}
+                    >
+                      <option value="">Atanmamış (Genel)</option>
+                      {HOME_SVC_META.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-5">
                   <button
@@ -604,70 +537,137 @@ function AdminPricingPage() {
               </Card>
             )}
 
-            {/* Services list */}
-            {loading ? (
+            {/* Category blocks + merged home toggle */}
+            {loading || homeLoading ? (
               <div className="flex flex-col items-center py-16">
                 <Loader size={28} className="text-primary-500 animate-spin mb-3" />
-                <p className="text-xs text-gray-500">Hizmetler yükleniyor...</p>
+                <p className="text-xs text-gray-500">Yükleniyor...</p>
               </div>
-            ) : services.length === 0 ? (
-              <EmptyState
-                icon={Coins}
-                title="Henüz hizmet eklenmemiş"
-                description="Yeni Hizmet butonuyla hizmetlerinizi ekleyin."
-              />
             ) : (
-              <div className="space-y-3">
-                {services.map(svc => (
-                  <Card key={svc.id} className={!svc.isActive ? 'opacity-50' : ''}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
-                        <Wrench size={18} className="text-gray-500" />
+              <div className="space-y-4">
+                {HOME_SVC_META.map(({ id, name, Icon, bgColor, iconColor }) => {
+                  const isActive = homeServices ? (homeServices[id]?.active ?? false) : false
+                  const catSvcs = services.filter(s => s.homeCategory === id)
+                  return (
+                    <Card key={id}>
+                      {/* Category header */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? bgColor : 'bg-gray-100'}`}>
+                          <Icon size={20} className={isActive ? iconColor : 'text-gray-400'} strokeWidth={1.8} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-gray-900">{name}</p>
+                          <p className="text-[11px] text-gray-400">{catSvcs.length} fiyat tanımı</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {!isActive && (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                              <Construction size={10} /> Yakında
+                            </span>
+                          )}
+                          <button
+                            onClick={() => toggleHomeSvc(id)}
+                            className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${isActive ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                          >
+                            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${isActive ? 'left-[22px]' : 'left-0.5'}`} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{svc.label}</p>
-                        <p className="text-[11px] text-gray-400 font-mono">{svc.category}</p>
-                      </div>
-                      <div className="text-right shrink-0 mr-1">
-                        <p className="text-base font-bold text-primary-600">{svc.basePrice} TL</p>
-                        <p className="text-[10px] text-gray-400">temel fiyat</p>
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <button
-                          onClick={() => handleToggle(svc)}
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
-                            svc.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
-                          }`}
-                        >
-                          {svc.isActive ? <Check size={14} /> : <X size={14} />}
-                        </button>
-                        <button
-                          onClick={() => openEdit(svc)}
-                          className="w-8 h-8 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center"
-                        >
-                          <Pencil size={13} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(svc.id)}
-                          className="w-8 h-8 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+
+                      {/* Services under this category */}
+                      {catSvcs.length > 0 && (
+                        <div className="space-y-2 mb-3 border-t border-gray-100 pt-3">
+                          {catSvcs.map(svc => (
+                            <div key={svc.id} className={`flex items-center gap-2 px-2 py-2 rounded-xl bg-gray-50 ${!svc.isActive ? 'opacity-50' : ''}`}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-semibold text-gray-800 truncate">{svc.label}</p>
+                                <p className="text-[10px] text-gray-400 font-mono">{svc.category}</p>
+                              </div>
+                              <p className="text-sm font-bold text-primary-600 flex-shrink-0">{svc.basePrice.toLocaleString('tr-TR')} TL</p>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <button onClick={() => handleToggle(svc)}
+                                  className={`w-7 h-7 rounded-lg flex items-center justify-center ${ svc.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-200 text-gray-400'}`}>
+                                  {svc.isActive ? <Check size={12} /> : <X size={12} />}
+                                </button>
+                                <button onClick={() => openEdit(svc)}
+                                  className="w-7 h-7 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
+                                  <Pencil size={11} />
+                                </button>
+                                <button onClick={() => handleDelete(svc.id)}
+                                  className="w-7 h-7 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center">
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => openCreate(id)}
+                        className="w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-gray-200 rounded-xl text-[12px] font-semibold text-gray-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50 transition"
+                      >
+                        <Plus size={13} /> Fiyat Ekle
+                      </button>
+                    </Card>
+                  )
+                })}
+
+                {/* Unassigned services */}
+                {services.filter(s => !s.homeCategory).length > 0 && (
+                  <Card>
+                    <div className="flex items-center gap-2 mb-3">
+                      <LayoutGrid size={16} className="text-gray-400" />
+                      <p className="text-sm font-bold text-gray-700">Atanmamış Hizmetler</p>
+                    </div>
+                    <div className="space-y-2">
+                      {services.filter(s => !s.homeCategory).map(svc => (
+                        <div key={svc.id} className={`flex items-center gap-2 px-2 py-2 rounded-xl bg-gray-50 ${!svc.isActive ? 'opacity-50' : ''}`}>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-gray-800 truncate">{svc.label}</p>
+                            <p className="text-[10px] text-gray-400 font-mono">{svc.category}</p>
+                          </div>
+                          <p className="text-sm font-bold text-primary-600 flex-shrink-0">{svc.basePrice.toLocaleString('tr-TR')} TL</p>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <button onClick={() => handleToggle(svc)}
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center ${ svc.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {svc.isActive ? <Check size={12} /> : <X size={12} />}
+                            </button>
+                            <button onClick={() => openEdit(svc)}
+                              className="w-7 h-7 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
+                              <Pencil size={11} />
+                            </button>
+                            <button onClick={() => handleDelete(svc.id)}
+                              className="w-7 h-7 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center">
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </Card>
-                ))}
+                )}
+
+                {homeServices && (
+                  <button
+                    onClick={saveHomeServices}
+                    disabled={homeSaving}
+                    className="w-full py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {homeSaving ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
+                    {homeSaving ? 'Kaydediliyor...' : 'Ana Sayfa Durumlarını Kaydet'}
+                  </button>
+                )}
+
+                <Card className="!bg-primary-50 !border-primary-100">
+                  <p className="text-[11px] text-primary-700 font-medium leading-relaxed">
+                    <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI,
+                    <strong> buradaki aktif hizmetleri</strong> baz alarak en uygun olanı seçer ve fiyat tahmini üretir.
+                    Toggle ile ana sayfada görünürlüğü değiştirirsiniz.
+                  </p>
+                </Card>
               </div>
             )}
-
-            {/* Info note */}
-            <Card className="!bg-primary-50 !border-primary-100">
-              <p className="text-[11px] text-primary-700 font-medium leading-relaxed">
-                <strong>Nasıl çalışır?</strong> Müşteri sorununu tanımladığında Gemini AI,
-                <strong> buradaki aktif hizmetleri</strong> baz alarak en uygun olanı seçer ve
-                fiyat tahmini üretir.
-              </p>
-            </Card>
           </>
         )}
       </div>

@@ -10,11 +10,11 @@ export const getServices = async (req, res, next) => {
 
 export const createService = async (req, res, next) => {
   try {
-    const { category, label, basePrice } = req.body
+    const { category, label, basePrice, homeCategory } = req.body
     if (!category || basePrice === undefined) {
       return res.status(400).json({ error: 'category ve basePrice zorunlu' })
     }
-    const service = await serviceService.createService({ category, label, basePrice })
+    const service = await serviceService.createService({ category, label, basePrice, homeCategory })
     successResponse(res, service, 'Servis oluşturuldu', 201)
   } catch (err) {
     if (err.code === 'P2002') {

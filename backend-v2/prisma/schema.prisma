@@ -346,16 +346,18 @@ model AppConfig {
 
 // AI Fiyat Servisleri — Admin CRUD, AI sınıflandırma için kullanılır
 model Service {
-  id        String   @id @default(cuid())
-  category  String   @unique  // ELECTRICAL_SOCKET, PLUMBING_LEAK, vb.
-  label     String            // Türkçe etiket: "Priz Tamiri"
-  basePrice Float             // TL cinsinden temel fiyat
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  category     String   @unique  // ELECTRICAL_SOCKET, PLUMBING_LEAK, vb.
+  label        String            // Türkçe etiket: "Priz Tamiri"
+  basePrice    Float             // TL cinsinden temel fiyat
+  homeCategory String?           // electric | plumbing | renovation | cleaning | painting | carpentry
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([category])
   @@index([isActive])
+  @@index([homeCategory])
 }
 
 // Bakım Paketi Konfigürasyonu — Admin tarafından yönetilir

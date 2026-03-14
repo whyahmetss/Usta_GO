@@ -26,8 +26,10 @@ export const getServicesByCategories = async (categories) => {
   })
 }
 
+const VALID_HOME_CATS = ['electric','plumbing','renovation','cleaning','painting','carpentry']
+
 /** Yeni servis oluştur — whitelist yok, admin istediği hizmeti ekleyebilir */
-export const createService = async ({ category, label, basePrice, keywords }) => {
+export const createService = async ({ category, label, basePrice, homeCategory }) => {
   if (!isValidCategoryKey(category)) {
     throw new Error('Kategori kodu geçersiz (sadece büyük harf, rakam ve alt çizgi)')
   }
@@ -36,18 +38,20 @@ export const createService = async ({ category, label, basePrice, keywords }) =>
       category,
       label: label || category,
       basePrice: Number(basePrice),
+      homeCategory: VALID_HOME_CATS.includes(homeCategory) ? homeCategory : null,
     },
   })
 }
 
 /** Servis güncelle */
-export const updateService = async (id, { label, basePrice, isActive }) => {
+export const updateService = async (id, { label, basePrice, isActive, homeCategory }) => {
   return prisma.service.update({
     where: { id },
     data: {
-      ...(label     !== undefined && { label }),
-      ...(basePrice !== undefined && { basePrice: Number(basePrice) }),
-      ...(isActive  !== undefined && { isActive }),
+      ...(label        !== undefined && { label }),
+      ...(basePrice    !== undefined && { basePrice: Number(basePrice) }),
+      ...(isActive     !== undefined && { isActive }),
+      ...(homeCategory !== undefined && { homeCategory: VALID_HOME_CATS.includes(homeCategory) ? homeCategory : null }),
     },
   })
 }
