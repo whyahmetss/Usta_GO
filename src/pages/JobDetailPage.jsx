@@ -16,27 +16,39 @@ import CarConfirmButton from '../components/CarConfirmButton'
 const STORAGE_KEY = (jobId) => `usta_sharing_${jobId}`
 
 // Usta location sharer component
-function UstaLocationSharer({ jobId, userId }) {
+function UstaLocationSharer({ jobId, userId, job }) {
   const [sharing, setSharing] = useState(false)
   const [gpsError, setGpsError] = useState(null)
   const watchIdRef = useRef(null)
 
+  const joinRoom = useCallback(() => {
+    const socket = userId ? connectSocket(userId) : getSocket()
+    if (socket) {
+      if (socket.connected) {
+        socket.emit('join_job_room', jobId)
+      } else {
+        socket.once('connect', () => socket.emit('join_job_room', jobId))
+      }
+    }
+  }, [jobId, userId])
+
   const startGps = useCallback(() => {
     if (!navigator.geolocation) return
     setGpsError(null)
-    // connectSocket: socket henüz yoksa oluştur (bağlanmamış olsa bile)
-    const socket = userId ? connectSocket(userId) : getSocket()
-    if (socket) socket.emit('join_job_room', jobId)
-
+    joinRoom()
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current)
     }
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude: lat, longitude: lng, heading } = pos.coords
-        // getSocket()?.emit → socket.io buffer'ı kullanır, emitEvent gibi sessizce düşürmez
         const sock = getSocket()
-        if (sock) sock.emit('usta_location_update', { jobId, lat, lng, heading: heading || 0 })
+        if (sock?.connected) {
+          sock.emit('usta_location_update', { jobId, lat, lng, heading: heading || 0 })
+        } else {
+          // Socket kopuksa yeniden bağlan ve gönder
+          joinRoom()
+        }
       },
       (err) => {
         console.warn('GPS error:', err.code, err.message)
@@ -45,17 +57,17 @@ function UstaLocationSharer({ jobId, userId }) {
       },
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
     )
-  }, [jobId, userId])
+  }, [jobId, userId, joinRoom])
 
   const startSharing = useCallback(() => {
     setSharing(true)
-    sessionStorage.setItem(STORAGE_KEY(jobId), 'true')
+    localStorage.setItem(STORAGE_KEY(jobId), 'true')
     startGps()
   }, [jobId, startGps])
 
   const stopSharing = useCallback(() => {
     setSharing(false)
-    sessionStorage.removeItem(STORAGE_KEY(jobId))
+    localStorage.removeItem(STORAGE_KEY(jobId))
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current)
       watchIdRef.current = null
@@ -64,13 +76,27 @@ function UstaLocationSharer({ jobId, userId }) {
     if (socket) socket.emit('leave_job_room', jobId)
   }, [jobId])
 
-  // F5 sonrası otomatik başlat
+  const handleNavigate = () => {
+    const loc = job?.location
+    let destination
+    if (loc && typeof loc === 'object' && loc.lat && loc.lng) {
+      destination = `${loc.lat},${loc.lng}`
+    } else {
+      destination = encodeURIComponent(job?.address || (typeof loc === 'string' ? loc : '') || '')
+    }
+    if (destination) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank')
+    }
+    // Konum paylaşımını da başlat
+    if (!sharing) startSharing()
+  }
+
+  // F5/yenileme sonrası otomatik devam et (localStorage daha kalıcı)
   useEffect(() => {
-    if (sessionStorage.getItem(STORAGE_KEY(jobId)) === 'true') {
+    if (localStorage.getItem(STORAGE_KEY(jobId)) === 'true') {
       setSharing(true)
       startGps()
     }
-    // Sadece unmount'ta GPS'i durdur (storage'ı silme — F5 restore için)
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
@@ -82,26 +108,37 @@ function UstaLocationSharer({ jobId, userId }) {
 
   return (
     <div className="space-y-2">
+      {/* Yola çık: Maps açar + konum paylaşımını başlatır */}
+      <button
+        onClick={handleNavigate}
+        className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-primary-600 active:scale-[0.98] transition"
+      >
+        <Navigation size={20} />
+        Yola Çık (Google Maps)
+      </button>
+
+      {/* Ayrıca sadece konum paylaşım toggle */}
       <button
         onClick={sharing ? stopSharing : startSharing}
-        className={`w-full py-4 rounded-2xl font-semibold text-base flex items-center justify-center gap-3 transition active:scale-[0.98] ${
+        className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 transition active:scale-[0.98] border ${
           sharing
-            ? 'bg-rose-500 text-white'
-            : 'bg-accent-500 text-white hover:bg-accent-600'
+            ? 'bg-rose-50 border-rose-200 text-rose-600'
+            : 'bg-white border-gray-200 text-gray-600'
         }`}
       >
         {sharing ? (
           <>
-            <span className="w-3 h-3 bg-white rounded-full animate-ping" />
+            <span className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping" />
             Konum Paylaşımını Durdur
           </>
         ) : (
           <>
-            <Navigation2 size={20} />
-            Konumumu Paylaş (Müşteri Görsün)
+            <Navigation2 size={16} />
+            Sadece Konum Paylaş
           </>
         )}
       </button>
+
       {gpsError && (
         <p className="text-xs text-red-600 text-center px-2">{gpsError}</p>
       )}
@@ -708,7 +745,7 @@ function JobDetailPage() {
 
         {/* Location Share Button - for usta when job is accepted or in_progress */}
         {!isCustomer && (job.status === 'accepted' || job.status === 'in_progress') && (
-          <UstaLocationSharer jobId={job.id} userId={user?.id} />
+          <UstaLocationSharer jobId={job.id} userId={user?.id} job={job} />
         )}
 
         {/* Customer uploaded photos */}
@@ -911,26 +948,17 @@ function JobDetailPage() {
             })()}
 
             {job.status === 'accepted' && (
-              <>
-                <button
-                  onClick={handleStartNavigation}
-                  className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-primary-600 active:scale-[0.98] transition"
-                >
-                  <Navigation size={20} />
-                  Yola Çık (Google Maps)
-                </button>
-                <button
-                  onClick={handleStartJob}
-                  className={`w-full py-4 rounded-2xl font-semibold text-base transition active:scale-[0.98] ${
-                    beforePhotos.length === 0
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-amber-500 text-white hover:bg-amber-600'
-                  }`}
-                  disabled={beforePhotos.length === 0}
-                >
-                  İşe Başla ({beforePhotos.length} fotoğraf)
-                </button>
-              </>
+              <button
+                onClick={handleStartJob}
+                className={`w-full py-4 rounded-2xl font-semibold text-base transition active:scale-[0.98] ${
+                  beforePhotos.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-amber-500 text-white hover:bg-amber-600'
+                }`}
+                disabled={beforePhotos.length === 0}
+              >
+                İşe Başla ({beforePhotos.length} fotoğraf)
+              </button>
             )}
 
             {job.status === 'in_progress' && (
