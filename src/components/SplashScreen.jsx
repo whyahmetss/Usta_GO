@@ -21,9 +21,8 @@ export default function SplashScreen({ onDone }) {
 
       <div className={`flex flex-col items-center transition-all duration-500 ${phase >= 0 ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
 
-        {/* İkon — dönen daire YOK, sadece çekiç */}
-        <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
-          <div className="absolute inset-0 bg-white/10 backdrop-blur rounded-3xl" />
+        {/* Çekiç ikonu — kutu yok */}
+        <div className="relative w-28 h-28 mb-6 flex items-center justify-center">
           <HammerIcon active={phase >= 1} />
         </div>
 
@@ -57,82 +56,120 @@ function HammerIcon({ active }) {
       <span className="sp sp3" />
       <span className="glow" />
 
-      <svg className="hammer" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Sap */}
-        <rect x="28" y="28" width="6" height="30" rx="2.5" fill="#A0622E" />
-        <rect x="29.5" y="29" width="2.5" height="28" rx="1.2" fill="#C08040" opacity="0.5" />
+      <svg className="hammer" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#B8783D" />
+            <stop offset="30%" stopColor="#D4A05A" />
+            <stop offset="55%" stopColor="#E8C080" />
+            <stop offset="75%" stopColor="#D4A05A" />
+            <stop offset="100%" stopColor="#9A6830" />
+          </linearGradient>
+          <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#E0E0E0" />
+            <stop offset="25%" stopColor="#C8C8C8" />
+            <stop offset="50%" stopColor="#A8A8A8" />
+            <stop offset="75%" stopColor="#B8B8B8" />
+            <stop offset="100%" stopColor="#909090" />
+          </linearGradient>
+          <linearGradient id="metalFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#D0D0D0" />
+            <stop offset="50%" stopColor="#A0A0A0" />
+            <stop offset="100%" stopColor="#888888" />
+          </linearGradient>
+          <linearGradient id="neck" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#B0B0B0" />
+            <stop offset="50%" stopColor="#D0D0D0" />
+            <stop offset="100%" stopColor="#999" />
+          </linearGradient>
+        </defs>
 
-        {/* Çekiç başı gövde */}
-        <rect x="14" y="10" width="34" height="20" rx="3" fill="#4A4A4A" />
+        <g transform="rotate(-45, 50, 50)">
+          {/* Sap */}
+          <rect x="44" y="38" width="12" height="58" rx="5.5" fill="url(#handle)" />
+          <rect x="47" y="40" width="3" height="54" rx="1.5" fill="#E8C888" opacity="0.35" />
+          <rect x="44.5" y="92" width="11" height="4" rx="2" fill="#8B6530" />
 
-        {/* Üst yüzey parlaklık */}
-        <rect x="14" y="10" width="34" height="11" rx="3" fill="#5C5C5C" />
-        <rect x="16" y="12" width="30" height="3" rx="1.5" fill="#727272" opacity="0.45" />
+          {/* Sap-baş metal bağlantı */}
+          <rect x="43" y="34" width="14" height="8" rx="2" fill="url(#neck)" />
+          <rect x="44" y="35" width="12" height="1.5" rx="0.7" fill="#E8E8E8" opacity="0.4" />
 
-        {/* Vurma yüzeyi (sağ) */}
-        <rect x="44" y="9" width="8" height="22" rx="2" fill="#3D3D3D" />
-        <rect x="49" y="11" width="2" height="18" rx="1" fill="#555" opacity="0.35" />
+          {/* Çekiç başı ana gövde */}
+          <rect x="22" y="12" width="56" height="24" rx="4" fill="url(#metal)" />
 
-        {/* Çengel (sol) */}
-        <path d="M16 12 L8 4 Q6 2 7 5 L11 11 Z" fill="#4A4A4A" />
-        <path d="M16 28 L8 36 Q6 38 7 35 L11 29 Z" fill="#4A4A4A" />
+          {/* Üst kenar parlaklık */}
+          <rect x="24" y="13" width="52" height="8" rx="3" fill="#D8D8D8" opacity="0.5" />
+          <rect x="28" y="15" width="44" height="2.5" rx="1.2" fill="#F0F0F0" opacity="0.3" />
 
-        {/* Sap-baş bağlantısı */}
-        <rect x="26" y="26" width="10" height="6" rx="2" fill="#7B4A1E" />
+          {/* Vurma yüzeyi (sağ) - düz kesim */}
+          <rect x="72" y="10" width="10" height="28" rx="2.5" fill="url(#metalFace)" />
+          <rect x="78" y="13" width="2.5" height="22" rx="1.2" fill="#C8C8C8" opacity="0.4" />
+          <rect x="72" y="10" width="2" height="28" rx="1" fill="#808080" opacity="0.3" />
+
+          {/* Çengel (sol) - kavisli pençe */}
+          <path d="M26 14 C22 10, 16 4, 12 2 C10 1, 9 2, 10 4 C11 6, 14 10, 18 14 Z" fill="url(#metal)" />
+          <path d="M26 34 C22 38, 16 44, 12 46 C10 47, 9 46, 10 44 C11 42, 14 38, 18 34 Z" fill="url(#metal)" />
+          {/* Çengel iç yarık */}
+          <path d="M16 6 C18 10, 20 14, 24 18" stroke="#808080" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
+          <path d="M16 42 C18 38, 20 34, 24 30" stroke="#808080" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
+
+          {/* Alt kenar gölge */}
+          <rect x="22" y="32" width="56" height="3" rx="1.5" fill="#808080" opacity="0.3" />
+        </g>
       </svg>
 
       <style>{`
         .hammer-root {
           position: relative;
-          width: 56px; height: 56px;
+          width: 80px; height: 80px;
           display: flex; align-items: center; justify-content: center;
         }
         .hammer {
-          width: 56px; height: 56px;
-          transform-origin: 48% 80%;
-          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+          width: 80px; height: 80px;
+          transform-origin: 50% 72%;
+          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
         }
 
         @keyframes strike {
           0%   { transform: rotate(0deg); }
-          18%  { transform: rotate(-22deg); }
-          46%  { transform: rotate(18deg); }
-          54%  { transform: rotate(20deg); }
-          68%  { transform: rotate(-4deg); }
-          82%  { transform: rotate(1deg); }
+          18%  { transform: rotate(-20deg); }
+          46%  { transform: rotate(16deg); }
+          54%  { transform: rotate(18deg); }
+          68%  { transform: rotate(-3deg); }
+          84%  { transform: rotate(1deg); }
           100% { transform: rotate(0deg); }
         }
         .is-active .hammer {
-          animation: strike 0.75s cubic-bezier(0.22, 0.68, 0.32, 1.15) infinite;
+          animation: strike 0.8s cubic-bezier(0.22, 0.68, 0.32, 1.12) infinite;
         }
 
         .glow {
-          position: absolute; top: 8px; right: 2px;
-          width: 14px; height: 14px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,210,80,0.95) 0%, transparent 70%);
+          position: absolute; top: 2px; right: 8px;
+          width: 16px; height: 16px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,220,100,0.9) 0%, transparent 70%);
           transform: scale(0); opacity: 0; pointer-events: none;
         }
         @keyframes flash {
           0%,42% { transform: scale(0); opacity: 0; }
-          50%    { transform: scale(2.2); opacity: 1; }
+          50%    { transform: scale(2); opacity: 1; }
           62%    { transform: scale(3); opacity: 0.5; }
-          74%    { transform: scale(3.5); opacity: 0; }
+          76%    { transform: scale(3.5); opacity: 0; }
           100%   { transform: scale(0); opacity: 0; }
         }
-        .is-active .glow { animation: flash 0.75s ease-out infinite; }
+        .is-active .glow { animation: flash 0.8s ease-out infinite; }
 
         .sp {
-          position: absolute; top: 12px; right: 4px;
+          position: absolute; top: 6px; right: 10px;
           width: 3px; height: 3px; border-radius: 50%;
-          background: #FFD700; opacity: 0; pointer-events: none;
+          background: #FFE070; opacity: 0; pointer-events: none;
         }
-        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}72%{transform:translate(10px,-12px);opacity:0}100%{opacity:0} }
-        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}72%{transform:translate(-6px,-14px);opacity:0}100%{opacity:0} }
-        @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}72%{transform:translate(12px,4px);opacity:0}100%{opacity:0} }
+        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(12px,-10px);opacity:0}100%{opacity:0} }
+        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(-8px,-14px);opacity:0}100%{opacity:0} }
+        @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}74%{transform:translate(14px,6px);opacity:0}100%{opacity:0} }
 
-        .is-active .sp1 { animation: s1 .75s ease-out infinite; }
-        .is-active .sp2 { animation: s2 .75s ease-out infinite; }
-        .is-active .sp3 { animation: s3 .75s ease-out infinite; }
+        .is-active .sp1 { animation: s1 .8s ease-out infinite; }
+        .is-active .sp2 { animation: s2 .8s ease-out infinite; }
+        .is-active .sp3 { animation: s3 .8s ease-out infinite; }
       `}</style>
     </div>
   )
