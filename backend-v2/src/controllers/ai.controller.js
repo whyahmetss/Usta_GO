@@ -1,5 +1,8 @@
 import { getActiveServices } from '../services/service.service.js'
 import { successResponse } from '../utils/response.js'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // ── Prompt enjeksiyon önleme ────────────────────────────────────────
 const sanitizeInput = (text) => {
@@ -211,5 +214,80 @@ export const analyzeJob = async (req, res, next) => {
     })
   } catch (err) {
     next(err)
+  }
+}
+
+// ── Canlı Destek AI Yanıtı ─────────────────────────────────────────────
+export const supportChatAI = async (req, res) => {
+  try {
+    const { message, conversationHistory = [] } = req.body
+    if (!message?.trim()) {
+      return res.status(400).json({ success: false, error: 'Mesaj boş olamaz' })
+    }
+
+    const apiKey = process.env.DEEPSEEK_API_KEY
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI servisi yapılandırılmamış',
+        reply: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir. Lütfen sohbeti sonlandırmayınız.',
+      })
+    }
+
+    const systemPrompt = `Sen Usta Go uygulamasının müşteri destek asistanısın.
+Görevin: Kullanıcıların sorularını yanıtlamak, sorunlarını çözmek, uygulama hakkında bilgi vermek.
+
+Uygulama hakkında:
+- Usta Go: Elektrik, su tesisatı, klima, beyaz eşya tamiri gibi ev hizmetleri sunan bir platform
+- Müşteriler iş talebi oluşturur, ustalar kabul eder, iş tamamlanınca ödeme yapılır
+- Canlı destek, mesajlaşma, cüzdan, iş takibi gibi özellikler var
+
+Kurallar:
+- Kısa, net, Türkçe cevap ver (max 2-3 cümle)
+- Samimi ve profesyonel ol
+- Teknik sorunlarda "destek ekibimiz inceleyecek" de
+- Ödeme/para iadesi konularında "yetkili ekip 1 iş günü içinde dönüş yapacak" de
+- Kullanıcı kızgınsa özür dile ve anlayışlı ol
+- Emoji kullanma`
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...conversationHistory.slice(-6).map(m => ({
+        role: m.isUser ? 'user' : 'assistant',
+        content: m.content,
+      })),
+      { role: 'user', content: sanitizeInput(message) },
+    ]
+
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages,
+        max_tokens: 200,
+        temperature: 0.7,
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(`DeepSeek API hatası: ${err.slice(0, 100)}`)
+    }
+
+    const data = await response.json()
+    const reply = data.choices?.[0]?.message?.content?.trim() || 'Anlayamadım, lütfen tekrar açıklar mısınız?'
+
+    res.json({ success: true, reply })
+  } catch (err) {
+    console.error('[AI Support] Error:', err)
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      reply: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.',
+    })
   }
 }

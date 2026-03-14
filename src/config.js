@@ -142,6 +142,7 @@ export const API_ENDPOINTS = {
   // AI Fiyat Analizi
   AI: {
     ANALYZE: '/ai/analyze',
+    SUPPORT_CHAT: '/ai/support-chat',
   },
 
   // Servis Fiyat Listesi (Admin CRUD)

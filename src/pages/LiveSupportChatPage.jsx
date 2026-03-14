@@ -32,7 +32,7 @@ export default function LiveSupportChatPage() {
   const [rating, setRating] = useState(0)
   const [ratingDone, setRatingDone] = useState(false)
   const [closingSession, setClosingSession] = useState(false)
-  const [autoReplied, setAutoReplied] = useState(false)
+  const [aiThinking, setAiThinking] = useState(false)
 
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -192,22 +192,54 @@ export default function LiveSupportChatPage() {
     }
     setMessages(prev => [...prev, optimistic])
 
-    // Offline mod: sadece kullanıcının mesajını ve otomatik sistem yanıtını lokal olarak göster
+    // Offline mod: AI ile cevap ver
     if (offlineMode) {
-      setTimeout(() => {
-        const botMessage = {
-          id: `bot-${Date.now()}`,
-          content: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir. Lütfen sohbeti sonlandırmayınız.',
-          senderId: 'support-bot',
-          receiverId: user?.id,
-          isRead: true,
-          createdAt: new Date().toISOString(),
-          _system: true,
-        }
-        setMessages(prev => [...prev, botMessage])
-        setSending(false)
-        setAutoReplied(true)
-      }, 600)
+      setSending(false)
+      setAiThinking(true)
+      
+      // Konuşma geçmişini hazırla (son 6 mesaj)
+      const history = messages.slice(-6).map(m => ({
+        content: m.content,
+        isUser: m.senderId === user?.id,
+      }))
+
+      try {
+        const aiRes = await fetchAPI(API_ENDPOINTS.AI.SUPPORT_CHAT, {
+          method: 'POST',
+          body: { message: content, conversationHistory: history },
+        })
+        
+        const reply = aiRes?.reply || 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
+        
+        setTimeout(() => {
+          const botMessage = {
+            id: `ai-${Date.now()}`,
+            content: reply,
+            senderId: 'support-ai',
+            receiverId: user?.id,
+            isRead: true,
+            createdAt: new Date().toISOString(),
+            _ai: true,
+          }
+          setMessages(prev => [...prev, botMessage])
+          setAiThinking(false)
+        }, 800)
+      } catch (err) {
+        console.error('AI reply error:', err)
+        setTimeout(() => {
+          const fallbackMsg = {
+            id: `bot-${Date.now()}`,
+            content: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.',
+            senderId: 'support-bot',
+            receiverId: user?.id,
+            isRead: true,
+            createdAt: new Date().toISOString(),
+            _system: true,
+          }
+          setMessages(prev => [...prev, fallbackMsg])
+          setAiThinking(false)
+        }, 600)
+      }
       return
     }
     try {
@@ -495,7 +527,7 @@ export default function LiveSupportChatPage() {
               )
             })}
 
-            {/* Typing indicator */}
+            {/* Typing indicator (agent) */}
             {typing && (
               <div className="flex justify-start mb-1">
                 <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mr-2 mt-1">
@@ -507,6 +539,30 @@ export default function LiveSupportChatPage() {
                       <div
                         key={i}
                         className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI thinking indicator (offline mode) */}
+            {aiThinking && (
+              <div className="flex justify-start mb-1">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-purple-400 to-blue-600 flex items-center justify-center mr-2 mt-1">
+                  <svg className="w-3.5 h-3.5 text-white animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75" />
+                  </svg>
+                </div>
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-100 dark:border-purple-800/30 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                  <div className="flex gap-1.5 items-center">
+                    <span className="text-xs font-medium text-purple-600 dark:text-purple-300">AI düşünüyor</span>
+                    {[0, 1, 2].map(i => (
+                      <div
+                        key={i}
+                        className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
                         style={{ animationDelay: `${i * 0.15}s` }}
                       />
                     ))}
