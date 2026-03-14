@@ -120,7 +120,7 @@ export function AuthProvider({ children }) {
           const baseNotif = {
             id,
             type: notifType,
-            title: isSupport ? 'Destek Mesajı' : 'Yeni Mesaj',
+            title: isSupport ? `${message.sender?.name || 'Admin'} — Destek` : (message.sender?.name ? `${message.sender.name} — Mesaj` : 'Yeni Mesaj'),
             message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
             icon: 'message',
             read: false,
