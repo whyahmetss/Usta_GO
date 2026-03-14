@@ -78,12 +78,13 @@ function AdminJobsPage() {
     }
   }, [filterStatus])
 
-  const statuses = ['all', 'pending', 'accepted', 'in_progress', 'completed', 'cancelled']
+  const statuses = ['all', 'pending', 'accepted', 'in_progress', 'pending_approval', 'completed', 'cancelled']
   const statusLabels = {
     all: 'Tümü',
     pending: 'Beklemede',
     accepted: 'Kabul Edildi',
     in_progress: 'Yapılıyor',
+    pending_approval: 'Onay Bekliyor',
     completed: 'Tamamlandı',
     cancelled: 'İptal Edildi'
   }

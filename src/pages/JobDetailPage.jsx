@@ -531,21 +531,71 @@ function JobDetailPage() {
     }
     try {
       await completeJob(job.id, afterPhotos)
-      alert('İş tamamlandı! Müşteri değerlendirme yapacak.')
+      alert('İş tamamlandı! Müşteri onayı bekleniyor.')
 
-      // Notify via socket
       emitEvent('job_status_changed', {
         jobId: job.id,
-        status: 'completed',
+        status: 'pending_approval',
         customerId: job.customer?.id,
         professionalId: user?.id
       })
 
-      // Navigate back to professional dashboard
-      setTimeout(() => navigate('/professional'), 1500)
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.GET(job.id))
+      if (response.data) {
+        setJob(mapJobFromBackend(response.data))
+      }
     } catch (err) {
       console.error('Complete job error:', err)
       alert('İş tamamlanırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+    }
+  }
+
+  const [rejectReason, setRejectReason] = useState('')
+  const [showRejectModal, setShowRejectModal] = useState(false)
+
+  const handleApproveJob = async () => {
+    if (!confirm('İşi onaylıyor musunuz? Onayladığınızda ödeme ustaya aktarılacaktır.')) return
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.APPROVE(job.id), { method: 'PUT' })
+      if (response.data) {
+        setJob(mapJobFromBackend(response.data))
+        alert('İş onaylandı! Ödeme ustaya aktarıldı.')
+
+        emitEvent('job_status_changed', {
+          jobId: job.id,
+          status: 'completed',
+          customerId: user?.id,
+          professionalId: job.professional?.id || job.usta?.id
+        })
+      }
+    } catch (err) {
+      console.error('Approve job error:', err)
+      alert('İş onaylanırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+    }
+  }
+
+  const handleRejectJob = async () => {
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.REJECT(job.id), {
+        method: 'PUT',
+        body: { reason: rejectReason }
+      })
+      if (response.data) {
+        setJob(mapJobFromBackend(response.data))
+        setShowRejectModal(false)
+        setRejectReason('')
+        alert('İş reddedildi. Usta tekrar çalışacak.')
+
+        emitEvent('job_status_changed', {
+          jobId: job.id,
+          status: 'in_progress',
+          customerId: user?.id,
+          professionalId: job.professional?.id || job.usta?.id
+        })
+      }
+    } catch (err) {
+      console.error('Reject job error:', err)
+      alert('İş reddedilirken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
     }
   }
 
@@ -677,7 +727,7 @@ function JobDetailPage() {
         )}
 
         {/* Photos - Professional View */}
-        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed' || job.status === 'rated') && isProfessional && (
+        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'pending_approval' || job.status === 'completed' || job.status === 'rated') && isProfessional && (
           <Card padding="p-5">
             <h3 className="font-bold text-gray-900 mb-3">Fotoğraflar</h3>
 
@@ -757,7 +807,7 @@ function JobDetailPage() {
               </div>
             )}
 
-            {(job.status === 'completed' || job.status === 'rated') && (
+            {(job.status === 'pending_approval' || job.status === 'completed' || job.status === 'rated') && (
               <div className="space-y-4">
                 {job.beforePhotos?.length > 0 && (
                   <div>
@@ -789,7 +839,7 @@ function JobDetailPage() {
         )}
 
         {/* Customer photo view */}
-        {isCustomer && (job.status === 'completed' || job.status === 'rated') && (job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
+        {isCustomer && (job.status === 'pending_approval' || job.status === 'completed' || job.status === 'rated') && (job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
           <Card padding="p-5">
             <h3 className="font-bold text-gray-900 mb-3">İş Fotografları</h3>
             <div className="space-y-4">
@@ -898,13 +948,42 @@ function JobDetailPage() {
                 İşi Tamamla ({afterPhotos.length} fotoğraf)
               </button>
             )}
+
+            {job.status === 'pending_approval' && (
+              <div className="w-full py-4 bg-orange-50 border border-orange-200 text-orange-700 rounded-2xl text-center font-semibold">
+                Müşteri onayı bekleniyor...
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Customer approve/reject for pending_approval */}
+        {isCustomer && job.status === 'pending_approval' && (
+          <div className="space-y-3">
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+              <p className="text-orange-800 font-semibold text-center mb-1">Usta işi tamamladı!</p>
+              <p className="text-orange-600 text-sm text-center">Fotoğrafları kontrol edip işi onaylayın veya reddedin.</p>
+            </div>
+            <button
+              onClick={handleApproveJob}
+              className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-[0.98] transition"
+            >
+              <CheckCircle size={20} />
+              İşi Onayla
+            </button>
+            <button
+              onClick={() => setShowRejectModal(true)}
+              className="w-full py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl font-semibold hover:bg-rose-100 active:scale-[0.98] transition"
+            >
+              İşi Reddet
+            </button>
           </div>
         )}
 
         {/* Customer rate - animated car confirm button */}
         {isCustomer && job.status === 'completed' && !job.rating && (
           <CarConfirmButton
-            label="İşi Onayla & Değerlendir"
+            label="Değerlendir"
             onConfirm={() => navigate(`/rate/${job.id}`)}
           />
         )}
@@ -920,7 +999,7 @@ function JobDetailPage() {
         )}
 
         {/* Cancel Button */}
-        {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'rated' && (
+        {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'rated' && job.status !== 'pending_approval' && (
           <button
             onClick={() => navigate(`/cancel-job/${job.id}`)}
             className="w-full py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl font-semibold hover:bg-rose-100 active:scale-[0.98] transition"
@@ -930,7 +1009,7 @@ function JobDetailPage() {
         )}
 
         {/* Complaint Button */}
-        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed') && !job.complaint && (
+        {(job.status === 'accepted' || job.status === 'in_progress' || job.status === 'pending_approval' || job.status === 'completed') && !job.complaint && (
           <button
             onClick={() => setShowComplaintModal(true)}
             className="w-full py-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl font-semibold hover:bg-amber-100 active:scale-[0.98] transition"
@@ -940,6 +1019,51 @@ function JobDetailPage() {
         )}
 
         {/* Complaint Modal */}
+        {/* Reject Modal */}
+        {showRejectModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+            <div className="w-full bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">İşi Reddet</h3>
+                <button onClick={() => { setShowRejectModal(false); setRejectReason('') }} className="text-gray-400 hover:text-gray-600">
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">Red Sebebi</label>
+                  <div className="space-y-2">
+                    {['İş düzgün yapılmamış', 'Eksik bırakılmış', 'Kalitesiz iş', 'Farklı bir sorun'].map(reason => (
+                      <label key={reason} className="flex items-center p-3 border border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="rejectReason"
+                          value={reason}
+                          checked={rejectReason === reason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                          className="mr-3"
+                        />
+                        <span className="text-gray-700">{reason}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={handleRejectJob}
+                  disabled={!rejectReason}
+                  className={`w-full py-3 rounded-2xl font-semibold transition active:scale-[0.98] ${
+                    !rejectReason
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-rose-500 text-white hover:bg-rose-600'
+                  }`}
+                >
+                  Reddi Onayla
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showComplaintModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
             <div className="w-full bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">

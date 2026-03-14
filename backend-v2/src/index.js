@@ -125,10 +125,17 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined room`);
   });
 
+  // Join support room (for admin/support agents to get all support notifications)
+  socket.on("join_support_room", () => {
+    socket.join("support_room");
+  });
+
   // Send message
   socket.on("send_message", (data) => {
     const { receiverId, message } = data;
     io.to(`user_${receiverId}`).emit("receive_message", message);
+    // Also notify support_room so admins/agents on the dashboard see it
+    io.to("support_room").emit("support_new_message", message);
   });
 
   // New job created - notify all professionals

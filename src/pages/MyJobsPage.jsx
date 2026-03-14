@@ -39,7 +39,7 @@ function MyJobsPage() {
   }, [user])
 
   const activeJobs = userJobs.filter(j =>
-    ['pending', 'accepted', 'in_progress'].includes(j.status?.toLowerCase())
+    ['pending', 'accepted', 'in_progress', 'pending_approval'].includes(j.status?.toLowerCase())
   )
   const completedJobs = userJobs.filter(j =>
     ['completed', 'rated'].includes(j.status?.toLowerCase())

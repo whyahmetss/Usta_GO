@@ -105,6 +105,29 @@ router.put(
 );
 
 /**
+ * @route PUT /api/jobs/:id/approve
+ * @desc Approve a completed job (CUSTOMER only)
+ */
+router.put(
+  "/:id/approve",
+  authMiddleware,
+  roleMiddleware("CUSTOMER", "ADMIN"),
+  jobController.approveJob
+);
+
+/**
+ * @route PUT /api/jobs/:id/reject
+ * @desc Reject a completed job (CUSTOMER only)
+ * @body {reason?: string}
+ */
+router.put(
+  "/:id/reject",
+  authMiddleware,
+  roleMiddleware("CUSTOMER", "ADMIN"),
+  jobController.rejectJob
+);
+
+/**
  * @route PUT /api/jobs/:id/cancel
  * @desc Cancel a job
  * @body {reason?: string, penalty?: number}

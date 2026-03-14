@@ -554,10 +554,9 @@ export function AuthProvider({ children }) {
       setError(null)
 
       if (useLocalStorage) {
-        // Fallback to localStorage
         setJobs(prev => prev.map(job =>
           job.id === jobId
-            ? { ...job, status: 'completed', afterPhotos, completedAt: new Date().toISOString() }
+            ? { ...job, status: 'pending_approval', afterPhotos, completedAt: new Date().toISOString() }
             : job
         ))
         return
@@ -587,7 +586,7 @@ export function AuthProvider({ children }) {
         addNotification({
           type: 'status',
           title: 'İş Tamamlandı',
-          message: 'İş tamamlandı. Lütfen değerlendiriniz.',
+          message: 'İş tamamlandı. Müşteri onayı bekleniyor.',
           icon: 'party'
         })
       }

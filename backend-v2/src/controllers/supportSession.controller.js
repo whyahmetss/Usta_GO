@@ -24,13 +24,15 @@ export const openSession = async (req, res) => {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, role: true } })
       const io = req.app.get('io')
       if (io && agentId !== 'offline-support') {
-        io.to(agentId).emit('new_support_session', {
+        const sessionPayload = {
           sessionId: session.id,
           userId,
           userName: user?.name || 'Kullanıcı',
           userRole: user?.role || 'CUSTOMER',
           openedAt: session.openedAt,
-        })
+        }
+        io.to(`user_${agentId}`).emit('new_support_session', sessionPayload)
+        io.to('support_room').emit('new_support_session', sessionPayload)
       }
     }
     

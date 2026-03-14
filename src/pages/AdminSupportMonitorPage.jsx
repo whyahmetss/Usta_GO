@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { useAuth } from '../context/AuthContext'
+import { connectSocket } from '../utils/socket'
 import {
   Headphones, Loader, RefreshCw, Star, User, Zap,
   MessageCircle, CheckCircle2, Clock, BarChart2,
@@ -23,6 +25,7 @@ function RatingStars({ rating, size = 12 }) {
 
 export default function AdminSupportMonitorPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('overview') // 'overview' | 'sessions'
@@ -42,6 +45,22 @@ export default function AdminSupportMonitorPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!user?.id) return
+    const socket = connectSocket(user.id)
+    socket.emit('join_support_room')
+    if (!socket.connected) {
+      socket.once('connect', () => socket.emit('join_support_room'))
+    }
+    const onUpdate = () => load()
+    socket.on('new_support_session', onUpdate)
+    socket.on('support_new_message', onUpdate)
+    return () => {
+      socket.off('new_support_session', onUpdate)
+      socket.off('support_new_message', onUpdate)
+    }
+  }, [user, load])
 
   const sessions = data?.sessions || []
   const agentStats = data?.agentStats || []

@@ -132,12 +132,13 @@ model Job {
 }
 
 enum JobStatus {
-  PENDING       // Waiting for offers
-  ACCEPTED      // Accepted by professional
-  IN_PROGRESS   // Work in progress
-  COMPLETED     // Work finished
-  RATED         // Job completed and rated
-  CANCELLED     // Job cancelled
+  PENDING            // Waiting for offers
+  ACCEPTED           // Accepted by professional
+  IN_PROGRESS        // Work in progress
+  PENDING_APPROVAL   // Usta finished, waiting for customer approval
+  COMPLETED          // Customer approved, payment done
+  RATED              // Job completed and rated
+  CANCELLED          // Job cancelled
 }
 
 // Offer Model

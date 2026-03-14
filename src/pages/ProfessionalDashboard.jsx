@@ -141,7 +141,7 @@ function ProfessionalDashboard() {
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   // İstatistikler için sadece kendi işleri kullan (MY_JOBS endpoint zaten filtreli döner)
   const myCompletedJobs = ownJobs.filter(j => j.status === 'completed' || j.status === 'rated')
-  const myActiveJobs = ownJobs.filter(j => j.status === 'accepted' || j.status === 'in_progress')
+  const myActiveJobs = ownJobs.filter(j => j.status === 'accepted' || j.status === 'in_progress' || j.status === 'pending_approval')
 
   const now = new Date()
   const thisMonthEarnings = myCompletedJobs

@@ -165,10 +165,23 @@ export default function SupportDashboard() {
     if (!user?.id) return
     const socket = connectSocket(user.id)
     
+    // Join support_room so we get ALL support-related notifications
+    socket.emit('join_support_room')
+    if (!socket.connected) {
+      socket.once('connect', () => socket.emit('join_support_room'))
+    }
+    
     const onReceive = (msg) => {
       loadConversations()
       if (activeTab !== 'chats') {
         showToast('Yeni mesaj geldi!')
+      }
+    }
+
+    const onSupportMsg = () => {
+      loadConversations()
+      if (activeTab !== 'chats') {
+        showToast('Yeni destek mesajı!')
       }
     }
     
@@ -178,10 +191,12 @@ export default function SupportDashboard() {
     }
     
     socket.on('receive_message', onReceive)
+    socket.on('support_new_message', onSupportMsg)
     socket.on('new_support_session', onNewSession)
     
     return () => {
       socket.off('receive_message', onReceive)
+      socket.off('support_new_message', onSupportMsg)
       socket.off('new_support_session', onNewSession)
     }
   }, [user, activeTab, loadConversations])

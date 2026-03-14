@@ -557,7 +557,7 @@ export default function LiveSupportChatPage() {
                 </div>
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-100 dark:border-purple-800/30 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                   <div className="flex gap-1.5 items-center">
-                    <span className="text-xs font-medium text-purple-600 dark:text-purple-300">AI düşünüyor</span>
+                    <span className="text-xs font-medium text-purple-600 dark:text-purple-300">Go düşünüyor</span>
                     {[0, 1, 2].map(i => (
                       <div
                         key={i}

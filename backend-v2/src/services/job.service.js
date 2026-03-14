@@ -327,45 +327,118 @@ export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
     throw error;
   }
 
-  const COMMISSION_RATE = 0.12  // %12 platform komisyonu
+  if (!afterPhotos || afterPhotos.length === 0) {
+    const error = new Error("İş bitim fotoğrafı zorunludur");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "PENDING_APPROVAL",
+      afterPhotos,
+      completedAt: new Date(),
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  return updatedJob;
+};
+
+export const approveJob = async (jobId, customerId) => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.customerId !== customerId) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status !== "PENDING_APPROVAL") {
+    const error = new Error("İş onay bekliyor durumunda değil");
+    error.status = 400;
+    throw error;
+  }
+
+  const COMMISSION_RATE = 0.12
   const commission = Math.round(job.budget * COMMISSION_RATE)
   const ustaEarning = job.budget - commission
 
-  // Use transaction to ensure atomicity
   const updatedJob = await prisma.$transaction(async (tx) => {
-    // 1. Update job status
     const jobData = await tx.job.update({
       where: { id: jobId },
-      data: {
-        status: "COMPLETED",
-        afterPhotos,
-        completedAt: new Date(),
-      },
+      data: { status: "COMPLETED" },
       include: {
         customer: { select: { id: true, name: true, email: true } },
         usta: { select: { id: true, name: true, email: true } },
       },
     });
 
-    // 2. Usta'ya komisyon düşülmüş ödeme yap
     await tx.user.update({
-      where: { id: ustaId },
+      where: { id: job.ustaId },
       data: { balance: { increment: ustaEarning } },
     });
 
-    // 3. Usta kazanç kaydı (komisyon düşülmüş gerçek miktar)
     await tx.transaction.create({
       data: {
-        userId: ustaId,
+        userId: job.ustaId,
         jobId: jobId,
         amount: ustaEarning,
         type: "EARNING",
         status: "COMPLETED",
-        description: `${job.title} işi tamamlandı`,
+        description: `${job.title} işi onaylandı`,
       },
     });
 
     return jobData;
+  });
+
+  return updatedJob;
+};
+
+export const rejectJob = async (jobId, customerId, reason = "") => {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (job.customerId !== customerId) {
+    const error = new Error("Unauthorized");
+    error.status = 403;
+    throw error;
+  }
+
+  if (job.status !== "PENDING_APPROVAL") {
+    const error = new Error("İş onay bekliyor durumunda değil");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: "IN_PROGRESS",
+      afterPhotos: [],
+      completedAt: null,
+      cancelReason: reason ? `Red sebebi: ${reason}` : null,
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      usta: { select: { id: true, name: true, email: true } },
+    },
   });
 
   return updatedJob;
@@ -411,7 +484,7 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     throw error;
   }
 
-  if (job.status === "COMPLETED" || job.status === "CANCELLED") {
+  if (job.status === "COMPLETED" || job.status === "CANCELLED" || job.status === "RATED") {
     const error = new Error("Cannot cancel job in this status");
     error.status = 400;
     throw error;

@@ -108,6 +108,24 @@ export const completeJob = async (req, res, next) => {
   }
 };
 
+export const approveJob = async (req, res, next) => {
+  try {
+    const job = await jobService.approveJob(req.params.id, req.user.id);
+    successResponse(res, job, "Job approved successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectJob = async (req, res, next) => {
+  try {
+    const job = await jobService.rejectJob(req.params.id, req.user.id, req.body.reason || "");
+    successResponse(res, job, "Job rejected successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const cancelJob = async (req, res, next) => {
   try {
     const job = await jobService.cancelJob(req.params.id, req.user.id, req.body.reason || "", req.body.penalty || 0);

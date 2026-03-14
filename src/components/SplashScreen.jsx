@@ -52,105 +52,87 @@ export default function SplashScreen({ onDone }) {
 function HammerIcon({ active }) {
   return (
     <div className={`hammer-root ${active ? 'is-active' : ''}`}>
-      {/* Kıvılcımlar */}
       <span className="sp sp1" />
       <span className="sp sp2" />
       <span className="sp sp3" />
-      <span className="sp sp4" />
-
-      {/* Impact glow */}
       <span className="glow" />
 
-      {/* Modern minimalist çekiç SVG */}
       <svg className="hammer" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Sap — ahşap tonları */}
-        <rect x="26" y="30" width="7" height="28" rx="3" fill="#8B4513" transform="rotate(-5 29 44)" />
-        <rect x="27.5" y="31" width="3" height="26" rx="1.5" fill="#A0522D" opacity="0.6" transform="rotate(-5 29 44)" />
-        <rect x="28.5" y="32" width="1" height="24" rx="0.5" fill="#CD853F" opacity="0.3" transform="rotate(-5 29 44)" />
+        {/* Sap */}
+        <rect x="28" y="28" width="6" height="30" rx="2.5" fill="#A0622E" />
+        <rect x="29.5" y="29" width="2.5" height="28" rx="1.2" fill="#C08040" opacity="0.5" />
 
-        {/* Çekiç başı gölge */}
-        <rect x="10" y="16" width="40" height="16" rx="3" fill="rgba(0,0,0,0.15)" transform="translate(1,1)" />
+        {/* Çekiç başı gövde */}
+        <rect x="14" y="10" width="34" height="20" rx="3" fill="#4A4A4A" />
 
-        {/* Çekiç başı — ana gövde */}
-        <rect x="10" y="16" width="40" height="16" rx="3" fill="#555555" />
+        {/* Üst yüzey parlaklık */}
+        <rect x="14" y="10" width="34" height="11" rx="3" fill="#5C5C5C" />
+        <rect x="16" y="12" width="30" height="3" rx="1.5" fill="#727272" opacity="0.45" />
 
-        {/* Üst yüzey (hafif açık ton — derinlik hissi) */}
-        <rect x="10" y="16" width="40" height="9" rx="3" fill="#666666" />
+        {/* Vurma yüzeyi (sağ) */}
+        <rect x="44" y="9" width="8" height="22" rx="2" fill="#3D3D3D" />
+        <rect x="49" y="11" width="2" height="18" rx="1" fill="#555" opacity="0.35" />
 
-        {/* Metal parıltı şeridi */}
-        <rect x="12" y="18.5" width="36" height="2.5" rx="1.2" fill="#888888" opacity="0.5" />
+        {/* Çengel (sol) */}
+        <path d="M16 12 L8 4 Q6 2 7 5 L11 11 Z" fill="#4A4A4A" />
+        <path d="M16 28 L8 36 Q6 38 7 35 L11 29 Z" fill="#4A4A4A" />
 
-        {/* Vurma yüzeyi (sağ taraf — düz kesim) */}
-        <rect x="45" y="15" width="7" height="18" rx="1.5" fill="#444444" />
-        <rect x="46" y="17" width="1.5" height="14" rx="0.75" fill="#555555" opacity="0.5" />
-
-        {/* Pençe tarafı (sol — V çıkıntı) */}
-        <path d="M12 18 L4 9 L7.5 8 L13 16 Z" fill="#555555" />
-        <path d="M12 30 L4 39 L7.5 40 L13 32 Z" fill="#555555" />
-        <path d="M5 9.5 L6.5 8.5" stroke="#666666" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
-        <path d="M5 38.5 L6.5 39.5" stroke="#666666" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
-
-        {/* Sap-baş bağlantı halkası */}
-        <rect x="25" y="28" width="9" height="5" rx="1.5" fill="#6B4226" />
+        {/* Sap-baş bağlantısı */}
+        <rect x="26" y="26" width="10" height="6" rx="2" fill="#7B4A1E" />
       </svg>
 
       <style>{`
         .hammer-root {
           position: relative;
-          width: 52px; height: 52px;
+          width: 56px; height: 56px;
           display: flex; align-items: center; justify-content: center;
         }
         .hammer {
-          width: 52px; height: 52px;
-          transform-origin: 35% 75%;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+          width: 56px; height: 56px;
+          transform-origin: 48% 80%;
+          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
         }
 
-        /* Vuruş animasyonu */
         @keyframes strike {
-          0%   { transform: rotate(0deg);    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-          15%  { transform: rotate(-18deg);  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-          45%  { transform: rotate(14deg);   filter: drop-shadow(0 0 14px rgba(255,180,50,0.9)); }
-          52%  { transform: rotate(16deg);   filter: drop-shadow(0 0 20px rgba(255,150,30,1)); }
-          65%  { transform: rotate(-5deg);   filter: drop-shadow(0 0 4px rgba(255,200,50,0.3)); }
-          78%  { transform: rotate(2deg);    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-          100% { transform: rotate(0deg);    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+          0%   { transform: rotate(0deg); }
+          18%  { transform: rotate(-22deg); }
+          46%  { transform: rotate(18deg); }
+          54%  { transform: rotate(20deg); }
+          68%  { transform: rotate(-4deg); }
+          82%  { transform: rotate(1deg); }
+          100% { transform: rotate(0deg); }
         }
         .is-active .hammer {
-          animation: strike 0.7s cubic-bezier(0.22, 0.68, 0.32, 1.2) infinite;
+          animation: strike 0.75s cubic-bezier(0.22, 0.68, 0.32, 1.15) infinite;
         }
 
-        /* Vuruş ışığı */
         .glow {
-          position: absolute; bottom: 2px; right: 6px;
-          width: 16px; height: 16px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,200,60,0.9) 0%, transparent 70%);
+          position: absolute; top: 8px; right: 2px;
+          width: 14px; height: 14px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,210,80,0.95) 0%, transparent 70%);
           transform: scale(0); opacity: 0; pointer-events: none;
         }
         @keyframes flash {
-          0%,40% { transform: scale(0); opacity: 0; }
-          50%    { transform: scale(2.5); opacity: 1; }
-          65%    { transform: scale(3.5); opacity: 0.4; }
-          75%    { transform: scale(4); opacity: 0; }
+          0%,42% { transform: scale(0); opacity: 0; }
+          50%    { transform: scale(2.2); opacity: 1; }
+          62%    { transform: scale(3); opacity: 0.5; }
+          74%    { transform: scale(3.5); opacity: 0; }
           100%   { transform: scale(0); opacity: 0; }
         }
-        .is-active .glow { animation: flash 0.7s cubic-bezier(0.22,0.68,0.32,1.2) infinite; }
+        .is-active .glow { animation: flash 0.75s ease-out infinite; }
 
-        /* Kıvılcımlar */
         .sp {
-          position: absolute; bottom: 6px; right: 10px;
+          position: absolute; top: 12px; right: 4px;
           width: 3px; height: 3px; border-radius: 50%;
           background: #FFD700; opacity: 0; pointer-events: none;
         }
-        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:1}75%{transform:translate(-8px,-14px);opacity:0}100%{opacity:0} }
-        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:1}75%{transform:translate(8px,-12px);opacity:0}100%{opacity:0} }
-        @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}75%{transform:translate(-12px,-6px);opacity:0}100%{opacity:0} }
-        @keyframes s4 { 0%,44%{transform:translate(0,0);opacity:0}54%{opacity:.9;background:#FF8C00}75%{transform:translate(4px,-16px);opacity:0}100%{opacity:0} }
+        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}72%{transform:translate(10px,-12px);opacity:0}100%{opacity:0} }
+        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}72%{transform:translate(-6px,-14px);opacity:0}100%{opacity:0} }
+        @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}72%{transform:translate(12px,4px);opacity:0}100%{opacity:0} }
 
-        .is-active .sp1 { animation: s1 .7s cubic-bezier(.22,.68,.32,1.2) infinite; }
-        .is-active .sp2 { animation: s2 .7s cubic-bezier(.22,.68,.32,1.2) infinite; }
-        .is-active .sp3 { animation: s3 .7s cubic-bezier(.22,.68,.32,1.2) infinite; }
-        .is-active .sp4 { animation: s4 .7s cubic-bezier(.22,.68,.32,1.2) infinite; }
+        .is-active .sp1 { animation: s1 .75s ease-out infinite; }
+        .is-active .sp2 { animation: s2 .75s ease-out infinite; }
+        .is-active .sp3 { animation: s3 .75s ease-out infinite; }
       `}</style>
     </div>
   )

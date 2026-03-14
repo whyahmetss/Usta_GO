@@ -1,8 +1,9 @@
 const statusConfig = {
   pending:     { label: 'Bekliyor',    bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-400' },
   accepted:    { label: 'Kabul Edildi', bg: 'bg-blue-50',    text: 'text-blue-700',    dot: 'bg-blue-400' },
-  in_progress: { label: 'Devam Ediyor', bg: 'bg-violet-50',  text: 'text-violet-700',  dot: 'bg-violet-400' },
-  completed:   { label: 'Tamamlandı',  bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400' },
+  in_progress:      { label: 'Devam Ediyor',    bg: 'bg-violet-50',  text: 'text-violet-700',  dot: 'bg-violet-400' },
+  pending_approval: { label: 'Onay Bekliyor',   bg: 'bg-orange-50',  text: 'text-orange-700',  dot: 'bg-orange-400' },
+  completed:        { label: 'Tamamlandı',      bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400' },
   rated:       { label: 'Değerlendirildi', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400' },
   cancelled:   { label: 'İptal',       bg: 'bg-rose-50',    text: 'text-rose-700',    dot: 'bg-rose-400' },
   rejected:    { label: 'Reddedildi',  bg: 'bg-rose-50',    text: 'text-rose-700',    dot: 'bg-rose-400' },
