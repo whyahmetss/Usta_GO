@@ -140,7 +140,7 @@ function HammerIcon({ active }) {
         }
 
         .glow {
-          position: absolute; top: 2px; right: 8px;
+          position: absolute; bottom: 6px; right: 4px;
           width: 16px; height: 16px; border-radius: 50%;
           background: radial-gradient(circle, rgba(255,220,100,0.9) 0%, transparent 70%);
           transform: scale(0); opacity: 0; pointer-events: none;
@@ -155,12 +155,12 @@ function HammerIcon({ active }) {
         .is-active .glow { animation: flash 0.8s ease-out infinite; }
 
         .sp {
-          position: absolute; top: 6px; right: 10px;
+          position: absolute; bottom: 10px; right: 8px;
           width: 3px; height: 3px; border-radius: 50%;
           background: #FFE070; opacity: 0; pointer-events: none;
         }
-        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(12px,-10px);opacity:0}100%{opacity:0} }
-        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(-8px,-14px);opacity:0}100%{opacity:0} }
+        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(10px,12px);opacity:0}100%{opacity:0} }
+        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(-6px,14px);opacity:0}100%{opacity:0} }
         @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}74%{transform:translate(14px,6px);opacity:0}100%{opacity:0} }
 
         .is-active .sp1 { animation: s1 .8s ease-out infinite; }
