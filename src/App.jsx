@@ -1,11 +1,3 @@
-/**
- * App — Usta Go Mobil Uygulama
- *
- * SADECE Müşteri + Usta rotalarını içerir.
- * Admin ve Destek sayfaları bu bundle'a girmez.
- * → Bakınız: src/AdminApp.jsx + vite.admin.config.js
- */
-
 import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -15,39 +7,49 @@ import Layout from './components/Layout'
 import PageErrorBoundary from './components/PageErrorBoundary'
 import SplashScreen from './components/SplashScreen'
 import OnboardingScreen from './components/OnboardingScreen'
-
-/* ── Eager: kritik ilk render ── */
 import AuthPage from './pages/AuthPage'
 
-/* ── Lazy: müşteri ── */
-const HomePage              = lazy(() => import('./pages/HomePage'))
-const CreateJobPage         = lazy(() => import('./pages/CreateJobPage'))
-const CustomerRegisterPage  = lazy(() => import('./pages/CustomerRegisterPage'))
+/* ── Lazy sayfalar ── */
+const UstaRegisterPage       = lazy(() => import('./pages/UstaRegisterPage'))
+const CustomerRegisterPage   = lazy(() => import('./pages/CustomerRegisterPage'))
+const HomePage               = lazy(() => import('./pages/HomePage'))
+const CreateJobPage          = lazy(() => import('./pages/CreateJobPage'))
+const ProfessionalDashboard  = lazy(() => import('./pages/ProfessionalDashboard'))
+const ProfessionalMapPage    = lazy(() => import('./pages/ProfessionalMapPage'))
+const ProfilePage            = lazy(() => import('./pages/ProfilePage'))
+const SettingsPage           = lazy(() => import('./pages/SettingsPage'))
+const NotificationsPage      = lazy(() => import('./pages/NotificationsPage'))
+const MyJobsPage             = lazy(() => import('./pages/MyJobsPage'))
+const MessagesPage           = lazy(() => import('./pages/MessagesPage'))
+const JobDetailPage          = lazy(() => import('./pages/JobDetailPage'))
+const RateJobPage            = lazy(() => import('./pages/RateJobPage'))
+const WalletPage             = lazy(() => import('./pages/WalletPage'))
+const WithdrawPage           = lazy(() => import('./pages/WithdrawPage'))
+const CancelJobPage          = lazy(() => import('./pages/CancelJobPage'))
+const LiveSupportChatPage    = lazy(() => import('./pages/LiveSupportChatPage'))
+const LiveTrackingPage       = lazy(() => import('./pages/LiveTrackingPage'))
+const HelpPage               = lazy(() => import('./pages/HelpPage'))
+const AboutPage              = lazy(() => import('./pages/AboutPage'))
+const Odeme                  = lazy(() => import('./pages/odeme'))
+const PaymentResultPage      = lazy(() => import('./pages/PaymentResultPage'))
+const AdminDashboard         = lazy(() => import('./pages/AdminDashboard'))
+const AdminWithdrawalsPage   = lazy(() => import('./pages/AdminWithdrawalsPage'))
+const AdminUsersPage         = lazy(() => import('./pages/AdminUsersPage'))
+const AdminJobsPage          = lazy(() => import('./pages/AdminJobsPage'))
+const AdminComplaintsPage    = lazy(() => import('./pages/AdminComplaintsPage'))
+const AdminMessagesPage      = lazy(() => import('./pages/AdminMessagesPage'))
+const AdminCouponsPage       = lazy(() => import('./pages/AdminCouponsPage'))
+const AdminPricingPage       = lazy(() => import('./pages/AdminPricingPage'))
+const AdminCertificatesPage  = lazy(() => import('./pages/AdminCertificatesPage'))
+const AdminPendingUstasPage  = lazy(() => import('./pages/AdminPendingUstasPage'))
+const AdminCampaignsPage     = lazy(() => import('./pages/AdminCampaignsPage'))
+const AdminFinancePage       = lazy(() => import('./pages/AdminFinancePage'))
+const AdminPromotionsPage    = lazy(() => import('./pages/AdminPromotionsPage'))
+const AdminVerificationPage  = lazy(() => import('./pages/AdminVerificationPage'))
+const AdminSupportMonitorPage = lazy(() => import('./pages/AdminSupportMonitorPage'))
+const SupportDashboard       = lazy(() => import('./pages/SupportDashboard'))
+const SupportChatPage        = lazy(() => import('./pages/SupportChatPage'))
 
-/* ── Lazy: usta ── */
-const ProfessionalDashboard = lazy(() => import('./pages/ProfessionalDashboard'))
-const ProfessionalMapPage   = lazy(() => import('./pages/ProfessionalMapPage'))
-const UstaRegisterPage      = lazy(() => import('./pages/UstaRegisterPage'))
-
-/* ── Lazy: ortak sayfalar ── */
-const ProfilePage       = lazy(() => import('./pages/ProfilePage'))
-const SettingsPage      = lazy(() => import('./pages/SettingsPage'))
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
-const MyJobsPage        = lazy(() => import('./pages/MyJobsPage'))
-const MessagesPage      = lazy(() => import('./pages/MessagesPage'))
-const JobDetailPage     = lazy(() => import('./pages/JobDetailPage'))
-const RateJobPage       = lazy(() => import('./pages/RateJobPage'))
-const WalletPage        = lazy(() => import('./pages/WalletPage'))
-const WithdrawPage      = lazy(() => import('./pages/WithdrawPage'))
-const CancelJobPage     = lazy(() => import('./pages/CancelJobPage'))
-const LiveSupportChatPage = lazy(() => import('./pages/LiveSupportChatPage'))
-const LiveTrackingPage  = lazy(() => import('./pages/LiveTrackingPage'))
-const HelpPage          = lazy(() => import('./pages/HelpPage'))
-const AboutPage         = lazy(() => import('./pages/AboutPage'))
-const Odeme             = lazy(() => import('./pages/odeme'))
-const PaymentResultPage = lazy(() => import('./pages/PaymentResultPage'))
-
-/* ── Sayfa geçişlerinde minimal spinner ── */
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a1628]">
@@ -59,7 +61,6 @@ function PageLoader() {
   )
 }
 
-/* ── Route koruma ── */
 function ProtectedRoute({ children, roleRequired = null }) {
   const { user, isLoading } = useAuth()
 
@@ -73,16 +74,15 @@ function ProtectedRoute({ children, roleRequired = null }) {
   const requiredRole = roleRequired?.toLowerCase()
 
   if (requiredRole && userRole !== requiredRole) {
+    if (userRole === 'admin')        return <Navigate to="/admin" replace />
     if (userRole === 'professional') return <Navigate to="/professional" replace />
-    /* admin / support → test sırasında müşteri sayfalarına erişebilsin */
-    if (userRole === 'admin' || userRole === 'support') return children
+    if (userRole === 'support')      return <Navigate to="/support" replace />
     return <Navigate to="/home" replace />
   }
 
   return children
 }
 
-/* ── Tüm uygulama rotaları ── */
 function AppRoutes() {
   const { user } = useAuth()
 
@@ -92,14 +92,13 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-
-        {/* Auth */}
         <Route
           path="/"
           element={
             user ? (
-              userRole === 'professional'              ? <Navigate to="/professional" replace /> :
-              userRole === 'admin' || userRole === 'support' ? <Navigate to="/home" replace /> :
+              userRole === 'admin'        ? <Navigate to="/admin" replace /> :
+              userRole === 'professional' ? <Navigate to="/professional" replace /> :
+              userRole === 'support'      ? <Navigate to="/support" replace /> :
               <Navigate to="/home" replace />
             ) : (
               <AuthPage />
@@ -118,23 +117,44 @@ function AppRoutes() {
         <Route path="/professional/map" element={<ProtectedRoute roleRequired="professional"><ProfessionalMapPage /></ProtectedRoute>} />
 
         {/* Ortak */}
-        <Route path="/profile"        element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-        <Route path="/settings"       element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
-        <Route path="/help"           element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
-        <Route path="/about"          element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
-        <Route path="/notifications"  element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-        <Route path="/my-jobs"        element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
-        <Route path="/messages"       element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
+        <Route path="/profile"         element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+        <Route path="/settings"        element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/help"            element={<ProtectedRoute><Layout><HelpPage /></Layout></ProtectedRoute>} />
+        <Route path="/about"           element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
+        <Route path="/notifications"   element={<ProtectedRoute><Layout><PageErrorBoundary><NotificationsPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/my-jobs"         element={<ProtectedRoute><Layout><MyJobsPage /></Layout></ProtectedRoute>} />
+        <Route path="/messages"        element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
         <Route path="/messages/:jobId" element={<ProtectedRoute><Layout><MessagesPage /></Layout></ProtectedRoute>} />
-        <Route path="/job/:id"        element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
-        <Route path="/rate/:id"       element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
-        <Route path="/wallet"         element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
-        <Route path="/withdraw"       element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
-        <Route path="/odeme"          element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
-        <Route path="/payment-result" element={<PaymentResultPage />} />
-        <Route path="/live-support"   element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
-        <Route path="/track/:id"      element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
-        <Route path="/cancel-job/:id" element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/job/:id"         element={<ProtectedRoute><Layout><JobDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/rate/:id"        element={<ProtectedRoute><Layout><RateJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/wallet"          element={<ProtectedRoute><Layout><WalletPage /></Layout></ProtectedRoute>} />
+        <Route path="/withdraw"        element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
+        <Route path="/odeme"           element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
+        <Route path="/payment-result"  element={<PaymentResultPage />} />
+        <Route path="/live-support"    element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
+        <Route path="/track/:id"       element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
+        <Route path="/cancel-job/:id"  element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
+
+        {/* Admin */}
+        <Route path="/admin"                 element={<ProtectedRoute roleRequired="admin"><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/admin/withdrawals"     element={<ProtectedRoute roleRequired="admin"><Layout><AdminWithdrawalsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/users"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/jobs"            element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/complaints"      element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/messages"        element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/admin/coupons"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/promotions"      element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
+        <Route path="/admin/verification"    element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
+        <Route path="/admin/support-monitor" element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
+        <Route path="/admin/pricing"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/certificates"    element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/pending-ustas"   element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/campaigns"       element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/finance"         element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
+
+        {/* Destek */}
+        <Route path="/support"              element={<ProtectedRoute roleRequired="support"><SupportDashboard /></ProtectedRoute>} />
+        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support"><SupportChatPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -142,7 +162,6 @@ function AppRoutes() {
   )
 }
 
-/* ── Splash + Onboarding ── */
 function AppWithOnboarding() {
   const [splashDone, setSplashDone] = useState(false)
   const [onboardingDone, setOnboardingDone] = useState(
@@ -155,7 +174,6 @@ function AppWithOnboarding() {
   return <AppRoutes />
 }
 
-/* ── Root ── */
 export default function App() {
   return (
     <BrowserRouter>
