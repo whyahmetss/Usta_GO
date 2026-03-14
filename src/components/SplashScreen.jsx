@@ -61,24 +61,37 @@ function HammerIcon({ active }) {
       {/* Impact glow */}
       <span className="glow" />
 
-      {/* Gerçekçi çekiç SVG */}
-      <svg className="hammer" viewBox="0 0 64 64" fill="none">
-        {/* Sap */}
-        <rect x="16" y="38" width="6" height="22" rx="2.5" fill="#C8A97E"
-          transform="rotate(-20 19 49)" />
-        <rect x="16.8" y="39" width="2.5" height="20" rx="1" fill="#D4B896" opacity="0.5"
-          transform="rotate(-20 19 49)" />
-        {/* Çekiç başı */}
-        <rect x="18" y="12" width="28" height="16" rx="3" fill="#6B7280" />
-        <rect x="18" y="12" width="28" height="8" rx="3" fill="#9CA3AF" />
-        {/* Metal vurgu */}
-        <rect x="20" y="14" width="24" height="3" rx="1.5" fill="#D1D5DB" opacity="0.6" />
-        {/* Çekiç sağ taraf (vurma yüzeyi) */}
-        <rect x="42" y="11" width="8" height="18" rx="2" fill="#4B5563" />
-        <rect x="43" y="13" width="2" height="14" rx="1" fill="#6B7280" opacity="0.5" />
-        {/* Sol pençe */}
-        <path d="M18 15 L12 8 L15 7 L19 13 Z" fill="#6B7280" />
-        <path d="M18 21 L12 28 L15 29 L19 23 Z" fill="#6B7280" />
+      {/* Modern minimalist çekiç SVG */}
+      <svg className="hammer" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Sap — ahşap tonları */}
+        <rect x="26" y="30" width="7" height="28" rx="3" fill="#8B4513" transform="rotate(-5 29 44)" />
+        <rect x="27.5" y="31" width="3" height="26" rx="1.5" fill="#A0522D" opacity="0.6" transform="rotate(-5 29 44)" />
+        <rect x="28.5" y="32" width="1" height="24" rx="0.5" fill="#CD853F" opacity="0.3" transform="rotate(-5 29 44)" />
+
+        {/* Çekiç başı gölge */}
+        <rect x="10" y="16" width="40" height="16" rx="3" fill="rgba(0,0,0,0.15)" transform="translate(1,1)" />
+
+        {/* Çekiç başı — ana gövde */}
+        <rect x="10" y="16" width="40" height="16" rx="3" fill="#555555" />
+
+        {/* Üst yüzey (hafif açık ton — derinlik hissi) */}
+        <rect x="10" y="16" width="40" height="9" rx="3" fill="#666666" />
+
+        {/* Metal parıltı şeridi */}
+        <rect x="12" y="18.5" width="36" height="2.5" rx="1.2" fill="#888888" opacity="0.5" />
+
+        {/* Vurma yüzeyi (sağ taraf — düz kesim) */}
+        <rect x="45" y="15" width="7" height="18" rx="1.5" fill="#444444" />
+        <rect x="46" y="17" width="1.5" height="14" rx="0.75" fill="#555555" opacity="0.5" />
+
+        {/* Pençe tarafı (sol — V çıkıntı) */}
+        <path d="M12 18 L4 9 L7.5 8 L13 16 Z" fill="#555555" />
+        <path d="M12 30 L4 39 L7.5 40 L13 32 Z" fill="#555555" />
+        <path d="M5 9.5 L6.5 8.5" stroke="#666666" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+        <path d="M5 38.5 L6.5 39.5" stroke="#666666" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+
+        {/* Sap-baş bağlantı halkası */}
+        <rect x="25" y="28" width="9" height="5" rx="1.5" fill="#6B4226" />
       </svg>
 
       <style>{`
