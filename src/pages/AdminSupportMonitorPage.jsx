@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { useAuth } from '../context/AuthContext'
-import { connectSocket } from '../utils/socket'
+import { connectSocket, joinSupportRoom } from '../utils/socket'
 import {
   Headphones, Loader, RefreshCw, Star, User, Zap,
   MessageCircle, CheckCircle2, Clock, BarChart2,
@@ -49,10 +49,7 @@ export default function AdminSupportMonitorPage() {
   useEffect(() => {
     if (!user?.id) return
     const socket = connectSocket(user.id)
-    socket.emit('join_support_room')
-    if (!socket.connected) {
-      socket.once('connect', () => socket.emit('join_support_room'))
-    }
+    joinSupportRoom()
     const onUpdate = () => load()
     socket.on('new_support_session', onUpdate)
     socket.on('support_new_message', onUpdate)

@@ -3,17 +3,16 @@ import { SOCKET_URL } from '../config'
 
 let socket = null
 let currentUserId = null
+let inSupportRoom = false
 
 export const connectSocket = (userId) => {
   currentUserId = userId
 
   if (socket) {
-    // Socket already exists (connected or still connecting) — reuse it
     if (socket.connected) {
       socket.emit('join_room', userId)
+      if (inSupportRoom) socket.emit('join_support_room')
     }
-    // If not yet connected, socket.io will reconnect automatically and
-    // the 'connect' handler below will emit join_room when ready.
     return socket
   }
 
@@ -31,6 +30,9 @@ export const connectSocket = (userId) => {
     if (currentUserId) {
       socket.emit('join_room', currentUserId)
     }
+    if (inSupportRoom) {
+      socket.emit('join_support_room')
+    }
   })
 
   socket.on('disconnect', (reason) => {
@@ -42,6 +44,13 @@ export const connectSocket = (userId) => {
   })
 
   return socket
+}
+
+export const joinSupportRoom = () => {
+  inSupportRoom = true
+  if (socket?.connected) {
+    socket.emit('join_support_room')
+  }
 }
 
 export const disconnectSocket = () => {

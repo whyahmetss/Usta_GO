@@ -18,6 +18,7 @@ export default function LiveSupportChatPage() {
   const [agentLoading, setAgentLoading] = useState(true)
   const [agentError, setAgentError] = useState(null)
   const [offlineMode, setOfflineMode] = useState(false)
+  const [fallbackAgentId, setFallbackAgentId] = useState(null)
   const [session, setSession] = useState(null) // SupportSession
 
   const [messages, setMessages] = useState([])
@@ -57,27 +58,41 @@ export default function LiveSupportChatPage() {
         const res = await fetchAPI('/support/agents')
         const agents = Array.isArray(res?.data) ? res.data : []
         if (agents.length === 0) {
-          // Offline mod: gerçek destek temsilcisi yoksa bile kullanıcı talep açabilsin
           setOfflineMode(true)
-          setAgent({
-            id: 'offline-support',
-            name: 'Destek Ekibi',
-            profileImage: null,
-          })
+          // Fallback: gerçek bir support/admin ID'si al (mesajları DB'ye kaydetmek için)
+          const fb = res?.fallbackAgent
+          if (fb) {
+            setFallbackAgentId(fb.id)
+            setAgent({
+              id: fb.id,
+              name: 'Destek Ekibi',
+              profileImage: null,
+            })
+            // Session aç ki mesajlar takip edilebilsin
+            try {
+              const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
+                method: 'POST',
+                body: { agentId: fb.id },
+              })
+              if (sRes?.data) setSession(sRes.data)
+            } catch (_) { /* session açılamazsa da devam et */ }
+          } else {
+            setAgent({
+              id: 'offline-support',
+              name: 'Destek Ekibi',
+              profileImage: null,
+            })
+          }
+          setAgentLoading(false)
+          return
         } else {
           const picked = agents[0]
           setAgent(picked)
-          // Open a new session
           const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
             method: 'POST',
             body: { agentId: picked.id },
           })
           if (sRes?.data) setSession(sRes.data)
-        }
-        if (!agents.length) {
-          // Offline mod için de loading state'i kapatmamız gerekiyor
-          setAgentLoading(false)
-          return
         }
       } catch (e) {
         setAgentError('Bağlantı hatası: ' + e.message)
@@ -191,12 +206,26 @@ export default function LiveSupportChatPage() {
     }
     setMessages(prev => [...prev, optimistic])
 
-    // Offline mod: AI ile cevap ver
+    // Offline mod: mesajı DB'ye kaydet + AI ile cevap ver
     if (offlineMode) {
       setSending(false)
+
+      // Mesajı DB'ye kaydet (destek online olunca görebilsin)
+      if (fallbackAgentId) {
+        fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+          method: 'POST',
+          body: { receiverId: fallbackAgentId, content },
+        }).then(res => {
+          const saved = res?.data || res
+          if (saved?.id) {
+            setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...saved, _sent: true } : m))
+            emitEvent('send_message', { receiverId: fallbackAgentId, message: saved })
+          }
+        }).catch(() => {})
+      }
+
       setAiThinking(true)
       
-      // Konuşma geçmişini hazırla (son 6 mesaj)
       const history = messages.slice(-6).map(m => ({
         content: m.content,
         isUser: m.senderId === user?.id,

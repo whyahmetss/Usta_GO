@@ -14,7 +14,17 @@ router.get('/agents', authMiddleware, async (req, res) => {
       where: { role: 'SUPPORT', isActive: true, status: 'ACTIVE' },
       select: { id: true, name: true, profileImage: true, status: true, isActive: true },
     })
-    res.json({ success: true, data: agents })
+
+    let fallbackAgent = null
+    if (agents.length === 0) {
+      fallbackAgent = await prisma.user.findFirst({
+        where: { role: { in: ['SUPPORT', 'ADMIN'] } },
+        select: { id: true, name: true, profileImage: true },
+        orderBy: { createdAt: 'asc' },
+      })
+    }
+
+    res.json({ success: true, data: agents, fallbackAgent })
   } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }

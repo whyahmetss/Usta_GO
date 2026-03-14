@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { connectSocket } from '../utils/socket'
+import { connectSocket, joinSupportRoom } from '../utils/socket'
 import { useAuth } from '../context/AuthContext'
 import {
   MessageCircle, UserCheck, UserX, Loader, Users,
@@ -164,12 +164,7 @@ export default function SupportDashboard() {
   useEffect(() => {
     if (!user?.id) return
     const socket = connectSocket(user.id)
-    
-    // Join support_room so we get ALL support-related notifications
-    socket.emit('join_support_room')
-    if (!socket.connected) {
-      socket.once('connect', () => socket.emit('join_support_room'))
-    }
+    joinSupportRoom()
     
     const onReceive = (msg) => {
       loadConversations()
