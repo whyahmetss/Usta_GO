@@ -120,8 +120,23 @@ export function AuthProvider({ children }) {
           const baseNotif = {
             id,
             type: notifType,
-            title: isSupport ? `${message.sender?.name || 'Admin'} — Destek` : (message.sender?.name ? `${message.sender.name} — Mesaj` : 'Yeni Mesaj'),
-            message: message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız',
+            title: (() => {
+              if (isSupport) {
+                const lines = (message.content || '').split('\n')
+                return lines.length > 1 && lines[0].trim()
+                  ? lines[0].trim()
+                  : `${message.sender?.name || 'Admin'} — Destek`
+              }
+              return message.sender?.name ? `${message.sender.name} — Mesaj` : 'Yeni Mesaj'
+            })(),
+            message: (() => {
+              if (isSupport) {
+                const lines = (message.content || '').split('\n')
+                const body = lines.length > 1 ? lines.slice(1).join('\n') : message.content
+                return (body || '').substring(0, 80) || 'Yeni bir mesaj aldınız'
+              }
+              return message.content?.substring(0, 80) || 'Yeni bir mesaj aldınız'
+            })(),
             icon: 'message',
             read: false,
             time: new Date().toISOString(),

@@ -12,6 +12,7 @@ function AdminMessagesPage() {
   const [sendMode, setSendMode] = useState('all')
   const [selectedUser, setSelectedUser] = useState('')
   const [messageText, setMessageText] = useState('')
+  const [subject, setSubject] = useState('')
   const [users, setUsers] = useState([])
   const [sentMessages, setSentMessages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -71,9 +72,12 @@ function AdminMessagesPage() {
 
     for (const target of targetUsers) {
       try {
+        const finalContent = subject.trim()
+          ? `${subject.trim()}\n${messageText.trim()}`
+          : messageText.trim()
         await fetchAPI(API_ENDPOINTS?.MESSAGES?.SEND ?? '/messages', {
           method: 'POST',
-          body: { receiverId: target.id, content: messageText.trim() }
+          body: { receiverId: target.id, content: finalContent }
         })
         successCount++
         newMessages.push({
@@ -93,6 +97,7 @@ function AdminMessagesPage() {
     setSentMessages(prev => [...prev, ...newMessages])
     setSending(false)
     alert(`Mesaj ${successCount} kullanıcıya gönderildi!`)
+    setSubject('')
     setMessageText('')
     setSelectedUser('')
     setSendMode('all')
@@ -170,6 +175,18 @@ function AdminMessagesPage() {
                   </select>
                 </div>
               )}
+
+              {/* Subject input */}
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Konu Başlığı <span className="text-gray-400 font-normal">(bildirim başlığı olur)</span></label>
+                <input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Örn: Kampanya Duyurusu, Önemli Bilgi..."
+                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  maxLength={80}
+                />
+              </div>
 
               {/* Message textarea */}
               <div className="mb-4">
