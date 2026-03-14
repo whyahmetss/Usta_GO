@@ -44,12 +44,13 @@ export const createJob = async (customerId, data) => {
     ] : []),
   ]);
 
-  // Transaction kaydı
+  // Transaction kaydı — JOB_PAYMENT (para çekme talebinden ayrı)
   if (amount > 0) {
     await prisma.transaction.create({
       data: {
         amount: -amount,
-        type: 'WITHDRAWAL',
+        type: 'JOB_PAYMENT',
+        status: 'COMPLETED',
         description: `İş ödemesi: ${title}`,
         userId: customerId,
         jobId: job.id,

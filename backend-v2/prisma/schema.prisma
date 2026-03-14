@@ -260,6 +260,7 @@ model Transaction {
 enum TransactionType {
   EARNING
   WITHDRAWAL
+  JOB_PAYMENT // Müşteri iş oluştururken cüzdandan düşen tutar (para çekme değil)
   REFUND
   COUPON
   REFERRAL

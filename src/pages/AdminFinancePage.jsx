@@ -15,6 +15,7 @@ const TYPE_LABELS = {
   TOPUP: { label: 'Bakiye Yükleme', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CreditCard },
   EARNING: { label: 'Usta Kazancı', color: 'text-blue-600', bg: 'bg-blue-50', icon: ArrowUpRight },
   WITHDRAWAL: { label: 'Para Çekme', color: 'text-rose-600', bg: 'bg-rose-50', icon: ArrowDownRight },
+  JOB_PAYMENT: { label: 'İş Ödemesi', color: 'text-orange-600', bg: 'bg-orange-50', icon: Briefcase },
   REFUND: { label: 'İade', color: 'text-amber-600', bg: 'bg-amber-50', icon: ArrowDownLeft },
   COUPON: { label: 'Kupon', color: 'text-violet-600', bg: 'bg-violet-50', icon: BarChart2 },
   REFERRAL: { label: 'Referans', color: 'text-cyan-600', bg: 'bg-cyan-50', icon: Users },
@@ -149,18 +150,23 @@ export default function AdminFinancePage() {
           dailyData.push({ label, volume: Math.round(vol), topup: Math.round(tp) })
         }
 
-        // Son işlemler — gerçek transaction kayıtları
+        // Son işlemler — JOB_PAYMENT: iş oluşturma; WITHDRAWAL: banka çekimi / paket vb.
         const recentTransactions = allTransactions
           .slice(0, 100)
-          .map(t => ({
-            id: t.id,
-            amount: t.type === 'WITHDRAWAL' ? -Math.abs(Number(t.amount) || 0) : Number(t.amount) || 0,
-            type: t.type,
-            status: t.status,
-            description: t.description || '—',
-            userName: t.user?.name || '—',
-            createdAt: t.createdAt,
-          }))
+          .map(t => {
+            const raw = Number(t.amount) || 0
+            const isDebit = t.type === 'WITHDRAWAL' || t.type === 'JOB_PAYMENT'
+            const amount = isDebit ? -Math.abs(raw) : raw
+            return {
+              id: t.id,
+              amount,
+              type: t.type,
+              status: t.status,
+              description: t.description || '—',
+              userName: t.user?.name || '—',
+              createdAt: t.createdAt,
+            }
+          })
 
         setData({
           summary: {
@@ -235,7 +241,7 @@ export default function AdminFinancePage() {
   const chartMax = Math.max(...chartData.map(d => d.volume || 0), 1)
   const chartMaxTopup = Math.max(...chartData.map(d => d.topup || 0), 1)
 
-  const txTypes = ['all', 'TOPUP', 'EARNING', 'WITHDRAWAL', 'REFUND', 'COUPON']
+  const txTypes = ['all', 'TOPUP', 'EARNING', 'JOB_PAYMENT', 'WITHDRAWAL', 'REFUND', 'COUPON']
   const filteredTx = (data?.recentTransactions || []).filter(t => txFilter === 'all' || t.type === txFilter)
 
   const fmt = (n) => `${(n || 0).toLocaleString('tr-TR')} TL`
