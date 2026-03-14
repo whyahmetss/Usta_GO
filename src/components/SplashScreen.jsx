@@ -84,7 +84,7 @@ function HammerIcon({ active }) {
           </linearGradient>
         </defs>
 
-        <g transform="rotate(-45, 50, 50)">
+        <g transform="rotate(45, 50, 50)">
           {/* Sap */}
           <rect x="44" y="38" width="12" height="58" rx="5.5" fill="url(#handle)" />
           <rect x="47" y="40" width="3" height="54" rx="1.5" fill="#E8C888" opacity="0.35" />
@@ -95,26 +95,22 @@ function HammerIcon({ active }) {
           <rect x="44" y="35" width="12" height="1.5" rx="0.7" fill="#E8E8E8" opacity="0.4" />
 
           {/* Çekiç başı ana gövde */}
-          <rect x="22" y="12" width="56" height="24" rx="4" fill="url(#metal)" />
+          <rect x="18" y="12" width="64" height="24" rx="4" fill="url(#metal)" />
 
           {/* Üst kenar parlaklık */}
-          <rect x="24" y="13" width="52" height="8" rx="3" fill="#D8D8D8" opacity="0.5" />
-          <rect x="28" y="15" width="44" height="2.5" rx="1.2" fill="#F0F0F0" opacity="0.3" />
+          <rect x="20" y="13" width="60" height="8" rx="3" fill="#D8D8D8" opacity="0.5" />
+          <rect x="24" y="15" width="52" height="2.5" rx="1.2" fill="#F0F0F0" opacity="0.3" />
 
           {/* Vurma yüzeyi (sağ) - düz kesim */}
-          <rect x="72" y="10" width="10" height="28" rx="2.5" fill="url(#metalFace)" />
-          <rect x="78" y="13" width="2.5" height="22" rx="1.2" fill="#C8C8C8" opacity="0.4" />
-          <rect x="72" y="10" width="2" height="28" rx="1" fill="#808080" opacity="0.3" />
+          <rect x="76" y="10" width="10" height="28" rx="2.5" fill="url(#metalFace)" />
+          <rect x="82" y="13" width="2.5" height="22" rx="1.2" fill="#C8C8C8" opacity="0.4" />
+          <rect x="76" y="10" width="2" height="28" rx="1" fill="#808080" opacity="0.3" />
 
-          {/* Çengel (sol) - kavisli pençe */}
-          <path d="M26 14 C22 10, 16 4, 12 2 C10 1, 9 2, 10 4 C11 6, 14 10, 18 14 Z" fill="url(#metal)" />
-          <path d="M26 34 C22 38, 16 44, 12 46 C10 47, 9 46, 10 44 C11 42, 14 38, 18 34 Z" fill="url(#metal)" />
-          {/* Çengel iç yarık */}
-          <path d="M16 6 C18 10, 20 14, 24 18" stroke="#808080" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
-          <path d="M16 42 C18 38, 20 34, 24 30" stroke="#808080" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
+          {/* Sol taraf yuvarlak bitim */}
+          <rect x="14" y="12" width="10" height="24" rx="4" fill="url(#metalFace)" />
 
           {/* Alt kenar gölge */}
-          <rect x="22" y="32" width="56" height="3" rx="1.5" fill="#808080" opacity="0.3" />
+          <rect x="18" y="32" width="64" height="3" rx="1.5" fill="#808080" opacity="0.3" />
         </g>
       </svg>
 
