@@ -345,7 +345,7 @@ export default function LiveSupportChatPage() {
                     : <Headphones size={18} className="text-white" />
                   }
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#111]" />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#111] ${offlineMode ? 'bg-amber-400' : 'bg-emerald-500'}`} />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{agent.name}</p>

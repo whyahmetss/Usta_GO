@@ -8,7 +8,7 @@ import {
   MessageCircle, UserCheck, UserX, Loader, Users,
   FileText, ExternalLink, RefreshCw, AlertCircle, CheckCircle2,
   Clock, ChevronDown, ChevronUp, Headphones, ChevronRight,
-  Check, X, ShieldCheck, User, LogOut,
+  Check, X, ShieldCheck, User, LogOut, Power,
 } from 'lucide-react'
 
 const DOC_LABELS = {
@@ -101,6 +101,8 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
 export default function SupportDashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const [isOnline, setIsOnline] = useState(user?.isActive !== false)
+  const [togglingStatus, setTogglingStatus] = useState(false)
   const [activeTab, setActiveTab] = useState('ustas') // 'ustas' | 'chats' | 'complaints' | 'docs'
   const [ustas, setUstas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -311,6 +313,29 @@ export default function SupportDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Online/Offline Toggle */}
+              {user?.role?.toUpperCase() === 'SUPPORT' && (
+                <button
+                  onClick={async () => {
+                    setTogglingStatus(true)
+                    try {
+                      const r = await fetchAPI('/support/toggle-status', { method: 'PATCH' })
+                      if (r?.success) {
+                        setIsOnline(r.data.isActive)
+                        showToast(r.data.isActive ? 'Çevrimiçi oldunuz' : 'Çevrimdışı oldunuz')
+                      }
+                    } catch (e) { showToast('Durum değiştirilemedi', 'error') }
+                    finally { setTogglingStatus(false) }
+                  }}
+                  disabled={togglingStatus}
+                  className={`h-9 px-3 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all ${
+                    isOnline ? 'bg-emerald-400/30 text-emerald-100' : 'bg-white/10 text-white/50'
+                  }`}
+                >
+                  {togglingStatus ? <Loader size={13} className="animate-spin" /> : <Power size={13} />}
+                  {isOnline ? 'Aktif' : 'Pasif'}
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (activeTab === 'ustas') load(true)

@@ -24,6 +24,8 @@ export const sendMessage = async (senderId, receiverId, content) => {
   return message;
 };
 
+const MSG_USER_SELECT = { id: true, name: true, profileImage: true, role: true };
+
 export const getMessagesMultiSender = async (senderIds, otherUserId, skip = 0, take = 50, since = null) => {
   const orConditions = [];
   for (const sid of senderIds) {
@@ -38,6 +40,7 @@ export const getMessagesMultiSender = async (senderIds, otherUserId, skip = 0, t
     skip,
     take,
     orderBy: { createdAt: "desc" },
+    include: { sender: { select: MSG_USER_SELECT }, receiver: { select: MSG_USER_SELECT } },
   });
   return messages.reverse();
 };
@@ -49,16 +52,15 @@ export const getMessages = async (userId, otherUserId, skip = 0, take = 50, sinc
       { senderId: otherUserId, receiverId: userId },
     ],
   };
-  if (since) {
-    where.createdAt = { gte: new Date(since) };
-  }
+  if (since) where.createdAt = { gte: new Date(since) };
+
   const messages = await prisma.message.findMany({
     where,
     skip,
     take,
     orderBy: { createdAt: "desc" },
+    include: { sender: { select: MSG_USER_SELECT }, receiver: { select: MSG_USER_SELECT } },
   });
-
   return messages.reverse();
 };
 

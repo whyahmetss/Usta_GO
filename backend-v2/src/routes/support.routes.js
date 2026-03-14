@@ -7,12 +7,12 @@ import { PrismaClient } from '@prisma/client'
 const router = Router()
 const prisma = new PrismaClient()
 
-// Public: list available support agents (authed users only)
+// Public: list ONLINE support agents (isActive=true means "online")
 router.get('/agents', authMiddleware, async (req, res) => {
   try {
     const agents = await prisma.user.findMany({
-      where: { role: 'SUPPORT', isActive: true },
-      select: { id: true, name: true, profileImage: true, status: true },
+      where: { role: 'SUPPORT', isActive: true, status: 'ACTIVE' },
+      select: { id: true, name: true, profileImage: true, status: true, isActive: true },
     })
     res.json({ success: true, data: agents })
   } catch (e) {
@@ -28,6 +28,19 @@ router.get('/sessions/mine', authMiddleware, sessionCtrl.getMySession)
 
 // All routes below require SUPPORT or ADMIN role
 router.use(authMiddleware, supportMiddleware)
+
+// Toggle online/offline status for support agent
+router.patch('/toggle-status', async (req, res) => {
+  try {
+    const userId = req.user.id
+    const current = await prisma.user.findUnique({ where: { id: userId }, select: { isActive: true } })
+    const newStatus = !current?.isActive
+    await prisma.user.update({ where: { id: userId }, data: { isActive: newStatus } })
+    res.json({ success: true, data: { isActive: newStatus } })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
+})
 
 router.get('/pending-ustas', adminController.getPendingUstas)
 router.patch('/users/:userId/approve-usta', adminController.approveUsta)
