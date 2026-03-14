@@ -154,10 +154,8 @@ export default function AuthPage() {
         const r = await login(email, password)
         if (r?.success) {
           const rl = r.role?.toLowerCase()
-          if (rl === 'admin') navigate('/admin')
-          else if (rl === 'usta' || rl === 'professional') navigate('/professional')
-          else if (rl === 'support') navigate('/support')
-          else navigate('/home')
+          if (rl === 'usta' || rl === 'professional') navigate('/professional')
+          else navigate('/home')   // admin, support, customer → /home (her iki app da yakalar)
         } else setError(r?.error || 'E-posta veya şifre hatalı')
       } catch { setError('Bağlantı hatası oluştu') }
       finally { setLoading(false) }
