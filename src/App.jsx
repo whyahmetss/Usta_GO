@@ -8,7 +8,6 @@ import PageErrorBoundary from './components/PageErrorBoundary'
 import SplashScreen from './components/SplashScreen'
 import OnboardingScreen from './components/OnboardingScreen'
 import AuthPage from './pages/AuthPage'
-import LandingPage from './pages/LandingPage'
 
 /* ── Lazy sayfalar ── */
 const UstaRegisterPage       = lazy(() => import('./pages/UstaRegisterPage'))
@@ -84,7 +83,7 @@ function AppRoutes() {
               userRole === 'professional' ? <Navigate to="/professional" replace /> :
               <Navigate to="/home" replace />
             ) : (
-              <LandingPage />
+              <Navigate to="/auth" replace />
             )
           }
         />
