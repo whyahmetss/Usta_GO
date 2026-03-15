@@ -1,34 +1,41 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'com.ustago.app',
   appName: 'Usta Go',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    hostname: 'app.usta-go.com',
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
-      backgroundColor: '#1F2937',
-      showSpinner: false,
-      spinnerColor: 'white'
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: '#3B82F6',
+      showSpinner: true,
+      iosSpinnerStyle: 'small',
+      spinnerColor: '#ffffff',
+      splashFullScreen: true,
+      splashImmersive: true,
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#1F2937'
+      backgroundColor: '#3B82F6',
+      overlaysWebView: false,
     },
     PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert']
+      presentationOptions: ['badge', 'sound', 'alert'],
     },
     Camera: {
-      cameraDirection: 'REAR'
+      cameraDirection: 'REAR',
     },
     Keyboard: {
-      hideFormAccessoryBar: false,
-      resize: 'body'
-    }
-  }
+      resize: KeyboardResize.Native,
+      resizeOnFullScreen: true,
+    },
+  },
 };
 
 export default config;
