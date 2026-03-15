@@ -172,19 +172,19 @@ export default function MapPickerModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-[#0d0d0d]">
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-white border-b border-gray-200">
+      <div className="shrink-0 bg-white dark:bg-[#141414] border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
           <button
             onClick={onClose}
-            className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200 transition-colors"
+            className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
             aria-label="Kapat"
           >
-            <X size={20} className="text-gray-700" />
+            <X size={20} className="text-gray-700 dark:text-gray-300" />
           </button>
-          <h2 className="font-bold text-gray-900 text-lg">Konum Seç</h2>
+          <h2 className="font-bold text-gray-900 dark:text-white text-lg">Konum Seç</h2>
         </div>
 
         {/* ── Arama inputu ──────────────────────────────────────── */}
@@ -201,7 +201,7 @@ export default function MapPickerModal({
               onFocus={() => inputValue.trim().length >= 3 && handleInput(inputValue)}
               placeholder="Adres veya yer ara…"
               autoComplete="off"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
             {inputValue.length > 0 && (
@@ -216,15 +216,15 @@ export default function MapPickerModal({
 
           {/* ── Nominatim önerileri ────────────────────────────── */}
           {suggestionOpen && (
-            <div className="absolute left-4 right-4 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-10">
+            <div className="absolute left-4 right-4 top-full mt-1 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-10">
               {suggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => handleSelectSuggestion(s)}
-                  className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
+                  className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0"
                 >
                   <MapPin size={15} className="shrink-0 text-blue-500 mt-0.5" />
-                  <span className="text-sm text-gray-800 line-clamp-2">{s.display_name}</span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{s.display_name}</span>
                 </button>
               ))}
             </div>
@@ -264,11 +264,11 @@ export default function MapPickerModal({
       </div>
 
       {/* ── Alt çubuk ─────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-4 pt-4 pb-8">
+      <div className="shrink-0 bg-white dark:bg-[#141414] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-4 pt-4 pb-8">
 
         {/* Seçili adres */}
         <div className="flex items-start gap-3 mb-4 min-h-[52px]">
-          <div className="w-9 h-9 shrink-0 bg-blue-50 rounded-full flex items-center justify-center mt-0.5">
+          <div className="w-9 h-9 shrink-0 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
             <MapPin size={16} className="text-blue-600" />
           </div>
           <div className="flex-1 min-w-0">
@@ -281,7 +281,7 @@ export default function MapPickerModal({
                 <span className="text-sm">Adres alınıyor…</span>
               </div>
             ) : (
-              <p className="text-sm font-medium text-gray-900 leading-snug line-clamp-2">
+              <p className="text-sm font-medium text-gray-900 dark:text-white leading-snug line-clamp-2">
                 {address || 'Haritada bir konum seçin veya markeri sürükleyin'}
               </p>
             )}

@@ -204,13 +204,13 @@ function CreateJobPage() {
         {step === 1 && (
           <div className="space-y-4">
             {analyzeError && (
-              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-rose-700 text-sm">
+              <div className="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 text-rose-700 dark:text-rose-300 text-sm">
                 {analyzeError}
               </div>
             )}
 
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-1 text-sm">Fotoğraf <span className="text-gray-400 font-normal">(opsiyonel)</span></h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm">Fotoğraf <span className="text-gray-400 font-normal">(opsiyonel)</span></h3>
               <input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" id="photo-upload" />
               <label htmlFor="photo-upload" className="cursor-pointer block mt-3">
                 {photoPreview ? (
@@ -221,7 +221,7 @@ function CreateJobPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-primary-300 transition-colors">
+                  <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-primary-300 transition-colors">
                     <Camera size={32} className="text-gray-300" />
                     <p className="text-gray-400 text-sm font-medium">Sorunu fotoğraflayın</p>
                   </div>
@@ -230,12 +230,12 @@ function CreateJobPage() {
             </Card>
 
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-1 text-sm">Sorunu Açıklayın <span className="text-rose-500">*</span></h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm">Sorunu Açıklayın <span className="text-rose-500">*</span></h3>
               <p className="text-xs text-gray-400 mb-3">AI bu açıklamayı analiz ederek tahmini fiyat sunacak.</p>
               {serviceMeta?.hints && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {serviceMeta.hints.map(hint => (
-                    <span key={hint} className="text-[11px] px-2.5 py-1 bg-primary-50 text-primary-600 rounded-full font-medium">
+                    <span key={hint} className="text-[11px] px-2.5 py-1 bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 rounded-full font-medium">
                       {hint}
                     </span>
                   ))}
@@ -245,7 +245,7 @@ function CreateJobPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={500}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none resize-none text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none resize-none text-sm"
                 rows={4}
                 placeholder={serviceMeta?.placeholder || 'Örn: Sorununuzu detaylıca açıklayın...'}
               />
@@ -253,20 +253,20 @@ function CreateJobPage() {
             </Card>
 
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm flex items-center gap-1.5">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm flex items-center gap-1.5">
                 <MapPin size={16} className="text-primary-500" />Tam Adres <span className="text-rose-500">*</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setShowMapPicker(true)}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition ${
-                  address ? 'bg-accent-50 border-accent-200' : 'bg-gray-50 border-gray-200 border-dashed'
+                  address ? 'bg-accent-50 dark:bg-accent-900/30 border-accent-200 dark:border-accent-700' : 'bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-700 border-dashed'
                 }`}
               >
-                <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${address ? 'bg-accent-500' : 'bg-gray-200'}`}>
+                <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${address ? 'bg-accent-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                   <MapPin size={16} className={address ? 'text-white' : 'text-gray-400'} />
                 </div>
-                <span className={`flex-1 text-sm leading-snug line-clamp-2 ${address ? 'font-medium text-gray-900' : 'text-gray-400'}`}>
+                <span className={`flex-1 text-sm leading-snug line-clamp-2 ${address ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-400'}`}>
                   {address || 'Haritadan konum seçin...'}
                 </span>
                 <ChevronRight size={16} className="shrink-0 text-gray-300" />
@@ -278,7 +278,7 @@ function CreateJobPage() {
               disabled={!description.trim() || !address.trim()}
               className={`w-full py-4 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2 ${
                 !description.trim() || !address.trim()
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
                   : 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98] shadow-card'
               }`}
             >
@@ -291,7 +291,7 @@ function CreateJobPage() {
         {step === 2 && (
           <Card className="text-center !py-16">
             <div className="w-14 h-14 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">AI Analiz Ediyor...</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">AI Analiz Ediyor...</h3>
             <p className="text-sm text-gray-400">Sorun sınıflandırılıyor ve fiyat hesaplanıyor</p>
           </Card>
         )}
@@ -300,14 +300,14 @@ function CreateJobPage() {
         {step === 3 && aiResult && (
           <div className="space-y-4">
             {analyzeError && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-700 text-sm">
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-amber-700 dark:text-amber-300 text-sm">
                 {analyzeError}
               </div>
             )}
 
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">AI Değerlendirmesi</h3>
-              <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">AI Değerlendirmesi</h3>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 <p>{aiResult.customerMessage?.giris}</p>
                 <p>{aiResult.customerMessage?.gelisme}</p>
                 <p className="text-gray-400 italic">{aiResult.customerMessage?.sonuc}</p>
@@ -358,7 +358,7 @@ function CreateJobPage() {
 
             {activeCoupons.length > 0 && (
               <Card>
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm">Kupon Kullan</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">Kupon Kullan</h3>
                 <div className="space-y-2">
                   {activeCoupons.map(c => (
                     <button
@@ -366,13 +366,13 @@ function CreateJobPage() {
                       onClick={() => setSelectedCoupon(selectedCoupon?.id === c.id ? null : c)}
                       className={`w-full p-3 rounded-xl border-2 text-left transition ${
                         selectedCoupon?.id === c.id
-                          ? 'bg-amber-50 border-amber-400'
-                          : 'bg-gray-50 border-gray-200'
+                          ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-400'
+                          : 'bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-700'
                       }`}
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">{c.code}</p>
+                          <p className="font-bold text-gray-900 dark:text-white text-sm">{c.code}</p>
                           <p className="text-xs text-gray-400">{c.amount} TL indirim</p>
                         </div>
                         <p className="text-lg font-bold text-amber-600">-{c.amount} TL</p>
@@ -388,7 +388,7 @@ function CreateJobPage() {
               const insufficient = userBalance < finalPrice
               return (
                 <>
-                  <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                  <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800' : 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'}`}>
                     <div className="flex justify-between items-center text-sm font-medium">
                       <span className={insufficient ? 'text-rose-600' : 'text-emerald-600'}>Cüzdan Bakiyeniz</span>
                       <span className={`font-bold text-base ${insufficient ? 'text-rose-600' : 'text-emerald-600'}`}>{userBalance} TL</span>
@@ -404,7 +404,7 @@ function CreateJobPage() {
                     <button
                       onClick={() => { setStep(1); setAiResult(null) }}
                       disabled={isCreating}
-                      className="py-3.5 bg-gray-100 text-gray-600 rounded-2xl font-semibold hover:bg-gray-200 transition text-sm"
+                      className="py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm"
                     >
                       Geri Dön
                     </button>
@@ -412,7 +412,7 @@ function CreateJobPage() {
                       onClick={handleCreateJob}
                       disabled={isCreating || insufficient}
                       className={`py-3.5 rounded-2xl font-semibold transition text-sm ${
-                        isCreating || insufficient ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
+                        isCreating || insufficient ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
                       }`}
                     >
                       {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
