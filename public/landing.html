@@ -135,6 +135,19 @@
     #video-lightbox.active { opacity:1;pointer-events:auto; }
     #video-lightbox iframe { width:90%;max-width:900px;aspect-ratio:16/9;border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.5); }
     
+    /* Confetti Animation */
+    .confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
+    .confetti { position:absolute;width:10px;height:10px;animation:confetti-fall 3s ease-out forwards; }
+    @keyframes confetti-fall {
+      0% { transform:translateY(-100px) rotate(0deg);opacity:1; }
+      100% { transform:translateY(100vh) rotate(720deg);opacity:0; }
+    }
+    .confetti:nth-child(odd) { background:#6366f1; }
+    .confetti:nth-child(even) { background:#10b981; }
+    .confetti:nth-child(3n) { background:#f59e0b; }
+    .confetti:nth-child(4n) { background:#ec4899; }
+    .confetti:nth-child(5n) { background:#8b5cf6; }
+    
     .app-ai { background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08));border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:6px;margin-bottom:6px; }
     
     /* Bottom Navigation */
@@ -1234,6 +1247,78 @@
   
   document.querySelectorAll('.feat-card, .badge-f').forEach(el => {
     levitationObserver.observe(el);
+  });
+
+  // ── Confetti + Sound Effect ─────────────────────────────────────
+  function playSuccessSound() {
+    // Simple beep using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    
+    // Second tone for "ding" effect
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      osc2.frequency.value = 1200;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      osc2.start(audioContext.currentTime);
+      osc2.stop(audioContext.currentTime + 0.3);
+    }, 100);
+  }
+  
+  function fireConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+    
+    for (let i = 0; i < 50; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.animationDelay = Math.random() * 0.5 + 's';
+      confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      container.appendChild(confetti);
+    }
+    
+    // Play sound
+    playSuccessSound();
+    
+    // Remove after animation
+    setTimeout(() => {
+      container.remove();
+    }, 3500);
+  }
+  
+  // Attach to all CTA buttons
+  document.querySelectorAll('#sticky-cta, #hero-cta-primary, .btn-primary').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // Only fire if it's an internal link (/auth)
+      if (btn.getAttribute('href') === '/auth') {
+        fireConfetti();
+      }
+    });
   });
 })();
 
