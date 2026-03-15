@@ -239,11 +239,24 @@ export default function LiveSupportChatPage() {
         
         const reply = aiRes?.reply || 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
         
+        // AI cevabını DB'ye kaydet ki destek aktife gelince görebilsin
+        if (fallbackAgentId) {
+          fetchAPI('/support/save-ai-reply', {
+            method: 'POST',
+            body: { 
+              userId: user?.id, 
+              agentId: fallbackAgentId, 
+              content: `[AI Asistan] ${reply}`,
+              sessionId: session?.id,
+            },
+          }).catch(err => console.log('AI reply save failed:', err))
+        }
+
         setTimeout(() => {
           const botMessage = {
             id: `ai-${Date.now()}`,
             content: reply,
-            senderId: 'support-ai',
+            senderId: fallbackAgentId || 'support-ai',
             receiverId: user?.id,
             isRead: true,
             createdAt: new Date().toISOString(),
@@ -254,11 +267,26 @@ export default function LiveSupportChatPage() {
         }, 800)
       } catch (err) {
         console.error('AI reply error:', err)
+        const fallbackReply = 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
+        
+        // Fallback mesajı da DB'ye kaydet
+        if (fallbackAgentId) {
+          fetchAPI('/support/save-ai-reply', {
+            method: 'POST',
+            body: { 
+              userId: user?.id, 
+              agentId: fallbackAgentId, 
+              content: `[AI Asistan] ${fallbackReply}`,
+              sessionId: session?.id,
+            },
+          }).catch(() => {})
+        }
+
         setTimeout(() => {
           const fallbackMsg = {
             id: `bot-${Date.now()}`,
-            content: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.',
-            senderId: 'support-bot',
+            content: fallbackReply,
+            senderId: fallbackAgentId || 'support-bot',
             receiverId: user?.id,
             isRead: true,
             createdAt: new Date().toISOString(),

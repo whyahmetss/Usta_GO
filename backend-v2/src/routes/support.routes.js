@@ -36,6 +36,28 @@ router.post('/sessions/close', authMiddleware, sessionCtrl.closeSession)
 router.post('/sessions/rate', authMiddleware, sessionCtrl.rateSession)
 router.get('/sessions/mine', authMiddleware, sessionCtrl.getMySession)
 
+// Save AI reply as a message from the agent (so support can see it when they come online)
+router.post('/save-ai-reply', authMiddleware, async (req, res) => {
+  try {
+    const { userId, agentId, content, sessionId } = req.body
+    if (!agentId || !content) {
+      return res.status(400).json({ success: false, error: 'agentId and content required' })
+    }
+    const msg = await prisma.message.create({
+      data: {
+        senderId: agentId,
+        receiverId: userId || req.user.id,
+        content,
+        isRead: false,
+      },
+    })
+    res.json({ success: true, data: msg })
+  } catch (e) {
+    console.error('Save AI reply error:', e)
+    res.status(500).json({ success: false, error: e.message })
+  }
+})
+
 // All routes below require SUPPORT or ADMIN role
 router.use(authMiddleware, supportMiddleware)
 
