@@ -93,6 +93,48 @@
     .app-card-header { display:flex;align-items:center;gap:5px;margin-bottom:4px; }
     .app-tags { display:flex;gap:2px;flex-wrap:wrap; }
     
+    /* Sticky CTA Bar */
+    #sticky-cta { position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:linear-gradient(135deg,rgba(99,102,241,.9),rgba(139,92,246,.9));backdrop-filter:blur(20px);border-radius:50px;padding:12px 24px;box-shadow:0 8px 32px rgba(99,102,241,.4);transition:all .4s cubic-bezier(.16,1,.3,1);opacity:0;translate:0 100px; }
+    #sticky-cta.visible { opacity:1;translate:0 0; }
+    #sticky-cta:hover { transform:translateX(-50%) scale(1.05);box-shadow:0 12px 40px rgba(99,102,241,.5); }
+    
+    /* Magnetic Button Effect */
+    .magnetic-btn { transition:transform .3s cubic-bezier(.16,1,.3,1); }
+    .magnetic-btn:active { transform:scale(.95); }
+    
+    /* Ripple Effect */
+    .ripple { position:relative;overflow:hidden; }
+    .ripple::after { content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.3) 10%,transparent 10%);background-repeat:no-repeat;background-position:50%;transform:scale(4);opacity:0;transition:transform .6s,opacity .6s; }
+    .ripple:active::after { transform:scale(0);opacity:1;transition:0s; }
+    
+    /* Shimmer Animation */
+    @keyframes shimmer { 0% { background-position:-200% center; } 100% { background-position:200% center; } }
+    .shimmer { background:linear-gradient(90deg,#6366f1 0%,#a78bfa 25%,#22d3ee 50%,#a78bfa 75%,#6366f1 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite; }
+    
+    /* Floating Levitation */
+    @keyframes levitate { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+    .levitate { animation:levitate 3s ease-in-out infinite; }
+    .levitate-delay-1 { animation-delay:.5s; }
+    .levitate-delay-2 { animation-delay:1s; }
+    .levitate-delay-3 { animation-delay:1.5s; }
+    
+    /* Live Pulse */
+    @keyframes live-pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+    .live-indicator { animation:live-pulse 2s ease-in-out infinite; }
+    
+    /* Testimonial Carousel */
+    .carousel-container { overflow:hidden;position:relative; }
+    .carousel-track { display:flex;transition:transform .5s cubic-bezier(.16,1,.3,1); }
+    .carousel-slide { min-width:100%;padding:0 10px; }
+    .carousel-nav { display:flex;gap:8px;justify-content:center;margin-top:20px; }
+    .carousel-dot { width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:all .3s;cursor:pointer; }
+    .carousel-dot.active { background:#6366f1;transform:scale(1.3); }
+    
+    /* Video Lightbox */
+    #video-lightbox { position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s; }
+    #video-lightbox.active { opacity:1;pointer-events:auto; }
+    #video-lightbox iframe { width:90%;max-width:900px;aspect-ratio:16/9;border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.5); }
+    
     .app-ai { background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08));border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:6px;margin-bottom:6px; }
     
     /* Bottom Navigation */
@@ -210,7 +252,7 @@
       </div>
 
       <h1 class="h-in h-d2 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-3">
-        Evinizin <span class="grad">Ustasını</span>
+        Evinizin <span class="grad shimmer">Ustasını</span>
       </h1>
       <h1 class="h-in h-d3 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-6">
         Anında Bulun<span class="text-indigo-400">.</span>
@@ -896,6 +938,18 @@
   </div>
 </footer>
 
+<!-- Sticky CTA Bar -->
+<a href="/auth" id="sticky-cta" class="flex items-center gap-3 text-white font-semibold text-sm">
+  <span class="w-2 h-2 bg-emerald-400 rounded-full live-indicator"></span>
+  <span>🚀 Hemen Başla - Ücretsiz</span>
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+</a>
+
+<!-- Video Lightbox -->
+<div id="video-lightbox" onclick="this.classList.remove('active')">
+  <iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 <script>
 (function() {
   'use strict';
@@ -1042,6 +1096,145 @@
     activeSvc = (activeSvc + 1) % svcEls.length;
     svcEls[activeSvc]?.classList.add('active');
   }, 2500);
+
+  // ── Sticky CTA Bar ───────────────────────────────────────────────
+  const stickyCta = document.getElementById('sticky-cta');
+  const heroCta = document.getElementById('hero-cta-primary');
+  if (stickyCta && heroCta) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) {
+          stickyCta.classList.add('visible');
+        } else {
+          stickyCta.classList.remove('visible');
+        }
+      });
+    }, { threshold: 0 });
+    observer.observe(heroCta);
+  }
+
+  // ── Magnetic Button Effect ─────────────────────────────────────────
+  document.querySelectorAll('.magnetic-btn').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate(0, 0)';
+    });
+  });
+
+  // ── Live Stats Counter ────────────────────────────────────────────
+  function updateLiveStats() {
+    const liveCounters = document.querySelectorAll('[data-live-counter]');
+    liveCounters.forEach(counter => {
+      const base = parseInt(counter.dataset.base) || 1000;
+      const variance = parseInt(counter.dataset.variance) || 50;
+      const current = base + Math.floor(Math.random() * variance * 2) - variance;
+      counter.textContent = current.toLocaleString('tr-TR');
+    });
+  }
+  setInterval(updateLiveStats, 5000);
+  updateLiveStats();
+
+  // ── Testimonial Carousel ─────────────────────────────────────────
+  const carouselTrack = document.querySelector('.carousel-track');
+  const carouselDots = document.querySelectorAll('.carousel-dot');
+  let currentSlide = 0;
+  
+  function goToSlide(index) {
+    if (carouselTrack) {
+      carouselTrack.style.transform = `translateX(-${index * 100}%)`;
+    }
+    carouselDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+    currentSlide = index;
+  }
+  
+  carouselDots.forEach((dot, index) => {
+    dot.addEventListener('click', () => goToSlide(index));
+  });
+  
+  // Auto-advance carousel
+  setInterval(() => {
+    const totalSlides = carouselDots.length || 3;
+    goToSlide((currentSlide + 1) % totalSlides);
+  }, 5000);
+
+  // ── Video Lightbox ────────────────────────────────────────────────
+  window.openVideo = function(videoId) {
+    const lightbox = document.getElementById('video-lightbox');
+    const frame = document.getElementById('video-frame');
+    if (lightbox && frame) {
+      frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      lightbox.classList.add('active');
+    }
+  };
+
+  // ── Enhanced 3D Phone Tilt with Parallax ─────────────────────────
+  if (phoneTilt) {
+    const inner = phoneTilt.querySelector('.phone-inner');
+    const screen = phoneTilt.querySelector('.phone-screen');
+    
+    phoneTilt.addEventListener('mousemove', e => {
+      const r = phoneTilt.getBoundingClientRect();
+      const cx = r.width / 2, cy = r.height / 2;
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const rx = (y - cy) / cy * -15;
+      const ry = (x - cx) / cx * 15;
+      
+      inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      
+      // Parallax depth for screen content
+      if (screen) {
+        const content = screen.querySelectorAll('.app-header, .floating-notification, .app-card, .app-ai');
+        content.forEach((el, i) => {
+          const depth = (i + 1) * 2;
+          el.style.transform = `translateZ(${depth}px)`;
+        });
+      }
+    });
+    
+    phoneTilt.addEventListener('mouseleave', () => {
+      inner.style.transform = 'rotateX(0) rotateY(0)';
+      const content = screen?.querySelectorAll('.app-header, .floating-notification, .app-card, .app-ai');
+      content?.forEach(el => {
+        el.style.transform = 'translateZ(0)';
+      });
+    });
+    
+    // Enhanced auto-float
+    let autoFloat = true;
+    let angle = 0;
+    function phoneAutoFloat() {
+      if (autoFloat) {
+        angle += .02;
+        const rx = Math.sin(angle) * 4;
+        const ry = Math.cos(angle) * 5;
+        inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      }
+      requestAnimationFrame(phoneAutoFloat);
+    }
+    phoneAutoFloat();
+    phoneTilt.addEventListener('mouseenter', () => { autoFloat = false; });
+    phoneTilt.addEventListener('mouseleave', () => { autoFloat = true; });
+  }
+
+  // ── Levitation Animation Trigger ─────────────────────────────────
+  const levitationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('levitate');
+      }
+    });
+  }, { threshold: .3 });
+  
+  document.querySelectorAll('.feat-card, .badge-f').forEach(el => {
+    levitationObserver.observe(el);
+  });
 })();
 
 // ── FAQ Accordion ────────────────────────────────────────────────────
