@@ -4,6 +4,7 @@ import cors from "cors";
 import "express-async-errors";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
+import { initFirebase } from "./utils/firebase.js";
 
 // Import routes
 import authRoutes from "./routes/auth.routes.js";
@@ -27,6 +28,9 @@ import otpRoutes from "./routes/otp.routes.js";
 import { PrismaClient } from "@prisma/client";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
+
+// Initialize Firebase Admin SDK for push notifications
+initFirebase();
 
 const app = express();
 const httpServer = createServer(app);

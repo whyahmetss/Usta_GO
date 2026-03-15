@@ -29,6 +29,15 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
+export const saveFcmToken = async (req, res, next) => {
+  try {
+    const result = await authService.saveFcmToken(req.user.id, req.body.fcmToken);
+    successResponse(res, result, "FCM token saved");
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateProfile = async (req, res, next) => {
   try {
     const user = await authService.updateUserProfile(req.user.id, req.body);

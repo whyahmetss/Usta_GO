@@ -37,4 +37,11 @@ router.get("/me", authMiddleware, authController.getProfile);
  */
 router.put("/profile", authMiddleware, validateBody(updateProfileSchema), authController.updateProfile);
 
+/**
+ * @route POST /api/auth/fcm-token
+ * @desc Save FCM push notification token for current user
+ * @body {fcmToken}
+ */
+router.post("/fcm-token", authMiddleware, authController.saveFcmToken);
+
 export default router;

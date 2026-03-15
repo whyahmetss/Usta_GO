@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { sendPushNotification } from "../utils/firebase.js";
 
 const prisma = new PrismaClient();
 
@@ -17,9 +18,29 @@ export const sendMessage = async (senderId, receiverId, content) => {
     },
     include: {
       sender: { select: { id: true, name: true, profileImage: true, role: true } },
-      receiver: { select: { id: true, name: true, profileImage: true, role: true } },
+      receiver: { select: { id: true, name: true, profileImage: true, role: true, fcmToken: true } },
     },
   });
+
+  // Push notification gönder (arka planda, hata olsa bile mesajı engelleme)
+  if (message.receiver?.fcmToken) {
+    const senderName = message.sender?.name || "Birisi";
+    const senderRole = (message.sender?.role || "").toUpperCase();
+    const isAdmin = senderRole === "ADMIN" || senderRole === "SUPPORT";
+    const title = isAdmin ? "Usta Go — Destek" : `${senderName} — Mesaj`;
+    const body = (content || "").substring(0, 120) || "Yeni bir mesaj aldınız";
+
+    sendPushNotification(message.receiver.fcmToken, title, body, {
+      type: "message",
+      senderId,
+      messageId: message.id,
+    }).catch(() => {}); // sessizce devam et
+  }
+
+  // fcmToken'ı response'dan çıkar
+  if (message.receiver) {
+    delete message.receiver.fcmToken;
+  }
 
   return message;
 };

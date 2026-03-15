@@ -172,6 +172,19 @@ export const getUserProfile = async (userId) => {
   return user;
 };
 
+export const saveFcmToken = async (userId, fcmToken) => {
+  if (!fcmToken) {
+    const error = new Error("fcmToken is required");
+    error.status = 400;
+    throw error;
+  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: { fcmToken },
+  });
+  return { success: true };
+};
+
 export const updateUserProfile = async (userId, data) => {
   const allowed = ['name', 'phone', 'bio', 'profileImage', 'isActive'];
   const sanitized = Object.fromEntries(
