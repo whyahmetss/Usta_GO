@@ -1,8 +1,0 @@
-[build]
-  command = "npm run build:panel"
-  publish = "dist-panel"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
