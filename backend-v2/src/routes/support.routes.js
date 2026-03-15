@@ -85,32 +85,21 @@ router.patch('/users/:userId/reject-customer', adminController.rejectCustomer)
 // Support conversations: list unique users who messaged support agents
 router.get('/conversations', async (req, res) => {
   try {
-    const role = (req.user.role || '').toUpperCase()
-    const isAdmin = role === 'ADMIN'
+    // Both SUPPORT and ADMIN see ALL conversations involving any support team member
+    const supportAgents = await prisma.user.findMany({
+      where: { role: { in: ['SUPPORT', 'ADMIN'] } },
+      select: { id: true },
+    })
+    const agentIds = supportAgents.map(a => a.id)
+    if (!agentIds.includes(req.user.id)) agentIds.push(req.user.id)
 
-    let whereClause
-    if (isAdmin) {
-      // Admin sees ALL conversations involving any SUPPORT role user
-      const supportAgents = await prisma.user.findMany({
-        where: { role: 'SUPPORT' },
-        select: { id: true },
-      })
-      const agentIds = supportAgents.map(a => a.id)
-      agentIds.push(req.user.id) // include admin's own convos too
-      whereClause = {
+    const msgs = await prisma.message.findMany({
+      where: {
         OR: [
           { senderId: { in: agentIds } },
           { receiverId: { in: agentIds } },
         ],
-      }
-    } else {
-      whereClause = {
-        OR: [{ senderId: req.user.id }, { receiverId: req.user.id }],
-      }
-    }
-
-    const msgs = await prisma.message.findMany({
-      where: whereClause,
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         sender: { select: { id: true, name: true, profileImage: true, role: true } },
@@ -121,7 +110,6 @@ router.get('/conversations', async (req, res) => {
     // Build unique conversations keyed by the non-support user's id
     const convMap = new Map()
     for (const msg of msgs) {
-      // Identify the "customer" side
       const senderRole = (msg.sender?.role || '').toUpperCase()
       const receiverRole = (msg.receiver?.role || '').toUpperCase()
       let customerUser
@@ -142,7 +130,8 @@ router.get('/conversations', async (req, res) => {
           unread: 0,
         })
       }
-      if (!msg.isRead && (msg.receiverId === req.user.id || isAdmin)) {
+      // Count unread for any support team member
+      if (!msg.isRead && agentIds.includes(msg.receiverId)) {
         convMap.get(customerUser.id).unread += 1
       }
     }

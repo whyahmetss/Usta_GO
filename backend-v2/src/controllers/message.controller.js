@@ -2,6 +2,9 @@ import * as messageService from "../services/message.service.js";
 import { successResponse } from "../utils/response.js";
 import { io } from "../index.js";
 import { analyzeMessage } from "../utils/messageFilter.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const sendMessage = async (req, res, next) => {
   try {
@@ -32,13 +35,19 @@ export const getMessages = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const role = (req.user.role || "").toUpperCase();
-    const asAgent = req.query.asAgent;
     const since = req.query.since || null;
 
-    if (role === "ADMIN" && asAgent) {
-      // Admin viewing: show messages between (agent OR admin) and customer
+    // SUPPORT and ADMIN: show ALL messages between any support team member and the customer
+    if (role === "SUPPORT" || role === "ADMIN") {
+      const supportUsers = await prisma.user.findMany({
+        where: { role: { in: ["SUPPORT", "ADMIN"] } },
+        select: { id: true },
+      });
+      const agentIds = supportUsers.map(u => u.id);
+      if (!agentIds.includes(req.user.id)) agentIds.push(req.user.id);
+
       const messages = await messageService.getMessagesMultiSender(
-        [asAgent, req.user.id], userId, skip, limit, since
+        agentIds, userId, skip, limit, since
       );
       return successResponse(res, messages, "Messages fetched successfully");
     }
