@@ -595,7 +595,15 @@ function JobDetailPage() {
       const response = await fetchAPI(API_ENDPOINTS.JOBS.APPROVE(job.id), { method: 'PUT' })
       if (response.data) {
         setJob(mapJobFromBackend(response.data))
-        alert('İş onaylandı! Ödeme ustaya aktarıldı.')
+        
+        // 🎉 Confetti + Sound Effect
+        fireConfetti()
+        playSuccessSound()
+        
+        // Alert'i geciktir ki confetti görünsün
+        setTimeout(() => {
+          alert('İş onaylandı! Ödeme ustaya aktarıldı.')
+        }, 1500)
 
         emitEvent('job_status_changed', {
           jobId: job.id,
@@ -607,6 +615,79 @@ function JobDetailPage() {
     } catch (err) {
       console.error('Approve job error:', err)
       alert('İş onaylanırken hata oluştu: ' + (err.message || 'Bilinmeyen hata'))
+    }
+  }
+
+  // 🎉 Confetti Effect Functions
+  const playSuccessSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.value = 800
+      oscillator.type = 'sine'
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.5)
+      
+      // Second tone for "ding" effect
+      setTimeout(() => {
+        const osc2 = audioContext.createOscillator()
+        const gain2 = audioContext.createGain()
+        osc2.connect(gain2)
+        gain2.connect(audioContext.destination)
+        osc2.frequency.value = 1200
+        osc2.type = 'sine'
+        gain2.gain.setValueAtTime(0.2, audioContext.currentTime)
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+        osc2.start(audioContext.currentTime)
+        osc2.stop(audioContext.currentTime + 0.3)
+      }, 100)
+    } catch (e) {
+      console.log('Sound effect failed:', e)
+    }
+  }
+  
+  const fireConfetti = () => {
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4']
+    
+    for (let i = 0; i < 50; i++) {
+      const confetti = document.createElement('div')
+      confetti.style.cssText = `
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        left: ${Math.random() * 100}%;
+        top: -10px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+        pointer-events: none;
+        z-index: 9999;
+        animation: confetti-fall ${Math.random() * 2 + 2}s ease-out forwards;
+      `
+      document.body.appendChild(confetti)
+      
+      setTimeout(() => confetti.remove(), 4000)
+    }
+    
+    // Add CSS animation if not exists
+    if (!document.getElementById('confetti-style')) {
+      const style = document.createElement('style')
+      style.id = 'confetti-style'
+      style.textContent = `
+        @keyframes confetti-fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `
+      document.head.appendChild(style)
     }
   }
 
@@ -1022,8 +1103,10 @@ function JobDetailPage() {
           </button>
         )}
 
-        {/* Cancel Button */}
+        {/* Cancel Button - Müşteri sadece pending'de iptal edebilir, usta accepted/in_progress'te iptal edebilir */}
         {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'rated' && job.status !== 'pending_approval' && (
+          (isProfessional || (isCustomer && job.status === 'pending'))
+        ) && (
           <button
             onClick={() => navigate(`/cancel-job/${job.id}`)}
             className="w-full py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl font-semibold hover:bg-rose-100 active:scale-[0.98] transition"

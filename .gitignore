@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 dist-admin
+dist-panel
+dist-landing
+*.jks
+*.keystore
 *.local
 
 # Environment variables - NEVER commit these
@@ -28,3 +32,6 @@ dist-admin
 *.njsproj
 *.sln
 *.sw?
+
+# Local Netlify folder
+.netlify

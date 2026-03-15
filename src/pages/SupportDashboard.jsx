@@ -345,6 +345,13 @@ export default function SupportDashboard() {
                 </button>
               )}
               <button
+                onClick={() => navigate('/support/guide')}
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
+                title="Destek Kılavuzu"
+              >
+                <FileText size={16} className="text-white" />
+              </button>
+              <button
                 onClick={() => {
                   if (activeTab === 'ustas') load(true)
                   else if (activeTab === 'chats') loadConversations()
@@ -660,7 +667,11 @@ export default function SupportDashboard() {
                         : 'bg-blue-100 text-blue-700'
                     }`}>{roleLabel(conv.user.role)}</span>
                   </div>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">{conv.lastMessage || '—'}</p>
+                  <p className={`text-xs truncate mt-0.5 ${conv.lastMessage?.startsWith('⛔') ? 'text-rose-500 font-medium' : 'text-slate-500'}`}>
+                    {conv.lastMessage?.startsWith('⛔') ? conv.lastMessage
+                      : conv.lastMessage?.startsWith('🤖') ? `🤖 AI: ${conv.lastMessage.replace(/^🤖\s*/, '')}`
+                      : conv.lastMessage || '—'}
+                  </p>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className="text-[10px] text-slate-400">{fmt(conv.lastMessageAt)}</span>

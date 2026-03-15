@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchAPI } from '../utils/api'
+import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { getSocket, connectSocket, emitEvent } from '../utils/socket'
 import Layout from '../components/Layout'
-import PageHeader from '../components/PageHeader'
 import {
   Send, Headphones, Loader, CheckCheck, Check, RefreshCw, PhoneOff, Star,
+  Paperclip, Image as ImageIcon, X, FileText, Download, Bot,
 } from 'lucide-react'
 
 export default function LiveSupportChatPage() {
@@ -19,7 +19,7 @@ export default function LiveSupportChatPage() {
   const [agentError, setAgentError] = useState(null)
   const [offlineMode, setOfflineMode] = useState(false)
   const [fallbackAgentId, setFallbackAgentId] = useState(null)
-  const [session, setSession] = useState(null) // SupportSession
+  const [session, setSession] = useState(null)
 
   const [messages, setMessages] = useState([])
   const [msgLoading, setMsgLoading] = useState(false)
@@ -27,7 +27,6 @@ export default function LiveSupportChatPage() {
   const [sending, setSending] = useState(false)
   const [typing, setTyping] = useState(false)
 
-  // Close + rating flow
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [chatClosed, setChatClosed] = useState(false)
   const [rating, setRating] = useState(0)
@@ -35,11 +34,30 @@ export default function LiveSupportChatPage() {
   const [closingSession, setClosingSession] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
 
+  const [uploading, setUploading] = useState(false)
+  const [previewFile, setPreviewFile] = useState(null)
+  const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
+
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const typingTimerRef = useRef(null)
 
-  // Load support agents + open/resume session
+  // ─── Helper: mesajı DB'ye kaydet ─────────────────────────────
+  const saveMessageToDB = async (receiverId, content) => {
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+        method: 'POST',
+        body: { receiverId, content },
+      })
+      return res?.data || res
+    } catch (err) {
+      console.error('saveMessageToDB error:', err)
+      return null
+    }
+  }
+
+  // ─── Load support agents + open/resume session ───────────────
   useEffect(() => {
     const load = async () => {
       setAgentLoading(true)
@@ -54,45 +72,39 @@ export default function LiveSupportChatPage() {
           setAgentLoading(false)
           return
         }
-        // Otherwise pick an available agent
+        // Pick available agent
         const res = await fetchAPI('/support/agents')
         const agents = Array.isArray(res?.data) ? res.data : []
-        if (agents.length === 0) {
+
+        if (agents.length > 0) {
+          // Online agent var
+          const picked = agents[0]
+          setAgent(picked)
+          try {
+            const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
+              method: 'POST',
+              body: { agentId: picked.id },
+            })
+            if (sRes?.data) setSession(sRes.data)
+          } catch (_) {}
+        } else {
+          // Destek çevrimdışı → AI modu
           setOfflineMode(true)
-          // Fallback: gerçek bir support/admin ID'si al (mesajları DB'ye kaydetmek için)
           const fb = res?.fallbackAgent
           if (fb) {
             setFallbackAgentId(fb.id)
-            setAgent({
-              id: fb.id,
-              name: 'Destek Ekibi',
-              profileImage: null,
-            })
-            // Session aç ki mesajlar takip edilebilsin
+            setAgent({ id: fb.id, name: 'Go AI Asistan', profileImage: null })
             try {
               const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
                 method: 'POST',
                 body: { agentId: fb.id },
               })
               if (sRes?.data) setSession(sRes.data)
-            } catch (_) { /* session açılamazsa da devam et */ }
+            } catch (_) {}
           } else {
-            setAgent({
-              id: 'offline-support',
-              name: 'Destek Ekibi',
-              profileImage: null,
-            })
+            // Fallback agent bile yok — yine de AI çalışsın
+            setAgent({ id: '__ai__', name: 'Go AI Asistan', profileImage: null })
           }
-          setAgentLoading(false)
-          return
-        } else {
-          const picked = agents[0]
-          setAgent(picked)
-          const sRes = await fetchAPI(API_ENDPOINTS.SUPPORT_SESSIONS.OPEN, {
-            method: 'POST',
-            body: { agentId: picked.id },
-          })
-          if (sRes?.data) setSession(sRes.data)
         }
       } catch (e) {
         setAgentError('Bağlantı hatası: ' + e.message)
@@ -103,9 +115,9 @@ export default function LiveSupportChatPage() {
     load()
   }, [])
 
-  // Load conversation once agent is set — only messages from current session
+  // ─── Load messages ───────────────────────────────────────────
   const loadMessages = useCallback(async () => {
-    if (!agent) return
+    if (!agent || agent.id === '__ai__') return
     setMsgLoading(true)
     try {
       const sinceParam = session?.openedAt ? `?since=${encodeURIComponent(session.openedAt)}` : ''
@@ -128,7 +140,7 @@ export default function LiveSupportChatPage() {
     if (agent && (session || offlineMode)) loadMessages()
   }, [agent, session, offlineMode, loadMessages])
 
-  // Socket.IO
+  // ─── Socket.IO ───────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id || offlineMode) return
     const socket = connectSocket(user.id)
@@ -174,10 +186,10 @@ export default function LiveSupportChatPage() {
     }
   }, [user, agent, session, offlineMode])
 
-  // Scroll to bottom on new message
+  // Scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, typing])
+  }, [messages, typing, aiThinking])
 
   const handleInputChange = (e) => {
     setText(e.target.value)
@@ -190,86 +202,82 @@ export default function LiveSupportChatPage() {
     }
   }
 
+  // ─── Send message ────────────────────────────────────────────
   const handleSend = async () => {
     if (!text.trim() || !agent || sending) return
     const content = text.trim()
     setText('')
     setSending(true)
+
+    const now = new Date().toISOString()
     const optimistic = {
       id: `opt-${Date.now()}`,
       content,
       senderId: user?.id,
       receiverId: agent.id,
       isRead: false,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       _optimistic: true,
     }
     setMessages(prev => [...prev, optimistic])
 
-    // Offline mod: mesajı DB'ye kaydet + AI ile cevap ver
+    // ── Offline / AI mode ──
     if (offlineMode) {
       setSending(false)
 
-      // Mesajı DB'ye kaydet (destek online olunca görebilsin)
+      // 1) Kullanıcı mesajını DB'ye kaydet
       if (fallbackAgentId) {
-        fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
-          method: 'POST',
-          body: { receiverId: fallbackAgentId, content },
-        }).then(res => {
-          const saved = res?.data || res
-          if (saved?.id) {
-            setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...saved, _sent: true } : m))
-            emitEvent('send_message', { receiverId: fallbackAgentId, message: saved })
-          }
-        }).catch(() => {})
+        const saved = await saveMessageToDB(fallbackAgentId, content)
+        if (saved?.id) {
+          setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...saved, _sent: true } : m))
+          emitEvent('send_message', { receiverId: fallbackAgentId, message: saved })
+        }
       }
 
+      // 2) AI cevabı al
       setAiThinking(true)
-      
       const history = messages.slice(-6).map(m => ({
         content: m.content,
         isUser: m.senderId === user?.id,
       }))
 
+      let reply = 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
       try {
         const aiRes = await fetchAPI(API_ENDPOINTS.AI.SUPPORT_CHAT, {
           method: 'POST',
           body: { message: content, conversationHistory: history },
         })
-        
-        const reply = aiRes?.reply || 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
-        
-        setTimeout(() => {
-          const botMessage = {
-            id: `ai-${Date.now()}`,
-            content: reply,
-            senderId: 'support-ai',
-            receiverId: user?.id,
-            isRead: true,
-            createdAt: new Date().toISOString(),
-            _ai: true,
-          }
-          setMessages(prev => [...prev, botMessage])
-          setAiThinking(false)
-        }, 800)
+        if (aiRes?.reply) reply = aiRes.reply
       } catch (err) {
         console.error('AI reply error:', err)
-        setTimeout(() => {
-          const fallbackMsg = {
-            id: `bot-${Date.now()}`,
-            content: 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.',
-            senderId: 'support-bot',
-            receiverId: user?.id,
-            isRead: true,
-            createdAt: new Date().toISOString(),
-            _system: true,
-          }
-          setMessages(prev => [...prev, fallbackMsg])
-          setAiThinking(false)
-        }, 600)
       }
+
+      // 3) AI cevabını DB'ye kaydet (müşteri→agent, 🤖 prefix ile AI olduğu belli olur)
+      const aiDbContent = `🤖 ${reply}`
+      let savedAiId = null
+      if (fallbackAgentId) {
+        const savedAi = await saveMessageToDB(fallbackAgentId, aiDbContent)
+        savedAiId = savedAi?.id
+      }
+
+      // 4) UI'a ekle
+      setTimeout(() => {
+        const botMessage = {
+          id: savedAiId || `ai-${Date.now()}`,
+          content: reply,
+          senderId: fallbackAgentId || '__ai__',
+          receiverId: user?.id,
+          isRead: true,
+          createdAt: new Date().toISOString(),
+          _ai: true,
+        }
+        setMessages(prev => [...prev, botMessage])
+        setAiThinking(false)
+      }, 600)
       return
     }
+
+    // ── Online mode ──
     try {
       const res = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
         method: 'POST',
@@ -284,6 +292,51 @@ export default function LiveSupportChatPage() {
     } finally {
       setSending(false)
       inputRef.current?.focus()
+    }
+  }
+
+  // ─── File upload ─────────────────────────────────────────────
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !agent) return
+    e.target.value = ''
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Dosya boyutu 10MB\'dan küçük olmalıdır.')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+      const fileUrl = uploadRes?.data?.url || uploadRes?.url
+      if (!fileUrl) throw new Error('Upload başarısız')
+
+      const isImage = file.type.startsWith('image/')
+      const content = isImage ? `[Fotoğraf] ${fileUrl}` : `[Dosya: ${file.name}] ${fileUrl}`
+      const receiverId = fallbackAgentId || agent.id
+
+      const optimistic = {
+        id: `opt-${Date.now()}`,
+        content,
+        senderId: user?.id,
+        receiverId,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        _optimistic: true,
+      }
+      setMessages(prev => [...prev, optimistic])
+
+      const saved = await saveMessageToDB(receiverId, content)
+      if (saved?.id) {
+        setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...saved, _sent: true } : m))
+        emitEvent('send_message', { receiverId, message: saved })
+      }
+    } catch (err) {
+      console.error('File upload error:', err)
+      alert('Dosya gönderilemedi')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -302,7 +355,11 @@ export default function LiveSupportChatPage() {
         method: 'POST',
         body: { sessionId: session.id },
       })
-      // Notify agent via socket
+      // Sohbet kapatıldı bildirimini DB'ye kaydet
+      const closeReceiverId = fallbackAgentId || agent?.id
+      if (closeReceiverId && closeReceiverId !== '__ai__') {
+        await saveMessageToDB(closeReceiverId, '⛔ Kullanıcı sohbeti kapattı.').catch(() => {})
+      }
       emitEvent('support_session_closed', { sessionId: session.id, userId: user?.id, agentId: agent?.id })
       setChatClosed(true)
       setShowCloseConfirm(false)
@@ -330,6 +387,30 @@ export default function LiveSupportChatPage() {
     const d = new Date(dateStr)
     return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
   }
+
+  // Parse file/image messages
+  const parseFileContent = (content) => {
+    if (!content) return { text: content, fileUrl: null, isImage: false, fileName: null }
+    const imgMatch = content.match(/^\[Fotoğraf\]\s*(.+)$/)
+    if (imgMatch) return { text: null, fileUrl: imgMatch[1].trim(), isImage: true, fileName: null }
+    const fileMatch = content.match(/^\[Dosya:\s*(.+?)\]\s*(.+)$/)
+    if (fileMatch) return { text: null, fileUrl: fileMatch[2].trim(), isImage: false, fileName: fileMatch[1] }
+    return { text: content, fileUrl: null, isImage: false, fileName: null }
+  }
+
+  // Strip AI prefix for display
+  const displayContent = (content) => {
+    if (!content) return content
+    return content.replace(/^🤖\s*/, '')
+  }
+
+  // Check if message is AI-generated
+  const isAiMessage = (msg) => {
+    return msg._ai || (msg.content && msg.content.startsWith('🤖'))
+  }
+
+  // Check if message is a system message (e.g. chat closed)
+  const isSystemMsg = (msg) => msg.content && msg.content.startsWith('⛔')
 
   // Group messages by date
   const groupedMessages = []
@@ -368,19 +449,23 @@ export default function LiveSupportChatPage() {
           ) : agent ? (
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="relative">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0">
-                  {agent.profileImage
-                    ? <img src={agent.profileImage} alt="" className="w-full h-full rounded-xl object-cover" />
-                    : <Headphones size={18} className="text-white" />
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${offlineMode ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-primary-400 to-primary-600'}`}>
+                  {offlineMode
+                    ? <Bot size={18} className="text-white" />
+                    : agent.profileImage
+                      ? <img src={agent.profileImage} alt="" className="w-full h-full rounded-xl object-cover" />
+                      : <Headphones size={18} className="text-white" />
                   }
                 </div>
-                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#111] ${offlineMode ? 'bg-amber-400' : 'bg-emerald-500'}`} />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#111] ${offlineMode ? 'bg-purple-400' : 'bg-emerald-500'}`} />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{agent.name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  {offlineMode ? 'Go AI Asistan' : agent.name}
+                </p>
                 <p className="text-[11px] font-medium">
                   {offlineMode
-                    ? <span className="text-amber-500">Destek ekibi şu an çevrimdışı, talebiniz kaydedilecektir.</span>
+                    ? <span className="text-purple-500">Yapay zeka asistanı aktif</span>
                     : <span className="text-emerald-500">{typing ? 'yazıyor...' : 'Canlı Destek · Çevrimiçi'}</span>}
                 </p>
               </div>
@@ -519,27 +604,65 @@ export default function LiveSupportChatPage() {
               }
 
               const { msg } = item
-              const isMine = msg.senderId === user?.id
+              const aiMsg = isAiMessage(msg)
+              const sysMsg = isSystemMsg(msg)
+              const isMine = (aiMsg || sysMsg) ? false : msg.senderId === user?.id
+              const parsed = parseFileContent(aiMsg ? displayContent(msg.content) : msg.content)
+              const msgText = aiMsg ? displayContent(msg.content) : msg.content
+
+              if (sysMsg) {
+                return (
+                  <div key={msg.id} className="flex justify-center my-3">
+                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-xs text-rose-600 dark:text-rose-400 font-medium">{msg.content}</span>
+                      <span className="text-[10px] text-rose-400">{fmt(msg.createdAt)}</span>
+                    </div>
+                  </div>
+                )
+              }
 
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                   {!isMine && (
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-                      <Headphones size={12} className="text-white" />
+                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mr-2 mt-1 ${
+                      aiMsg ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-primary-400 to-primary-600'
+                    }`}>
+                      {aiMsg ? <Bot size={12} className="text-white" /> : <Headphones size={12} className="text-white" />}
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
+                    {parsed.isImage ? (
+                      <div className={`rounded-2xl overflow-hidden cursor-pointer ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${msg._error ? 'opacity-50' : ''}`}
+                        onClick={() => setPreviewFile({ url: parsed.fileUrl, type: 'image' })}>
+                        <img src={parsed.fileUrl} alt="Fotoğraf" className="max-w-full max-h-[200px] object-cover rounded-2xl" loading="lazy" />
+                      </div>
+                    ) : parsed.fileUrl ? (
+                      <a href={parsed.fileUrl} target="_blank" rel="noopener noreferrer"
+                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm ${
+                          isMine
+                            ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
+                            : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                        }`}>
+                        <FileText size={18} className={isMine ? 'text-white/70' : 'text-primary-500'} />
+                        <span className="flex-1 truncate">{parsed.fileName || 'Dosya'}</span>
+                        <Download size={14} className={isMine ? 'text-white/50' : 'text-gray-400'} />
+                      </a>
+                    ) : (
                     <div
                       className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         isMine
                           ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
-                          : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                          : aiMsg
+                            ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 text-gray-800 dark:text-gray-100 border border-purple-200 dark:border-purple-800/30 rounded-bl-sm shadow-sm'
+                            : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
                       }`}
                     >
-                      {msg.content}
+                      {msgText}
                     </div>
+                    )}
                     <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? 'flex-row-reverse' : ''}`}>
                       <span className="text-[10px] text-gray-400">{fmt(msg.createdAt)}</span>
+                      {aiMsg && <span className="text-[10px] text-purple-400 font-medium">AI</span>}
                       {isMine && (
                         msg._error ? (
                           <span className="text-[10px] text-rose-400">!</span>
@@ -604,10 +727,47 @@ export default function LiveSupportChatPage() {
         )}
       </div>
 
+      {/* Image Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setPreviewFile(null)}>
+          <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center" onClick={() => setPreviewFile(null)}>
+            <X size={20} className="text-white" />
+          </button>
+          <img src={previewFile.url} alt="Önizleme" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+        </div>
+      )}
+
+      {/* Hidden file inputs */}
+      <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.xls" className="hidden" onChange={handleFileUpload} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileUpload} />
+
       {/* Input bar */}
       {agent && !agentError && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10">
+          {/* Upload progress */}
+          {uploading && (
+            <div className="max-w-lg mx-auto px-4 py-2 flex items-center gap-2">
+              <Loader size={14} className="text-primary-500 animate-spin" />
+              <span className="text-xs text-gray-500">Dosya yükleniyor...</span>
+            </div>
+          )}
           <div className="max-w-lg mx-auto flex items-end gap-2 px-4 py-3">
+            {/* Attach button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-white/10 transition flex-shrink-0 disabled:opacity-50"
+            >
+              <Paperclip size={18} />
+            </button>
+            {/* Camera button */}
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-white/10 transition flex-shrink-0 disabled:opacity-50"
+            >
+              <ImageIcon size={18} />
+            </button>
             <textarea
               ref={inputRef}
               value={text}

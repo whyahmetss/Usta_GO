@@ -5,13 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('404.html + _redirects copied')\"",
+    "dev:panel": "vite --open /panel.html",
+    "build": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('App build done')\"",
+    "build:app": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('App build done')\"",
+    "build:panel": "cross-env VITE_BUILD_TARGET=panel vite build && node -e \"const fs=require('fs'); const d='dist-panel'; const src=d+'/panel.html'; if(fs.existsSync(src)){fs.renameSync(src,d+'/index.html')} fs.copyFileSync(d+'/index.html',d+'/404.html'); fs.writeFileSync(d+'/_redirects','/* /index.html 200'); console.log('Panel build done')\"",
     "preview": "vite preview",
-    "build:mobile": "vite build && npx cap sync",
+    "build:mobile": "cross-env VITE_BUILD_TARGET=app vite build && npx cap sync",
     "android": "npx cap open android",
     "ios": "npx cap open ios",
     "sync:android": "npx cap sync android",
-    "sync:ios": "npx cap sync ios"
+    "sync:ios": "npx cap sync ios",
+    "build:landing": "node -e \"const fs=require('fs'); if(!fs.existsSync('dist-landing'))fs.mkdirSync('dist-landing'); fs.copyFileSync('public/landing.html','dist-landing/index.html'); console.log('Landing build done')\""
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -41,10 +45,12 @@
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
+    "cross-env": "^10.1.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

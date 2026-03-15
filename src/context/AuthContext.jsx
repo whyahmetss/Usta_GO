@@ -10,6 +10,7 @@ import {
   uploadFiles
 } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { initPushNotifications } from '../utils/pushNotifications'
 import {
   mapUserFromBackend,
   mapJobFromBackend,
@@ -105,6 +106,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (user && !useLocalStorage) {
       const socket = connectSocket(user.id)
+
+      // Push notification'ları başlat (native platformda FCM token alır)
+      initPushNotifications()
 
       // Listen for real-time message notifications
       socket.on('receive_message', (message) => {

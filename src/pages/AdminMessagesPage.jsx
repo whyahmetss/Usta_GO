@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Send, Loader, Users, Zap, User, MessageSquare, Inbox } from 'lucide-react'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
+import { emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 import EmptyState from '../components/EmptyState'
@@ -75,10 +76,12 @@ function AdminMessagesPage() {
         const finalContent = subject.trim()
           ? `${subject.trim()}\n${messageText.trim()}`
           : messageText.trim()
-        await fetchAPI(API_ENDPOINTS?.MESSAGES?.SEND ?? '/messages', {
+        const res = await fetchAPI(API_ENDPOINTS?.MESSAGES?.SEND ?? '/messages', {
           method: 'POST',
           body: { receiverId: target.id, content: finalContent }
         })
+        const saved = res?.data || res
+        emitEvent('send_message', { receiverId: target.id, message: saved })
         successCount++
         newMessages.push({
           id: Date.now().toString() + Math.random().toString(36).substr(2, 5),

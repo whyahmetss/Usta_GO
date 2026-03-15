@@ -75,7 +75,7 @@ function WalletPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
         <div className="w-10 h-10 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
@@ -138,11 +138,11 @@ function WalletPage() {
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center"><Tag size={16} className="text-amber-500" /></div>
-              <h3 className="font-semibold text-gray-900 text-sm">Kupon Kodu Ekle</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Kupon Kodu Ekle</h3>
             </div>
             <div className="flex gap-2">
               <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleAddCoupon()} placeholder="Kupon kodunu girin..."
-                className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300" />
+                className="flex-1 px-4 py-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-300" />
               <button onClick={handleAddCoupon} disabled={couponLoading || !couponCode.trim()} className="px-4 py-3 bg-primary-500 text-white rounded-xl font-medium text-sm disabled:opacity-50 active:scale-[0.98] transition">
                 {couponLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Plus size={18} />}
               </button>
@@ -157,17 +157,17 @@ function WalletPage() {
           {/* Active Coupons */}
           {activeCoupons.length > 0 && (
             <div>
-              <h3 className="font-semibold text-gray-900 text-sm mb-2.5 px-0.5">Kuponlarım <span className="ml-1 text-[10px] bg-amber-50 text-amber-600 font-semibold px-2 py-0.5 rounded-full">{activeCoupons.length}</span></h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2.5 px-0.5">Kuponlarım <span className="ml-1 text-[10px] bg-amber-50 dark:bg-amber-900/30 text-amber-600 font-semibold px-2 py-0.5 rounded-full">{activeCoupons.length}</span></h3>
               <div className="space-y-2">
                 {activeCoupons.map((c, idx) => (
                   <Card key={c.id || idx} className="flex items-center gap-3 !p-3.5">
-                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center shrink-0"><Tag size={16} className="text-amber-500" /></div>
+                    <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0"><Tag size={16} className="text-amber-500" /></div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-amber-600 text-sm">{c.amount} TL</p>
                       <p className="text-[10px] text-gray-400 font-mono truncate">{c.code || 'Kupon'}</p>
                       {c.expiresAt && <p className="text-[10px] text-gray-300 flex items-center gap-0.5 mt-0.5"><Clock size={9} />{new Date(c.expiresAt).toLocaleDateString('tr-TR')}</p>}
                     </div>
-                    <span className="text-[10px] bg-emerald-50 text-emerald-600 font-semibold px-2 py-1 rounded-lg shrink-0">Aktif</span>
+                    <span className="text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 font-semibold px-2 py-1 rounded-lg shrink-0">Aktif</span>
                   </Card>
                 ))}
               </div>
@@ -177,7 +177,7 @@ function WalletPage() {
           {usedCoupons.length > 0 && (
             <div className="space-y-1.5">
               {usedCoupons.map((c, idx) => (
-                <div key={c.id || idx} className="bg-gray-50 rounded-xl p-3 flex items-center gap-3 opacity-50">
+                <div key={c.id || idx} className="bg-gray-50 dark:bg-[#1a1a1a] rounded-xl p-3 flex items-center gap-3 opacity-50">
                   <Tag size={14} className="text-gray-400 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-500 text-xs">{c.amount} TL - <span className="font-mono">{c.code}</span></p>
@@ -192,8 +192,8 @@ function WalletPage() {
           <Card>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center"><Package size={16} className="text-violet-500" /></div>
-                <h3 className="font-semibold text-gray-900 text-sm">Bakım Paketleri</h3>
+                <div className="w-8 h-8 bg-violet-50 dark:bg-violet-900/30 rounded-xl flex items-center justify-center"><Package size={16} className="text-violet-500" /></div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Bakım Paketleri</h3>
               </div>
               {!showPackageSelection && (
                 <button onClick={() => setShowPackageSelection(true)} className="text-[11px] bg-primary-500 text-white px-3 py-1.5 rounded-lg font-medium active:scale-[0.98] transition">
@@ -219,11 +219,11 @@ function WalletPage() {
                     <span className="bg-white/20 text-white text-[10px] font-semibold px-2 py-1 rounded-lg">Aktif</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2"><Calendar size={14} className="text-gray-500" /><div><p className="text-[10px] text-gray-400">Sonraki Bakım</p><p className="font-medium text-gray-900 text-xs">{activePackage.nextRenewal ? new Date(activePackage.nextRenewal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '—'}</p></div></div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl">
+                  <div className="flex items-center gap-2"><Calendar size={14} className="text-gray-500" /><div><p className="text-[10px] text-gray-400">Sonraki Bakım</p><p className="font-medium text-gray-900 dark:text-white text-xs">{activePackage.nextRenewal ? new Date(activePackage.nextRenewal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '—'}</p></div></div>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2"><CreditCard size={14} className="text-gray-500" /><p className="text-xs text-gray-600">Otomatik Yenile</p></div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl">
+                  <div className="flex items-center gap-2"><CreditCard size={14} className="text-gray-500" /><p className="text-xs text-gray-600 dark:text-gray-400">Otomatik Yenile</p></div>
                   <button onClick={handleToggleAutoRenew} className={`relative w-11 h-6 rounded-full transition ${activePackage.autoRenew ? 'bg-emerald-500' : 'bg-gray-300'}`}>
                     <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${activePackage.autoRenew ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </button>
@@ -244,7 +244,7 @@ function WalletPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">{pkg.badge}</span>
                       <div>
-                        <p className="font-bold text-gray-900 text-sm">{pkg.name}</p>
+                        <p className="font-bold text-gray-900 dark:text-white text-sm">{pkg.name}</p>
                         <p className={`font-bold text-sm ${pkg.accent}`}>{pkg.price?.toLocaleString('tr-TR')} TL<span className="text-[10px] text-gray-400 font-normal">/ay</span></p>
                       </div>
                     </div>
@@ -279,7 +279,7 @@ function WalletPage() {
                         {isCredit ? <ArrowDownCircle size={16} className="text-emerald-500" /> : <ShoppingCart size={16} className="text-rose-500" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-xs truncate">{tx.description || tx.note || (isCredit ? 'Bakiye Yüklendi' : 'Ödeme')}</p>
+                        <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{tx.description || tx.note || (isCredit ? 'Bakiye Yüklendi' : 'Ödeme')}</p>
                         <p className="text-[10px] text-gray-300">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('tr-TR') : ''}</p>
                       </div>
                       <p className={`font-bold text-xs shrink-0 ${isCredit ? 'text-emerald-600' : 'text-rose-500'}`}>
@@ -294,7 +294,7 @@ function WalletPage() {
 
           <Card onClick={() => navigate('/odeme')} className="flex items-center gap-3 !p-3.5">
             <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center shrink-0"><CreditCard size={18} className="text-white" /></div>
-            <div className="flex-1"><p className="font-semibold text-gray-900 text-sm">Bakiye Yükle</p><p className="text-[10px] text-gray-400">Kredi kartı ile hızlı yükleme</p></div>
+            <div className="flex-1"><p className="font-semibold text-gray-900 dark:text-white text-sm">Bakiye Yükle</p><p className="text-[10px] text-gray-400">Kredi kartı ile hızlı yükleme</p></div>
             <ChevronRight size={16} className="text-gray-300" />
           </Card>
         </div>
@@ -317,7 +317,7 @@ function WalletPage() {
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <TrendingUp size={16} className="text-emerald-500 mb-1.5" />
-            <p className="text-lg font-bold text-gray-900">{thisMonthEarnings.toLocaleString('tr-TR')} TL</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">{thisMonthEarnings.toLocaleString('tr-TR')} TL</p>
             <p className="text-[10px] text-gray-400">Bu Ay Kazanç</p>
           </Card>
           <Card>
@@ -327,7 +327,7 @@ function WalletPage() {
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-900 text-sm mb-2.5 px-0.5">İşlem Özeti</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2.5 px-0.5">İşlem Özeti</h3>
           {transactions.length === 0 ? (
             <Card className="text-center !py-8"><p className="text-xs text-gray-400">İşlem geçmişi bulunamadı.</p></Card>
           ) : (
@@ -338,7 +338,7 @@ function WalletPage() {
                     {tx.amount > 0 ? <Coins size={16} className="text-emerald-500" /> : <ArrowUpCircle size={16} className="text-rose-500" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-xs truncate">{tx.description || 'İşlem'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{tx.description || 'İşlem'}</p>
                     <p className="text-[10px] text-gray-300">{tx.date ? new Date(tx.date).toLocaleDateString('tr-TR') : ''}</p>
                   </div>
                   <p className={`font-bold text-xs shrink-0 ${tx.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>

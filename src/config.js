@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/auth/profile',
     CHANGE_PASSWORD: '/auth/change-password',
     LOGOUT: '/auth/logout',
+    FCM_TOKEN: '/auth/fcm-token',
   },
 
   // Jobs
