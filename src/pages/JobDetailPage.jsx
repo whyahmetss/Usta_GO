@@ -1103,8 +1103,10 @@ function JobDetailPage() {
           </button>
         )}
 
-        {/* Cancel Button */}
+        {/* Cancel Button - Müşteri sadece pending'de iptal edebilir, usta accepted/in_progress'te iptal edebilir */}
         {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'rated' && job.status !== 'pending_approval' && (
+          (isProfessional || (isCustomer && job.status === 'pending'))
+        ) && (
           <button
             onClick={() => navigate(`/cancel-job/${job.id}`)}
             className="w-full py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl font-semibold hover:bg-rose-100 active:scale-[0.98] transition"
