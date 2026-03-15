@@ -129,12 +129,16 @@ export default function SupportChatPage() {
 
   const parseFileContent = (content) => {
     if (!content) return { text: content, fileUrl: null, isImage: false, fileName: null }
-    const imgMatch = content.match(/^\[Fotoğraf\]\s*(.+)$/)
+    // Strip AI prefix before parsing
+    const clean = content.replace(/^🤖\s*/, '')
+    const imgMatch = clean.match(/^\[Fotoğraf\]\s*(.+)$/)
     if (imgMatch) return { text: null, fileUrl: imgMatch[1].trim(), isImage: true, fileName: null }
-    const fileMatch = content.match(/^\[Dosya:\s*(.+?)\]\s*(.+)$/)
+    const fileMatch = clean.match(/^\[Dosya:\s*(.+?)\]\s*(.+)$/)
     if (fileMatch) return { text: null, fileUrl: fileMatch[2].trim(), isImage: false, fileName: fileMatch[1] }
-    return { text: content, fileUrl: null, isImage: false, fileName: null }
+    return { text: clean, fileUrl: null, isImage: false, fileName: null }
   }
+
+  const isAiMessage = (msg) => msg.content && msg.content.startsWith('🤖')
 
   const roleLabel = (role) => {
     if (!role) return ''
@@ -179,16 +183,20 @@ export default function SupportChatPage() {
               <div className="text-center py-12 text-sm text-gray-400">Henüz mesaj yok. Yanıtlamak için yazın.</div>
             )}
             {messages.map(msg => {
-              const isMine = msg.senderId === user?.id
+              const aiMsg = isAiMessage(msg)
+              const isMine = msg.senderId === user?.id && !aiMsg
               const parsed = parseFileContent(msg.content)
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                   {!isMine && (
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center mr-2 mt-1 flex-shrink-0 ${
+                      aiMsg ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-blue-400 to-indigo-600'
+                    }`}>
                       <User size={12} className="text-white" />
                     </div>
                   )}
                   <div className={`max-w-[75%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                    {aiMsg && <span className="text-[10px] text-purple-500 font-semibold mb-0.5 px-1">🤖 AI Asistan</span>}
                     {parsed.isImage ? (
                       <div className={`rounded-2xl overflow-hidden cursor-pointer ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${msg._error ? 'opacity-50' : ''}`}
                         onClick={() => setPreviewFile({ url: parsed.fileUrl })}>
@@ -209,9 +217,11 @@ export default function SupportChatPage() {
                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                       isMine
                         ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
-                        : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                        : aiMsg
+                          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 text-gray-800 dark:text-gray-100 border border-purple-200 dark:border-purple-800/30 rounded-bl-sm shadow-sm'
+                          : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
                     }`}>
-                      {msg.content}
+                      {parsed.text}
                     </div>
                     )}
                     <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? 'flex-row-reverse' : ''}`}>
