@@ -245,16 +245,12 @@ export default function LiveSupportChatPage() {
         
         const reply = aiRes?.reply || 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
         
-        // AI cevabını DB'ye kaydet ki destek aktife gelince görebilsin
+        // AI cevabını DB'ye kaydet (mevcut mesaj sistemiyle)
+        const aiContent = `🤖 [AI Asistan]\n${reply}`
         if (fallbackAgentId) {
-          fetchAPI('/support/save-ai-reply', {
+          fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
             method: 'POST',
-            body: { 
-              userId: user?.id, 
-              agentId: fallbackAgentId, 
-              content: `[AI Asistan] ${reply}`,
-              sessionId: session?.id,
-            },
+            body: { receiverId: fallbackAgentId, content: aiContent },
           }).catch(err => console.log('AI reply save failed:', err))
         }
 
@@ -275,16 +271,11 @@ export default function LiveSupportChatPage() {
         console.error('AI reply error:', err)
         const fallbackReply = 'Yardım talebiniz alınmıştır, en kısa sürede ilgili destek ekibi sizinle iletişime geçecektir.'
         
-        // Fallback mesajı da DB'ye kaydet
+        // Fallback mesajı da DB'ye kaydet (mevcut mesaj sistemiyle)
         if (fallbackAgentId) {
-          fetchAPI('/support/save-ai-reply', {
+          fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
             method: 'POST',
-            body: { 
-              userId: user?.id, 
-              agentId: fallbackAgentId, 
-              content: `[AI Asistan] ${fallbackReply}`,
-              sessionId: session?.id,
-            },
+            body: { receiverId: fallbackAgentId, content: `🤖 [AI Asistan]\n${fallbackReply}` },
           }).catch(() => {})
         }
 
