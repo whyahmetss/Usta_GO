@@ -139,6 +139,7 @@ export default function SupportChatPage() {
   }
 
   const isAiMessage = (msg) => msg.content && msg.content.startsWith('🤖')
+  const isSystemMessage = (msg) => msg.content && msg.content.startsWith('⛔')
 
   const roleLabel = (role) => {
     if (!role) return ''
@@ -184,8 +185,21 @@ export default function SupportChatPage() {
             )}
             {messages.map(msg => {
               const aiMsg = isAiMessage(msg)
-              const isMine = msg.senderId === user?.id && !aiMsg
+              const sysMsg = isSystemMessage(msg)
+              const isMine = msg.senderId === user?.id && !aiMsg && !sysMsg
               const parsed = parseFileContent(msg.content)
+
+              if (sysMsg) {
+                return (
+                  <div key={msg.id} className="flex justify-center my-3">
+                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-sm text-rose-600 dark:text-rose-400 font-medium">{msg.content}</span>
+                      <span className="text-[10px] text-rose-400">{fmt(msg.createdAt)}</span>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                   {!isMine && (

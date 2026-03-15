@@ -355,6 +355,11 @@ export default function LiveSupportChatPage() {
         method: 'POST',
         body: { sessionId: session.id },
       })
+      // Sohbet kapatıldı bildirimini DB'ye kaydet
+      const closeReceiverId = fallbackAgentId || agent?.id
+      if (closeReceiverId && closeReceiverId !== '__ai__') {
+        await saveMessageToDB(closeReceiverId, '⛔ Kullanıcı sohbeti kapattı.').catch(() => {})
+      }
       emitEvent('support_session_closed', { sessionId: session.id, userId: user?.id, agentId: agent?.id })
       setChatClosed(true)
       setShowCloseConfirm(false)
@@ -403,6 +408,9 @@ export default function LiveSupportChatPage() {
   const isAiMessage = (msg) => {
     return msg._ai || (msg.content && msg.content.startsWith('🤖'))
   }
+
+  // Check if message is a system message (e.g. chat closed)
+  const isSystemMsg = (msg) => msg.content && msg.content.startsWith('⛔')
 
   // Group messages by date
   const groupedMessages = []
@@ -597,9 +605,21 @@ export default function LiveSupportChatPage() {
 
               const { msg } = item
               const aiMsg = isAiMessage(msg)
-              const isMine = aiMsg ? false : msg.senderId === user?.id
+              const sysMsg = isSystemMsg(msg)
+              const isMine = (aiMsg || sysMsg) ? false : msg.senderId === user?.id
               const parsed = parseFileContent(aiMsg ? displayContent(msg.content) : msg.content)
               const msgText = aiMsg ? displayContent(msg.content) : msg.content
+
+              if (sysMsg) {
+                return (
+                  <div key={msg.id} className="flex justify-center my-3">
+                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-xs text-rose-600 dark:text-rose-400 font-medium">{msg.content}</span>
+                      <span className="text-[10px] text-rose-400">{fmt(msg.createdAt)}</span>
+                    </div>
+                  </div>
+                )
+              }
 
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
