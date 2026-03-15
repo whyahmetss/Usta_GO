@@ -8,6 +8,7 @@ import PageErrorBoundary from './components/PageErrorBoundary'
 import SplashScreen from './components/SplashScreen'
 import OnboardingScreen from './components/OnboardingScreen'
 import AuthPage from './pages/AuthPage'
+import LandingPage from './pages/LandingPage'
 
 /* ── Lazy sayfalar ── */
 const UstaRegisterPage       = lazy(() => import('./pages/UstaRegisterPage'))
@@ -66,7 +67,7 @@ function ProtectedRoute({ children, roleRequired = null, allowAdmin = false }) {
 
   if (isLoading) return <PageLoader />
 
-  if (!user) return <Navigate to="/" replace />
+  if (!user) return <Navigate to="/auth" replace />
 
   let userRole = user.role?.toLowerCase()
   if (userRole === 'usta') userRole = 'professional'
@@ -104,10 +105,11 @@ function AppRoutes() {
               userRole === 'support'      ? <Navigate to="/support" replace /> :
               <Navigate to="/home" replace />
             ) : (
-              <AuthPage />
+              <LandingPage />
             )
           }
         />
+        <Route path="/auth" element={user ? <Navigate to="/home" replace /> : <AuthPage />} />
         <Route path="/register/usta"     element={user ? <Navigate to="/professional" replace /> : <UstaRegisterPage />} />
         <Route path="/register/customer" element={<ProtectedRoute roleRequired="customer"><CustomerRegisterPage /></ProtectedRoute>} />
 
