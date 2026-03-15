@@ -600,7 +600,10 @@ function JobDetailPage() {
         fireConfetti()
         playSuccessSound()
         
-        alert('İş onaylandı! Ödeme ustaya aktarıldı.')
+        // Alert'i geciktir ki confetti görünsün
+        setTimeout(() => {
+          alert('İş onaylandı! Ödeme ustaya aktarıldı.')
+        }, 1500)
 
         emitEvent('job_status_changed', {
           jobId: job.id,

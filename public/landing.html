@@ -265,7 +265,7 @@
       </div>
 
       <h1 class="h-in h-d2 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-3">
-        Evinizin <span class="grad shimmer">Ustasını</span>
+        Evinizin <span class="shimmer">Ustasını</span>
       </h1>
       <h1 class="h-in h-d3 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-6">
         Anında Bulun<span class="text-indigo-400">.</span>
@@ -279,14 +279,14 @@
       </p>
 
       <div class="h-in h-d5 flex flex-wrap gap-4">
-        <a href="/auth" class="btn-store btn-primary glow-border">
+        <a href="/auth" id="hero-cta-primary" class="btn-store btn-primary glow-border magnetic-btn ripple">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2.5 2.5 0 01-.93-2V2.24a2.5 2.5 0 01.93-2L13.5 12 3.18 23.76zm11.14-11.09L6.5 5.5l8.42 4.87-2.6 2.3zm-2.6 2.58l2.6 2.31L6.5 18.5l5.82-3.17-.6-.54zM17.5 15l-2.94-1.69 2.95-2.62L21 12l-3.5 3z"/></svg>
           <div class="text-left">
             <div style="font-size:10px;opacity:.7;font-weight:400;">Google Play'den</div>
             <div style="font-size:15px;font-weight:700;">İndir</div>
           </div>
         </a>
-        <a href="/auth" class="btn-store btn-dark">
+        <a href="/auth" class="btn-store btn-dark magnetic-btn ripple">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
           <div class="text-left">
             <div style="font-size:10px;opacity:.7;font-weight:400;">App Store'dan</div>
@@ -493,6 +493,11 @@
 <!-- ═══════════════════════════════════════ STATS ══════════════════════════════════════ -->
 <section class="py-16 relative section-glow">
   <div class="max-w-5xl mx-auto px-6">
+    <!-- Live indicator -->
+    <div class="flex items-center justify-center gap-2 mb-6 reveal">
+      <span class="w-2 h-2 bg-emerald-400 rounded-full live-indicator"></span>
+      <span class="text-xs text-white/40">Canlı · <span data-live-counter data-base="342" data-variance="30">342</span> usta şu an çevrimiçi</span>
+    </div>
     <div class="glass rounded-3xl grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-white/8 overflow-hidden reveal">
       <div class="p-8 text-center group">
         <div class="counter-num text-3xl md:text-4xl font-black grad-brand mb-2" data-target="10000" data-suffix="+">0</div>
@@ -661,9 +666,10 @@
 <section class="py-24 relative overflow-hidden section-glow">
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(139,92,246,.06) 0%, transparent 55%);pointer-events:none;"></div>
   <div class="max-w-6xl mx-auto px-6">
-    <h2 class="reveal text-center text-4xl md:text-5xl font-black mb-14">Kullanıcılar <span class="grad">Ne Diyor?</span></h2>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="reveal d1 glass rounded-2xl p-7 feat-card relative overflow-hidden">
+    <h2 class="reveal text-center text-4xl md:text-5xl font-black mb-14">Kullanıcılar <span class="shimmer">Ne Diyor?</span></h2>
+    <!-- Desktop: grid, Mobile: carousel -->
+    <div class="hidden md:grid md:grid-cols-3 gap-6">
+      <div class="reveal d1 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate">
         <div class="card-shine"></div>
         <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
         <p class="text-white/60 text-sm leading-relaxed mb-6">"Elektrikçi için saatlerce aramak yerine UstaGO'yu açtım, 10 dakikada usta ayarladım. Harika uygulama!"</p>
@@ -672,7 +678,7 @@
           <div><div class="text-sm font-semibold">Mehmet K.</div><div class="text-xs text-white/35">İstanbul</div></div>
         </div>
       </div>
-      <div class="reveal d3 glass rounded-2xl p-7 feat-card relative overflow-hidden">
+      <div class="reveal d3 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate levitate-delay-1">
         <div class="card-shine"></div>
         <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
         <p class="text-white/60 text-sm leading-relaxed mb-6">"Fiyat tahmini gerçekten doğru çıktı. Güvenli ödeme sistemi de süper, para peşin vermek zorunda kalmadım."</p>
@@ -681,13 +687,55 @@
           <div><div class="text-sm font-semibold">Seda Y.</div><div class="text-xs text-white/35">Ankara</div></div>
         </div>
       </div>
-      <div class="reveal d5 glass rounded-2xl p-7 feat-card relative overflow-hidden">
+      <div class="reveal d5 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate levitate-delay-2">
         <div class="card-shine"></div>
         <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
         <p class="text-white/60 text-sm leading-relaxed mb-6">"Profesyonel ustalar, zamanında iş, sorunsuz ödeme. Bu uygulama hayatı kolaylaştırıyor gerçekten."</p>
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-bold shadow-lg">A</div>
           <div><div class="text-sm font-semibold">Ali R.</div><div class="text-xs text-white/35">İzmir</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Mobile Carousel -->
+    <div class="md:hidden">
+      <div class="carousel-container reveal">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Elektrikçi için saatlerce aramak yerine UstaGO'yu açtım, 10 dakikada usta ayarladım. Harika uygulama!"</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm font-bold shadow-lg">M</div>
+                <div><div class="text-sm font-semibold">Mehmet K.</div><div class="text-xs text-white/35">İstanbul</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Fiyat tahmini gerçekten doğru çıktı. Güvenli ödeme sistemi de süper, para peşin vermek zorunda kalmadım."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-sm font-bold shadow-lg">S</div>
+                <div><div class="text-sm font-semibold">Seda Y.</div><div class="text-xs text-white/35">Ankara</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Profesyonel ustalar, zamanında iş, sorunsuz ödeme. Bu uygulama hayatı kolaylaştırıyor gerçekten."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-bold shadow-lg">A</div>
+                <div><div class="text-sm font-semibold">Ali R.</div><div class="text-xs text-white/35">İzmir</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-nav">
+          <div class="carousel-dot active"></div>
+          <div class="carousel-dot"></div>
+          <div class="carousel-dot"></div>
         </div>
       </div>
     </div>
@@ -1047,33 +1095,6 @@
 
   // ── Phone 3D Tilt ──────────────────────────────────────────────────
   const phoneTilt = document.getElementById('phone-tilt');
-  if (phoneTilt) {
-    const inner = phoneTilt.querySelector('.phone-inner');
-    phoneTilt.addEventListener('mousemove', e => {
-      const r = phoneTilt.getBoundingClientRect();
-      const cx = r.width / 2, cy = r.height / 2;
-      const x = e.clientX - r.left, y = e.clientY - r.top;
-      const rx = (y - cy) / cy * -12;
-      const ry = (x - cx) / cx * 12;
-      inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-    });
-    phoneTilt.addEventListener('mouseleave', () => {
-      inner.style.transform = 'rotateX(0) rotateY(0)';
-    });
-    // auto-float when no mouse interaction
-    let autoFloat = true;
-    let angle = 0;
-    function phoneAutoFloat() {
-      if (autoFloat) {
-        angle += .015;
-        inner.style.transform = `rotateX(${Math.sin(angle)*3}deg) rotateY(${Math.cos(angle)*4}deg)`;
-      }
-      requestAnimationFrame(phoneAutoFloat);
-    }
-    phoneAutoFloat();
-    phoneTilt.addEventListener('mouseenter', () => { autoFloat = false; });
-    phoneTilt.addEventListener('mouseleave', () => { autoFloat = true; });
-  }
 
   // ── Typing Animation ──────────────────────────────────────────────
   const phrases = [
@@ -1311,13 +1332,10 @@
     }, 3500);
   }
   
-  // Attach to all CTA buttons
-  document.querySelectorAll('#sticky-cta, #hero-cta-primary, .btn-primary').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      // Only fire if it's an internal link (/auth)
-      if (btn.getAttribute('href') === '/auth') {
-        fireConfetti();
-      }
+  // Attach confetti to ALL /auth links
+  document.querySelectorAll('a[href="/auth"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fireConfetti();
     });
   });
 })();
