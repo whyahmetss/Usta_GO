@@ -29,3 +29,6 @@ dist-panel
 *.njsproj
 *.sln
 *.sw?
+
+# Local Netlify folder
+.netlify
