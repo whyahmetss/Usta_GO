@@ -33,24 +33,6 @@ const HelpPage               = lazy(() => import('./pages/HelpPage'))
 const AboutPage              = lazy(() => import('./pages/AboutPage'))
 const Odeme                  = lazy(() => import('./pages/odeme'))
 const PaymentResultPage      = lazy(() => import('./pages/PaymentResultPage'))
-const AdminDashboard         = lazy(() => import('./pages/AdminDashboard'))
-const AdminWithdrawalsPage   = lazy(() => import('./pages/AdminWithdrawalsPage'))
-const AdminUsersPage         = lazy(() => import('./pages/AdminUsersPage'))
-const AdminJobsPage          = lazy(() => import('./pages/AdminJobsPage'))
-const AdminComplaintsPage    = lazy(() => import('./pages/AdminComplaintsPage'))
-const AdminMessagesPage      = lazy(() => import('./pages/AdminMessagesPage'))
-const AdminCouponsPage       = lazy(() => import('./pages/AdminCouponsPage'))
-const AdminPricingPage       = lazy(() => import('./pages/AdminPricingPage'))
-const AdminCertificatesPage  = lazy(() => import('./pages/AdminCertificatesPage'))
-const AdminPendingUstasPage  = lazy(() => import('./pages/AdminPendingUstasPage'))
-const AdminCampaignsPage     = lazy(() => import('./pages/AdminCampaignsPage'))
-const AdminFinancePage       = lazy(() => import('./pages/AdminFinancePage'))
-const AdminPromotionsPage    = lazy(() => import('./pages/AdminPromotionsPage'))
-const AdminVerificationPage  = lazy(() => import('./pages/AdminVerificationPage'))
-const AdminSupportMonitorPage = lazy(() => import('./pages/AdminSupportMonitorPage'))
-const SupportDashboard       = lazy(() => import('./pages/SupportDashboard'))
-const SupportChatPage        = lazy(() => import('./pages/SupportChatPage'))
-const SupportGuidePage       = lazy(() => import('./pages/SupportGuidePage'))
 
 function PageLoader() {
   return (
@@ -79,9 +61,7 @@ function ProtectedRoute({ children, roleRequired = null, allowAdmin = false }) {
   if (allowAdmin && userRole === 'admin') return children
 
   if (requiredRole && userRole !== requiredRole) {
-    if (userRole === 'admin')        return <Navigate to="/admin" replace />
     if (userRole === 'professional') return <Navigate to="/professional" replace />
-    if (userRole === 'support')      return <Navigate to="/support" replace />
     return <Navigate to="/home" replace />
   }
 
@@ -101,9 +81,7 @@ function AppRoutes() {
           path="/"
           element={
             user ? (
-              userRole === 'admin'        ? <Navigate to="/admin" replace /> :
               userRole === 'professional' ? <Navigate to="/professional" replace /> :
-              userRole === 'support'      ? <Navigate to="/support" replace /> :
               <Navigate to="/home" replace />
             ) : (
               <LandingPage />
@@ -141,27 +119,9 @@ function AppRoutes() {
         <Route path="/track/:id"       element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
         <Route path="/cancel-job/:id"  element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
 
-        {/* Admin */}
-        <Route path="/admin"                 element={<ProtectedRoute roleRequired="admin"><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-        <Route path="/admin/withdrawals"     element={<ProtectedRoute roleRequired="admin"><Layout><AdminWithdrawalsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/users"           element={<ProtectedRoute roleRequired="admin"><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/jobs"            element={<ProtectedRoute roleRequired="admin"><Layout><AdminJobsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/complaints"      element={<ProtectedRoute roleRequired="admin"><Layout><AdminComplaintsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/messages"        element={<ProtectedRoute roleRequired="admin"><Layout><PageErrorBoundary><AdminMessagesPage /></PageErrorBoundary></Layout></ProtectedRoute>} />
-        <Route path="/admin/coupons"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminCouponsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/promotions"      element={<ProtectedRoute roleRequired="admin"><AdminPromotionsPage /></ProtectedRoute>} />
-        <Route path="/admin/verification"    element={<ProtectedRoute roleRequired="admin"><AdminVerificationPage /></ProtectedRoute>} />
-        <Route path="/admin/support-monitor" element={<ProtectedRoute roleRequired="admin"><AdminSupportMonitorPage /></ProtectedRoute>} />
-        <Route path="/admin/pricing"         element={<ProtectedRoute roleRequired="admin"><Layout><AdminPricingPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/certificates"    element={<ProtectedRoute roleRequired="admin"><Layout><AdminCertificatesPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/pending-ustas"   element={<ProtectedRoute roleRequired="admin"><Layout><AdminPendingUstasPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/campaigns"       element={<ProtectedRoute roleRequired="admin"><Layout><AdminCampaignsPage /></Layout></ProtectedRoute>} />
-        <Route path="/admin/finance"         element={<ProtectedRoute roleRequired="admin"><AdminFinancePage /></ProtectedRoute>} />
-
-        {/* Destek */}
-        <Route path="/support"              element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportDashboard /></ProtectedRoute>} />
-        <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportChatPage /></ProtectedRoute>} />
-        <Route path="/support/guide"        element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportGuidePage /></ProtectedRoute>} />
+        {/* Admin/Support kullanıcıları panel.usta-go.com'a yönlendir */}
+        <Route path="/admin/*"   element={<Navigate to="/" replace />} />
+        <Route path="/support/*" element={<Navigate to="/" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

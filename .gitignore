@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 dist-admin
+dist-panel
 *.local
 
 # Environment variables - NEVER commit these
