@@ -14,7 +14,8 @@
     "android": "npx cap open android",
     "ios": "npx cap open ios",
     "sync:android": "npx cap sync android",
-    "sync:ios": "npx cap sync ios"
+    "sync:ios": "npx cap sync ios",
+    "build:landing": "node -e \"const fs=require('fs'); if(!fs.existsSync('dist-landing'))fs.mkdirSync('dist-landing'); fs.copyFileSync('public/landing.html','dist-landing/index.html'); console.log('Landing build done')\""
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

@@ -12,6 +12,7 @@ dist
 dist-ssr
 dist-admin
 dist-panel
+dist-landing
 *.local
 
 # Environment variables - NEVER commit these
