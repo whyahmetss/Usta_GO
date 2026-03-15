@@ -50,6 +50,7 @@ const AdminVerificationPage  = lazy(() => import('./pages/AdminVerificationPage'
 const AdminSupportMonitorPage = lazy(() => import('./pages/AdminSupportMonitorPage'))
 const SupportDashboard       = lazy(() => import('./pages/SupportDashboard'))
 const SupportChatPage        = lazy(() => import('./pages/SupportChatPage'))
+const SupportGuidePage       = lazy(() => import('./pages/SupportGuidePage'))
 
 function PageLoader() {
   return (
@@ -160,6 +161,7 @@ function AppRoutes() {
         {/* Destek */}
         <Route path="/support"              element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportDashboard /></ProtectedRoute>} />
         <Route path="/support/chat/:userId" element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportChatPage /></ProtectedRoute>} />
+        <Route path="/support/guide"        element={<ProtectedRoute roleRequired="support" allowAdmin={true}><SupportGuidePage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

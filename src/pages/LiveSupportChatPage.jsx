@@ -8,6 +8,7 @@ import Layout from '../components/Layout'
 import PageHeader from '../components/PageHeader'
 import {
   Send, Headphones, Loader, CheckCheck, Check, RefreshCw, PhoneOff, Star,
+  Paperclip, Image as ImageIcon, X, FileText, Download,
 } from 'lucide-react'
 
 export default function LiveSupportChatPage() {
@@ -34,6 +35,11 @@ export default function LiveSupportChatPage() {
   const [ratingDone, setRatingDone] = useState(false)
   const [closingSession, setClosingSession] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
+
+  const [uploading, setUploading] = useState(false)
+  const [previewFile, setPreviewFile] = useState(null) // { url, type }
+  const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
 
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -315,6 +321,61 @@ export default function LiveSupportChatPage() {
     }
   }
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !agent) return
+    e.target.value = ''
+
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert('Dosya boyutu 10MB\'dan küçük olmalıdır.')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('photo', file)
+      const uploadRes = await fetchAPI(API_ENDPOINTS.UPLOAD.SINGLE, {
+        method: 'POST',
+        body: formData,
+        isFormData: true,
+      })
+      const fileUrl = uploadRes?.data?.url || uploadRes?.url
+      if (!fileUrl) throw new Error('Upload başarısız')
+
+      const isImage = file.type.startsWith('image/')
+      const content = isImage ? `[Fotoğraf] ${fileUrl}` : `[Dosya: ${file.name}] ${fileUrl}`
+      const receiverId = offlineMode ? (fallbackAgentId || agent.id) : agent.id
+
+      const optimistic = {
+        id: `opt-${Date.now()}`,
+        content,
+        senderId: user?.id,
+        receiverId,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        _optimistic: true,
+      }
+      setMessages(prev => [...prev, optimistic])
+
+      const res = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, {
+        method: 'POST',
+        body: { receiverId, content },
+      })
+      const saved = res?.data || res
+      if (saved?.id) {
+        setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...saved, _sent: true } : m))
+        emitEvent('send_message', { receiverId, message: saved })
+      }
+    } catch (err) {
+      console.error('File upload error:', err)
+      alert('Dosya gönderilemedi: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -357,6 +418,16 @@ export default function LiveSupportChatPage() {
   const fmt = (dateStr) => {
     const d = new Date(dateStr)
     return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  // Parse file messages
+  const parseFileContent = (content) => {
+    if (!content) return { text: content, fileUrl: null, isImage: false, fileName: null }
+    const imgMatch = content.match(/^\[Fotoğraf\]\s*(.+)$/)
+    if (imgMatch) return { text: null, fileUrl: imgMatch[1].trim(), isImage: true, fileName: null }
+    const fileMatch = content.match(/^\[Dosya:\s*(.+?)\]\s*(.+)$/)
+    if (fileMatch) return { text: null, fileUrl: fileMatch[2].trim(), isImage: false, fileName: fileMatch[1] }
+    return { text: content, fileUrl: null, isImage: false, fileName: null }
   }
 
   // Group messages by date
@@ -548,6 +619,7 @@ export default function LiveSupportChatPage() {
 
               const { msg } = item
               const isMine = msg.senderId === user?.id
+              const parsed = parseFileContent(msg.content)
 
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
@@ -557,6 +629,23 @@ export default function LiveSupportChatPage() {
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
+                    {parsed.isImage ? (
+                      <div className={`rounded-2xl overflow-hidden cursor-pointer ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${msg._error ? 'opacity-50' : ''}`}
+                        onClick={() => setPreviewFile({ url: parsed.fileUrl, type: 'image' })}>
+                        <img src={parsed.fileUrl} alt="Fotoğraf" className="max-w-full max-h-[200px] object-cover rounded-2xl" loading="lazy" />
+                      </div>
+                    ) : parsed.fileUrl ? (
+                      <a href={parsed.fileUrl} target="_blank" rel="noopener noreferrer"
+                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm ${
+                          isMine
+                            ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
+                            : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                        }`}>
+                        <FileText size={18} className={isMine ? 'text-white/70' : 'text-primary-500'} />
+                        <span className="flex-1 truncate">{parsed.fileName || 'Dosya'}</span>
+                        <Download size={14} className={isMine ? 'text-white/50' : 'text-gray-400'} />
+                      </a>
+                    ) : (
                     <div
                       className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         isMine
@@ -566,6 +655,7 @@ export default function LiveSupportChatPage() {
                     >
                       {msg.content}
                     </div>
+                    )}
                     <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? 'flex-row-reverse' : ''}`}>
                       <span className="text-[10px] text-gray-400">{fmt(msg.createdAt)}</span>
                       {isMine && (
@@ -632,10 +722,47 @@ export default function LiveSupportChatPage() {
         )}
       </div>
 
+      {/* Image Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setPreviewFile(null)}>
+          <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center" onClick={() => setPreviewFile(null)}>
+            <X size={20} className="text-white" />
+          </button>
+          <img src={previewFile.url} alt="Önizleme" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+        </div>
+      )}
+
+      {/* Hidden file inputs */}
+      <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.xls" className="hidden" onChange={handleFileUpload} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileUpload} />
+
       {/* Input bar */}
       {agent && !agentError && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10">
+          {/* Upload progress */}
+          {uploading && (
+            <div className="max-w-lg mx-auto px-4 py-2 flex items-center gap-2">
+              <Loader size={14} className="text-primary-500 animate-spin" />
+              <span className="text-xs text-gray-500">Dosya yükleniyor...</span>
+            </div>
+          )}
           <div className="max-w-lg mx-auto flex items-end gap-2 px-4 py-3">
+            {/* Attach button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-white/10 transition flex-shrink-0 disabled:opacity-50"
+            >
+              <Paperclip size={18} />
+            </button>
+            {/* Camera button */}
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-white/10 transition flex-shrink-0 disabled:opacity-50"
+            >
+              <ImageIcon size={18} />
+            </button>
             <textarea
               ref={inputRef}
               value={text}

@@ -7,6 +7,7 @@ import { getSocket, connectSocket, emitEvent } from '../utils/socket'
 import Layout from '../components/Layout'
 import {
   Send, Loader, CheckCheck, Check, ArrowLeft, User,
+  FileText, Download, X,
 } from 'lucide-react'
 
 export default function SupportChatPage() {
@@ -24,6 +25,7 @@ export default function SupportChatPage() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [typing, setTyping] = useState(false)
+  const [previewFile, setPreviewFile] = useState(null)
 
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -125,6 +127,15 @@ export default function SupportChatPage() {
 
   const fmt = (d) => new Date(d).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 
+  const parseFileContent = (content) => {
+    if (!content) return { text: content, fileUrl: null, isImage: false, fileName: null }
+    const imgMatch = content.match(/^\[Fotoğraf\]\s*(.+)$/)
+    if (imgMatch) return { text: null, fileUrl: imgMatch[1].trim(), isImage: true, fileName: null }
+    const fileMatch = content.match(/^\[Dosya:\s*(.+?)\]\s*(.+)$/)
+    if (fileMatch) return { text: null, fileUrl: fileMatch[2].trim(), isImage: false, fileName: fileMatch[1] }
+    return { text: content, fileUrl: null, isImage: false, fileName: null }
+  }
+
   const roleLabel = (role) => {
     if (!role) return ''
     const r = role.toUpperCase()
@@ -169,6 +180,7 @@ export default function SupportChatPage() {
             )}
             {messages.map(msg => {
               const isMine = msg.senderId === user?.id
+              const parsed = parseFileContent(msg.content)
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                   {!isMine && (
@@ -177,6 +189,23 @@ export default function SupportChatPage() {
                     </div>
                   )}
                   <div className={`max-w-[75%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                    {parsed.isImage ? (
+                      <div className={`rounded-2xl overflow-hidden cursor-pointer ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${msg._error ? 'opacity-50' : ''}`}
+                        onClick={() => setPreviewFile({ url: parsed.fileUrl })}>
+                        <img src={parsed.fileUrl} alt="Fotoğraf" className="max-w-full max-h-[200px] object-cover rounded-2xl" loading="lazy" />
+                      </div>
+                    ) : parsed.fileUrl ? (
+                      <a href={parsed.fileUrl} target="_blank" rel="noopener noreferrer"
+                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm ${
+                          isMine
+                            ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
+                            : 'bg-white dark:bg-[#1E293B] text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                        }`}>
+                        <FileText size={18} className={isMine ? 'text-white/70' : 'text-primary-500'} />
+                        <span className="flex-1 truncate">{parsed.fileName || 'Dosya'}</span>
+                        <Download size={14} className={isMine ? 'text-white/50' : 'text-gray-400'} />
+                      </a>
+                    ) : (
                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                       isMine
                         ? `bg-primary-500 text-white rounded-br-sm ${msg._error ? 'opacity-50' : ''}`
@@ -184,6 +213,7 @@ export default function SupportChatPage() {
                     }`}>
                       {msg.content}
                     </div>
+                    )}
                     <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? 'flex-row-reverse' : ''}`}>
                       <span className="text-[10px] text-gray-400">{fmt(msg.createdAt)}</span>
                       {isMine && (msg._error
@@ -236,6 +266,15 @@ export default function SupportChatPage() {
           </button>
         </div>
       </div>
+      {/* Image Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setPreviewFile(null)}>
+          <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center" onClick={() => setPreviewFile(null)}>
+            <X size={20} className="text-white" />
+          </button>
+          <img src={previewFile.url} alt="Önizleme" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+        </div>
+      )}
     </Layout>
   )
 }

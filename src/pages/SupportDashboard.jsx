@@ -345,6 +345,13 @@ export default function SupportDashboard() {
                 </button>
               )}
               <button
+                onClick={() => navigate('/support/guide')}
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center"
+                title="Destek Kılavuzu"
+              >
+                <FileText size={16} className="text-white" />
+              </button>
+              <button
                 onClick={() => {
                   if (activeTab === 'ustas') load(true)
                   else if (activeTab === 'chats') loadConversations()
