@@ -160,20 +160,17 @@ export const analyzeJob = async (req, res, next) => {
     try {
       const key = await classifyWithDeepSeek(description, activeServices)
 
-      // Açıklama yetersizse hata döndür
+      // Açıklama yetersizse fallback kullan, hata döndürme
       if (key === 'INSUFFICIENT') {
-        return res.status(422).json({
-          error: 'Açıklama yetersiz',
-          message: 'Açıklamanız çok genel veya kısa. Lütfen sorunu daha detaylı tarif edin. Örn: hangi oda, ne zaman başladı, nasıl bir belirti var.',
-          needsMoreDetail: true,
-        })
+        console.log('[AI] INSUFFICIENT — fallback category kullanılıyor')
+        // matchedCategory zaten fallbackService.category olarak set edildi
+      } else {
+        const found = activeServices.find(s => s.category === key)
+        if (found) matchedCategory = found.category
+        const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
+        isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
+        aiUsed = true
       }
-
-      const found = activeServices.find(s => s.category === key)
-      if (found) matchedCategory = found.category
-      const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
-      isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
-      aiUsed = true
     } catch (aiErr) {
       console.error('[AI] DeepSeek hatası:', aiErr.message)
       aiError = aiErr.message
