@@ -75,9 +75,28 @@ function CreateJobPage() {
     reader.readAsDataURL(file)
   }
 
+  const isIstanbul = (addr) => {
+    const lower = addr.toLowerCase()
+    const keywords = ['istanbul', 'İstanbul', 'ıstanbul', 'besiktas', 'beşiktaş', 'kadıköy', 'kadikoy',
+      'şişli', 'sisli', 'üsküdar', 'uskudar', 'fatih', 'beyoglu', 'beyoğlu', 'bakırköy', 'bakirkoy',
+      'maltepe', 'ataşehir', 'atasehir', 'pendik', 'kartal', 'tuzla', 'ümraniye', 'umraniye',
+      'sancaktepe', 'sultanbeyli', 'çekmeköy', 'cekmekoy', 'şile', 'sile', 'beykoz', 'eyüp', 'eyup',
+      'gaziosmanpaşa', 'gaziosmanpasa', 'bağcılar', 'bagcilar', 'bahçelievler', 'bahcelievler',
+      'güngören', 'gungoren', 'esenler', 'sultangazi', 'arnavutköy', 'arnavutkoy', 'başakşehir',
+      'basaksehir', 'avcılar', 'avcilar', 'büyükçekmece', 'buyukcekmece', 'esenyurt', 'beylikdüzü',
+      'beylikduzu', 'küçükçekmece', 'kucukcekmece', 'silivri', 'çatalca', 'catalca', 'adalar',
+      'sarıyer', 'sariyer', 'zeytinburnu', 'bayrampaşa', 'bayrampasa', 'kağıthane', 'kagithane',
+      'levent', 'maslak', 'taksim', 'boğaziçi', 'bogazici']
+    return keywords.some(k => lower.includes(k.toLowerCase()))
+  }
+
   const handleAIAnalysis = async () => {
     if (!description.trim() || !address.trim()) {
       alert('Lütfen hem sorunu açıklayın hem de adresinizi girin.')
+      return
+    }
+    if (!isIstanbul(address)) {
+      alert('Şu an yalnızca İstanbul\'da hizmet veriyoruz. Lütfen İstanbul içinde bir adres girin.')
       return
     }
     setIsAnalyzing(true)
