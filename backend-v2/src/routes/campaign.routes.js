@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../utils/prisma.js";
 import { authMiddleware, adminMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.get("/active", async (req, res) => {
   const campaign = await prisma.campaign.findFirst({

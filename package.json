@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:panel": "vite --open /panel.html",
-    "build": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('App build done')\"",
-    "build:app": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); fs.copyFileSync('public/_redirects','dist/_redirects'); console.log('App build done')\"",
-    "build:panel": "cross-env VITE_BUILD_TARGET=panel vite build && node -e \"const fs=require('fs'); const d='dist-panel'; const src=d+'/panel.html'; if(fs.existsSync(src)){fs.renameSync(src,d+'/index.html')} fs.copyFileSync(d+'/index.html',d+'/404.html'); fs.writeFileSync(d+'/_redirects','/* /index.html 200'); console.log('Panel build done')\"",
+    "build": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); console.log('App build done')\"",
+    "build:app": "cross-env VITE_BUILD_TARGET=app vite build && node -e \"const fs=require('fs'); fs.copyFileSync('dist/index.html','dist/404.html'); console.log('App build done')\"",
+    "build:panel": "cross-env VITE_BUILD_TARGET=panel vite build && node -e \"const fs=require('fs'); const d='dist-panel'; const src=d+'/panel.html'; if(fs.existsSync(src)){fs.renameSync(src,d+'/index.html')} fs.copyFileSync(d+'/index.html',d+'/404.html'); console.log('Panel build done')\"",
     "preview": "vite preview",
     "build:mobile": "cross-env VITE_BUILD_TARGET=app vite build && npx cap sync",
     "build:apk": "cross-env VITE_BUILD_TARGET=app USTAGO_KEYSTORE_PASSWORD=cavdaR_38 vite build && npx cap sync && cross-env USTAGO_KEYSTORE_PASSWORD=cavdaR_38 node -e \"process.chdir('android'); const {execSync}=require('child_process'); execSync('.\\\\gradlew.bat assembleRelease', {stdio:'inherit', env:{...process.env, USTAGO_KEYSTORE_PASSWORD:'cavdaR_38'}}); process.chdir('..'); const fs=require('fs'),path=require('path'),os=require('os'); const src='android/app/build/outputs/apk/release/app-release.apk'; const dst=path.join(os.homedir(),'OneDrive','Desktop','UstaGo-latest.apk'); fs.copyFileSync(src,dst); console.log('APK masaüstüne kopyalandı:', dst)\"",

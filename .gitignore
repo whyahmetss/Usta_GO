@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 dist-admin
+dist-panel
+dist-landing
 *.jks
 *.keystore
 *.local

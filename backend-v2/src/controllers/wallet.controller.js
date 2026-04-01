@@ -1,11 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import * as iyzicoService from '../services/iyzico.service.js';
 import { Buffer } from 'buffer';
 
-const prisma = new PrismaClient();
-
-const getCallbackBaseUrl = () => process.env.IYZIPAY_CALLBACK_BASE || process.env.API_BASE_URL || 'https://usta-go-1.onrender.com';
-const getFrontendUrl = () => process.env.FRONTEND_URL || 'https://usta-go-app.onrender.com';
+const getCallbackBaseUrl = () => process.env.IYZIPAY_CALLBACK_BASE || process.env.API_BASE_URL || '';
+const getFrontendUrl = () => process.env.FRONTEND_URL || '';
 
 export const walletController = {
   // GET /wallet
@@ -155,7 +153,6 @@ export const walletController = {
       const amtFromQuery = parseFloat(req.query.amt || req.body?.amt || 0);
 
       const result = await iyzicoService.retrieveCheckoutForm(token);
-      console.log('topupCallback result:', JSON.stringify(result, null, 2));
 
       const payOk = result?.status === 'success' && (
         result.paymentStatus === 'SUCCESS' ||
@@ -276,7 +273,6 @@ export const walletController = {
       const amtFromQuery = parseFloat(req.query.amt || req.body?.amt || 0);
 
       const result = await iyzicoService.complete3DSPayment(paymentId, conversationData, conversationId);
-      console.log('topup3DSCallback result:', JSON.stringify(result, null, 2));
 
       const payOk = result?.status === 'success' && (
         result.paymentStatus === 'SUCCESS' ||

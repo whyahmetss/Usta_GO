@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../utils/prisma.js'
 
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000))
 

@@ -2,9 +2,7 @@ import * as messageService from "../services/message.service.js";
 import { successResponse } from "../utils/response.js";
 import { io } from "../index.js";
 import { analyzeMessage } from "../utils/messageFilter.js";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 export const sendMessage = async (req, res, next) => {
   try {

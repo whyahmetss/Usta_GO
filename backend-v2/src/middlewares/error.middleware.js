@@ -59,8 +59,9 @@ export const errorHandler = (err, req, res, _next) => {
   if (status >= 500 && process.env.INTERNAL_API_KEY) {
     notifyAmeleOnError(err, req).catch(() => {});
   }
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(status).json({
-    error: err.message || "Internal server error",
+    error: isProd && status >= 500 ? 'Sunucu hatası' : (err.message || 'Internal server error'),
   });
 };
 

@@ -2,10 +2,9 @@ import { Router } from 'express'
 import * as adminController from '../controllers/admin.controller.js'
 import * as sessionCtrl from '../controllers/supportSession.controller.js'
 import { authMiddleware, supportMiddleware } from '../middlewares/auth.middleware.js'
-import { PrismaClient } from '@prisma/client'
+import prisma from '../utils/prisma.js'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 // Public: list ONLINE support agents (isActive=true means "online")
 router.get('/agents', authMiddleware, async (req, res) => {

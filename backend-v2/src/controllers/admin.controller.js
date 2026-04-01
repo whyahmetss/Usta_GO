@@ -1,6 +1,7 @@
 import * as adminService from "../services/admin.service.js";
 import * as configController from "./config.controller.js";
 import { successResponse, paginatedResponse } from "../utils/response.js";
+import prisma from "../utils/prisma.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -133,12 +134,9 @@ export const getSystemHealth = async (req, res, next) => {
   }
 };
 
-import { PrismaClient } from "@prisma/client";
-const _prisma = new PrismaClient();
-
 export const getCoupons = async (req, res, next) => {
   try {
-    const coupons = await _prisma.coupon.findMany({
+    const coupons = await prisma.coupon.findMany({
       include: { _count: { select: { usages: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -150,9 +148,9 @@ export const createCoupon = async (req, res, next) => {
   try {
     const { code, amount, description, maxUses, expiresAt } = req.body;
     if (!code?.trim() || !amount) return res.status(400).json({ success: false, error: 'Kod ve tutar zorunlu' });
-    const existing = await _prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
+    const existing = await prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
     if (existing) return res.status(409).json({ success: false, error: 'Bu kupon kodu zaten mevcut' });
-    const coupon = await _prisma.coupon.create({
+    const coupon = await prisma.coupon.create({
       data: {
         code: code.trim().toUpperCase(),
         amount: Number(amount),
@@ -167,16 +165,16 @@ export const createCoupon = async (req, res, next) => {
 
 export const deleteCoupon = async (req, res, next) => {
   try {
-    await _prisma.coupon.delete({ where: { id: req.params.couponId } });
+    await prisma.coupon.delete({ where: { id: req.params.couponId } });
     res.json({ success: true, message: 'Kupon silindi' });
   } catch (error) { next(error); }
 };
 
 export const toggleCoupon = async (req, res, next) => {
   try {
-    const coupon = await _prisma.coupon.findUnique({ where: { id: req.params.couponId } });
+    const coupon = await prisma.coupon.findUnique({ where: { id: req.params.couponId } });
     if (!coupon) return res.status(404).json({ success: false, error: 'Kupon bulunamadı' });
-    const updated = await _prisma.coupon.update({ where: { id: req.params.couponId }, data: { isActive: !coupon.isActive } });
+    const updated = await prisma.coupon.update({ where: { id: req.params.couponId }, data: { isActive: !coupon.isActive } });
     res.json({ success: true, data: updated });
   } catch (error) { next(error); }
 };
@@ -196,23 +194,23 @@ export const getFinanceReport = async (req, res, next) => {
       pendingWithdrawals,
       totalUsers,
     ] = await Promise.all([
-      _prisma.transaction.findMany({
+      prisma.transaction.findMany({
         orderBy: { createdAt: 'desc' },
         take: 500,
         include: {
           user: { select: { id: true, name: true, role: true } },
         },
       }),
-      _prisma.job.findMany({
+      prisma.job.findMany({
         where: { status: { in: ['COMPLETED', 'RATED'] } },
         select: { id: true, budget: true, completedAt: true, createdAt: true },
       }),
-      _prisma.transaction.aggregate({
+      prisma.transaction.aggregate({
         where: { type: 'WITHDRAWAL', status: 'PENDING' },
         _sum: { amount: true },
         _count: true,
       }),
-      _prisma.user.count(),
+      prisma.user.count(),
     ])
 
     // Komisyon (tamamlanan işlerin %12'si)
@@ -298,7 +296,7 @@ export const getFinanceReport = async (req, res, next) => {
 // Kampanya
 export const getActiveCampaign = async (req, res, next) => {
   try {
-    const campaign = await _prisma.campaign.findFirst({ where: { active: true }, orderBy: { updatedAt: "desc" } });
+    const campaign = await prisma.campaign.findFirst({ where: { active: true }, orderBy: { updatedAt: "desc" } });
     if (!campaign) return res.json({ data: null });
     res.json({
       data: {
@@ -324,8 +322,8 @@ export const setCampaign = async (req, res, next) => {
   try {
     const { title, description, badge_text, button_text, bg_color, badge_color, text_color, bg_image, icon_type, icon_image } = req.body;
     if (!title) return res.status(400).json({ error: "Kampanya basligi zorunludur" });
-    await _prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
-    const campaign = await _prisma.campaign.create({
+    await prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
+    const campaign = await prisma.campaign.create({
       data: {
         title,
         description: description || "",
@@ -363,7 +361,7 @@ export const setCampaign = async (req, res, next) => {
 
 export const deleteCampaign = async (req, res, next) => {
   try {
-    await _prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
+    await prisma.campaign.updateMany({ where: { active: true }, data: { active: false } });
     res.json({ data: null, message: "Kampanya kaldirildi" });
   } catch (error) { next(error); }
 };

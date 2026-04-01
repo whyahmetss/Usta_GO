@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import prisma from '../utils/prisma.js'
 
 // Open a new session (or return existing OPEN one)
 export const openSession = async (req, res) => {

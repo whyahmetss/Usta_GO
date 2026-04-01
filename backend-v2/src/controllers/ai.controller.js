@@ -1,8 +1,6 @@
 import { getActiveServices } from '../services/service.service.js'
 import { successResponse } from '../utils/response.js'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../utils/prisma.js'
 
 // ── Prompt enjeksiyon önleme ────────────────────────────────────────
 const sanitizeInput = (text) => {
@@ -90,15 +88,12 @@ ${serviceList}`
   const data = await response.json()
   const raw = data.choices?.[0]?.message?.content?.trim() || '{}'
 
-  console.log('[AI] DeepSeek raw:', raw.slice(0, 200))
-
   try {
     const parsed = JSON.parse(raw)
     const category = (parsed.category || '').replace(/[^A-Z0-9_]/g, '').trim()
     const band = ['LOW','MID','HIGH'].includes(parsed.band) ? parsed.band : 'MID'
     const needsInfo = !!parsed.needsInfo
     const infoQuestion = needsInfo ? (parsed.infoQuestion || null) : null
-    console.log('[AI] Parsed:', { category, band, needsInfo, infoQuestion })
     return { category, band, needsInfo, infoQuestion }
   } catch {
     // JSON parse hatası — raw'dan category çıkarmaya çalış

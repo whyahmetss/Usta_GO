@@ -26,7 +26,6 @@ export const connectSocket = (userId) => {
   })
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id)
     if (currentUserId) {
       socket.emit('join_room', currentUserId)
     }
@@ -35,12 +34,8 @@ export const connectSocket = (userId) => {
     }
   })
 
-  socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason)
-  })
-
-  socket.on('connect_error', (err) => {
-    console.warn('Socket connection error:', err.message)
+  socket.on('connect_error', () => {
+    // silent — reconnection is automatic
   })
 
   return socket

@@ -23,7 +23,7 @@ router.post(
  * @route GET /api/offers/job/:jobId
  * @desc Get all offers for a specific job
  */
-router.get("/job/:jobId", offerController.getOffers);
+router.get("/job/:jobId", authMiddleware, offerController.getOffers);
 
 /**
  * @route GET /api/offers/my-offers

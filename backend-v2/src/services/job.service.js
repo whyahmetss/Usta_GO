@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../utils/prisma.js";
 import { getCancellationRates } from "./config.service.js";
 import { sendPushNotification } from "../utils/firebase.js";
-
-const prisma = new PrismaClient();
 
 const pushTo = async (userId, title, body, data = {}) => {
   try {
@@ -13,7 +11,7 @@ const pushTo = async (userId, title, body, data = {}) => {
 
 export const createJob = async (customerId, data) => {
   // Only extract fields that exist in the Prisma schema
-  const { title, description, category, location, budget, status, photos, price } = data;
+  const { title, description, category, location, budget, photos, price } = data;
 
   const amount = price || budget || 0
 
@@ -25,7 +23,7 @@ export const createJob = async (customerId, data) => {
       category,
       location,
       budget: amount,
-      status,
+      status: "PENDING", // Her yeni iş daima PENDING başlar, body'den status kabul edilmez
       photos: photos || [],
       customerId,
     },
@@ -101,9 +99,12 @@ export const updateJob = async (jobId, customerId, data) => {
     throw error;
   }
 
+  const allowed = ['title', 'description', 'category', 'location', 'budget', 'photos'];
+  const sanitized = Object.fromEntries(Object.entries(data).filter(([k]) => allowed.includes(k)));
+
   const updatedJob = await prisma.job.update({
     where: { id: jobId },
-    data,
+    data: sanitized,
     include: { customer: { select: { id: true, name: true } } },
   });
 

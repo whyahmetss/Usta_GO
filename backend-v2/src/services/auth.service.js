@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../utils/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 import { getReferralBonus } from "./config.service.js";
-
-const prisma = new PrismaClient();
 
 // Generate a unique referral code like "USTA-AB12CD"
 const generateReferralCode = () => {
@@ -96,15 +94,16 @@ export const registerUser = async (data) => {
 export const loginUser = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
+  // Generic hata: e-posta/şifre ayrımı yapma (user enumeration önleme)
   if (!user) {
-    const error = new Error("User not found");
-    error.status = 404;
+    const error = new Error("E-posta veya şifre hatalı");
+    error.status = 401;
     throw error;
   }
 
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
-    const error = new Error("Invalid password");
+    const error = new Error("E-posta veya şifre hatalı");
     error.status = 401;
     throw error;
   }

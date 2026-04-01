@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../utils/prisma.js'
 
-const prisma = new PrismaClient()
-
-const IBAN   = process.env.HAVALE_IBAN        || 'TR00 0000 0000 0000 0000 0000 00'
-const AD     = process.env.HAVALE_AD          || 'UstaGo Teknoloji A.Ş.'
-const BANKA  = process.env.HAVALE_BANKA       || 'Ziraat Bankası'
+const IBAN   = process.env.HAVALE_IBAN   || ''
+const AD     = process.env.HAVALE_AD     || 'UstaGo'
+const BANKA  = process.env.HAVALE_BANKA  || ''
 
 const genRef = () => `UGO-${Math.floor(1000 + Math.random() * 9000)}`
 

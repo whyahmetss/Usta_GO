@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../utils/prisma.js";
 import { sendPushNotification } from "../utils/firebase.js";
-
-const prisma = new PrismaClient();
 
 export const sendMessage = async (senderId, receiverId, content) => {
   if (senderId === receiverId) {

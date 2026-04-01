@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../utils/prisma.js'
 
 /** Kategori key'ini validate et: sadece BÜYÜK harf, rakam, alt çizgi */
 const isValidCategoryKey = (key) =>

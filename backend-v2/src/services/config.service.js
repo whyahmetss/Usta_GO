@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import prisma from '../utils/prisma.js'
 
 const CANCELLATION_KEY = 'cancellation_rates'
 const DEFAULT_RATES = { pending: 5, accepted: 25, inProgress: 50 }
