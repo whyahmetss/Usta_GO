@@ -83,6 +83,11 @@ export const API_ENDPOINTS = {
     WITHDRAW: '/wallet/withdraw',
     ADD_COUPON: '/wallet/coupon',
     RELEASE_ESCROW: (jobId) => `/wallet/escrow-release/${jobId}`,
+    HAVALE_TALEP: '/wallet/havale/talep',
+    HAVALE_TALEPLERIM: '/wallet/havale/taleplerim',
+    HAVALE_ADMIN_TALEPLER: '/wallet/havale/admin/talepler',
+    HAVALE_ADMIN_ONAYLA: (id) => `/wallet/havale/admin/${id}/onayla`,
+    HAVALE_ADMIN_REDDET: (id) => `/wallet/havale/admin/${id}/reddet`,
   },
 
   // Sertifika
