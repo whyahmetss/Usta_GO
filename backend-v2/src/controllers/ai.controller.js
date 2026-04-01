@@ -143,7 +143,7 @@ const buildCustomerMessage = (serviceLabel, priceRange, bandPrice, isUrgent, ban
   return {
     giris: 'Talebinizi aldık ve teknik ekibimiz değerlendirdi.',
     gelisme: `Açıklamanız doğrultusunda "${serviceLabel}" kapsamında hizmet gerektirdiği değerlendirildi.${bandNote} Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
-    sonuc: `Uzman ustamız sizinle iletişime geçerek yerinde inceleme yapacak ve kesin fiyatı bildirecektir.`,
+    sonuc: `Bu ücret platformdaki ustalara gösterilecektir. Usta kabul ederse işe gider, reddederse talep bir sonraki ustaya iletilir.`,
   }
 }
 
@@ -164,7 +164,14 @@ export const analyzeJob = async (req, res, next) => {
       return res.status(400).json({ error: 'Açıklama çok kısa (en az 5 karakter)' })
     }
 
-    // 1. DB'den aktif servisleri çek
+    // 1. Kullanıcı bakiyesini çek
+    let userBalance = 0
+    try {
+      const dbUser = await prisma.user.findUnique({ where: { id: req.user.id }, select: { balance: true } })
+      userBalance = Number(dbUser?.balance) || 0
+    } catch {}
+
+    // 2. DB'den aktif servisleri çek
     const activeServices = await getActiveServices()
 
     if (activeServices.length === 0) {
@@ -242,6 +249,7 @@ export const analyzeJob = async (req, res, next) => {
       priceMin:       finalMin,
       priceMax:       finalMax,
       customerMessage,
+      userBalance,
       aiUsed,
       aiError,
     })
