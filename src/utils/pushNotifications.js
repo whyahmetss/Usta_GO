@@ -32,6 +32,7 @@ export async function initPushNotifications() {
         await fetchAPI(API_ENDPOINTS.AUTH.FCM_TOKEN, {
           method: 'POST',
           body: { fcmToken: token.value },
+          skipAutoLogout: true,
         })
       } catch (err) {
         console.error('FCM token kayıt hatası:', err)

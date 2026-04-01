@@ -32,7 +32,11 @@ model User {
   isActive  Boolean    @default(true)  // Usta: iş almayı aç/kapat
 
   // Push Notifications
+<<<<<<< HEAD
   fcmToken  String?
+=======
+  fcmToken  String?   // Firebase Cloud Messaging token
+>>>>>>> fac3128 (Usta_GO: Bildirim ayarları ve local düzenlemeler)
 
   // Referral
   referralCode   String?  @unique

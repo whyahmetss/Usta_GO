@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"require\\(''''./node_modules/prisma''''\\)\")",
+      "Bash(dir node_modules)",
+      "Bash(dir \"C:\\\\Users\\\\cvdra\\\\.windsurf\\\\Usta_GO\\\\backend-v2\\\\node_modules\")",
+      "Bash(cmd /c \"dir C:\\\\Users\\\\cvdra\\\\.windsurf\\\\Usta_GO\\\\backend-v2\\\\node_modules 2>&1\")",
+      "Bash(npm install:*)",
+      "Bash(node_modules/.bin/prisma migrate:*)",
+      "Bash(node_modules/.bin/prisma generate:*)"
+    ]
+  }
+}
