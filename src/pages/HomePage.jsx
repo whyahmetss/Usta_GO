@@ -61,7 +61,7 @@ function HomePage() {
     { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
 
-  const FALLBACK_STATUS = { electric: true, plumbing: true, renovation: true, cleaning: true, painting: true, carpentry: true }
+  const FALLBACK_STATUS = { electric: true, plumbing: false, renovation: false, cleaning: false, painting: false, carpentry: false }
 
   const allServices = SERVICE_DEFS.map(s => ({
     ...s,
