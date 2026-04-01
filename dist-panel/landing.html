@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UstaGO — Evinizin Ustasını Anında Bulun</title>
+  <meta name="description" content="Elektrik, tesisat, tadilat ve daha fazlası için güvenilir ustalar. Yapay zeka destekli fiyatlama, anlık iş takibi." />
+  <meta name="theme-color" content="#06060f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: #050510; color: #fff; overflow-x: hidden; cursor: default; }
+
+    /* ── Scroll Progress Bar ── */
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #6366f1, #a78bfa, #22d3ee); z-index: 9999; width: 0%; transition: width .1s linear; }
+
+    /* ── Cursor Glow ── */
+    #cursor-glow { position: fixed; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 70%); pointer-events: none; z-index: 1; transform: translate(-50%, -50%); transition: opacity .4s; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #050510; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(#6366f1, #a78bfa); border-radius: 4px; }
+
+    /* ── Gradient text ── */
+    .grad { background: linear-gradient(135deg, #fff 0%, #a5b4fc 40%, #67e8f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-brand { background: linear-gradient(135deg, #6366f1, #a78bfa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── Aurora Background ── */
+    .aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .aurora-beam { position: absolute; width: 140%; height: 60%; filter: blur(100px); opacity: .25; border-radius: 50%; }
+    .aurora-beam.a1 { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #7c3aed 100%); top: -30%; left: -20%; animation: aurora-drift 12s ease-in-out infinite; }
+    .aurora-beam.a2 { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #8b5cf6 100%); top: -20%; right: -30%; animation: aurora-drift 15s ease-in-out infinite reverse; }
+    .aurora-beam.a3 { background: linear-gradient(45deg, #a78bfa 0%, #6366f1 100%); width: 80%; height: 40%; bottom: -10%; left: 10%; animation: aurora-drift 10s ease-in-out infinite 3s; }
+    @keyframes aurora-drift { 0%,100% { transform: translate(0,0) rotate(0deg) scale(1); } 33% { transform: translate(40px,-20px) rotate(3deg) scale(1.05); } 66% { transform: translate(-30px,15px) rotate(-2deg) scale(.97); } }
+
+    /* ── Grid ── */
+    .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 64px 64px; pointer-events: none; mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 70%); }
+
+    /* ── Glass card ── */
+    .glass { background: rgba(255,255,255,.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08); }
+
+    /* ── Nav ── */
+    #nav { background: rgba(5,5,16,.6); backdrop-filter: blur(24px) saturate(1.2); border-bottom: 1px solid rgba(255,255,255,.05); transition: all .3s; }
+    #nav.scrolled { background: rgba(5,5,16,.92); box-shadow: 0 4px 30px rgba(0,0,0,.3); }
+
+    /* ── Animated gradient border ── */
+    .glow-border { position: relative; overflow: visible; }
+    .glow-border::before { content: ''; position: absolute; inset: -2px; background: conic-gradient(from var(--angle, 0deg), #6366f1, #a78bfa, #22d3ee, #6366f1); border-radius: inherit; z-index: -1; animation: glow-rotate 3s linear infinite; }
+    @keyframes glow-rotate { to { --angle: 360deg; } }
+    @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
+    /* ── Phone mockup ── */
+    .phone-wrap { perspective: 800px; }
+
+    /* ── Scroll reveal ── */
+    .reveal { opacity: 0; transform: translateY(50px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+    .d4{transition-delay:.4s}.d5{transition-delay:.5s}.d6{transition-delay:.6s}
+
+    /* ── 3D Feature card ── */
+    .feat-card { transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s ease, border-color .4s ease; transform-style: preserve-3d; }
+    .feat-card:hover { border-color: rgba(99,102,241,.4) !important; box-shadow: 0 40px 80px rgba(99,102,241,.2); }
+
+    /* ── Phone Mockup ── */
+    .phone-wrap { perspective: 1000px; }
+    .phone-inner { transition: transform 0.15s ease-out; transform-style: preserve-3d; }
+    .phone { width:200px; height:410px; background:#0a0a0f; border-radius:30px; padding:4px; box-shadow:0 25px 50px -12px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.1); }
+    .phone-screen { width:100%; height:100%; background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:26px; padding:6px; overflow:hidden; position:relative; display:flex;flex-direction:column; }
+    .phone-glow { position:absolute;inset:-40px; background:radial-gradient(ellipse at center,rgba(99,102,241,.15),transparent 70%); filter:blur(60px); pointer-events:none; }
+    
+    /* Status Bar */
+    .phone-status-bar { display:flex;justify-content:space-between;align-items:center;padding:0 2px 2px 2px;margin-bottom:2px;font-size:6px;color:rgba(255,255,255,.7); }
+    
+    /* App Components */
+    .app-header { margin-bottom:4px; }
+    .app-svc-row { display:flex;gap:4px;margin-bottom:6px; }
+    .app-svc { flex:1;text-align:center;padding:4px 2px;border-radius:8px;background:rgba(255,255,255,.04);transition:all .3s;cursor:pointer; }
+    .app-svc.active { background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.2));box-shadow:0 4px 12px rgba(99,102,241,.2); }
+    .app-svc-icon { font-size:13px;margin-bottom:1px;transition:transform .3s; }
+    .app-svc:hover .app-svc-icon { transform:scale(1.1); }
+    .app-svc-label { font-size:6px;color:rgba(255,255,255,.4); }
+    
+    /* Floating Notification */
+    .floating-notification { background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(34,197,94,.15));border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:3px 5px;margin-bottom:4px;backdrop-filter:blur(10px); }
+    
+    .app-card { background:rgba(255,255,255,.06);border-radius:10px;padding:6px;margin-bottom:6px;border:1px solid rgba(255,255,255,.08);transition:all .3s; }
+    .app-card:hover { background:rgba(255,255,255,.08);transform:translateY(-1px); }
+    .app-card-header { display:flex;align-items:center;gap:5px;margin-bottom:4px; }
+    .app-tags { display:flex;gap:2px;flex-wrap:wrap; }
+    
+    /* Sticky CTA Bar */
+    #sticky-cta { position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:linear-gradient(135deg,rgba(99,102,241,.9),rgba(139,92,246,.9));backdrop-filter:blur(20px);border-radius:50px;padding:12px 24px;box-shadow:0 8px 32px rgba(99,102,241,.4);transition:all .4s cubic-bezier(.16,1,.3,1);opacity:0;translate:0 100px; }
+    #sticky-cta.visible { opacity:1;translate:0 0; }
+    #sticky-cta:hover { transform:translateX(-50%) scale(1.05);box-shadow:0 12px 40px rgba(99,102,241,.5); }
+    
+    /* Magnetic Button Effect */
+    .magnetic-btn { transition:transform .3s cubic-bezier(.16,1,.3,1); }
+    .magnetic-btn:active { transform:scale(.95); }
+    
+    /* Ripple Effect */
+    .ripple { position:relative;overflow:hidden; }
+    .ripple::after { content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.3) 10%,transparent 10%);background-repeat:no-repeat;background-position:50%;transform:scale(4);opacity:0;transition:transform .6s,opacity .6s; }
+    .ripple:active::after { transform:scale(0);opacity:1;transition:0s; }
+    
+    /* Shimmer Animation */
+    @keyframes shimmer { 0% { background-position:-200% center; } 100% { background-position:200% center; } }
+    .shimmer { background:linear-gradient(90deg,#6366f1 0%,#a78bfa 25%,#22d3ee 50%,#a78bfa 75%,#6366f1 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite; }
+    
+    /* Floating Levitation */
+    @keyframes levitate { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+    .levitate { animation:levitate 3s ease-in-out infinite; }
+    .levitate-delay-1 { animation-delay:.5s; }
+    .levitate-delay-2 { animation-delay:1s; }
+    .levitate-delay-3 { animation-delay:1.5s; }
+    
+    /* Live Pulse */
+    @keyframes live-pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+    .live-indicator { animation:live-pulse 2s ease-in-out infinite; }
+    
+    /* Testimonial Carousel */
+    .carousel-container { overflow:hidden;position:relative; }
+    .carousel-track { display:flex;transition:transform .5s cubic-bezier(.16,1,.3,1); }
+    .carousel-slide { min-width:100%;padding:0 10px; }
+    .carousel-nav { display:flex;gap:8px;justify-content:center;margin-top:20px; }
+    .carousel-dot { width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:all .3s;cursor:pointer; }
+    .carousel-dot.active { background:#6366f1;transform:scale(1.3); }
+    
+    /* Video Lightbox */
+    #video-lightbox { position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s; }
+    #video-lightbox.active { opacity:1;pointer-events:auto; }
+    #video-lightbox iframe { width:90%;max-width:900px;aspect-ratio:16/9;border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.5); }
+    
+    /* Confetti Animation */
+    .confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
+    .confetti { position:absolute;width:10px;height:10px;animation:confetti-fall 3s ease-out forwards; }
+    @keyframes confetti-fall {
+      0% { transform:translateY(-100px) rotate(0deg);opacity:1; }
+      100% { transform:translateY(100vh) rotate(720deg);opacity:0; }
+    }
+    .confetti:nth-child(odd) { background:#6366f1; }
+    .confetti:nth-child(even) { background:#10b981; }
+    .confetti:nth-child(3n) { background:#f59e0b; }
+    .confetti:nth-child(4n) { background:#ec4899; }
+    .confetti:nth-child(5n) { background:#8b5cf6; }
+    
+    .app-ai { background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08));border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:6px;margin-bottom:6px; }
+    
+    /* Bottom Navigation */
+    .app-nav { display:flex;justify-content:space-around;align-items:center;padding:4px 0;margin-top:auto;border-top:1px solid rgba(255,255,255,.08); }
+    .app-nav-item { text-align:center;color:rgba(255,255,255,.4);transition:all .3s;cursor:pointer;padding:4px 8px;border-radius:8px; }
+    .app-nav-item.active { color:#fff;background:rgba(99,102,241,.15); }
+    .app-nav-item:hover { color:#fff;background:rgba(255,255,255,.08); }
+    .feat-card .card-shine { position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .4s; background: radial-gradient(600px circle at var(--mx) var(--my), rgba(99,102,241,.12), transparent 40%); pointer-events: none; }
+    .feat-card:hover .card-shine { opacity: 1; }
+
+    /* ── Store buttons ── */
+    .btn-store { display: flex; align-items: center; gap: 12px; padding: 15px 26px; border-radius: 18px; font-weight: 600; transition: all .35s cubic-bezier(.16,1,.3,1); cursor: pointer; text-decoration: none; position: relative; overflow: hidden; }
+    .btn-store::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,.1) 50%, transparent 70%); opacity: 0; transition: opacity .3s; }
+    .btn-store:hover::after { opacity: 1; }
+    .btn-dark { background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.12); color: #fff; }
+    .btn-dark:hover { background: rgba(255,255,255,.1); transform: translateY(-5px); box-shadow: 0 25px 50px rgba(0,0,0,.3); }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; }
+    .btn-primary:hover { transform: translateY(-5px); box-shadow: 0 25px 60px rgba(99,102,241,.5); }
+
+    /* ── Particles ── */
+    .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .p { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0; animation: pfloat linear infinite; }
+    @keyframes pfloat { 0%{opacity:0;transform:translateY(0)} 15%{opacity:.35} 85%{opacity:.08} 100%{opacity:0;transform:translateY(-150px) translateX(var(--dx))} }
+
+    /* ── Ticker ── */
+    .ticker { display: flex; gap: 48px; animation: ticker-move 22s linear infinite; white-space: nowrap; }
+    @keyframes scroll-bounce { 0%,100% { transform: translateX(-50%) translateY(0); opacity: 1; } 50% { transform: translateX(-50%) translateY(8px); opacity: .5; } }
+    .scroll-bounce { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); animation: scroll-bounce 2s ease-in-out infinite; }
+    .pulse-ring { position: relative; }
+    .pulse-ring::before { content: ''; position: absolute; inset: -6px; border: 2px solid rgba(99,102,241,.5); border-radius: 50%; animation: pulse-ring 2.5s ease-out infinite; }
+    @keyframes pulse-ring { 0% { transform: scale(.85); opacity: .8; } 100% { transform: scale(1.6); opacity: 0; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bounce-slow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes float { 0%,100% { transform: translateY(0) translateX(0); } 33% { transform: translateY(-15px) translateX(5px); } 66% { transform: translateY(5px) translateX(-5px); } }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
+    .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+    .animate-float { animation: float 4s ease-in-out infinite; }
+
+    /* ── Hero animations ── */
+    @keyframes hero-in { from { opacity: 0; transform: translateY(35px); } to { opacity: 1; transform: translateY(0); } }
+    .h-in { animation: hero-in 1s cubic-bezier(.16,1,.3,1) both; }
+    .h-d1{animation-delay:.2s}.h-d2{animation-delay:.4s}.h-d3{animation-delay:.6s}.h-d4{animation-delay:.8s}.h-d5{animation-delay:1s}.h-d6{animation-delay:1.2s}
+
+    /* ── Typing cursor ── */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #typed-cursor { animation: blink 1s step-end infinite; color: #6366f1; }
+
+    /* ── Badge float ── */
+    @keyframes badge-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .badge-f { animation: badge-float var(--dur, 4s) ease-in-out infinite var(--del, 0s); }
+
+    /* ── FAQ Accordion ── */
+    .faq-item { border-bottom: 1px solid rgba(255,255,255,.06); }
+    .faq-btn { width: 100%; text-align: left; padding: 20px 0; display: flex; justify-content: space-between; align-items: center; background: none; border: none; color: #fff; font: inherit; cursor: pointer; }
+    .faq-btn svg { transition: transform .3s ease; flex-shrink: 0; }
+    .faq-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .faq-body { max-height: 0; overflow: hidden; transition: max-height .4s cubic-bezier(.16,1,.3,1), padding .4s; }
+    .faq-body.open { max-height: 200px; padding-bottom: 20px; }
+
+    /* ── Floating notification ── */
+    @keyframes notif-in { 0%{opacity:0;transform:translateX(40px) scale(.8)} 100%{opacity:1;transform:none} }
+    .notif-pop { animation: notif-in .6s cubic-bezier(.16,1,.3,1) 2s both; }
+
+    /* ── Scroll bounce ── */
+    @keyframes scroll-b { 0%,100%{transform:translateY(0);opacity:1} 50%{transform:translateY(10px);opacity:.4} }
+    .scroll-b { animation: scroll-b 2.5s ease-in-out infinite; }
+
+    /* ── Counter ── */
+    .counter-num { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Section divider ── */
+    .section-glow { position: relative; }
+    .section-glow::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,.3), transparent); }
+  </style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress"></div>
+<!-- Cursor glow -->
+<div id="cursor-glow"></div>
+
+<!-- ═══════════════════════════════════════ NAV ════════════════════════════════════════ -->
+<nav id="nav" class="fixed top-0 left-0 right-0 z-50 py-4 px-6 flex items-center justify-between">
+  <div class="flex items-center gap-2.5">
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-500/30">U</div>
+    <span class="text-lg font-bold tracking-tight">Usta<span class="grad-brand">GO</span></span>
+  </div>
+  <div class="hidden md:flex items-center gap-8 text-sm text-white/60 font-medium">
+    <a href="#features" class="hover:text-white transition">Özellikler</a>
+    <a href="#how" class="hover:text-white transition">Nasıl Çalışır</a>
+    <a href="#services" class="hover:text-white transition">Hizmetler</a>
+    <a href="#faq" class="hover:text-white transition">SSS</a>
+  </div>
+  <a href="#download" class="btn-primary text-sm px-5 py-2.5 rounded-xl font-semibold" style="display:flex;align-items:center;gap:6px;text-decoration:none;">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Uygulamayı İndir
+  </a>
+</nav>
+
+<!-- ═══════════════════════════════════════ HERO ═══════════════════════════════════════ -->
+<section id="hero" class="relative min-h-screen flex items-center pt-16 overflow-hidden">
+  <div class="aurora"><div class="aurora-beam a1"></div><div class="aurora-beam a2"></div><div class="aurora-beam a3"></div></div>
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="max-w-7xl mx-auto px-6 py-8 grid lg:grid-cols-2 gap-16 items-center w-full relative" style="z-index:2;">
+    <!-- Left column -->
+    <div>
+      <div class="h-in h-d1 inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-xs font-semibold text-indigo-300 mb-6">
+        <span class="w-2 h-2 bg-emerald-400 rounded-full inline-block" style="animation:pr 1.5s ease-in-out infinite;border:none;"></span>
+        🇹🇷 Türkiye'nin #1 Usta Platformu
+      </div>
+
+      <h1 class="h-in h-d2 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-3">
+        Evinizin <span class="shimmer">Ustasını</span>
+      </h1>
+      <h1 class="h-in h-d3 text-5xl lg:text-[3.6rem] font-black leading-[1.1] mb-6">
+        Anında Bulun<span class="text-indigo-400">.</span>
+      </h1>
+
+      <p class="h-in h-d4 text-lg text-white/50 leading-relaxed mb-3 max-w-lg">
+        <span id="typed-text"></span><span id="typed-cursor">|</span>
+      </p>
+      <p class="h-in h-d4 text-base text-white/35 leading-relaxed mb-10 max-w-lg">
+        Yapay zeka destekli fiyatlama · Güvenli cüzdan ödemesi · Anlık iş takibi
+      </p>
+
+      <div class="h-in h-d5 flex flex-wrap gap-4">
+        <a href="#download" id="hero-cta-primary" class="btn-store btn-primary glow-border magnetic-btn ripple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2.5 2.5 0 01-.93-2V2.24a2.5 2.5 0 01.93-2L13.5 12 3.18 23.76zm11.14-11.09L6.5 5.5l8.42 4.87-2.6 2.3zm-2.6 2.58l2.6 2.31L6.5 18.5l5.82-3.17-.6-.54zM17.5 15l-2.94-1.69 2.95-2.62L21 12l-3.5 3z"/></svg>
+          <div class="text-left">
+            <div style="font-size:10px;opacity:.7;font-weight:400;">Google Play'den</div>
+            <div style="font-size:15px;font-weight:700;">İndir</div>
+          </div>
+        </a>
+        <a href="#download" class="btn-store btn-dark magnetic-btn ripple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <div class="text-left">
+            <div style="font-size:10px;opacity:.7;font-weight:400;">App Store'dan</div>
+            <div style="font-size:15px;font-weight:700;">İndir</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="h-in h-d6 flex items-center gap-6 mt-8">
+        <div class="flex -space-x-2.5">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 border-2 border-[#050510] flex items-center justify-center text-xs font-bold">A</div>
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-[#050510] flex items-center justify-center text-xs font-bold">M</div>
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-orange-500 border-2 border-[#050510] flex items-center justify-center text-xs font-bold">S</div>
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 border-2 border-[#050510] flex items-center justify-center text-xs font-bold">K</div>
+        </div>
+        <div class="text-sm text-white/50"><span class="text-white font-semibold">10.000+</span> mutlu kullanıcı · <span class="text-amber-400">★ 4.9</span></div>
+      </div>
+    </div>
+
+    <!-- Phone mockup with 3D tilt -->
+    <div class="h-in h-d6 flex justify-center lg:justify-end">
+      <div class="phone-wrap relative" id="phone-tilt">
+        <div class="phone-glow"></div>
+        <div class="phone-inner">
+          <div class="phone">
+            <div class="phone-screen">
+              <!-- Status Bar -->
+              <div class="phone-status-bar">
+                <div style="font-size:7px;font-weight:600;">9:41</div>
+                <div style="display:flex;gap:2px;align-items:center;">
+                  <div style="width:12px;height:6px;border:1px solid rgba(255,255,255,.6);border-radius:1px;position:relative;">
+                    <div style="position:absolute;left:1px;top:1px;width:8px;height:4px;background:rgba(255,255,255,.8);border-radius:0.5px;"></div>
+                  </div>
+                  <div style="font-size:6px;">📶</div>
+                  <div style="font-size:6px;">🔋</div>
+                </div>
+              </div>
+              <div class="app-header">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <div>
+                    <div style="font-size:8px;color:rgba(255,255,255,.5);margin-bottom:1px;opacity:0;animation:fadeIn 0.5s 0.2s forwards;">Merhaba,</div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;opacity:0;animation:fadeIn 0.5s 0.3s forwards;">Ahmet Bey 👋</div>
+                  </div>
+                  <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 4px 12px rgba(99,102,241,.3);opacity:0;animation:fadeIn 0.5s 0.4s forwards;position:relative;">
+                    🔔
+                    <div style="position:absolute;top:-2px;right:-2px;width:5px;height:5px;background:#ef4444;border-radius:50%;border:1px solid #050510;animation:pulse 2s infinite;"></div>
+                  </div>
+                </div>
+                <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:6px 8px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(10px);opacity:0;animation:fadeIn 0.5s 0.5s forwards;">
+                  <span style="font-size:10px;">🔍</span>
+                  <span style="font-size:8px;color:rgba(255,255,255,.4);">Ne arıyorsunuz?</span>
+                </div>
+              </div>
+              
+              <!-- Floating Notification -->
+              <div class="floating-notification" style="opacity:0;animation:slideInRight 0.6s 1s forwards;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"></div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:7px;font-weight:600;color:#fff;margin-bottom:1px;">Yeni Teklif!</div>
+                    <div style="font-size:6px;color:rgba(255,255,255,.4);">Mehmet Usta 5 dk içinde</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="app-svc-row">
+                <div class="app-svc" style="opacity:0;animation:fadeInUp 0.4s 0.6s forwards;">
+                  <div class="app-svc-icon">⚡</div>
+                  <div class="app-svc-label">Elektrik</div>
+                </div>
+                <div class="app-svc active" style="opacity:0;animation:fadeInUp 0.4s 0.7s forwards;">
+                  <div class="app-svc-icon">🔧</div>
+                  <div class="app-svc-label">Tesisat</div>
+                </div>
+                <div class="app-svc" style="opacity:0;animation:fadeInUp 0.4s 0.8s forwards;">
+                  <div class="app-svc-icon">🏗️</div>
+                  <div class="app-svc-label">Tadilat</div>
+                </div>
+                <div class="app-svc" style="opacity:0;animation:fadeInUp 0.4s 0.9s forwards;">
+                  <div class="app-svc-icon">🧹</div>
+                  <div class="app-svc-label">Temizlik</div>
+                </div>
+              </div>
+
+              <div class="app-card" style="opacity:0;animation:fadeInUp 0.5s 1.0s forwards;">
+                <div class="app-card-header">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold shadow-lg">A</div>
+                  <div style="flex:1;">
+                    <div style="font-size:10px;font-weight:600;color:#fff;">Ali Usta</div>
+                    <div style="font-size:7px;color:rgba(255,255,255,.5);">⭐ 4.9 (127 iş) • 2.3 km</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:9px;font-weight:700;color:#10b981;">₺850</div>
+                    <div style="font-size:6px;color:rgba(255,255,255,.4);">/saat</div>
+                  </div>
+                </div>
+                <div style="font-size:7px;color:rgba(255,255,255,.4);line-height:1.4;margin-top:8px;">"Lavabo tıkanıklığı için 30 dk içinde gelebilirim. Referanslı..."</div>
+                <div class="app-tags" style="margin-top:8px;">
+                  <span style="background:rgba(16,185,129,.15);color:#10b981;font-size:6px;padding:2px 6px;border-radius:4px;border:1px solid rgba(16,185,129,.3);">⚡ Hızlı</span>
+                  <span style="background:rgba(99,102,241,.15);color:#818cf8;font-size:6px;padding:2px 6px;border-radius:4px;border:1px solid rgba(99,102,241,.3);">📍 Yakın</span>
+                  <span style="background:rgba(245,158,11,.15);color:#fbbf24;font-size:6px;padding:2px 6px;border-radius:4px;border:1px solid rgba(245,158,11,.3);">✓ Güvenli</span>
+                </div>
+              </div>
+
+              <div class="app-ai" style="opacity:0;animation:fadeInUp 0.5s 1.2s forwards;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                  <span style="font-size:8px;color:rgba(255,255,255,.3);">🤖 AI Fiyat Analizi</span>
+                  <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                </div>
+                <div style="background:linear-gradient(90deg,transparent,rgba(99,102,241,.2),transparent);height:2px;border-radius:1px;position:relative;overflow:hidden;">
+                  <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(99,102,241,.8),transparent);animation:scan 2s ease-in-out infinite;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                  <div>
+                    <div style="font-size:9px;font-weight:600;color:#818cf8;">₺750-900 arası</div>
+                    <div style="font-size:6px;color:rgba(255,255,255,.3);">Piyasa analizi</div>
+                  </div>
+                  <div style="background:rgba(16,185,129,.15);color:#10b981;font-size:6px;padding:3px 6px;border-radius:6px;font-weight:600;border:1px solid rgba(16,185,129,.3);">Adil Fiyat ✓</div>
+                </div>
+              </div>
+
+              <!-- Recent Jobs Section -->
+              <div style="opacity:0;animation:fadeIn 0.5s 1.3s forwards;">
+                <div style="font-size:8px;font-weight:600;color:#fff;margin-bottom:8px;">Son İşler</div>
+                <div>
+                  <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:6px;border:1px solid rgba(255,255,255,.06);margin-bottom:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                      <div style="font-size:7px;font-weight:600;color:#fff;">⚡ Priz Tamiri</div>
+                      <div style="font-size:6px;color:#10b981;">✓ Tamamlandı</div>
+                    </div>
+                    <div style="font-size:6px;color:rgba(255,255,255,.4);">Mehmet Usta • 2 gün önce • ₺450</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:6px;border:1px solid rgba(255,255,255,.06);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                      <div style="font-size:7px;font-weight:600;color:#fff;">🔧 Musluk Değişimi</div>
+                      <div style="font-size:6px;color:rgba(255,255,255,.4);">⏳ Devam</div>
+                    </div>
+                    <div style="font-size:6px;color:rgba(255,255,255,.4);">Ali Usta • Bugün • ₺650</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div style="margin-top:6px;opacity:0;animation:fadeIn 0.5s 1.4s forwards;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                  <div style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15));border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px;text-align:center;cursor:pointer;transition:all .3s;">
+                    <div style="font-size:12px;margin-bottom:2px;">➕</div>
+                    <div style="font-size:6px;color:#fff;font-weight:600;">İş Ekle</div>
+                  </div>
+                  <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(34,197,94,.15));border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:6px;text-align:center;cursor:pointer;transition:all .3s;">
+                    <div style="font-size:12px;margin-bottom:2px;">📞</div>
+                    <div style="font-size:6px;color:#fff;font-weight:600;">Ara</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Navigation -->
+              <div class="app-nav" style="opacity:0;animation:fadeIn 0.5s 1.5s forwards;">
+                <div class="app-nav-item active">
+                  <div style="font-size:12px;">🏠</div>
+                  <div style="font-size:5px;">Ana</div>
+                </div>
+                <div class="app-nav-item">
+                  <div style="font-size:12px;">🔍</div>
+                  <div style="font-size:5px;">Ara</div>
+                </div>
+                <div class="app-nav-item">
+                  <div style="font-size:12px;">📋</div>
+                  <div style="font-size:5px;">İşler</div>
+                </div>
+                <div class="app-nav-item">
+                  <div style="font-size:12px;">👤</div>
+                  <div style="font-size:5px;">Profil</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Floating badges -->
+        <div class="glass rounded-2xl px-3 py-2.5 absolute -left-16 top-14 text-xs font-semibold flex items-center gap-2 badge-f" style="--dur:4s;--del:0s;">
+          <span class="text-base">🤖</span> AI Fiyatlama
+        </div>
+        <div class="glass rounded-2xl px-3 py-2.5 absolute -right-16 bottom-28 text-xs font-semibold flex items-center gap-2 badge-f" style="--dur:5s;--del:1s;">
+          <span class="text-base">🔒</span> Güvenli Ödeme
+        </div>
+        <div class="glass rounded-2xl px-3 py-2.5 absolute -left-12 bottom-20 text-xs font-semibold flex items-center gap-2 badge-f" style="--dur:4.5s;--del:.5s;">
+          <span class="text-base">⭐</span> 4.9 Puan
+        </div>
+        <!-- Floating notification -->
+        <div class="notif-pop glass rounded-2xl px-3.5 py-3 absolute -right-20 top-28 text-xs flex items-center gap-3 border-l-2 border-emerald-400" style="min-width:160px;">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-sm">✅</div>
+          <div><div class="font-semibold text-emerald-400" style="font-size:10px;">Yeni Teklif!</div><div style="font-size:9px;color:rgba(255,255,255,.4);">Mehmet U. · 220 TL</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/25 text-xs scroll-b" style="z-index:2;">
+    <span>Keşfet</span>
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ STATS ══════════════════════════════════════ -->
+<section class="py-16 relative section-glow">
+  <div class="max-w-5xl mx-auto px-6">
+    <!-- Live indicator -->
+    <div class="flex items-center justify-center gap-2 mb-6 reveal">
+      <span class="w-2 h-2 bg-emerald-400 rounded-full live-indicator"></span>
+      <span class="text-xs text-white/40">Canlı · <span data-live-counter data-base="342" data-variance="30">342</span> usta şu an çevrimiçi</span>
+    </div>
+    <div class="glass rounded-3xl grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-white/8 overflow-hidden reveal">
+      <div class="p-8 text-center group">
+        <div class="counter-num text-3xl md:text-4xl font-black grad-brand mb-2" data-target="10000" data-suffix="+">0</div>
+        <div class="text-sm text-white/45 group-hover:text-white/60 transition">Kayıtlı Usta</div>
+      </div>
+      <div class="p-8 text-center group">
+        <div class="counter-num text-3xl md:text-4xl font-black grad-brand mb-2" data-target="50000" data-suffix="+">0</div>
+        <div class="text-sm text-white/45 group-hover:text-white/60 transition">Tamamlanan İş</div>
+      </div>
+      <div class="p-8 text-center group">
+        <div class="counter-num text-3xl md:text-4xl font-black grad-brand mb-2" data-target="4.9" data-suffix="★" data-decimal="1">0</div>
+        <div class="text-sm text-white/45 group-hover:text-white/60 transition">Ortalama Puan</div>
+      </div>
+      <div class="p-8 text-center group">
+        <div class="counter-num text-3xl md:text-4xl font-black grad-brand mb-2" data-target="81" data-suffix=" İl">0</div>
+        <div class="text-sm text-white/45 group-hover:text-white/60 transition">Hizmet Bölgesi</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ TICKER ═════════════════════════════════════ -->
+<div class="py-5 border-y border-white/5 overflow-hidden">
+  <div class="ticker">
+    <span class="text-white/18 text-sm font-medium">⚡ Elektrik</span>
+    <span class="text-white/18 text-sm font-medium">🔧 Tesisat</span>
+    <span class="text-white/18 text-sm font-medium">🏗️ Tadilat</span>
+    <span class="text-white/18 text-sm font-medium">🧹 Temizlik</span>
+    <span class="text-white/18 text-sm font-medium">🎨 Boyacı</span>
+    <span class="text-white/18 text-sm font-medium">🪵 Marangoz</span>
+    <span class="text-white/18 text-sm font-medium">🤖 AI Fiyatlama</span>
+    <span class="text-white/18 text-sm font-medium">🔒 Güvenli Ödeme</span>
+    <span class="text-indigo-400/35 text-sm font-semibold">— UstaGO</span>
+    <span class="text-white/18 text-sm font-medium">⚡ Elektrik</span>
+    <span class="text-white/18 text-sm font-medium">🔧 Tesisat</span>
+    <span class="text-white/18 text-sm font-medium">🏗️ Tadilat</span>
+    <span class="text-white/18 text-sm font-medium">🧹 Temizlik</span>
+    <span class="text-white/18 text-sm font-medium">🎨 Boyacı</span>
+    <span class="text-white/18 text-sm font-medium">🪵 Marangoz</span>
+    <span class="text-white/18 text-sm font-medium">🤖 AI Fiyatlama</span>
+    <span class="text-white/18 text-sm font-medium">🔒 Güvenli Ödeme</span>
+    <span class="text-indigo-400/35 text-sm font-semibold">— UstaGO</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FEATURES ══════════════════════════════════ -->
+<section id="features" class="py-28 relative">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%, rgba(99,102,241,.06) 0%, transparent 55%);pointer-events:none;"></div>
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="reveal inline-block glass rounded-full px-4 py-1.5 text-xs font-semibold text-indigo-300 mb-4">Neden UstaGO?</div>
+      <h2 class="reveal d1 text-4xl md:text-5xl font-black mb-4">Farkımızı <span class="grad">Hissedin</span></h2>
+      <p class="reveal d2 text-white/45 text-lg max-w-xl mx-auto">Geleneksel usta arama dönemini kapatıyoruz. Yapay zeka destekli, güvenli ve hızlı.</p>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5" id="feat-grid">
+      <div class="feat-card glass rounded-2xl p-7 reveal d1 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-2xl mb-5">🤖</div>
+        <h3 class="font-bold text-lg mb-2">AI Destekli Fiyatlama</h3>
+        <p class="text-white/45 text-sm leading-relaxed">Gemini AI analiz eder, sorununu tanımlar ve saniyeler içinde adil bir fiyat tahmini sunar.</p>
+      </div>
+      <div class="feat-card glass rounded-2xl p-7 reveal d2 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-2xl mb-5">🔒</div>
+        <h3 class="font-bold text-lg mb-2">Güvenli Cüzdan Ödemesi</h3>
+        <p class="text-white/45 text-sm leading-relaxed">Para direkt ustaya geçmez. İş tamamlanıp sen onaylayana kadar cüzdanda güvende.</p>
+      </div>
+      <div class="feat-card glass rounded-2xl p-7 reveal d3 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center text-2xl mb-5">⚡</div>
+        <h3 class="font-bold text-lg mb-2">Anlık Teklif Akışı</h3>
+        <p class="text-white/45 text-sm leading-relaxed">İlanını oluştur, dakikalar içinde onlarca ustadan teklif al. En uygununu seç.</p>
+      </div>
+      <div class="feat-card glass rounded-2xl p-7 reveal d4 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-2xl mb-5">📍</div>
+        <h3 class="font-bold text-lg mb-2">Gerçek Zamanlı Takip</h3>
+        <p class="text-white/45 text-sm leading-relaxed">Ustanın nerede olduğunu takip et, iş aşamalarını anlık olarak izle.</p>
+      </div>
+      <div class="feat-card glass rounded-2xl p-7 reveal d5 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center text-2xl mb-5">⭐</div>
+        <h3 class="font-bold text-lg mb-2">Doğrulanmış Ustalar</h3>
+        <p class="text-white/45 text-sm leading-relaxed">Tüm ustalar kimlik ve belge doğrulamasından geçer. Güvensiz usta platformda yer almaz.</p>
+      </div>
+      <div class="feat-card glass rounded-2xl p-7 reveal d6 relative overflow-hidden">
+        <div class="card-shine"></div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-2xl mb-5">🎁</div>
+        <h3 class="font-bold text-lg mb-2">Referans & Kupon</h3>
+        <p class="text-white/45 text-sm leading-relaxed">Arkadaşını davet et, her ikiniz de kazanın. Özel kuponlarla indirimli hizmet.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SERVICES ══════════════════════════════════ -->
+<section id="services" class="py-24 relative overflow-hidden section-glow">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(99,102,241,.06) 0%, transparent 65%);pointer-events:none;"></div>
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-14">
+      <h2 class="reveal text-4xl md:text-5xl font-black mb-4">Tüm Ev <span class="grad">Hizmetleri</span></h2>
+      <p class="reveal d1 text-white/45">Tek uygulamadan tüm ev ihtiyaçlarınız için usta bulun.</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="reveal d1 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">⚡</div><div class="font-semibold text-sm">Elektrik</div><div class="text-[11px] text-white/35 mt-1">Priz, kablo, sigorta</div>
+      </div>
+      <div class="reveal d2 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">🔧</div><div class="font-semibold text-sm">Tesisat</div><div class="text-[11px] text-white/35 mt-1">Su, kaçak, musluk</div>
+      </div>
+      <div class="reveal d3 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">🏗️</div><div class="font-semibold text-sm">Tadilat</div><div class="text-[11px] text-white/35 mt-1">Duvar, zemin, kapı</div>
+      </div>
+      <div class="reveal d4 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">🧹</div><div class="font-semibold text-sm">Temizlik</div><div class="text-[11px] text-white/35 mt-1">Ev, ofis, derin</div>
+      </div>
+      <div class="reveal d5 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">🎨</div><div class="font-semibold text-sm">Boyacı</div><div class="text-[11px] text-white/35 mt-1">İç, dış cephe</div>
+      </div>
+      <div class="reveal d6 glass rounded-2xl p-6 text-center feat-card cursor-default relative overflow-hidden"><div class="card-shine"></div>
+        <div class="text-4xl mb-3">🪵</div><div class="font-semibold text-sm">Marangoz</div><div class="text-[11px] text-white/35 mt-1">Mobilya, dolap</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ HOW IT WORKS ══════════════════════════════ -->
+<section id="how" class="py-28">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="reveal text-4xl md:text-5xl font-black mb-4">3 Adımda <span class="grad">Çözüm</span></h2>
+      <p class="reveal d1 text-white/45">İş bulmaktan ödemeye kadar her şey basit ve hızlı.</p>
+    </div>
+    <div class="relative grid md:grid-cols-3 gap-10">
+      <!-- Step connectors (desktop) -->
+      <div class="hidden md:block absolute top-[44px] left-[calc(16.67%+32px)] right-[calc(16.67%+32px)] h-px bg-gradient-to-r from-indigo-500/40 via-violet-500/40 to-cyan-500/40"></div>
+      <div class="reveal d1 text-center">
+        <div class="pulse-ring w-[72px] h-[72px] mx-auto mb-6">
+          <div class="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-3xl shadow-2xl shadow-indigo-500/30" style="position:relative;">📸</div>
+        </div>
+        <div class="glass rounded-full w-7 h-7 text-xs font-bold text-indigo-400 mx-auto mb-3 flex items-center justify-center">1</div>
+        <h3 class="font-bold text-xl mb-2">Sorunu Tanımla</h3>
+        <p class="text-white/45 text-sm leading-relaxed max-w-xs mx-auto">Fotoğraf çek ve problemi birkaç cümleyle anlat. AI anında analiz eder.</p>
+      </div>
+      <div class="reveal d3 text-center">
+        <div class="pulse-ring w-[72px] h-[72px] mx-auto mb-6">
+          <div class="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-3xl shadow-2xl shadow-violet-500/30" style="position:relative;">🤝</div>
+        </div>
+        <div class="glass rounded-full w-7 h-7 text-xs font-bold text-violet-400 mx-auto mb-3 flex items-center justify-center">2</div>
+        <h3 class="font-bold text-xl mb-2">Ustayı Seç</h3>
+        <p class="text-white/45 text-sm leading-relaxed max-w-xs mx-auto">Teklifleri karşılaştır, profillere bak, puana göre en iyisini seç.</p>
+      </div>
+      <div class="reveal d5 text-center">
+        <div class="pulse-ring w-[72px] h-[72px] mx-auto mb-6">
+          <div class="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-3xl shadow-2xl shadow-cyan-500/30" style="position:relative;">✅</div>
+        </div>
+        <div class="glass rounded-full w-7 h-7 text-xs font-bold text-cyan-400 mx-auto mb-3 flex items-center justify-center">3</div>
+        <h3 class="font-bold text-xl mb-2">İşi Onayla</h3>
+        <p class="text-white/45 text-sm leading-relaxed max-w-xs mx-auto">İş tamamlandı, sen memnunsun. Onayla, ödeme tamamlansın, puan ver!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ TESTIMONIALS ══════════════════════════════ -->
+<section class="py-24 relative overflow-hidden section-glow">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(139,92,246,.06) 0%, transparent 55%);pointer-events:none;"></div>
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="reveal text-center text-4xl md:text-5xl font-black mb-14">Kullanıcılar <span class="shimmer">Ne Diyor?</span></h2>
+    <!-- Desktop: grid, Mobile: carousel -->
+    <div class="hidden md:grid md:grid-cols-3 gap-6">
+      <div class="reveal d1 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate">
+        <div class="card-shine"></div>
+        <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+        <p class="text-white/60 text-sm leading-relaxed mb-6">"Elektrikçi için saatlerce aramak yerine UstaGO'yu açtım, 10 dakikada usta ayarladım. Harika uygulama!"</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm font-bold shadow-lg">M</div>
+          <div><div class="text-sm font-semibold">Mehmet K.</div><div class="text-xs text-white/35">İstanbul</div></div>
+        </div>
+      </div>
+      <div class="reveal d3 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate levitate-delay-1">
+        <div class="card-shine"></div>
+        <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+        <p class="text-white/60 text-sm leading-relaxed mb-6">"Fiyat tahmini gerçekten doğru çıktı. Güvenli ödeme sistemi de süper, para peşin vermek zorunda kalmadım."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-sm font-bold shadow-lg">S</div>
+          <div><div class="text-sm font-semibold">Seda Y.</div><div class="text-xs text-white/35">Ankara</div></div>
+        </div>
+      </div>
+      <div class="reveal d5 glass rounded-2xl p-7 feat-card relative overflow-hidden levitate levitate-delay-2">
+        <div class="card-shine"></div>
+        <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+        <p class="text-white/60 text-sm leading-relaxed mb-6">"Profesyonel ustalar, zamanında iş, sorunsuz ödeme. Bu uygulama hayatı kolaylaştırıyor gerçekten."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-bold shadow-lg">A</div>
+          <div><div class="text-sm font-semibold">Ali R.</div><div class="text-xs text-white/35">İzmir</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Mobile Carousel -->
+    <div class="md:hidden">
+      <div class="carousel-container reveal">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Elektrikçi için saatlerce aramak yerine UstaGO'yu açtım, 10 dakikada usta ayarladım. Harika uygulama!"</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm font-bold shadow-lg">M</div>
+                <div><div class="text-sm font-semibold">Mehmet K.</div><div class="text-xs text-white/35">İstanbul</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Fiyat tahmini gerçekten doğru çıktı. Güvenli ödeme sistemi de süper, para peşin vermek zorunda kalmadım."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-sm font-bold shadow-lg">S</div>
+                <div><div class="text-sm font-semibold">Seda Y.</div><div class="text-xs text-white/35">Ankara</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="glass rounded-2xl p-7">
+              <div class="flex gap-1 text-amber-400 text-sm mb-4">★★★★★</div>
+              <p class="text-white/60 text-sm leading-relaxed mb-6">"Profesyonel ustalar, zamanında iş, sorunsuz ödeme. Bu uygulama hayatı kolaylaştırıyor gerçekten."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-bold shadow-lg">A</div>
+                <div><div class="text-sm font-semibold">Ali R.</div><div class="text-xs text-white/35">İzmir</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-nav">
+          <div class="carousel-dot active"></div>
+          <div class="carousel-dot"></div>
+          <div class="carousel-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ COMPARISON TABLE ════════════════════════════ -->
+<section class="py-28 relative overflow-hidden">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%, rgba(99,102,241,.08) 0%, transparent 65%);pointer-events:none;"></div>
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="reveal inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs font-semibold text-indigo-300 mb-4">
+        ⚡ Karşılaştırma
+      </div>
+      <h2 class="reveal d1 text-4xl md:text-6xl font-black mb-4">Geleneksel <span class="grad">vs</span> UstaGO</h2>
+      <p class="reveal d2 text-white/45 text-lg max-w-xl mx-auto">Farkı görün, zaman kazanın, hayatınız kolaylaşsın.</p>
+    </div>
+    <div class="reveal d3 relative">
+      <div class="grid md:grid-cols-2 gap-6 md:gap-0 md:divide-x divide-white/10 glass rounded-3xl overflow-hidden comparison-table">
+        <!-- Traditional -->
+        <div class="p-8 md:p-10 bg-gradient-to-br from-red-500/5 via-transparent to-transparent hover:from-red-500/8 transition-all duration-700 transform hover:-translate-y-1">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center text-3xl shadow-lg shadow-red-500/20 animate-pulse">❌</div>
+            <div>
+              <h3 class="font-bold text-2xl mb-1">Geleneksel Yöntem</h3>
+              <p class="text-red-400/70 text-sm">Eski usul, yavaş, riskli</p>
+            </div>
+          </div>
+          <ul class="space-y-5">
+            <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.1s;animation-fill-mode:forwards;">
+              <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
+                <span class="text-red-400 text-sm">✗</span>
+              </div>
+              <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                <div class="font-semibold text-white/80 mb-0.5">Saatlerce Arama</div>
+                <div class="text-white/40 text-sm">Telefonlar, komşular, sosyal medya derdi</div>
+              </div>
+            </li>
+            <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.2s;animation-fill-mode:forwards;">
+              <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
+                <span class="text-red-400 text-sm">✗</span>
+              </div>
+              <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                <div class="font-semibold text-white/80 mb-0.5">Fiyat Belirsizliği</div>
+                <div class="text-white/40 text-sm">İş bitince ne kadar ödeyeceğini bilmiyorsun</div>
+              </div>
+            </li>
+            <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.3s;animation-fill-mode:forwards;">
+              <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
+                <span class="text-red-400 text-sm">✗</span>
+              </div>
+              <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                <div class="font-semibold text-white/80 mb-0.5">Güvensiz Ustalar</div>
+                <div class="text-white/40 text-sm">Referans yok, belge yok, garanti yok</div>
+              </div>
+            </li>
+            <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.4s;animation-fill-mode:forwards;">
+              <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
+                <span class="text-red-400 text-sm">✗</span>
+              </div>
+              <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                <div class="font-semibold text-white/80 mb-0.5">Peşin Ödeme Riski</div>
+                <div class="text-white/40 text-sm">Para ver, umudu ye, yandın mı yandın</div>
+              </div>
+            </li>
+            <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.5s;animation-fill-mode:forwards;">
+              <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
+                <span class="text-red-400 text-sm">✗</span>
+              </div>
+              <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                <div class="font-semibold text-white/80 mb-0.5">Sınırlı Seçenek</div>
+                <div class="text-white/40 text-sm">Sadece tanıdıkların tavsiye ettiği ustalar</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <!-- UstaGO -->
+        <div class="p-8 md:p-10 bg-gradient-to-br from-emerald-500/5 via-indigo-500/5 to-purple-500/5 hover:from-emerald-500/8 hover:via-indigo-500/8 hover:to-purple-500/8 transition-all duration-700 transform hover:-translate-y-1 relative overflow-hidden">
+          <!-- Animated glow effect -->
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent opacity-50 animate-pulse"></div>
+          <!-- Floating particles -->
+          <div class="absolute top-10 right-10 w-2 h-2 bg-emerald-400 rounded-full animate-float opacity-60"></div>
+          <div class="absolute top-20 right-20 w-1 h-1 bg-cyan-400 rounded-full animate-float opacity-40" style="animation-delay:1s;"></div>
+          <div class="absolute bottom-20 right-15 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-float opacity-50" style="animation-delay:2s;"></div>
+          <div class="relative">
+            <div class="flex items-center gap-4 mb-8">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-3xl shadow-2xl shadow-emerald-500/30 animate-bounce-slow">✅</div>
+              <div>
+                <h3 class="font-bold text-2xl mb-1 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">UstaGO</h3>
+                <p class="text-emerald-400/70 text-sm">Modern, hızlı, güvenli</p>
+              </div>
+            </div>
+            <ul class="space-y-5">
+              <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.6s;animation-fill-mode:forwards;">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  <span class="text-emerald-400 text-sm animate-pulse">⚡</span>
+                </div>
+                <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                  <div class="font-semibold text-white/90 mb-0.5">Dakikalar İçinde Usta</div>
+                  <div class="text-white/50 text-sm">İlan aç, 10 dakikada teklifler gelsin</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.7s;animation-fill-mode:forwards;">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  <span class="text-emerald-400 text-sm animate-pulse">🤖</span>
+                </div>
+                <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                  <div class="font-semibold text-white/90 mb-0.5">AI Fiyat Analizi</div>
+                  <div class="text-white/50 text-sm">Gemini AI ile adil, şeffaf fiyat</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.8s;animation-fill-mode:forwards;">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  <span class="text-emerald-400 text-sm animate-pulse">🛡️</span>
+                </div>
+                <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                  <div class="font-semibold text-white/90 mb-0.5">Doğrulanmış Profesyoneller</div>
+                  <div class="text-white/50 text-sm">Kimlik, belge, geçmiş kontrolü yapıldı</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:0.9s;animation-fill-mode:forwards;">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  <span class="text-emerald-400 text-sm animate-pulse">🔒</span>
+                </div>
+                <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                  <div class="font-semibold text-white/90 mb-0.5">Güvenli Cüzdan</div>
+                  <div class="text-white/50 text-sm">İş bitince öde, memnun değilsen iade</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-4 group opacity-0 animate-fadeInUp" style="animation-delay:1.0s;animation-fill-mode:forwards;">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  <span class="text-emerald-400 text-sm animate-pulse">🌍</span>
+                </div>
+                <div class="transform transition-all duration-300 group-hover:translate-x-1">
+                  <div class="font-semibold text-white/90 mb-0.5">81 İlde Hizmet</div>
+                  <div class="text-white/50 text-sm">Türkiye'nin her yerinde usta ağı</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FAQ ════════════════════════════════════════ -->
+<section id="faq" class="py-28">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="text-center mb-14">
+      <h2 class="reveal text-4xl md:text-5xl font-black mb-4">Sık Sorulan <span class="grad">Sorular</span></h2>
+    </div>
+    <div class="reveal d1 glass rounded-3xl p-6 md:p-8">
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false" onclick="toggleFAQ(this)">
+          <span class="font-semibold text-sm pr-6">UstaGO'yu kullanmak ücretli mi?</span>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-body"><p class="text-white/50 text-sm leading-relaxed">Uygulamayı indirmek ve iş ilanı oluşturmak tamamen ücretsizdir. Sadece ustayı seçip iş başladığında ödeme yaparsınız.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false" onclick="toggleFAQ(this)">
+          <span class="font-semibold text-sm pr-6">Ödeme güvenliği nasıl sağlanıyor?</span>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-body"><p class="text-white/50 text-sm leading-relaxed">Paranız cüzdanınızda tutulur ve iş tamamlanıp siz onaylayana kadar ustaya aktarılmaz. İş beğenmezseniz iade alabilirsiniz.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false" onclick="toggleFAQ(this)">
+          <span class="font-semibold text-sm pr-6">AI fiyat tahmini nasıl çalışıyor?</span>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-body"><p class="text-white/50 text-sm leading-relaxed">Sorununuzun fotoğrafını ve açıklamasını Gemini AI analiz eder. Piyasa verilerini kullanarak adil bir fiyat aralığı önerir. Bu sayede ne fazla ne az ödersiniz.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false" onclick="toggleFAQ(this)">
+          <span class="font-semibold text-sm pr-6">Ustalar nasıl seçiliyor?</span>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-body"><p class="text-white/50 text-sm leading-relaxed">Tüm ustalar kimlik doğrulaması, mesleki belge kontrolü ve güvenlik taramasından geçer. Sadece onaylanan ustalar platformda yer alır.</p></div>
+      </div>
+      <div class="faq-item" style="border-bottom:none;">
+        <button class="faq-btn" aria-expanded="false" onclick="toggleFAQ(this)">
+          <span class="font-semibold text-sm pr-6">Hangi şehirlerde hizmet veriyorsunuz?</span>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-body"><p class="text-white/50 text-sm leading-relaxed">Türkiye'nin 81 ilinde hizmet veriyoruz. Usta ağımız her geçen gün büyüyor. Bulunduğunuz bölgede aktif ustalar her zaman mevcut.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ DOWNLOAD ══════════════════════════════════ -->
+<section id="download" class="py-32 relative overflow-hidden">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(99,102,241,.12) 0%, transparent 60%);pointer-events:none;"></div>
+  <div class="max-w-3xl mx-auto px-6 text-center relative" style="z-index:2;">
+    <div class="reveal inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-xs font-semibold text-indigo-300 mb-6">
+      📲 Ücretsiz İndir
+    </div>
+    <h2 class="reveal d1 text-4xl md:text-6xl font-black mb-6">Hemen <span class="grad">Başlayın</span></h2>
+    <p class="reveal d2 text-white/50 text-lg mb-12 max-w-lg mx-auto">İlk işinizi ücretsiz açın. Binlerce güvenilir usta sizi bekliyor.</p>
+    <div class="reveal d3 flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="#download" class="btn-store btn-primary glow-border">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2.5 2.5 0 01-.93-2V2.24a2.5 2.5 0 01.93-2L13.5 12 3.18 23.76zm11.14-11.09L6.5 5.5l8.42 4.87-2.6 2.3zm-2.6 2.58l2.6 2.31L6.5 18.5l5.82-3.17-.6-.54zM17.5 15l-2.94-1.69 2.95-2.62L21 12l-3.5 3z"/></svg>
+        <div class="text-left">
+          <div style="font-size:11px;opacity:.75;font-weight:400;">Google Play'den İndir</div>
+          <div style="font-size:17px;font-weight:700;">Android</div>
+        </div>
+      </a>
+      <a href="#download" class="btn-store btn-dark">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <div class="text-left">
+          <div style="font-size:11px;opacity:.75;font-weight:400;">App Store'dan İndir</div>
+          <div style="font-size:17px;font-weight:700;">iPhone</div>
+        </div>
+      </a>
+    </div>
+    <p class="reveal d4 text-white/25 text-xs mt-8">iOS 14+ ve Android 8+ · Ücretsiz · Reklam yok · 100% Türkçe</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FOOTER ════════════════════════════════════ -->
+<footer class="border-t border-white/5 py-14 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-4 gap-10 mb-10">
+      <div>
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-black">U</div>
+          <span class="text-lg font-bold tracking-tight">Usta<span class="grad-brand">GO</span></span>
+        </div>
+        <p class="text-white/35 text-sm leading-relaxed">Türkiye'nin en gelişmiş ev hizmetleri platformu. Güvenli, hızlı, yapay zeka destekli.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-sm">Hizmetler</h4>
+        <ul class="space-y-2.5 text-sm text-white/35">
+          <li>⚡ Elektrik</li><li>🔧 Tesisat</li><li>🏗️ Tadilat</li><li>🧹 Temizlik</li><li>🎨 Boyacı</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-sm">Şirket</h4>
+        <ul class="space-y-2.5 text-sm text-white/35">
+          <li><a href="#" class="hover:text-white transition">Hakkımızda</a></li>
+          <li><a href="#" class="hover:text-white transition">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition">Kariyer</a></li>
+          <li><a href="#" class="hover:text-white transition">İletişim</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-sm">Yasal</h4>
+        <ul class="space-y-2.5 text-sm text-white/35">
+          <li><a href="#" class="hover:text-white transition">Gizlilik Politikası</a></li>
+          <li><a href="#" class="hover:text-white transition">Kullanım Koşulları</a></li>
+          <li><a href="#" class="hover:text-white transition">KVKK</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/25">
+      <span>© 2025 UstaGO. Tüm hakları saklıdır.</span>
+      <span>🇹🇷 Türkiye'de yapıldı</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Sticky CTA Bar -->
+<a href="#download" id="sticky-cta" class="flex items-center gap-3 text-white font-semibold text-sm">
+  <span class="w-2 h-2 bg-emerald-400 rounded-full live-indicator"></span>
+  <span>🚀 Hemen Başla - Ücretsiz</span>
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+</a>
+
+<!-- Video Lightbox -->
+<div id="video-lightbox" onclick="this.classList.remove('active')">
+  <iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Particles ──────────────────────────────────────────────────────
+  const pCont = document.getElementById('particles');
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'p';
+    p.style.cssText = `left:${Math.random()*100}%;bottom:${Math.random()*40}%;width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;--dx:${(Math.random()-.5)*80}px;animation-duration:${Math.random()*10+6}s;animation-delay:-${Math.random()*12}s;`;
+    pCont.appendChild(p);
+  }
+
+  // ── Cursor Glow ────────────────────────────────────────────────────
+  const glow = document.getElementById('cursor-glow');
+  let mx = 0, my = 0, gx = 0, gy = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animGlow() {
+    gx += (mx - gx) * .08;
+    gy += (my - gy) * .08;
+    glow.style.left = gx + 'px';
+    glow.style.top = gy + 'px';
+    requestAnimationFrame(animGlow);
+  }
+  animGlow();
+
+  // ── Scroll Progress ────────────────────────────────────────────────
+  const prog = document.getElementById('progress');
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.width = (window.scrollY / h * 100) + '%';
+    nav.classList.toggle('scrolled', window.scrollY > 30);
+  }, { passive: true });
+
+  // ── Scroll Reveal ──────────────────────────────────────────────────
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: .1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // ── Counter Animation ──────────────────────────────────────────────
+  const cObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = parseFloat(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const dec = parseInt(el.dataset.decimal || '0');
+      const dur = 2200;
+      const start = performance.now();
+      (function run(now) {
+        const t = Math.min((now - start) / dur, 1);
+        const ease = t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+        const v = target * ease;
+        el.textContent = (dec > 0 ? v.toFixed(dec) : Math.floor(v).toLocaleString('tr-TR')) + suffix;
+        if (t < 1) requestAnimationFrame(run);
+      })(performance.now());
+      cObs.unobserve(el);
+    });
+  }, { threshold: .4 });
+  document.querySelectorAll('[data-target]').forEach(el => cObs.observe(el));
+
+  // ── 3D Card Shine (mouse-follow radial gradient) ───────────────────
+  document.querySelectorAll('.feat-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      card.style.setProperty('--mx', x + 'px');
+      card.style.setProperty('--my', y + 'px');
+      // subtle 3D tilt
+      const cx = r.width / 2, cy = r.height / 2;
+      const rx = (y - cy) / cy * -6;
+      const ry = (x - cx) / cx * 6;
+      card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-8px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+
+  // ── Phone 3D Tilt ──────────────────────────────────────────────────
+  const phoneTilt = document.getElementById('phone-tilt');
+
+  // ── Typing Animation ──────────────────────────────────────────────
+  const phrases = [
+    'Elektrikçi mi arıyorsunuz? Tek tıkla bulun.',
+    'Tesisatçınız 10 dakikada kapınızda.',
+    'Tadilat için güvenilir usta, hızlı teklif.',
+    'AI ile adil fiyat tahmini — hemen deneyin.',
+    'Temizlikçi bulmak hiç bu kadar kolay olmadı.',
+  ];
+  const typedEl = document.getElementById('typed-text');
+  let pi = 0, ci = 0, deleting = false;
+  function typeStep() {
+    const phrase = phrases[pi];
+    if (!deleting) {
+      typedEl.textContent = phrase.substring(0, ci + 1);
+      ci++;
+      if (ci >= phrase.length) { deleting = true; setTimeout(typeStep, 2000); return; }
+      setTimeout(typeStep, 45 + Math.random() * 35);
+    } else {
+      typedEl.textContent = phrase.substring(0, ci);
+      ci--;
+      if (ci < 0) { deleting = false; ci = 0; pi = (pi + 1) % phrases.length; setTimeout(typeStep, 400); return; }
+      setTimeout(typeStep, 22);
+    }
+  }
+  setTimeout(typeStep, 1200);
+
+  // ── App service icon cycling ───────────────────────────────────────
+  const svcEls = document.querySelectorAll('.app-svc');
+  let activeSvc = 0;
+  setInterval(() => {
+    svcEls.forEach(el => el.classList.remove('active'));
+    activeSvc = (activeSvc + 1) % svcEls.length;
+    svcEls[activeSvc]?.classList.add('active');
+  }, 2500);
+
+  // ── Sticky CTA Bar ───────────────────────────────────────────────
+  const stickyCta = document.getElementById('sticky-cta');
+  const heroCta = document.getElementById('hero-cta-primary');
+  if (stickyCta && heroCta) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) {
+          stickyCta.classList.add('visible');
+        } else {
+          stickyCta.classList.remove('visible');
+        }
+      });
+    }, { threshold: 0 });
+    observer.observe(heroCta);
+  }
+
+  // ── Magnetic Button Effect ─────────────────────────────────────────
+  document.querySelectorAll('.magnetic-btn').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate(0, 0)';
+    });
+  });
+
+  // ── Live Stats Counter ────────────────────────────────────────────
+  function updateLiveStats() {
+    const liveCounters = document.querySelectorAll('[data-live-counter]');
+    liveCounters.forEach(counter => {
+      const base = parseInt(counter.dataset.base) || 1000;
+      const variance = parseInt(counter.dataset.variance) || 50;
+      const current = base + Math.floor(Math.random() * variance * 2) - variance;
+      counter.textContent = current.toLocaleString('tr-TR');
+    });
+  }
+  setInterval(updateLiveStats, 5000);
+  updateLiveStats();
+
+  // ── Testimonial Carousel ─────────────────────────────────────────
+  const carouselTrack = document.querySelector('.carousel-track');
+  const carouselDots = document.querySelectorAll('.carousel-dot');
+  let currentSlide = 0;
+  
+  function goToSlide(index) {
+    if (carouselTrack) {
+      carouselTrack.style.transform = `translateX(-${index * 100}%)`;
+    }
+    carouselDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+    currentSlide = index;
+  }
+  
+  carouselDots.forEach((dot, index) => {
+    dot.addEventListener('click', () => goToSlide(index));
+  });
+  
+  // Auto-advance carousel
+  setInterval(() => {
+    const totalSlides = carouselDots.length || 3;
+    goToSlide((currentSlide + 1) % totalSlides);
+  }, 5000);
+
+  // ── Video Lightbox ────────────────────────────────────────────────
+  window.openVideo = function(videoId) {
+    const lightbox = document.getElementById('video-lightbox');
+    const frame = document.getElementById('video-frame');
+    if (lightbox && frame) {
+      frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      lightbox.classList.add('active');
+    }
+  };
+
+  // ── Enhanced 3D Phone Tilt with Parallax ─────────────────────────
+  if (phoneTilt) {
+    const inner = phoneTilt.querySelector('.phone-inner');
+    const screen = phoneTilt.querySelector('.phone-screen');
+    
+    phoneTilt.addEventListener('mousemove', e => {
+      const r = phoneTilt.getBoundingClientRect();
+      const cx = r.width / 2, cy = r.height / 2;
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const rx = (y - cy) / cy * -15;
+      const ry = (x - cx) / cx * 15;
+      
+      inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      
+      // Parallax depth for screen content
+      if (screen) {
+        const content = screen.querySelectorAll('.app-header, .floating-notification, .app-card, .app-ai');
+        content.forEach((el, i) => {
+          const depth = (i + 1) * 2;
+          el.style.transform = `translateZ(${depth}px)`;
+        });
+      }
+    });
+    
+    phoneTilt.addEventListener('mouseleave', () => {
+      inner.style.transform = 'rotateX(0) rotateY(0)';
+      const content = screen?.querySelectorAll('.app-header, .floating-notification, .app-card, .app-ai');
+      content?.forEach(el => {
+        el.style.transform = 'translateZ(0)';
+      });
+    });
+    
+    // Enhanced auto-float
+    let autoFloat = true;
+    let angle = 0;
+    function phoneAutoFloat() {
+      if (autoFloat) {
+        angle += .02;
+        const rx = Math.sin(angle) * 4;
+        const ry = Math.cos(angle) * 5;
+        inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      }
+      requestAnimationFrame(phoneAutoFloat);
+    }
+    phoneAutoFloat();
+    phoneTilt.addEventListener('mouseenter', () => { autoFloat = false; });
+    phoneTilt.addEventListener('mouseleave', () => { autoFloat = true; });
+  }
+
+  // ── Levitation Animation Trigger ─────────────────────────────────
+  const levitationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('levitate');
+      }
+    });
+  }, { threshold: .3 });
+  
+  document.querySelectorAll('.feat-card, .badge-f').forEach(el => {
+    levitationObserver.observe(el);
+  });
+
+  // ── Confetti Effect ────────────────────────────────────────────
+  function fireConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+    
+    for (let i = 0; i < 50; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.animationDelay = Math.random() * 0.5 + 's';
+      confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      container.appendChild(confetti);
+    }
+    
+    setTimeout(() => { container.remove(); }, 3500);
+  }
+  
+  // Attach confetti to ALL /auth links
+  document.querySelectorAll('a[href="#download"]').forEach(btn => {
+    btn.addEventListener('click', () => { fireConfetti(); });
+  });
+})();
+
+// ── FAQ Accordion ────────────────────────────────────────────────────
+function toggleFAQ(btn) {
+  const body = btn.nextElementSibling;
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  // Close all
+  document.querySelectorAll('.faq-btn').forEach(b => {
+    b.setAttribute('aria-expanded', 'false');
+    b.nextElementSibling.classList.remove('open');
+  });
+  if (!expanded) {
+    btn.setAttribute('aria-expanded', 'true');
+    body.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>
