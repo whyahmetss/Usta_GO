@@ -53,6 +53,7 @@ model User {
   supportSessions  SupportSession[]  @relation("UserSessions")
   agentSessions    SupportSession[]  @relation("AgentSessions")
   notifications Notification[]
+  bakiyeTalepleri BakiyeTalebi[]
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -477,6 +478,29 @@ model UserCertificate {
 
   @@index([userId])
   @@index([status])
+}
+
+// Havale/EFT ile bakiye talebi
+model BakiyeTalebi {
+  id           String              @id @default(cuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tutar        Float
+  referansKodu String              @unique
+  durum        BakiyeTalebiDurum   @default(BEKLIYOR)
+  adminNot     String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([durum])
+  @@index([referansKodu])
+}
+
+enum BakiyeTalebiDurum {
+  BEKLIYOR
+  ONAYLANDI
+  REDDEDILDI
 }
 
 // Canlı Destek Oturumu
