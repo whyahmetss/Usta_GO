@@ -336,7 +336,7 @@ function CreateJobPage() {
             {/* Eksik bilgi uyarısı */}
             {aiResult.needsInfo && aiResult.infoQuestion && (
               <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 flex gap-3">
-                <span className="text-xl shrink-0">&#x2139;&#xfe0f;</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <div>
                   <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Fiyatı doğrulaştırmak için</p>
                   <p className="text-sm text-amber-700 dark:text-amber-400">{aiResult.infoQuestion}</p>
@@ -345,57 +345,19 @@ function CreateJobPage() {
               </div>
             )}
 
-            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white text-center" padding="p-6">
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Tahmini Ücret Aralığı</p>
-              {aiResult.priceMin != null && aiResult.priceMax != null && aiResult.priceMin !== aiResult.priceMax ? (
-                <>
-                  <p className="text-3xl font-bold mb-0.5">{aiResult.priceMin} — {aiResult.priceMax} TL</p>
-                  <p className="text-white/50 text-xs mb-1">Tahmini: {finalPrice} TL</p>
-                </>
-              ) : (
-                <p className="text-4xl font-bold mb-1">{finalPrice} TL</p>
-              )}
-              {selectedCoupon && (
-                <p className="text-white/60 text-xs mb-2">({estimatedPrice} TL - {selectedCoupon.amount} TL kupon)</p>
-              )}
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
-                  <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
+            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white" padding="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles size={18} className="text-white" />
                 </div>
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
-                  <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
-                </div>
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
-                  <p className="font-semibold text-xs">{aiResult.urgency}</p>
+                <div>
+                  <p className="font-bold text-white text-base leading-tight">{aiResult.primaryLabel}</p>
+                  <p className="text-white/60 text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı iş' : aiResult.band === 'LOW' ? 'Basit iş' : 'Standart iş'}{aiResult.isUrgent ? ' · Acil' : ''}</p>
                 </div>
               </div>
-              {aiResult.priceBreakdown && (
-                <div className="mt-3 text-left bg-white/10 rounded-xl p-3 text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Band fiyat ({aiResult.band})</span>
-                    <span>{aiResult.priceBreakdown.bandPrice} TL</span>
-                  </div>
-                  {aiResult.priceBreakdown.nightMultiplier > 1 && (
-                    <div className="flex justify-between text-amber-200">
-                      <span>Gece çarpanı</span>
-                      <span>x{aiResult.priceBreakdown.nightMultiplier}</span>
-                    </div>
-                  )}
-                  {aiResult.priceBreakdown.urgencyMultiplier > 1 && (
-                    <div className="flex justify-between text-rose-200">
-                      <span>Acil çarpanı</span>
-                      <span>x{aiResult.priceBreakdown.urgencyMultiplier}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-white/50">
-                    <span>Bölge çarpanı</span>
-                    <span>x{aiResult.priceBreakdown.regionMultiplier}</span>
-                  </div>
-                </div>
-              )}
+              <div className="bg-white/15 rounded-2xl px-4 py-3 text-sm text-white/80 leading-relaxed">
+                Talebiniz alındı. Ustalar tekliflerini iletecek, fiyatı kabul ettikten sonra iş başlayacak.
+              </div>
             </Card>
 
             {activeCoupons.length > 0 && (
@@ -425,44 +387,24 @@ function CreateJobPage() {
               </Card>
             )}
 
-            {(() => {
-              const userBalance = aiResult?.userBalance ?? 0
-              const insufficient = userBalance < finalPrice
-              return (
-                <>
-                  <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800' : 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'}`}>
-                    <div className="flex justify-between items-center text-sm font-medium">
-                      <span className={insufficient ? 'text-rose-600' : 'text-emerald-600'}>Cüzdan Bakiyeniz</span>
-                      <span className={`font-bold text-base ${insufficient ? 'text-rose-600' : 'text-emerald-600'}`}>{userBalance} TL</span>
-                    </div>
-                    {insufficient && (
-                      <p className="text-rose-500 text-xs mt-1">
-                        Bu işi açmak için {finalPrice - userBalance} TL daha bakiye yüklemeniz gerekiyor.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <button
-                      onClick={() => { setStep(1); setAiResult(null) }}
-                      disabled={isCreating}
-                      className="py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm"
-                    >
-                      Geri Dön
-                    </button>
-                    <button
-                      onClick={handleCreateJob}
-                      disabled={isCreating || insufficient}
-                      className={`py-3.5 rounded-2xl font-semibold transition text-sm ${
-                        isCreating || insufficient ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
-                      }`}
-                    >
-                      {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
-                    </button>
-                  </div>
-                </>
-              )
-            })()}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button
+                onClick={() => { setStep(1); setAiResult(null) }}
+                disabled={isCreating}
+                className="py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm"
+              >
+                Geri Dön
+              </button>
+              <button
+                onClick={handleCreateJob}
+                disabled={isCreating}
+                className={`py-3.5 rounded-2xl font-semibold transition text-sm ${
+                  isCreating ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
+                }`}
+              >
+                {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
+              </button>
+            </div>
           </div>
         )}
       </div>
