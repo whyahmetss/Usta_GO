@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const createJobSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().min(3, "Description must be at least 3 characters"),
   category: z.string().min(2, "Category is required"),
   location: z.string().min(2, "Location is required"),
-  budget: z.number().positive("Budget must be positive"),
+  budget: z.number().min(0, "Budget must be 0 or positive").optional().default(0),
   photos: z.array(z.string()).optional(),
   status: z.string().optional(),
 }).passthrough();
