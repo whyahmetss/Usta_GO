@@ -6,7 +6,7 @@ let initialized = false
 
 // Firebase henüz yapılandırılmadı (google-services.json eksik).
 // Bu flag true yapılınca push notification aktif olur.
-const FIREBASE_CONFIGURED = false
+const FIREBASE_CONFIGURED = true
 
 /**
  * Push notification'ları başlat.
