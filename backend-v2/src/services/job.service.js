@@ -9,54 +9,22 @@ export const createJob = async (customerId, data) => {
 
   const amount = price || budget || 0
 
-  // Bakiye kontrolü
-  if (amount > 0) {
-    const customer = await prisma.user.findUnique({ where: { id: customerId }, select: { balance: true } })
-    if (!customer || customer.balance < amount) {
-      const err = new Error(`Yetersiz bakiye. Gereken: ${amount} TL, Mevcut: ${customer?.balance ?? 0} TL`)
-      err.statusCode = 402
-      throw err
-    }
-  }
-
-  // İş oluştur + bakiye düş (atomik)
-  const [job] = await prisma.$transaction([
-    prisma.job.create({
-      data: {
-        title,
-        description,
-        category,
-        location,
-        budget: amount,
-        status,
-        photos: photos || [],
-        customerId,
-      },
-      include: {
-        customer: { select: { id: true, name: true, email: true } },
-      },
-    }),
-    ...(amount > 0 ? [
-      prisma.user.update({
-        where: { id: customerId },
-        data: { balance: { decrement: amount } },
-      }),
-    ] : []),
-  ]);
-
-  // Transaction kaydı — JOB_PAYMENT (para çekme talebinden ayrı)
-  if (amount > 0) {
-    await prisma.transaction.create({
-      data: {
-        amount: -amount,
-        type: 'JOB_PAYMENT',
-        status: 'COMPLETED',
-        description: `İş ödemesi: ${title}`,
-        userId: customerId,
-        jobId: job.id,
-      },
-    })
-  }
+  // Ödeme sistemi beta'da devre dışı — bakiye kontrolü yapılmıyor
+  const job = await prisma.job.create({
+    data: {
+      title,
+      description,
+      category,
+      location,
+      budget: amount,
+      status,
+      photos: photos || [],
+      customerId,
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+    },
+  });
 
   return job;
 };
