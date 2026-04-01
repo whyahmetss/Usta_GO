@@ -1,7 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import { getCancellationRates } from "./config.service.js";
+import { sendPushNotification } from "../utils/firebase.js";
 
 const prisma = new PrismaClient();
+
+const pushTo = async (userId, title, body, data = {}) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } });
+    if (user?.fcmToken) await sendPushNotification(user.fcmToken, title, body, data);
+  } catch {}
+};
 
 export const createJob = async (customerId, data) => {
   // Only extract fields that exist in the Prisma schema
@@ -235,6 +243,9 @@ export const acceptJob = async (jobId, ustaId) => {
     },
   });
 
+  // Müşteriye: usta iş kabul etti
+  pushTo(updatedJob.customer.id, "🔧 Ustanız Belirlendi!", `${updatedJob.usta.name} iş talebinizi kabul etti. Yakında gelecek!`, { type: "job_accepted", jobId });
+
   return updatedJob;
 };
 
@@ -271,6 +282,9 @@ export const startJob = async (jobId, ustaId, beforePhotos = []) => {
       usta: { select: { id: true, name: true, email: true } },
     },
   });
+
+  // Müşteriye: iş başladı
+  pushTo(updatedJob.customer.id, "🚀 İşiniz Başladı!", `${updatedJob.usta.name} işe başladı.`, { type: "job_started", jobId });
 
   return updatedJob;
 };
@@ -314,6 +328,9 @@ export const completeJob = async (jobId, ustaId, afterPhotos = []) => {
       usta: { select: { id: true, name: true, email: true } },
     },
   });
+
+  // Müşteriye: iş tamamlandı, onay bekliyor
+  pushTo(updatedJob.customer.id, "✅ İş Tamamlandı!", `${updatedJob.usta.name} işi bitirdi. Lütfen onaylayın.`, { type: "job_completed", jobId });
 
   return updatedJob;
 };
@@ -372,6 +389,11 @@ export const approveJob = async (jobId, customerId) => {
     return jobData;
   });
 
+  // Ustaya: iş onaylandı, ödeme yapıldı
+  if (updatedJob.usta?.id) {
+    pushTo(updatedJob.usta.id, "💰 Ödemeniz Yapıldı!", `${updatedJob.title} işi müşteri tarafından onaylandı. Kazanç hesabınıza aktarıldı.`, { type: "job_approved", jobId });
+  }
+
   return updatedJob;
 };
 
@@ -409,6 +431,11 @@ export const rejectJob = async (jobId, customerId, reason = "") => {
       usta: { select: { id: true, name: true, email: true } },
     },
   });
+
+  // Ustaya: iş onaylanmadı, tekrar tamamla
+  if (updatedJob.usta?.id) {
+    pushTo(updatedJob.usta.id, "⚠️ İş Onaylanmadı", reason ? `Sebep: ${reason}. Lütfen tekrar tamamlayın.` : "Müşteri işi onaylamadı. Lütfen tekrar tamamlayın.", { type: "job_rejected", jobId });
+  }
 
   return updatedJob;
 };
