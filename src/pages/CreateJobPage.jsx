@@ -345,19 +345,27 @@ function CreateJobPage() {
               </div>
             )}
 
-            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white" padding="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={18} className="text-white" />
+            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white text-center" padding="p-6">
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">İş Ücreti</p>
+              <p className="text-5xl font-black mb-1">{finalPrice} TL</p>
+              {selectedCoupon && (
+                <p className="text-white/50 text-xs mb-2">{estimatedPrice} TL − {selectedCoupon.amount} TL kupon</p>
+              )}
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
+                  <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
                 </div>
-                <div>
-                  <p className="font-bold text-white text-base leading-tight">{aiResult.primaryLabel}</p>
-                  <p className="text-white/60 text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı iş' : aiResult.band === 'LOW' ? 'Basit iş' : 'Standart iş'}{aiResult.isUrgent ? ' · Acil' : ''}</p>
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
+                  <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
+                </div>
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
+                  <p className="font-semibold text-xs">{aiResult.isUrgent ? 'Acil' : 'Normal'}</p>
                 </div>
               </div>
-              <div className="bg-white/15 rounded-2xl px-4 py-3 text-sm text-white/80 leading-relaxed">
-                Talebiniz alındı. Ustalar tekliflerini iletecek, fiyatı kabul ettikten sonra iş başlayacak.
-              </div>
+              <p className="text-white/50 text-xs mt-4 leading-relaxed">Bu ücret ustaya gösterilir. Usta kabul ederse işe gider, reddederse başka usta görür.</p>
             </Card>
 
             {activeCoupons.length > 0 && (
