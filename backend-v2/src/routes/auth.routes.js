@@ -39,7 +39,7 @@ router.put("/profile", authMiddleware, validateBody(updateProfileSchema), authCo
 
 /**
  * @route POST /api/auth/fcm-token
- * @desc Save FCM push notification token for current user
+ * @desc Save FCM push notification token for the authenticated user
  * @body {fcmToken}
  */
 router.post("/fcm-token", authMiddleware, authController.saveFcmToken);

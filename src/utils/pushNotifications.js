@@ -1,20 +1,27 @@
 import { Capacitor } from '@capacitor/core'
-import { PushNotifications } from '@capacitor/push-notifications'
 import { fetchAPI } from './api'
 import { API_ENDPOINTS } from '../config'
 
 let initialized = false
 
+// Firebase henüz yapılandırılmadı (google-services.json eksik).
+// Bu flag true yapılınca push notification aktif olur.
+const FIREBASE_CONFIGURED = false
+
 /**
  * Push notification'ları başlat.
  * Sadece native platformda (Android/iOS) çalışır.
  * FCM token'ı backend'e kaydeder.
+ * FIREBASE_CONFIGURED = true olunca aktif olur.
  */
 export async function initPushNotifications() {
+  if (!FIREBASE_CONFIGURED) return
   if (initialized) return
   if (!Capacitor.isNativePlatform()) return
 
   try {
+    const { PushNotifications } = await import('@capacitor/push-notifications')
+
     // İzin iste
     const permResult = await PushNotifications.requestPermissions()
     if (permResult.receive !== 'granted') {
@@ -46,7 +53,6 @@ export async function initPushNotifications() {
     // Uygulama açıkken gelen bildirim
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       console.log('Push bildirim alındı (foreground):', notification)
-      // Foreground'da local notification gösterebilirsin veya in-app toast
     })
 
     // Bildirime tıklanınca

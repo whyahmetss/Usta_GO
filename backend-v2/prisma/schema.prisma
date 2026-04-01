@@ -32,7 +32,7 @@ model User {
   isActive  Boolean    @default(true)  // Usta: iş almayı aç/kapat
 
   // Push Notifications
-  fcmToken  String?
+  fcmToken  String?   // Firebase Cloud Messaging token
 
   // Referral
   referralCode   String?  @unique

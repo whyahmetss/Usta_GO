@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle, Package, Calendar, ArrowDownCircle, ArrowUpCircle, Coins, ShoppingCart } from 'lucide-react'
+import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle, Package, Calendar, ArrowDownCircle, ArrowUpCircle, Coins, ShoppingCart, Wallet, Lock } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
+
+// Beta: Ödeme sistemi henüz aktif değil
+const WALLET_ENABLED = false
 
 function WalletPage() {
   const { user } = useAuth()
@@ -77,6 +80,26 @@ function WalletPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
         <div className="w-10 h-10 border-[3px] border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (!WALLET_ENABLED) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
+        <PageHeader title="Cüzdan" />
+        <div className="flex flex-col items-center justify-center px-6 pt-20 pb-10 text-center">
+          <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-3xl flex items-center justify-center mb-5">
+            <Lock size={36} className="text-primary-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Yakında Geliyor</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
+            Cüzdan ve ödeme sistemi çok yakında aktif olacak. Haberdar olmak için bizi takip etmeyi unutma!
+          </p>
+          <div className="mt-6 px-5 py-2.5 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
+            <p className="text-xs font-semibold text-primary-600 dark:text-primary-400">🚀 1-2 Hafta İçinde Aktif</p>
+          </div>
+        </div>
       </div>
     )
   }

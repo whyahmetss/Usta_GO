@@ -42,6 +42,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
     body = null,
     headers = {},
     includeAuth = true,
+    skipAutoLogout = false,
   } = options;
 
   try {
@@ -75,7 +76,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       // Handle 401 Unauthorized
-      if (response.status === 401) {
+      if (response.status === 401 && !skipAutoLogout) {
         removeToken();
         removeStoredUser();
         window.location.href = '/';
