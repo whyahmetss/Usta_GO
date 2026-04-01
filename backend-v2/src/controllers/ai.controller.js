@@ -143,7 +143,7 @@ const buildCustomerMessage = (serviceLabel, priceRange, bandPrice, isUrgent, ban
   return {
     giris: 'Talebinizi aldık ve teknik ekibimiz değerlendirdi.',
     gelisme: `Açıklamanız doğrultusunda "${serviceLabel}" kapsamında hizmet gerektirdiği değerlendirildi.${bandNote} Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
-    sonuc: `Tahmini hizmet bedeli ${rangeText}'dır. Kesin tutar usta tarafından yerinde inceleme sonrası belirlenir.`,
+    sonuc: `Uzman ustamız sizinle iletişime geçerek yerinde inceleme yapacak ve kesin fiyatı bildirecektir.`,
   }
 }
 
