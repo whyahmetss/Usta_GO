@@ -37,7 +37,7 @@ function AdminPricingPage() {
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState(null)
-  const [form, setForm] = useState({ label: '', basePrice: '', homeCategory: '' })
+  const [form, setForm] = useState({ label: '', basePrice: '', minPrice: '', maxPrice: '', homeCategory: '' })
   const generatedKey = toKey(form.label || '')
 
   const [packages, setPackages]         = useState([])
@@ -135,14 +135,20 @@ function AdminPricingPage() {
 
   const openCreate = (catId = '') => {
     setEditingId(null)
-    setForm({ label: '', basePrice: '', homeCategory: catId })
+    setForm({ label: '', basePrice: '', minPrice: '', maxPrice: '', homeCategory: catId })
     setError(null)
     setShowForm(true)
   }
 
   const openEdit = (svc) => {
     setEditingId(svc.id)
-    setForm({ label: svc.label, basePrice: String(svc.basePrice), homeCategory: svc.homeCategory || '' })
+    setForm({
+      label: svc.label,
+      basePrice: String(svc.basePrice),
+      minPrice: svc.minPrice != null ? String(svc.minPrice) : '',
+      maxPrice: svc.maxPrice != null ? String(svc.maxPrice) : '',
+      homeCategory: svc.homeCategory || '',
+    })
     setError(null)
     setShowForm(true)
   }
@@ -152,9 +158,15 @@ function AdminPricingPage() {
       setError('Hizmet adı ve temel fiyat zorunludur.')
       return
     }
-    const price = Number(form.basePrice)
+    const price    = Number(form.basePrice)
+    const minPrice = form.minPrice !== '' ? Number(form.minPrice) : null
+    const maxPrice = form.maxPrice !== '' ? Number(form.maxPrice) : null
     if (isNaN(price) || price <= 0) {
-      setError('Geçerli bir fiyat girin.')
+      setError('Geçerli bir orta fiyat girin.')
+      return
+    }
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      setError('Alt fiyat, üst fiyattan büyük olamaz.')
       return
     }
     if (!editingId && generatedKey.length < 2) {
@@ -165,15 +177,13 @@ function AdminPricingPage() {
     setError(null)
     try {
       const hc = form.homeCategory || null
+      const body = { label: form.label.trim(), basePrice: price, minPrice, maxPrice, homeCategory: hc }
       if (editingId) {
-        await fetchAPI(API_ENDPOINTS.SERVICES.UPDATE(editingId), {
-          method: 'PATCH',
-          body: { label: form.label.trim(), basePrice: price, homeCategory: hc },
-        })
+        await fetchAPI(API_ENDPOINTS.SERVICES.UPDATE(editingId), { method: 'PATCH', body })
       } else {
         await fetchAPI(API_ENDPOINTS.SERVICES.CREATE, {
           method: 'POST',
-          body: { category: generatedKey, label: form.label.trim(), basePrice: price, homeCategory: hc },
+          body: { category: generatedKey, ...body },
         })
       }
       setShowForm(false)
@@ -493,15 +503,40 @@ function AdminPricingPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-500 mb-1">Temel Fiyat (TL)</label>
+                    <label className="block text-[11px] font-semibold text-gray-500 mb-1">Orta Fiyat / Temel Fiyat (TL) <span className="text-rose-500">*</span></label>
                     <input
                       type="number" min="1"
                       value={form.basePrice}
                       onChange={(e) => setForm(prev => ({ ...prev, basePrice: e.target.value }))}
-                      placeholder="150"
+                      placeholder="Örn: 350"
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none"
                       disabled={saving}
                     />
+                    <p className="text-[10px] text-gray-400 mt-1">AI basit iş için alt, karmaşık için üst fiyatı kullanır</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1">Alt Fiyat (TL) <span className="text-gray-400">(opsiyonel)</span></label>
+                      <input
+                        type="number" min="0"
+                        value={form.minPrice}
+                        onChange={(e) => setForm(prev => ({ ...prev, minPrice: e.target.value }))}
+                        placeholder="Örn: 200"
+                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none"
+                        disabled={saving}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1">Üst Fiyat (TL) <span className="text-gray-400">(opsiyonel)</span></label>
+                      <input
+                        type="number" min="0"
+                        value={form.maxPrice}
+                        onChange={(e) => setForm(prev => ({ ...prev, maxPrice: e.target.value }))}
+                        placeholder="Örn: 600"
+                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none"
+                        disabled={saving}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-gray-500 mb-1">Ana Sayfa Kategorisi</label>

@@ -333,27 +333,50 @@ function CreateJobPage() {
               </div>
             </Card>
 
+            {/* Eksik bilgi uyarısı */}
+            {aiResult.needsInfo && aiResult.infoQuestion && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 flex gap-3">
+                <span className="text-xl shrink-0">&#x2139;&#xfe0f;</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Fiyatı doğrulaştırmak için</p>
+                  <p className="text-sm text-amber-700 dark:text-amber-400">{aiResult.infoQuestion}</p>
+                  <p className="text-xs text-amber-500 mt-1">Devam edebilirsiniz, usta yerinde kesin fiyat verecektir.</p>
+                </div>
+              </div>
+            )}
+
             <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white text-center" padding="p-6">
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Tahmini Ücret</p>
-              <p className="text-4xl font-bold mb-1">{finalPrice} TL</p>
-              {selectedCoupon && (
-                <p className="text-white/60 text-xs mb-3">({estimatedPrice} TL - {selectedCoupon.amount} TL kupon)</p>
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Tahmini Ücret Aralığı</p>
+              {aiResult.priceMin != null && aiResult.priceMax != null && aiResult.priceMin !== aiResult.priceMax ? (
+                <>
+                  <p className="text-3xl font-bold mb-0.5">{aiResult.priceMin} — {aiResult.priceMax} TL</p>
+                  <p className="text-white/50 text-xs mb-1">Tahmini: {finalPrice} TL</p>
+                </>
+              ) : (
+                <p className="text-4xl font-bold mb-1">{finalPrice} TL</p>
               )}
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              {selectedCoupon && (
+                <p className="text-white/60 text-xs mb-2">({estimatedPrice} TL - {selectedCoupon.amount} TL kupon)</p>
+              )}
+              <div className="grid grid-cols-3 gap-2 mt-4">
                 <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
                   <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
-                  <p className="font-semibold text-sm">{aiResult.primaryLabel}</p>
+                  <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
+                </div>
+                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
+                  <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
                 </div>
                 <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-left">
                   <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
-                  <p className="font-semibold text-sm">{aiResult.urgency}</p>
+                  <p className="font-semibold text-xs">{aiResult.urgency}</p>
                 </div>
               </div>
               {aiResult.priceBreakdown && (
                 <div className="mt-3 text-left bg-white/10 rounded-xl p-3 text-xs space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-white/60">Temel fiyat</span>
-                    <span>{aiResult.priceBreakdown.basePrice} TL</span>
+                    <span className="text-white/60">Band fiyat ({aiResult.band})</span>
+                    <span>{aiResult.priceBreakdown.bandPrice} TL</span>
                   </div>
                   {aiResult.priceBreakdown.nightMultiplier > 1 && (
                     <div className="flex justify-between text-amber-200">
