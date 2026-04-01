@@ -29,7 +29,7 @@ export const getServicesByCategories = async (categories) => {
 const VALID_HOME_CATS = ['electric','plumbing','renovation','cleaning','painting','carpentry']
 
 /** Yeni servis oluştur — whitelist yok, admin istediği hizmeti ekleyebilir */
-export const createService = async ({ category, label, basePrice, homeCategory }) => {
+export const createService = async ({ category, label, basePrice, minPrice, maxPrice, homeCategory }) => {
   if (!isValidCategoryKey(category)) {
     throw new Error('Kategori kodu geçersiz (sadece büyük harf, rakam ve alt çizgi)')
   }
@@ -38,18 +38,22 @@ export const createService = async ({ category, label, basePrice, homeCategory }
       category,
       label: label || category,
       basePrice: Number(basePrice),
+      minPrice:  minPrice  != null ? Number(minPrice)  : null,
+      maxPrice:  maxPrice  != null ? Number(maxPrice)  : null,
       homeCategory: VALID_HOME_CATS.includes(homeCategory) ? homeCategory : null,
     },
   })
 }
 
 /** Servis güncelle */
-export const updateService = async (id, { label, basePrice, isActive, homeCategory }) => {
+export const updateService = async (id, { label, basePrice, minPrice, maxPrice, isActive, homeCategory }) => {
   return prisma.service.update({
     where: { id },
     data: {
       ...(label        !== undefined && { label }),
       ...(basePrice    !== undefined && { basePrice: Number(basePrice) }),
+      ...(minPrice     !== undefined && { minPrice:  minPrice  != null ? Number(minPrice)  : null }),
+      ...(maxPrice     !== undefined && { maxPrice:  maxPrice  != null ? Number(maxPrice)  : null }),
       ...(isActive     !== undefined && { isActive }),
       ...(homeCategory !== undefined && { homeCategory: VALID_HOME_CATS.includes(homeCategory) ? homeCategory : null }),
     },

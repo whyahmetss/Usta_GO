@@ -352,7 +352,9 @@ model Service {
   id           String   @id @default(cuid())
   category     String   @unique  // ELECTRICAL_SOCKET, PLUMBING_LEAK, vb.
   label        String            // Türkçe etiket: "Priz Tamiri"
-  basePrice    Float             // TL cinsinden temel fiyat
+  basePrice    Float             // TL cinsinden temel fiyat (orta band)
+  minPrice     Float?            // Alt fiyat bandı
+  maxPrice     Float?            // Üst fiyat bandı
   homeCategory String?           // electric | plumbing | renovation | cleaning | painting | carpentry
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
