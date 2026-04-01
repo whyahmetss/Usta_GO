@@ -29,14 +29,40 @@ const getRegionMultiplier = (address = '') => {
   return 1.15
 }
 
-// ── DeepSeek çağrısı — DB'deki gerçek kategorilerle çalışır ────────
+// ── DeepSeek çağrısı — kategori + fiyat bandı + detay analizi ─────
+// Döndürür: { category: 'MUSLUK_DEGISIMI', band: 'MID', needsInfo: false, infoQuestion: null }
 const classifyWithDeepSeek = async (description, services) => {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY ayarlanmamış')
 
   const serviceList = services
-    .map(s => `${s.category}: ${s.label}`)
+    .map(s => {
+      const range = (s.minPrice && s.maxPrice)
+        ? ` [${s.minPrice}-${s.maxPrice} TL]`
+        : s.basePrice ? ` [~${s.basePrice} TL]` : ''
+      return `${s.category}: ${s.label}${range}`
+    })
     .join('\n')
+
+  const systemPrompt = `Sen bir ev hizmetleri fiyatlandırma asistanısın.
+Kullanıcının talebini analiz et ve JSON formatında yanıt ver.
+
+Görevin:
+1. Hizmet listesinden EN UYGUN kategoriyi seç
+2. Açıklamanın detay düzeyine göre fiyat bandını belirle:
+   - LOW: Basit/küçük iş (tek priz, küçük sızıntı, ufak tamir)
+   - MID: Orta ölçekli iş (birkaç priz, standart tamir)
+   - HIGH: Büyük/karmaşık iş (çoklu nokta, uzun kablo, büyük alan, sistem değişimi)
+3. Eğer fiyatı doğru hesaplamak için kritik bilgi eksikse (kaç metre? kaç adet? hangi oda?) needsInfo=true yap ve kısa Türkçe soru yaz
+
+ÖNEMLİ KURALLAR:
+- Açıklama anlaşılabiliyorsa mutlaka bir kategori seç, INSUFFICIENT yazma
+- JSON dışında HİÇBİR şey yazma
+- Yanıt formatı kesinlikle şu olmalı:
+{"category":"KATEGORİ_KODU","band":"LOW|MID|HIGH","needsInfo":false,"infoQuestion":null}
+
+Hizmet listesi:
+${serviceList}`
 
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
@@ -47,24 +73,12 @@ const classifyWithDeepSeek = async (description, services) => {
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [
-        {
-          role: 'system',
-          content: `Kullanıcı bir ev tamir sorunu bildirdi.
-Aşağıdaki hizmet listesinden EN UYGUN birini seç.
-SADECE kategori kodunu yaz, başka hiçbir şey yazma.
-
-Eğer açıklama çok kısa, belirsiz veya hangi hizmet gerektiği anlaşılamıyorsa INSUFFICIENT yaz.
-
-Hizmet listesi:
-${serviceList}`,
-        },
-        {
-          role: 'user',
-          content: description,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: description },
       ],
-      max_tokens: 30,
+      max_tokens: 120,
       temperature: 0,
+      response_format: { type: 'json_object' },
     }),
   })
 
@@ -74,46 +88,62 @@ ${serviceList}`,
   }
 
   const data = await response.json()
-  const raw = data.choices?.[0]?.message?.content?.trim() || ''
+  const raw = data.choices?.[0]?.message?.content?.trim() || '{}'
 
-  // Sadece kategori kodunu al (A-Z, 0-9, _)
-  const categoryKey = raw.split(/[\s\n]/)[0].replace(/[^A-Z0-9_]/g, '').trim()
+  console.log('[AI] DeepSeek raw:', raw.slice(0, 200))
 
-  console.log('[AI] DeepSeek raw:', raw.slice(0, 80))
-  console.log('[AI] Parsed key:', categoryKey)
-
-  return categoryKey
+  try {
+    const parsed = JSON.parse(raw)
+    const category = (parsed.category || '').replace(/[^A-Z0-9_]/g, '').trim()
+    const band = ['LOW','MID','HIGH'].includes(parsed.band) ? parsed.band : 'MID'
+    const needsInfo = !!parsed.needsInfo
+    const infoQuestion = needsInfo ? (parsed.infoQuestion || null) : null
+    console.log('[AI] Parsed:', { category, band, needsInfo, infoQuestion })
+    return { category, band, needsInfo, infoQuestion }
+  } catch {
+    // JSON parse hatası — raw'dan category çıkarmaya çalış
+    const fallbackKey = raw.split(/[\s\n"]/)[0].replace(/[^A-Z0-9_]/g, '').trim()
+    return { category: fallbackKey, band: 'MID', needsInfo: false, infoQuestion: null }
+  }
 }
 
-// ── Açıklamadan adet/miktar çıkar ──────────────────────────────────
-const extractQuantity = (text) => {
-  // "3 priz", "üç tane", "iki adet" gibi ifadeleri yakala
-  const wordMap = { bir: 1, iki: 2, üç: 3, uc: 3, dört: 4, dort: 4, beş: 5, bes: 5,
-                    altı: 6, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
-  const lower = text.toLowerCase()
+// ── Band'a göre fiyat hesapla ───────────────────────────────────────
+// minPrice/maxPrice varsa kullan, yoksa basePrice'tan türet
+const calcBandPrice = (service, band) => {
+  const base = service.basePrice || 0
+  const min  = service.minPrice  ?? Math.round(base * 0.7)
+  const max  = service.maxPrice  ?? Math.round(base * 1.5)
 
-  // Önce rakam + birim: "3 priz", "2 tane", "4 adet"
-  const numMatch = lower.match(/(\d+)\s*(tane|adet|priz|lamba|ampul|kablo|devre|sigort[ae]|valf|musluk|batarya|radyatör|panel)?/)
-  if (numMatch && parseInt(numMatch[1]) > 1 && parseInt(numMatch[1]) <= 20) {
-    return parseInt(numMatch[1])
+  if (band === 'LOW')  return min
+  if (band === 'HIGH') return max
+  return base  // MID
+}
+
+// ── Fiyat aralığını döndür ───────────────────────────────────────────
+const getPriceRange = (service) => {
+  const base = service.basePrice || 0
+  return {
+    min:  service.minPrice  ?? Math.round(base * 0.7),
+    mid:  base,
+    max:  service.maxPrice  ?? Math.round(base * 1.5),
   }
-
-  // Sonra yazıyla: "üç priz", "iki tane"
-  for (const [word, val] of Object.entries(wordMap)) {
-    const re = new RegExp(`\\b${word}\\b\\s*(tane|adet|priz|lamba|ampul|kablo|devre)?`)
-    if (re.test(lower) && val > 1) return val
-  }
-
-  return 1
 }
 
 // ── Müşteri mesajı ──────────────────────────────────────────────────
-const buildCustomerMessage = (serviceLabel, finalPrice, isUrgent) => {
+const buildCustomerMessage = (serviceLabel, priceRange, bandPrice, isUrgent, band) => {
   const urgencyNote = isUrgent ? ' Acil servis talebi olarak önceliklendirileceğinizi belirtmek isteriz.' : ''
+  const bandNote = band === 'HIGH'
+    ? ' Açıklamanız kapsamlı bir iş gerektirdiğini gösteriyor.'
+    : band === 'LOW'
+    ? ' Açıklamanız küçük çaplı bir iş olduğunu gösteriyor.'
+    : ''
+  const rangeText = (priceRange.min !== priceRange.max)
+    ? `${priceRange.min} - ${priceRange.max} TL arasında`
+    : `yaklaşık ${bandPrice} TL`
   return {
     giris: 'Talebinizi aldık ve teknik ekibimiz değerlendirdi.',
-    gelisme: `Açıklamanız doğrultusunda "${serviceLabel}" kapsamında hizmet gerektirdiği değerlendirildi. Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
-    sonuc: `Tahmini hizmet bedeli ${finalPrice} TL'dir. Bu tutar, usta tarafından yerinde inceleme sonrası kesinleşecektir. Nihai ücret malzeme ve işçilik durumuna göre değişebilir.`,
+    gelisme: `Açıklamanız doğrultusunda "${serviceLabel}" kapsamında hizmet gerektirdiği değerlendirildi.${bandNote} Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.${urgencyNote}`,
+    sonuc: `Tahmini hizmet bedeli ${rangeText}'dır. Kesin tutar usta tarafından yerinde inceleme sonrası belirlenir.`,
   }
 }
 
@@ -134,16 +164,8 @@ export const analyzeJob = async (req, res, next) => {
       return res.status(400).json({ error: 'Açıklama çok kısa (en az 5 karakter)' })
     }
 
-    // 1. DB'den aktif servisleri ve kullanıcı bakiyesini çek
-    const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient()
-
-    const [activeServices, currentUser] = await Promise.all([
-      getActiveServices(),
-      prisma.user.findUnique({ where: { id: req.user.id }, select: { balance: true } }),
-    ])
-
-    await prisma.$disconnect()
+    // 1. DB'den aktif servisleri çek
+    const activeServices = await getActiveServices()
 
     if (activeServices.length === 0) {
       return res.status(503).json({ error: 'Henüz hizmet tanımlı değil. Admin panelinden ekleyin.' })
@@ -152,25 +174,28 @@ export const analyzeJob = async (req, res, next) => {
     const fallbackService =
       activeServices.find(s => s.category === 'GENERAL') || activeServices[0]
 
-    // 2. DeepSeek ile sınıflandır
+    // 2. DeepSeek ile sınıflandır — kategori + band + needsInfo
     let matchedCategory = fallbackService.category
+    let band = 'MID'
+    let needsInfo = false
+    let infoQuestion = null
     let isUrgent = false
     let aiUsed = false
     let aiError = null
-    try {
-      const key = await classifyWithDeepSeek(description, activeServices)
 
-      // Açıklama yetersizse fallback kullan, hata döndürme
-      if (key === 'INSUFFICIENT') {
-        console.log('[AI] INSUFFICIENT — fallback category kullanılıyor')
-        // matchedCategory zaten fallbackService.category olarak set edildi
-      } else {
-        const found = activeServices.find(s => s.category === key)
-        if (found) matchedCategory = found.category
-        const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
-        isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
-        aiUsed = true
-      }
+    try {
+      const result = await classifyWithDeepSeek(description, activeServices)
+
+      const found = activeServices.find(s => s.category === result.category)
+      if (found) matchedCategory = found.category
+
+      band        = result.band
+      needsInfo   = result.needsInfo
+      infoQuestion = result.infoQuestion
+
+      const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
+      isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
+      aiUsed = true
     } catch (aiErr) {
       console.error('[AI] DeepSeek hatası:', aiErr.message)
       aiError = aiErr.message
@@ -180,34 +205,45 @@ export const analyzeJob = async (req, res, next) => {
     const matchedService =
       activeServices.find(s => s.category === matchedCategory) || fallbackService
 
-    // 4. Fiyat hesapla
-    const basePrice         = matchedService.basePrice
-    const quantity          = extractQuantity(description)
+    // 4. Fiyat hesapla (band + çarpanlar)
     const nightMultiplier   = getNightMultiplier()
     const urgencyMultiplier = isUrgent ? 1.3 : 1.0
     const regionMultiplier  = getRegionMultiplier(address)
-    const finalPrice = Math.round(basePrice * quantity * nightMultiplier * urgencyMultiplier * regionMultiplier)
+
+    const priceRange   = getPriceRange(matchedService)
+    const bandPrice    = calcBandPrice(matchedService, band)
+    const finalPrice   = Math.round(bandPrice * nightMultiplier * urgencyMultiplier * regionMultiplier)
+    const finalMin     = Math.round(priceRange.min * nightMultiplier * urgencyMultiplier * regionMultiplier)
+    const finalMax     = Math.round(priceRange.max * nightMultiplier * urgencyMultiplier * regionMultiplier)
 
     // 5. Müşteri mesajı
-    const customerMessage = buildCustomerMessage(matchedService.label, finalPrice, isUrgent)
+    const displayRange   = { min: finalMin, max: finalMax }
+    const customerMessage = buildCustomerMessage(matchedService.label, displayRange, finalPrice, isUrgent, band)
 
     successResponse(res, {
       primaryLabel: matchedService.label,
       category:     matchedService.category,
       isUrgent,
-      urgency: isUrgent ? 'Yüksek' : 'Normal',
+      urgency:      isUrgent ? 'Yüksek' : 'Normal',
+      band,
+      needsInfo,
+      infoQuestion,
       priceBreakdown: {
-        basePrice,
-        quantity,
+        basePrice:        matchedService.basePrice,
+        minPrice:         matchedService.minPrice ?? null,
+        maxPrice:         matchedService.maxPrice ?? null,
+        band,
+        bandPrice,
         nightMultiplier,
         urgencyMultiplier,
         regionMultiplier: Math.round(regionMultiplier * 100) / 100,
       },
       estimatedPrice: finalPrice,
+      priceMin:       finalMin,
+      priceMax:       finalMax,
       customerMessage,
       aiUsed,
       aiError,
-      userBalance: currentUser?.balance ?? 0,
     })
   } catch (err) {
     next(err)
