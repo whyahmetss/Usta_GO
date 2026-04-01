@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, CheckCircle, CreditCard, Lock } from 'lucide-react';
+import { ShieldCheck, CheckCircle, CreditCard, Lock, Building2, Copy, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { fetchAPI } from '../utils/api';
 import { API_ENDPOINTS } from '../config';
 import { useAuth } from '../context/AuthContext';
@@ -204,12 +204,124 @@ const formatExpiry = (val) => {
   return clean;
 };
 
+/* ── Havale Talimatları Ekranı ── */
+function HavaleTalimat({ tutar, onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [copied, setCopied] = useState('');
+
+  useEffect(() => {
+    fetchAPI(API_ENDPOINTS.WALLET.HAVALE_TALEP, { method: 'POST', body: { tutar } })
+      .then(res => { if (res?.success) setData(res.data); else setError(res?.error || 'Talep oluşturulamadı'); })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [tutar]);
+
+  const copy = (text, key) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(key);
+    setTimeout(() => setCopied(''), 2000);
+  };
+
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center">
+      <div className="w-10 h-10 border-3 border-white/40 border-t-white rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center p-6">
+      <div className="text-center">
+        <XCircle size={48} className="text-rose-400 mx-auto mb-4" />
+        <p className="text-white font-bold mb-4">{error}</p>
+        <button onClick={onClose} className="px-6 py-3 bg-white/10 text-white rounded-2xl font-semibold">Geri Dön</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444]">
+      <div className="flex items-center px-4 pt-12 pb-4">
+        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 text-white mr-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+        <div>
+          <h1 className="text-white font-black text-xl">Havale / EFT</h1>
+          <p className="text-white/40 text-xs">Aşağıdaki bilgilere havale gönderin</p>
+        </div>
+      </div>
+
+      <div className="px-4 space-y-3 pb-10">
+        {/* Referans kodu — en önemli */}
+        <div className="bg-amber-400/20 border border-amber-400/40 rounded-3xl p-5 text-center">
+          <p className="text-amber-300 text-xs font-semibold uppercase tracking-widest mb-2">Açıklamaya Mutlaka Yazın</p>
+          <p className="text-white font-black text-4xl tracking-widest mb-1">{data.referansKodu}</p>
+          <button onClick={() => copy(data.referansKodu, 'ref')} className="mt-2 flex items-center gap-1.5 mx-auto text-amber-300 text-xs font-semibold">
+            {copied === 'ref' ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+            {copied === 'ref' ? 'Kopyalandı!' : 'Referans Kodunu Kopyala'}
+          </button>
+        </div>
+
+        {/* Tutar */}
+        <div className="bg-white/10 rounded-3xl p-5">
+          <p className="text-white/50 text-xs mb-1">Gönderilecek Tutar</p>
+          <p className="text-white font-black text-3xl">{Number(data.tutar).toLocaleString('tr-TR')} TL</p>
+        </div>
+
+        {/* Banka bilgileri */}
+        <div className="bg-white/10 rounded-3xl p-5 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Building2 size={16} className="text-white/60" />
+            <p className="text-white font-semibold text-sm">{data.banka}</p>
+          </div>
+
+          {[{ label: 'Hesap Adı', value: data.ad, key: 'ad' }, { label: 'IBAN', value: data.iban, key: 'iban' }].map(item => (
+            <div key={item.key}>
+              <p className="text-white/40 text-xs mb-1">{item.label}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-white font-mono font-semibold text-sm break-all">{item.value}</p>
+                <button onClick={() => copy(item.value, item.key)} className="shrink-0 p-2 rounded-xl bg-white/10 active:scale-90 transition">
+                  {copied === item.key ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Copy size={14} className="text-white/60" />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Adımlar */}
+        <div className="bg-white/5 rounded-3xl p-5 space-y-3">
+          <p className="text-white/60 text-xs font-semibold uppercase tracking-wider">Nasıl Çalışır?</p>
+          {[
+            'Bankanızdan yukarıdaki IBAN\'a havale gönderin.',
+            `Açıklama kısmına referans kodunu yazın: ${data.referansKodu}`,
+            'Admin havaleinizi kontrol eder, bakiyeniz 1-24 saat içinde yüklenir.',
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+              </div>
+              <p className="text-white/70 text-sm leading-relaxed">{step}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-2 text-white/30 text-xs">
+          <Clock size={12} />
+          Hafta içi 09:00–18:00 arası genellikle aynı gün işlenir
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Page ── */
 const Odeme = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
+  const [yontem, setYontem] = useState(null); // null | 'kart' | 'havale'
   const [selectedAmount, setSelectedAmount] = useState(200);
   const [customAmount, setCustomAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -287,6 +399,10 @@ const Odeme = () => {
     return <ThreeDSOverlay htmlContent={threeDSContent} onClose={() => setThreeDSContent(null)} />;
   }
 
+  if (yontem === 'havale') {
+    return <HavaleTalimat tutar={finalAmount} onClose={() => setYontem(null)} />;
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center p-6">
@@ -360,6 +476,46 @@ const Odeme = () => {
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">TL</span>
           </div>
 
+          {error && (
+            <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 text-sm text-rose-600 dark:text-rose-400 font-medium mb-4">
+              {error}
+            </div>
+          )}
+
+          {/* Ödeme Yöntemi Seçimi */}
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3 mt-2">
+            Ödeme Yöntemi
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <button
+              onClick={() => setYontem(yontem === 'kart' ? null : 'kart')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
+                yontem === 'kart'
+                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                  : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300'
+              }`}
+            >
+              <CreditCard size={22} />
+              Kart ile Öde
+              <span className="text-[10px] font-normal opacity-60">iyzico 3D Secure</span>
+            </button>
+            <button
+              onClick={() => { if (finalAmount >= 10) setYontem('havale'); }}
+              disabled={finalAmount < 10}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
+                yontem === 'havale'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                  : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300'
+              } disabled:opacity-40`}
+            >
+              <Building2 size={22} />
+              Havale / EFT
+              <span className="text-[10px] font-normal opacity-60">1-24 saat içinde</span>
+            </button>
+          </div>
+
+          {/* Kart formu — sadece kart seçiliyken göster */}
+          {yontem === 'kart' && (<>
           {/* Kart Bilgileri */}
           <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Kart Bilgileri
@@ -418,6 +574,7 @@ const Odeme = () => {
               <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
           </div>
+          </>)}
 
           {error && (
             <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 text-sm text-rose-600 dark:text-rose-400 font-medium mb-4">
@@ -425,7 +582,8 @@ const Odeme = () => {
             </div>
           )}
 
-          {/* Pay button */}
+          {/* Pay button — sadece kart seçiliyken */}
+          {yontem === 'kart' && (
           <button
             onClick={handlePay}
             disabled={loading || finalAmount < 10}
@@ -445,10 +603,11 @@ const Odeme = () => {
               </span>
             )}
           </button>
+          )}
 
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 dark:text-gray-500 text-xs font-medium">
             <ShieldCheck size={13} />
-            256-bit SSL · iyzico 3D Secure korumalı
+            256-bit SSL · Güvenli ödeme
           </div>
         </div>
       </div>

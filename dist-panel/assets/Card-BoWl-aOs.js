@@ -1,1 +1,0 @@
-import{j as r}from"./panel-Cb4LOHg-.js";function a({children:a,className:e="",onClick:o,padding:d="p-4"}){return r.jsx("div",{onClick:o,className:`bg-white dark:bg-[#141414] rounded-2xl border border-gray-200 dark:border-[#262626] shadow-card ${d} ${o?"cursor-pointer hover:shadow-card-hover active:scale-[0.98] transition-all":""} ${e}`,children:a})}export{a as C};

@@ -15,7 +15,7 @@ import AuthPage from './pages/AuthPage'
 import {
   LayoutDashboard, Users, Briefcase, MessageSquare, AlertCircle,
   Wallet, Tag, DollarSign, Award, Clock, Megaphone, ShieldCheck,
-  Headphones, LogOut, Sun, Moon, Menu, X,
+  Headphones, LogOut, Sun, Moon, Menu, X, Building2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -35,6 +35,7 @@ const AdminFinancePage        = lazy(() => import('./pages/AdminFinancePage'))
 const AdminPromotionsPage     = lazy(() => import('./pages/AdminPromotionsPage'))
 const AdminVerificationPage   = lazy(() => import('./pages/AdminVerificationPage'))
 const AdminSupportMonitorPage = lazy(() => import('./pages/AdminSupportMonitorPage'))
+const AdminHavalePage         = lazy(() => import('./pages/AdminHavalePage'))
 
 /* ── Lazy support sayfaları ── */
 const SupportDashboard = lazy(() => import('./pages/SupportDashboard'))
@@ -48,6 +49,7 @@ const ADMIN_NAV = [
   { to: '/admin/complaints',        icon: AlertCircle,     label: 'Şikayetler'        },
   { to: '/admin/messages',          icon: MessageSquare,   label: 'Mesajlar'          },
   { to: '/admin/withdrawals',       icon: Wallet,          label: 'Para Çekme'        },
+  { to: '/admin/havale',            icon: Building2,       label: 'Havale Talepleri'  },
   { to: '/admin/coupons',           icon: Tag,             label: 'Kuponlar'          },
   { to: '/admin/pricing',           icon: DollarSign,      label: 'Fiyatlandırma'     },
   { to: '/admin/certificates',      icon: Award,           label: 'Sertifikalar'      },
@@ -278,6 +280,11 @@ function AdminAppRoutes() {
         <Route path="/admin/withdrawals" element={
           <AdminRoute roleRequired="admin">
             <AdminLayout role="admin"><AdminWithdrawalsPage /></AdminLayout>
+          </AdminRoute>
+        } />
+        <Route path="/admin/havale" element={
+          <AdminRoute roleRequired="admin">
+            <AdminLayout role="admin"><AdminHavalePage /></AdminLayout>
           </AdminRoute>
         } />
         <Route path="/admin/users" element={
