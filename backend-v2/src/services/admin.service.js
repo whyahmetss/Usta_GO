@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { sendPushNotification } from "../utils/firebase.js";
 
 const prisma = new PrismaClient();
+
+const pushTo = async (userId, title, body, data = {}) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } });
+    if (user?.fcmToken) await sendPushNotification(user.fcmToken, title, body, data);
+  } catch {}
+};
 
 export const getAllUsers = async (skip = 0, take = 10) => {
   const [users, total] = await Promise.all([
@@ -63,10 +71,9 @@ export const approveUsta = async (userId) => {
     err.status = 404;
     throw err;
   }
-  return prisma.user.update({
-    where: { id: userId },
-    data: { status: "ACTIVE" },
-  });
+  const updated = await prisma.user.update({ where: { id: userId }, data: { status: "ACTIVE" } });
+  pushTo(userId, "🎉 Hesabınız Onaylandı!", "Usta Go'da artık iş alabilirsiniz. Hemen aktif olun!", { type: "approval", status: "approved" });
+  return updated;
 };
 
 export const rejectUsta = async (userId, reason) => {
@@ -76,10 +83,9 @@ export const rejectUsta = async (userId, reason) => {
     err.status = 404;
     throw err;
   }
-  return prisma.user.update({
-    where: { id: userId },
-    data: { status: "BANNED" },
-  });
+  const updated = await prisma.user.update({ where: { id: userId }, data: { status: "BANNED" } });
+  pushTo(userId, "❌ Başvurunuz Reddedildi", reason ? `Sebep: ${reason}` : "Belgeleriniz incelendi, başvurunuz kabul edilmedi.", { type: "approval", status: "rejected" });
+  return updated;
 };
 
 export const getPendingCustomers = async () => {
@@ -97,7 +103,9 @@ export const approveCustomer = async (userId) => {
     err.status = 404;
     throw err;
   }
-  return prisma.user.update({ where: { id: userId }, data: { status: "ACTIVE" } });
+  const updated = await prisma.user.update({ where: { id: userId }, data: { status: "ACTIVE" } });
+  pushTo(userId, "✅ Hesabınız Onaylandı!", "Usta Go'da iş talepleri oluşturabilirsiniz.", { type: "approval", status: "approved" });
+  return updated;
 };
 
 export const rejectCustomer = async (userId) => {
@@ -107,7 +115,9 @@ export const rejectCustomer = async (userId) => {
     err.status = 404;
     throw err;
   }
-  return prisma.user.update({ where: { id: userId }, data: { status: "BANNED" } });
+  const updated = await prisma.user.update({ where: { id: userId }, data: { status: "BANNED" } });
+  pushTo(userId, "❌ Başvurunuz Reddedildi", "Belgeleriniz incelendi, başvurunuz kabul edilmedi.", { type: "approval", status: "rejected" });
+  return updated;
 };
 
 export const deleteUser = async (userId) => {

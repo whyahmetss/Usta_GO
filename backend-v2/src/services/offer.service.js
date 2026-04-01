@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { sendPushNotification } from "../utils/firebase.js";
 
 const prisma = new PrismaClient();
+
+const pushTo = async (userId, title, body, data = {}) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } });
+    if (user?.fcmToken) await sendPushNotification(user.fcmToken, title, body, data);
+  } catch {}
+};
 
 export const createOffer = async (jobId, ustaId, data) => {
   const usta = await prisma.user.findUnique({ where: { id: ustaId }, select: { status: true } });
@@ -40,10 +48,13 @@ export const createOffer = async (jobId, ustaId, data) => {
       ...data,
     },
     include: {
-      job: { select: { id: true, title: true } },
+      job: { select: { id: true, title: true, customerId: true } },
       usta: { select: { id: true, name: true } },
     },
   });
+
+  // Müşteriye: yeni teklif geldi
+  pushTo(offer.job.customerId, "📩 Yeni Teklif Geldi!", `${offer.usta.name} "${offer.job.title}" işiniz için teklif verdi.`, { type: "new_offer", jobId, offerId: offer.id });
 
   return offer;
 };
@@ -141,6 +152,9 @@ export const acceptOffer = async (offerId, customerId) => {
     return updatedOffer;
   });
 
+  // Ustaya: teklifi kabul edildi
+  pushTo(offer.ustaId, "🎉 Teklifiniz Kabul Edildi!", `${result.job.title} işi sizin!  Hazırlanın!`, { type: "offer_accepted", jobId: offer.jobId, offerId });
+
   return result;
 };
 
@@ -168,7 +182,11 @@ export const rejectOffer = async (offerId, customerId) => {
       status: "REJECTED",
       rejectedAt: new Date(),
     },
+    include: { usta: { select: { id: true } } },
   });
+
+  // Ustaya: teklifi reddedildi
+  pushTo(offer.ustaId, "😕 Teklifiniz Reddedildi", `"${offer.job.title}" işi için verdiğiniz teklif kabul edilmedi.`, { type: "offer_rejected", jobId: offer.jobId, offerId });
 
   return updatedOffer;
 };
