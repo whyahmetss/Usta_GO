@@ -158,7 +158,7 @@ function ProfilePage() {
             <p className="font-semibold text-gray-900 dark:text-white text-sm">Cüzdanım</p>
             <p className="text-xs text-gray-400">Bakiye ve kuponlar</p>
           </div>
-          <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-2 py-0.5 rounded-full">Yakında</span>
+          <ChevronRight size={16} className="text-gray-400" />
         </Card>
 
         {/* Stats */}
