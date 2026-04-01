@@ -39,11 +39,7 @@ router.put("/profile", authMiddleware, validateBody(updateProfileSchema), authCo
 
 /**
  * @route POST /api/auth/fcm-token
-<<<<<<< HEAD
- * @desc Save FCM push notification token for current user
-=======
  * @desc Save FCM push notification token for the authenticated user
->>>>>>> fac3128 (Usta_GO: Bildirim ayarları ve local düzenlemeler)
  * @body {fcmToken}
  */
 router.post("/fcm-token", authMiddleware, authController.saveFcmToken);

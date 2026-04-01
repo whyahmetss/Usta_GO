@@ -173,22 +173,16 @@ export const getUserProfile = async (userId) => {
 };
 
 export const saveFcmToken = async (userId, fcmToken) => {
-<<<<<<< HEAD
   if (!fcmToken) {
     const error = new Error("fcmToken is required");
     error.status = 400;
     throw error;
   }
-=======
->>>>>>> fac3128 (Usta_GO: Bildirim ayarları ve local düzenlemeler)
   await prisma.user.update({
     where: { id: userId },
     data: { fcmToken },
   });
-<<<<<<< HEAD
   return { success: true };
-=======
->>>>>>> fac3128 (Usta_GO: Bildirim ayarları ve local düzenlemeler)
 };
 
 export const updateUserProfile = async (userId, data) => {
