@@ -47,13 +47,3 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
-export const saveFcmToken = async (req, res, next) => {
-  try {
-    const { fcmToken } = req.body;
-    if (!fcmToken) return res.status(400).json({ message: "fcmToken gerekli" });
-    await authService.saveFcmToken(req.user.id, fcmToken);
-    successResponse(res, null, "FCM token kaydedildi");
-  } catch (error) {
-    next(error);
-  }
-};
