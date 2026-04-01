@@ -205,18 +205,13 @@ const formatExpiry = (val) => {
 };
 
 /* ── Havale Talimatları Ekranı ── */
-function HavaleTalimat({ tutar, onClose }) {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
+function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
+  // ibanBilgi: { iban, ad, banka } — backend env'den gelir, sabit bilgi
+  // 3 aşama: 'bilgi' → 'gonderiyor' → 'bekleniyor'
+  const [aşama, setAşama] = useState('bilgi');
   const [copied, setCopied] = useState('');
-
-  useEffect(() => {
-    fetchAPI(API_ENDPOINTS.WALLET.HAVALE_TALEP, { method: 'POST', body: { tutar } })
-      .then(res => { if (res?.success) setData(res.data); else setError(res?.error || 'Talep oluşturulamadı'); })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [tutar]);
+  const [talep, setTalep] = useState(null);
+  const [hata, setHata] = useState(null);
 
   const copy = (text, key) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -224,22 +219,62 @@ function HavaleTalimat({ tutar, onClose }) {
     setTimeout(() => setCopied(''), 2000);
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center">
-      <div className="w-10 h-10 border-3 border-white/40 border-t-white rounded-full animate-spin" />
-    </div>
-  );
+  const handleGonderdim = async () => {
+    setAşama('gonderiyor');
+    setHata(null);
+    try {
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.HAVALE_TALEP, { method: 'POST', body: { tutar } });
+      if (res?.success) {
+        setTalep(res.data);
+        setAşama('bekleniyor');
+      } else {
+        setHata(res?.error || 'Talep oluşturulamadı');
+        setAşama('bilgi');
+      }
+    } catch (e) {
+      setHata(e.message);
+      setAşama('bilgi');
+    }
+  };
 
-  if (error) return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center p-6">
-      <div className="text-center">
-        <XCircle size={48} className="text-rose-400 mx-auto mb-4" />
-        <p className="text-white font-bold mb-4">{error}</p>
-        <button onClick={onClose} className="px-6 py-3 bg-white/10 text-white rounded-2xl font-semibold">Geri Dön</button>
+  // ── Onay Bekleniyor ekranı ──
+  if (aşama === 'bekleniyor' && talep) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center p-6">
+        <div className="text-center w-full max-w-sm">
+          <div className="w-20 h-20 rounded-full bg-amber-400/20 border-2 border-amber-400/40 flex items-center justify-center mx-auto mb-5">
+            <Clock size={36} className="text-amber-400" />
+          </div>
+          <h2 className="text-white font-black text-2xl mb-2">Onay Bekleniyor</h2>
+          <p className="text-white/50 text-sm mb-6">Havaleni aldık. Admin banka hesabını kontrol ettikten sonra bakiyeni yükleyecek.</p>
+
+          <div className="bg-white/10 rounded-2xl p-4 mb-3 text-left">
+            <p className="text-white/40 text-xs mb-1">Referans Kodu</p>
+            <div className="flex items-center justify-between">
+              <p className="text-white font-black text-xl tracking-widest">{talep.referansKodu}</p>
+              <button onClick={() => copy(talep.referansKodu, 'ref2')} className="p-2 rounded-xl bg-white/10">
+                {copied === 'ref2' ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Copy size={14} className="text-white/60" />}
+              </button>
+            </div>
+          </div>
+          <div className="bg-white/10 rounded-2xl p-4 mb-6 text-left">
+            <p className="text-white/40 text-xs mb-1">Tutar</p>
+            <p className="text-white font-bold text-lg">{Number(talep.tutar).toLocaleString('tr-TR')} TL</p>
+          </div>
+
+          <button
+            onClick={() => navigate('/wallet')}
+            className="w-full py-4 rounded-2xl font-black text-white text-base"
+            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' }}
+          >
+            Cüzdana Dön
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
+  // ── Bilgi ekranı (IBAN + "Havaleyi Gönderdim" butonu) ──
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444]">
       <div className="flex items-center px-4 pt-12 pb-4">
@@ -253,30 +288,23 @@ function HavaleTalimat({ tutar, onClose }) {
       </div>
 
       <div className="px-4 space-y-3 pb-10">
-        {/* Referans kodu — en önemli */}
-        <div className="bg-amber-400/20 border border-amber-400/40 rounded-3xl p-5 text-center">
-          <p className="text-amber-300 text-xs font-semibold uppercase tracking-widest mb-2">Açıklamaya Mutlaka Yazın</p>
-          <p className="text-white font-black text-4xl tracking-widest mb-1">{data.referansKodu}</p>
-          <button onClick={() => copy(data.referansKodu, 'ref')} className="mt-2 flex items-center gap-1.5 mx-auto text-amber-300 text-xs font-semibold">
-            {copied === 'ref' ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-            {copied === 'ref' ? 'Kopyalandı!' : 'Referans Kodunu Kopyala'}
-          </button>
-        </div>
-
         {/* Tutar */}
-        <div className="bg-white/10 rounded-3xl p-5">
+        <div className="bg-white/10 rounded-3xl p-5 text-center">
           <p className="text-white/50 text-xs mb-1">Gönderilecek Tutar</p>
-          <p className="text-white font-black text-3xl">{Number(data.tutar).toLocaleString('tr-TR')} TL</p>
+          <p className="text-white font-black text-4xl">{Number(tutar).toLocaleString('tr-TR')} TL</p>
         </div>
 
         {/* Banka bilgileri */}
         <div className="bg-white/10 rounded-3xl p-5 space-y-4">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Building2 size={16} className="text-white/60" />
-            <p className="text-white font-semibold text-sm">{data.banka}</p>
+            <p className="text-white font-semibold text-sm">{ibanBilgi?.banka || 'Banka'}</p>
           </div>
 
-          {[{ label: 'Hesap Adı', value: data.ad, key: 'ad' }, { label: 'IBAN', value: data.iban, key: 'iban' }].map(item => (
+          {[
+            { label: 'Hesap Adı', value: ibanBilgi?.ad || '—', key: 'ad' },
+            { label: 'IBAN', value: ibanBilgi?.iban || '—', key: 'iban' },
+          ].map(item => (
             <div key={item.key}>
               <p className="text-white/40 text-xs mb-1">{item.label}</p>
               <div className="flex items-center justify-between gap-2">
@@ -289,22 +317,39 @@ function HavaleTalimat({ tutar, onClose }) {
           ))}
         </div>
 
-        {/* Adımlar */}
-        <div className="bg-white/5 rounded-3xl p-5 space-y-3">
-          <p className="text-white/60 text-xs font-semibold uppercase tracking-wider">Nasıl Çalışır?</p>
-          {[
-            'Bankanızdan yukarıdaki IBAN\'a havale gönderin.',
-            `Açıklama kısmına referans kodunu yazın: ${data.referansKodu}`,
-            'Admin havaleinizi kontrol eder, bakiyeniz 1-24 saat içinde yüklenir.',
-          ].map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-white/60 text-xs font-bold">{i + 1}</span>
-              </div>
-              <p className="text-white/70 text-sm leading-relaxed">{step}</p>
-            </div>
-          ))}
+        {/* Uyarı */}
+        <div className="bg-amber-400/10 border border-amber-400/30 rounded-2xl p-4">
+          <p className="text-amber-300 text-xs font-semibold mb-1">Önemli</p>
+          <p className="text-amber-200/70 text-xs leading-relaxed">
+            Havale açıklamasına herhangi bir not yazabilirsiniz — "Ödemeyi Yaptım" butonuna basınca sistem otomatik referans kodu oluşturur ve sizi bilgilendirir.
+          </p>
         </div>
+
+        {hata && (
+          <div className="bg-rose-500/20 border border-rose-500/40 rounded-2xl p-4 text-rose-300 text-sm">
+            {hata}
+          </div>
+        )}
+
+        {/* Ana buton */}
+        <button
+          onClick={handleGonderdim}
+          disabled={aşama === 'gonderiyor'}
+          className="w-full py-4 rounded-2xl font-black text-white text-base active:scale-[0.98] transition disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg, #059669 0%, #0d9488 100%)', boxShadow: '0 8px 24px rgba(5,150,105,0.4)' }}
+        >
+          {aşama === 'gonderiyor' ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              İşleniyor...
+            </div>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <CheckCircle2 size={18} />
+              Havaleyi Gönderdim
+            </span>
+          )}
+        </button>
 
         <div className="flex items-center justify-center gap-2 text-white/30 text-xs">
           <Clock size={12} />
@@ -328,6 +373,7 @@ const Odeme = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
+  const [ibanBilgi, setIbanBilgi] = useState(null);
 
   // Kart alanları
   const [cardNumber, setCardNumber] = useState('');
@@ -400,7 +446,7 @@ const Odeme = () => {
   }
 
   if (yontem === 'havale') {
-    return <HavaleTalimat tutar={finalAmount} onClose={() => setYontem(null)} />;
+    return <HavaleTalimat tutar={finalAmount} ibanBilgi={ibanBilgi} onClose={() => setYontem(null)} navigate={navigate} />;
   }
 
   if (success) {
@@ -500,7 +546,16 @@ const Odeme = () => {
               <span className="text-[10px] font-normal opacity-60">iyzico 3D Secure</span>
             </button>
             <button
-              onClick={() => { if (finalAmount >= 10) setYontem('havale'); }}
+              onClick={async () => {
+                if (finalAmount < 10) return;
+                if (!ibanBilgi) {
+                  try {
+                    const res = await fetchAPI(API_ENDPOINTS.WALLET.HAVALE_BILGI);
+                    if (res?.success) setIbanBilgi(res.data);
+                  } catch {}
+                }
+                setYontem('havale');
+              }}
               disabled={finalAmount < 10}
               className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
                 yontem === 'havale'
