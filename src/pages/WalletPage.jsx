@@ -8,7 +8,7 @@ import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
 // Beta: Ödeme sistemi henüz aktif değil
-const WALLET_ENABLED = false
+const WALLET_ENABLED = true
 
 function WalletPage() {
   const { user } = useAuth()
@@ -97,7 +97,7 @@ function WalletPage() {
             Cüzdan ve ödeme sistemi çok yakında aktif olacak. Haberdar olmak için bizi takip etmeyi unutma!
           </p>
           <div className="mt-6 px-5 py-2.5 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
-            <p className="text-xs font-semibold text-primary-600 dark:text-primary-400">🚀 1-2 Hafta İçinde Aktif</p>
+            <p className="text-xs font-semibold text-primary-600 dark:text-primary-400">Yakında Aktif</p>
           </div>
         </div>
       </div>

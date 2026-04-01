@@ -345,19 +345,27 @@ function CreateJobPage() {
               </div>
             )}
 
-            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white" padding="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={18} className="text-white" />
+            <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white text-center" padding="p-6">
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">İş Ücreti</p>
+              <p className="text-5xl font-black mb-1">{finalPrice} TL</p>
+              {selectedCoupon && (
+                <p className="text-white/50 text-xs mb-2">{estimatedPrice} TL − {selectedCoupon.amount} TL kupon</p>
+              )}
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
+                  <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
                 </div>
-                <div>
-                  <p className="font-bold text-white text-base leading-tight">{aiResult.primaryLabel}</p>
-                  <p className="text-white/60 text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı iş' : aiResult.band === 'LOW' ? 'Basit iş' : 'Standart iş'}{aiResult.isUrgent ? ' · Acil' : ''}</p>
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
+                  <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
+                </div>
+                <div className="bg-white/15 rounded-xl p-3 text-left">
+                  <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
+                  <p className="font-semibold text-xs">{aiResult.isUrgent ? 'Acil' : 'Normal'}</p>
                 </div>
               </div>
-              <div className="bg-white/15 rounded-2xl px-4 py-3 text-sm text-white/80 leading-relaxed">
-                Talebiniz alındı. Ustalar tekliflerini iletecek, fiyatı kabul ettikten sonra iş başlayacak.
-              </div>
+              <p className="text-white/50 text-xs mt-4 leading-relaxed">Bu ücret ustaya gösterilir. Usta kabul ederse işe gider, reddederse başka usta görür.</p>
             </Card>
 
             {activeCoupons.length > 0 && (
@@ -387,24 +395,52 @@ function CreateJobPage() {
               </Card>
             )}
 
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button
-                onClick={() => { setStep(1); setAiResult(null) }}
-                disabled={isCreating}
-                className="py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm"
-              >
-                Geri Dön
-              </button>
-              <button
-                onClick={handleCreateJob}
-                disabled={isCreating}
-                className={`py-3.5 rounded-2xl font-semibold transition text-sm ${
-                  isCreating ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
-                }`}
-              >
-                {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
-              </button>
-            </div>
+            {(() => {
+              const userBalance = aiResult?.userBalance ?? 0
+              const insufficient = userBalance < finalPrice
+              return (
+                <>
+                  <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800' : 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className={`text-sm font-medium ${insufficient ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>Cüzdan Bakiyeniz</span>
+                      <span className={`font-bold text-base ${insufficient ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{userBalance.toLocaleString('tr-TR')} TL</span>
+                    </div>
+                    {insufficient && (
+                      <>
+                        <p className="text-rose-500 dark:text-rose-400 text-xs mt-1">
+                          Bu işi açmak için {(finalPrice - userBalance).toLocaleString('tr-TR')} TL daha bakiye yüklemeniz gerekiyor.
+                        </p>
+                        <button
+                          onClick={() => navigate('/wallet')}
+                          className="mt-2 w-full py-2 bg-rose-500 text-white rounded-xl font-semibold text-xs active:scale-[0.98] transition"
+                        >
+                          Bakiye Yükle
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <button
+                      onClick={() => { setStep(1); setAiResult(null) }}
+                      disabled={isCreating}
+                      className="py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm"
+                    >
+                      Geri Dön
+                    </button>
+                    <button
+                      onClick={handleCreateJob}
+                      disabled={isCreating || insufficient}
+                      className={`py-3.5 rounded-2xl font-semibold transition text-sm ${
+                        isCreating || insufficient ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98]'
+                      }`}
+                    >
+                      {isCreating ? 'Oluşturuluyor...' : 'Onayla ve Gönder'}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         )}
       </div>
