@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchAPI } from '../utils/api'
+import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { getSocket, connectSocket, emitEvent } from '../utils/socket'
 import Layout from '../components/Layout'
 import {
   Send, Loader, CheckCheck, Check, ArrowLeft, User,
-  FileText, Download, X,
+  FileText, Download, X, Paperclip,
 } from 'lucide-react'
 
 export default function SupportChatPage() {
@@ -26,10 +26,12 @@ export default function SupportChatPage() {
   const [sending, setSending] = useState(false)
   const [typing, setTyping] = useState(false)
   const [previewFile, setPreviewFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const typingTimerRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const loadMessages = useCallback(async () => {
     if (!userId) return
@@ -122,6 +124,32 @@ export default function SupportChatPage() {
     } finally {
       setSending(false)
       inputRef.current?.focus()
+    }
+  }
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    e.target.value = ''
+    if (file.size > 10 * 1024 * 1024) { alert('Dosya 10MB\'dan küçük olmalı.'); return }
+    setUploading(true)
+    try {
+      const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+      const fileUrl = uploadRes?.data?.url || uploadRes?.url
+      if (!fileUrl) throw new Error('Upload başarısız')
+      const isImage = file.type.startsWith('image/')
+      const content = isImage ? `[Fotoğraf] ${fileUrl}` : `[Dosya: ${file.name}] ${fileUrl}`
+      const opt = { id: `opt-${Date.now()}`, content, senderId: user?.id, receiverId: userId, isRead: false, createdAt: new Date().toISOString(), _optimistic: true }
+      setMessages(prev => [...prev, opt])
+      const res = await fetchAPI(API_ENDPOINTS.MESSAGES.SEND, { method: 'POST', body: { receiverId: userId, content } })
+      const saved = res?.data || res
+      setMessages(prev => prev.map(m => m.id === opt.id ? { ...saved, _sent: true } : m))
+      emitEvent('send_message', { receiverId: userId, message: saved })
+    } catch (err) {
+      console.error('File upload error:', err)
+      alert('Dosya gönderilemedi')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -271,6 +299,14 @@ export default function SupportChatPage() {
       {/* Input */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10">
         <div className="max-w-lg mx-auto flex items-end gap-2 px-4 py-3">
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" className="hidden" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="w-11 h-11 flex items-center justify-center rounded-2xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition flex-shrink-0"
+          >
+            {uploading ? <Loader size={16} className="text-gray-400 animate-spin" /> : <Paperclip size={16} className="text-gray-500" />}
+          </button>
           <textarea
             ref={inputRef}
             value={text}
