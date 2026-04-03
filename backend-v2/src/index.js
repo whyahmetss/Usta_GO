@@ -91,7 +91,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // Rate limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
-  max: 200,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Çok fazla istek, lütfen bekleyin.' },
