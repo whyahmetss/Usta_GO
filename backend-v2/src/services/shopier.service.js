@@ -40,19 +40,19 @@ export const createProduct = async ({ amount, userId, orderId }) => {
     media: [
       {
         type: 'image',
-        url: 'https://placehold.co/600x600/7c3aed/white.png?text=UstaGo',
-        ranking: 1,
+        url: 'https://dmih5ui1qqea9.cloudfront.net/pictures_large/Camiseta6855_cobalt-blue-t-shirt.jpg',
+        placement: 1,
       },
     ],
     priceData: {
       currency: 'TRY',
-      price: String(amount),
-      shippingPrice: '0',
+      price: Number(amount).toFixed(2),
+      shippingPrice: '0.00',
     },
     stockStatus: 'inStock',
     stockQuantity: 1,
     shippingPayer: 'sellerPays',
-    customListing: false,
+    customListing: true,
     customNote: `USTAGO|${userId}|${orderId}`,
     placementScore: 0,
   })
