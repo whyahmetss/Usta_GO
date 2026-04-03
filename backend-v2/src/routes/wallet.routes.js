@@ -13,6 +13,8 @@ router.post('/topup/callback', walletController.topupCallback);
 router.post('/topup/3ds', authMiddleware, walletController.topup3DSInit);
 router.get('/topup/3ds/callback', walletController.topup3DSCallback);
 router.post('/topup/3ds/callback', walletController.topup3DSCallback);
+router.post('/topup/shopier/init', authMiddleware, walletController.shopierInit);
+router.post('/topup/shopier/webhook', walletController.shopierWebhook);
 router.get('/transactions', authMiddleware, walletController.getTransactions);
 router.get('/admin/transactions', authMiddleware, adminMiddleware, walletController.getAllTransactions);
 router.get('/admin/withdrawals', authMiddleware, adminMiddleware, walletController.getAllWithdrawals);

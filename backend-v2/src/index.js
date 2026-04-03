@@ -28,6 +28,7 @@ import campaignRoutes from "./routes/campaign.routes.js";
 import supportRoutes from "./routes/support.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
 import prisma from "./utils/prisma.js";
+import * as shopierService from "./services/shopier.service.js";
 // Import middlewares
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 
@@ -287,7 +288,7 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   console.log(`
 ╔═══════════════════════════════════════════╗
 ║  🚀 Usta GO Backend Server                ║
@@ -300,6 +301,25 @@ httpServer.listen(PORT, () => {
 
   Ready to accept connections!
 `);
+
+  // Shopier webhook kaydı (PAT varsa)
+  if (process.env.SHOPIER_PAT) {
+    try {
+      const baseUrl = (process.env.IYZIPAY_CALLBACK_BASE || process.env.API_BASE_URL || '').replace(/\/$/, '');
+      const webhookUrl = `${baseUrl}/api/wallet/topup/shopier/webhook`;
+      const existing = await shopierService.listWebhooks();
+      const items = existing?.data || existing || [];
+      const alreadyRegistered = Array.isArray(items) && items.some(w => w.url === webhookUrl && w.event === 'order.created');
+      if (!alreadyRegistered) {
+        await shopierService.createWebhook(webhookUrl, 'order.created');
+        console.log('  ✅ Shopier webhook kaydedildi:', webhookUrl);
+      } else {
+        console.log('  ✅ Shopier webhook zaten kayıtlı');
+      }
+    } catch (err) {
+      console.warn('  ⚠️  Shopier webhook kaydı başarısız:', err.message);
+    }
+  }
 });
 
 // Graceful shutdown

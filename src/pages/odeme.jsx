@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, CheckCircle, CreditCard, Lock, Building2, Copy, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { ShieldCheck, CheckCircle, CreditCard, Lock, Building2, Copy, Clock, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { fetchAPI } from '../utils/api';
 import { API_ENDPOINTS } from '../config';
 import { useAuth } from '../context/AuthContext';
@@ -156,53 +156,7 @@ function VirtualCard({ amount, holderName, cardNumber, expiry, cvc, flipped }) {
   );
 }
 
-/* ── 3DS iframe overlay ── */
-function ThreeDSOverlay({ htmlContent, onClose }) {
-  const iframeRef = useRef(null);
 
-  useEffect(() => {
-    if (iframeRef.current && htmlContent) {
-      const decoded = atob(htmlContent);
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(decoded);
-        doc.close();
-      }
-    }
-  }, [htmlContent]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#000' }}>
-      <div className="flex items-center justify-between px-4 py-3 bg-[#1a1040]">
-        <div className="flex items-center gap-2 text-white text-sm font-semibold">
-          <Lock size={14} className="text-green-400" />
-          Güvenli 3D Doğrulama
-        </div>
-        <button onClick={onClose} className="text-white/60 text-xs border border-white/20 rounded-lg px-3 py-1.5 active:opacity-70">
-          İptal
-        </button>
-      </div>
-      <iframe
-        ref={iframeRef}
-        className="flex-1 w-full border-0 bg-white"
-        title="3D Secure Doğrulama"
-      />
-    </div>
-  );
-}
-
-/* ── Kart numarası formatlayıcı ── */
-const formatCardNumber = (val) => {
-  const clean = val.replace(/\D/g, '').slice(0, 16);
-  return clean.replace(/(.{4})/g, '$1 ').trim();
-};
-
-const formatExpiry = (val) => {
-  const clean = val.replace(/\D/g, '').slice(0, 4);
-  if (clean.length >= 3) return `${clean.slice(0,2)}/${clean.slice(2)}`;
-  return clean;
-};
 
 /* ── Havale Talimatları Ekranı ── */
 function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
@@ -295,6 +249,13 @@ function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
         </div>
 
         {/* Banka bilgileri */}
+        {(!ibanBilgi?.iban || ibanBilgi.iban === '—') ? (
+          <div className="bg-rose-500/20 border border-rose-500/40 rounded-2xl p-5 text-center">
+            <XCircle size={28} className="text-rose-400 mx-auto mb-2" />
+            <p className="text-rose-300 font-semibold text-sm mb-1">Havale bilgileri henüz tanımlanmamış</p>
+            <p className="text-rose-300/70 text-xs">Lütfen daha sonra tekrar deneyin veya kart ile ödeme yöntemini kullanın.</p>
+          </div>
+        ) : (
         <div className="bg-white/10 rounded-3xl p-5 space-y-4">
           <div className="flex items-center gap-2">
             <Building2 size={16} className="text-white/60" />
@@ -316,6 +277,7 @@ function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
             </div>
           ))}
         </div>
+        )}
 
         {/* Uyarı */}
         <div className="bg-amber-400/10 border border-amber-400/30 rounded-2xl p-4">
@@ -375,18 +337,8 @@ const Odeme = () => {
   const [successAmount, setSuccessAmount] = useState(0);
   const [ibanBilgi, setIbanBilgi] = useState(null);
 
-  // Kart alanları
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [cardHolder, setCardHolder] = useState('');
-  const [cardFlipped, setCardFlipped] = useState(false);
-
-  // 3DS
-  const [threeDSContent, setThreeDSContent] = useState(null);
 
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
-  const holderName = cardHolder || (user ? user.name?.toUpperCase() : '');
 
   useEffect(() => {
     const status = searchParams.get('status');
@@ -400,37 +352,19 @@ const Odeme = () => {
     }
   }, [searchParams]);
 
-  const parseExpiry = (val) => {
-    const parts = val.split('/');
-    return { month: parts[0] || '', year: parts[1] ? `20${parts[1]}` : '' };
-  };
-
-  const handlePay = async () => {
+  const handleShopierPay = async () => {
     if (!finalAmount || finalAmount < 10) { setError('Minimum yükleme tutarı 10 TL'); return; }
-
-    const rawCard = cardNumber.replace(/\s/g, '');
-    if (rawCard.length < 16) { setError('Geçerli bir kart numarası girin (16 hane)'); return; }
-    const { month, year } = parseExpiry(expiry);
-    if (!month || !year || month.length < 2) { setError('Geçerli bir son kullanma tarihi girin (AA/YY)'); return; }
-    if (cvc.length < 3) { setError('Geçerli bir CVC girin (3 hane)'); return; }
 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_3DS, {
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_SHOPIER, {
         method: 'POST',
-        body: {
-          amount: finalAmount,
-          cardHolderName: cardHolder || user?.name || 'Müşteri',
-          cardNumber: rawCard,
-          expireMonth: month,
-          expireYear: year,
-          cvc,
-        },
+        body: { amount: finalAmount },
       });
 
-      if (res?.success && res?.data?.htmlContent) {
-        setThreeDSContent(res.data.htmlContent);
+      if (res?.success && res?.data?.paymentUrl) {
+        window.location.href = res.data.paymentUrl;
         return;
       }
       setError(res?.error || 'Ödeme başlatılamadı.');
@@ -440,10 +374,6 @@ const Odeme = () => {
       setLoading(false);
     }
   };
-
-  if (threeDSContent) {
-    return <ThreeDSOverlay htmlContent={threeDSContent} onClose={() => setThreeDSContent(null)} />;
-  }
 
   if (yontem === 'havale') {
     return <HavaleTalimat tutar={finalAmount} ibanBilgi={ibanBilgi} onClose={() => setYontem(null)} navigate={navigate} />;
@@ -481,14 +411,15 @@ const Odeme = () => {
           </button>
           <div>
             <h1 className="text-white font-black text-xl">Bakiye Yükle</h1>
-            <p className="text-white/40 text-xs">iyzico 3D Secure ile güvenli ödeme</p>
+            <p className="text-white/40 text-xs">Güvenli kart ödemesi</p>
           </div>
         </div>
 
         {/* Virtual Card */}
         <div className="px-5 mt-2 mb-6">
-          <VirtualCard amount={finalAmount} holderName={holderName} cardNumber={cardNumber} expiry={expiry} cvc={cvc} flipped={cardFlipped} />
+          <VirtualCard amount={finalAmount} holderName={user?.name?.toUpperCase() || ''} cardNumber={''} expiry={''} cvc={''} flipped={false} />
         </div>
+
 
         {/* Bottom sheet */}
         <div className="mx-2 rounded-t-[32px] bg-white dark:bg-[#1a1a2e] shadow-2xl px-5 pt-6 pb-10">
@@ -543,7 +474,7 @@ const Odeme = () => {
             >
               <CreditCard size={22} />
               Kart ile Öde
-              <span className="text-[10px] font-normal opacity-60">iyzico 3D Secure</span>
+              <span className="text-[10px] font-normal opacity-60">Shopier Güvenli Ödeme</span>
             </button>
             <button
               onClick={async () => {
@@ -569,95 +500,36 @@ const Odeme = () => {
             </button>
           </div>
 
-          {/* Kart formu — sadece kart seçiliyken göster */}
-          {yontem === 'kart' && (<>
-          {/* Kart Bilgileri */}
-          <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
-            Kart Bilgileri
-          </p>
-
-          {/* Kart Numarası */}
-          <div className="mb-3">
-            <div className="flex items-center gap-3 h-[52px] rounded-2xl px-4 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 focus-within:border-purple-500 transition">
-              <CreditCard size={18} className="text-gray-400 flex-shrink-0" />
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Kart Numarası"
-                maxLength={19}
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                className="flex-1 bg-transparent text-sm font-mono text-gray-800 dark:text-white placeholder-gray-400 outline-none tracking-widest"
-              />
-            </div>
-          </div>
-
-          {/* Kart Sahibi */}
-          <div className="mb-3">
-            <input
-              type="text"
-              placeholder="Kart Üzerindeki Ad Soyad"
-              value={cardHolder}
-              onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-              className="w-full h-[52px] px-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-semibold tracking-wide focus:outline-none focus:border-purple-500 transition uppercase"
-            />
-          </div>
-
-          {/* Son Kullanma + CVC */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="AA/YY"
-              maxLength={5}
-              value={expiry}
-              onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-              className="h-[52px] px-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
-            />
-            <div className="relative">
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="CVC"
-                maxLength={4}
-                value={cvc}
-                onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0,4))}
-                onFocus={() => setCardFlipped(true)}
-                onBlur={() => setCardFlipped(false)}
-                className="w-full h-[52px] pl-4 pr-10 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-800 dark:text-white placeholder-gray-400 text-sm font-mono text-center focus:outline-none focus:border-purple-500 transition tracking-widest"
-              />
-              <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-          </>)}
-
-          {error && (
-            <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 text-sm text-rose-600 dark:text-rose-400 font-medium mb-4">
-              {error}
-            </div>
-          )}
-
-          {/* Pay button — sadece kart seçiliyken */}
+          {/* Shopier ile Öde butonu — sadece kart seçiliyken */}
           {yontem === 'kart' && (
-          <button
-            onClick={handlePay}
-            disabled={loading || finalAmount < 10}
-            className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
-          >
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
-            {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>İşleniyor...</span>
-              </div>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <Lock size={16} />
-                {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL — 3D Öde` : '3D Öde'}
-              </span>
-            )}
-          </button>
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 mb-4">
+              <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                <ExternalLink size={14} className="inline mr-1.5 -mt-0.5" />
+                Kart bilgilerinizi güvenli Shopier ödeme sayfasında gireceksiniz.
+              </p>
+            </div>
+
+            <button
+              onClick={handleShopierPay}
+              disabled={loading || finalAmount < 10}
+              className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Shopier'e yönlendiriliyorsunuz...</span>
+                </div>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Lock size={16} />
+                  {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL — Güvenli Öde` : 'Güvenli Öde'}
+                </span>
+              )}
+            </button>
+          </>
           )}
 
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 dark:text-gray-500 text-xs font-medium">

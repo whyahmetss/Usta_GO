@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma.js';
 import * as iyzicoService from '../services/iyzico.service.js';
+import * as shopierService from '../services/shopier.service.js';
 import { Buffer } from 'buffer';
 
 const getCallbackBaseUrl = () => process.env.IYZIPAY_CALLBACK_BASE || process.env.API_BASE_URL || '';
@@ -304,6 +305,140 @@ export const walletController = {
     } catch (error) {
       console.error('topup3DSCallback error:', error);
       return sendHtml(false, 0, error.message || 'Beklenmeyen hata.');
+    }
+  },
+
+  // POST /wallet/topup/shopier/init - Shopier'de ürün oluştur, ödeme URL'si dön
+  shopierInit: async (req, res) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || amount < 10) return res.status(400).json({ success: false, error: 'Minimum 10 TL yükleyebilirsiniz' });
+      const amt = Number(amount);
+      if (isNaN(amt)) return res.status(400).json({ success: false, error: 'Geçersiz tutar' });
+
+      const orderId = `UGO-${req.user.id.slice(-6)}-${amt}-${Date.now()}`;
+
+      const product = await shopierService.createProduct({
+        amount: amt,
+        userId: req.user.id,
+        orderId,
+      });
+
+      if (!product?.url) {
+        return res.status(500).json({ success: false, error: 'Shopier ürün oluşturulamadı' });
+      }
+
+      // Ödeme bekleme kaydı oluştur (webhook gelince eşleştirilecek)
+      await prisma.transaction.create({
+        data: {
+          userId: req.user.id,
+          amount: amt,
+          type: 'TOPUP',
+          status: 'PENDING',
+          description: JSON.stringify({ orderId, shopierProductId: product.id, source: 'shopier' }),
+        },
+      });
+
+      res.json({ success: true, data: { paymentUrl: product.url, productId: product.id } });
+    } catch (error) {
+      const status = error.status || 500;
+      res.status(status).json({ success: false, error: error.message || 'Shopier başlatılamadı' });
+    }
+  },
+
+  // POST /wallet/topup/shopier/webhook - Shopier order.created webhook
+  shopierWebhook: async (req, res) => {
+    try {
+      const order = req.body || {};
+      const shopierOrderId = order.id;
+      const paymentStatus = order.paymentStatus; // 'paid' or 'unpaid'
+
+      if (paymentStatus !== 'paid') {
+        return res.status(200).json({ ok: true, message: 'Ödenmemiş sipariş, atlandı.' });
+      }
+
+      // Sipariş tutarını al
+      const grandTotal = parseFloat(order?.totals?.grandTotal || 0);
+      if (grandTotal <= 0) {
+        return res.status(200).json({ ok: true, message: 'Tutar geçersiz.' });
+      }
+
+      // lineItems'tan ürün başlığını ve customNote'u çıkar
+      const items = order?.lineItems || [];
+      let userId = null;
+      let internalOrderId = null;
+
+      for (const item of items) {
+        const title = item?.title || '';
+        if (title.startsWith('Bakiye Yükleme')) {
+          // description'dan parse — customNote ürüne yazıldı
+          // Ürün detayını çekelim
+          const productId = item?.productId;
+          if (productId) {
+            try {
+              const product = await shopierService.getOrder(shopierOrderId);
+              // buyerNote kontrol
+            } catch {}
+          }
+        }
+      }
+
+      // PENDING transaction'dan eşleştir — shopierProductId ile
+      // Ürün başlığından tutarı çıkar
+      const amountFromTitle = items[0]?.title?.match(/Bakiye Yükleme (\d+(?:\.\d+)?) TL/);
+      const paidAmount = amountFromTitle ? parseFloat(amountFromTitle[1]) : grandTotal;
+
+      // PENDING transaction bul — amount eşleşmesi + source: shopier
+      const pendingTxns = await prisma.transaction.findMany({
+        where: { type: 'TOPUP', status: 'PENDING', amount: paidAmount },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+
+      let matchedTx = null;
+      for (const tx of pendingTxns) {
+        try {
+          const desc = JSON.parse(tx.description);
+          if (desc.source === 'shopier') {
+            matchedTx = tx;
+            break;
+          }
+        } catch {}
+      }
+
+      if (!matchedTx) {
+        console.warn('Shopier webhook: eşleşen PENDING transaction bulunamadı', { shopierOrderId, paidAmount });
+        return res.status(200).json({ ok: true, message: 'Eşleşen işlem bulunamadı.' });
+      }
+
+      // Duplicate kontrolü
+      if (matchedTx.status === 'COMPLETED') {
+        return res.status(200).json({ ok: true, message: 'Zaten işlenmiş.' });
+      }
+
+      // Bakiye yükle
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: matchedTx.userId }, data: { balance: { increment: paidAmount } } }),
+        prisma.transaction.update({
+          where: { id: matchedTx.id },
+          data: {
+            status: 'COMPLETED',
+            description: `Bakiye yükleme (Shopier): ${paidAmount} TL [shopier:${shopierOrderId}]`,
+          },
+        }),
+      ]);
+
+      // Ürünü temizle (opsiyonel)
+      try {
+        const desc = JSON.parse(matchedTx.description);
+        if (desc.shopierProductId) await shopierService.deleteProduct(desc.shopierProductId);
+      } catch {}
+
+      console.log(`Shopier bakiye yüklendi: ${matchedTx.userId} → ${paidAmount} TL`);
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error('Shopier webhook error:', error);
+      return res.status(200).json({ ok: true, message: 'İşleme hatası.' });
     }
   },
 
