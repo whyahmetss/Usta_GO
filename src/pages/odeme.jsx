@@ -409,6 +409,7 @@ const Odeme = () => {
       const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_SHOPIER, {
         method: 'POST',
         body: { amount: finalAmount },
+        skipAutoLogout: true,
       });
 
       if (res?.success && res?.data?.paymentUrl) {
