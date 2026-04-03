@@ -40,6 +40,7 @@ const AdminHavalePage         = lazy(() => import('./pages/AdminHavalePage'))
 /* ── Lazy support sayfaları ── */
 const SupportDashboard = lazy(() => import('./pages/SupportDashboard'))
 const SupportChatPage  = lazy(() => import('./pages/SupportChatPage'))
+const SupportGuidePage = lazy(() => import('./pages/SupportGuidePage'))
 
 /* ── Sidebar nav items ── */
 const ADMIN_NAV = [
@@ -108,7 +109,9 @@ function Unauthorized() {
 function AdminSidebar({ open, onClose, role }) {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const { isDark, toggleTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark')
   const navItems = role === 'support' ? SUPPORT_NAV : ADMIN_NAV
 
   const handleLogout = () => {
@@ -364,6 +367,11 @@ function AdminAppRoutes() {
         <Route path="/support/chat/:userId" element={
           <AdminRoute roleRequired="support">
             <AdminLayout role="support"><SupportChatPage /></AdminLayout>
+          </AdminRoute>
+        } />
+        <Route path="/support/guide" element={
+          <AdminRoute roleRequired="support">
+            <AdminLayout role="support"><SupportGuidePage /></AdminLayout>
           </AdminRoute>
         } />
 
