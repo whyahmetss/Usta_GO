@@ -2,7 +2,7 @@ import crypto from 'crypto'
 
 const SHOPIER_API_BASE = 'https://api.shopier.com/v1'
 
-const getPAT = () => process.env.SHOPIER_PAT || ''
+const getPAT = () => (process.env.SHOPIER_PAT || '').replace(/[\r\n\s]+/g, '')
 
 const shopierFetch = async (path, method = 'GET', body = null) => {
   const pat = getPAT()
