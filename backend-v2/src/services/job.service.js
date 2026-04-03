@@ -499,10 +499,12 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     finalPenalty = Math.round(job.budget * pct)
   }
 
-  const refundAmount = Math.max(0, (job.budget || 0) - finalPenalty)
+  // Usta iptal → ustadan ceza kes, müşteriye tam iade
+  // Müşteri iptal → ceza yok, müşteriye tam iade
+  const refundAmount = job.budget || 0
 
-  // İptal + bakiye iade (atomik)
-  const [updatedJob] = await prisma.$transaction([
+  // İptal + bakiye işlemleri (atomik)
+  const txOps = [
     prisma.job.update({
       where: { id: jobId },
       data: {
@@ -516,13 +518,29 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
         usta: { select: { id: true, name: true, email: true } },
       },
     }),
-    ...(refundAmount > 0 ? [
+  ]
+
+  // Müşteriye iade (iş bedeli ödendiyse)
+  if (refundAmount > 0) {
+    txOps.push(
       prisma.user.update({
         where: { id: job.customerId },
         data: { balance: { increment: refundAmount } },
-      }),
-    ] : []),
-  ]);
+      })
+    )
+  }
+
+  // Ustadan ceza kes (usta iptal ettiyse)
+  if (isUsta && finalPenalty > 0) {
+    txOps.push(
+      prisma.user.update({
+        where: { id: userId },
+        data: { balance: { decrement: finalPenalty } },
+      })
+    )
+  }
+
+  const [updatedJob] = await prisma.$transaction(txOps);
 
   // Transaction kayıtları
   const txRecords = []
@@ -532,27 +550,36 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
         data: {
           amount: refundAmount,
           type: 'REFUND',
-          description: `İptal iadesi: ${job.title}${finalPenalty > 0 ? ` (${finalPenalty} TL ceza kesildi)` : ''}`,
+          description: `İptal iadesi: ${job.title}`,
           userId: job.customerId,
           jobId,
         },
       })
     )
   }
-  if (finalPenalty > 0) {
+  if (isUsta && finalPenalty > 0) {
     txRecords.push(
       prisma.transaction.create({
         data: {
           amount: -finalPenalty,
-          type: 'WITHDRAWAL',
-          description: `İptal cezası: ${job.title}`,
-          userId: job.customerId,
+          type: 'PENALTY',
+          description: `İptal cezası: ${job.title} (${job.status === 'IN_PROGRESS' ? 'devam eden iş' : 'kabul edilmiş iş'})`,
+          userId: userId,
           jobId,
         },
       })
     )
   }
   if (txRecords.length > 0) await Promise.all(txRecords)
+
+  // Ustaya bildirim: ceza kesildi
+  if (isUsta && finalPenalty > 0) {
+    pushTo(userId, "⚠️ İptal Cezası", `${job.title} işini iptal ettiniz. ${finalPenalty} TL ceza kesildi.`, { type: "cancel_penalty", jobId })
+  }
+  // Müşteriye bildirim: iş iptal edildi
+  if (isUsta && job.customerId) {
+    pushTo(job.customerId, "❌ İş İptal Edildi", `${updatedJob.usta?.name || 'Usta'} işi iptal etti. Bakiyeniz iade edildi.`, { type: "job_cancelled", jobId })
+  }
 
   return { ...updatedJob, refundAmount, penaltyApplied: finalPenalty };
 };
