@@ -75,20 +75,20 @@ export function AuthProvider({ children }) {
               setUseLocalStorage(false)
             }
           } catch (err) {
-            // Fallback to localStorage if API fails
-            console.warn('API fetch failed, falling back to localStorage:', err)
+            // API fail — user'ı localStorage'dan yükle ama backend modunda kal
+            console.warn('API fetch failed, using stored user:', err)
             const storedUser = getStoredUser()
             if (storedUser) {
               setUser(mapUserFromBackend(storedUser))
-              setUseLocalStorage(true)
+              setUseLocalStorage(false)
             }
           }
         } else {
-          // No token, try localStorage for transition period
+          // No token — localStorage'dan geçiş denemesi
           const storedUser = getStoredUser()
           if (storedUser) {
             setUser(mapUserFromBackend(storedUser))
-            setUseLocalStorage(true)
+            setUseLocalStorage(false)
           }
         }
       } catch (err) {
