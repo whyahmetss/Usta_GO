@@ -15,22 +15,68 @@ export const createJob = async (customerId, data) => {
 
   const amount = price || budget || 0
 
-  // Ödeme sistemi beta'da devre dışı — bakiye kontrolü yapılmıyor
-  const job = await prisma.job.create({
-    data: {
-      title,
-      description,
-      category,
-      location,
-      budget: amount,
-      status: "PENDING", // Her yeni iş daima PENDING başlar, body'den status kabul edilmez
-      photos: photos || [],
-      customerId,
-    },
-    include: {
-      customer: { select: { id: true, name: true, email: true } },
-    },
-  });
+  // Bakiye kontrolü — müşterinin yeterli bakiyesi olmalı
+  if (amount > 0) {
+    const customer = await prisma.user.findUnique({
+      where: { id: customerId },
+      select: { balance: true },
+    })
+    if (!customer) {
+      const err = new Error("Kullanıcı bulunamadı")
+      err.status = 404
+      throw err
+    }
+    if ((customer.balance || 0) < amount) {
+      const err = new Error(`Yetersiz bakiye. Gereken: ${amount} TL, Mevcut: ${customer.balance || 0} TL`)
+      err.status = 400
+      throw err
+    }
+  }
+
+  // Atomik: bakiye düş + iş oluştur + transaction kaydı
+  const job = await prisma.$transaction(async (tx) => {
+    // Müşteriden bakiye düş
+    if (amount > 0) {
+      await tx.user.update({
+        where: { id: customerId },
+        data: { balance: { decrement: amount } },
+      })
+    }
+
+    // İş oluştur
+    const newJob = await tx.job.create({
+      data: {
+        title,
+        description,
+        category,
+        location,
+        budget: amount,
+        paidAmount: amount,
+        status: "PENDING",
+        photos: photos || [],
+        customerId,
+      },
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+      },
+    })
+
+    // Transaction kaydı
+    if (amount > 0) {
+      await tx.transaction.create({
+        data: {
+          userId: customerId,
+          jobId: newJob.id,
+          amount: -amount,
+          type: "PAYMENT",
+          status: "COMPLETED",
+          description: `İş ödemesi: ${title}`,
+        },
+      })
+    }
+
+    return newJob
+  })
 
   return job;
 };
@@ -499,9 +545,9 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     finalPenalty = Math.round(job.budget * pct)
   }
 
-  // Usta iptal → ustadan ceza kes, müşteriye tam iade
-  // Müşteri iptal → ceza yok, müşteriye tam iade
-  const refundAmount = job.budget || 0
+  // Sadece gerçekten ödenmiş tutarı iade et (paidAmount)
+  const paidAmount = job.paidAmount || 0
+  const refundAmount = paidAmount
 
   // İptal + bakiye işlemleri (atomik)
   const txOps = [
@@ -520,7 +566,7 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     }),
   ]
 
-  // Müşteriye iade (iş bedeli ödendiyse)
+  // Müşteriye iade (sadece ödeme yapılmışsa)
   if (refundAmount > 0) {
     txOps.push(
       prisma.user.update({

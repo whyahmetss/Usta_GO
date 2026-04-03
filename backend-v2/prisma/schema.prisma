@@ -105,6 +105,9 @@ model Job {
   cancelledAt  DateTime?
   ratedAt      DateTime?
 
+  // Payment tracking
+  paidAmount   Float       @default(0)
+
   // Cancellation details
   cancelReason String?
   cancelPenalty Float?
