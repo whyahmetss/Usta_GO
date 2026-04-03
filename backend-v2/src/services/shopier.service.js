@@ -40,7 +40,7 @@ export const createProduct = async ({ amount, userId, orderId }) => {
     media: [
       {
         type: 'image',
-        url: 'https://usta-v3vu.onrender.com/pwa-192x192.svg',
+        url: 'https://placehold.co/600x600/7c3aed/white.png?text=UstaGo',
         ranking: 1,
       },
     ],
