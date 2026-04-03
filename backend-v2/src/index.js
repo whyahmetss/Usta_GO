@@ -66,6 +66,7 @@ const allowedOrigins = [
   'https://panel.usta-go.com',
   'capacitor://app.usta-go.com',
   'https://app.usta-go.com',
+  'https://usta-v3vu.onrender.com',
   ...(NODE_ENV === 'development' ? ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173'] : []),
 ];
 
