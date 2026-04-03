@@ -72,12 +72,17 @@ export const getAllComplaints = async () => {
     filedAt: c.filedAt,
     jobId: c.job.id,
     jobTitle: c.job.title,
+    filedById: c.filedById,
+    filedByName: c.filedBy?.name || "-",
+    filedByEmail: c.filedBy?.email || "-",
     customerName: c.job.customer?.name || "-",
     customerEmail: c.job.customer?.email || "-",
     customerPhone: c.job.customer?.phone || "-",
+    customerId: c.job.customer?.id || null,
     professionalName: c.job.usta?.name || "-",
     professionalEmail: c.job.usta?.email || "-",
     professionalPhone: c.job.usta?.phone || "-",
+    professionalId: c.job.usta?.id || null,
   }));
 };
 

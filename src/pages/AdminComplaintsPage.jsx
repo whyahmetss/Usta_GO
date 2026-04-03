@@ -123,6 +123,16 @@ function ComplaintsTab() {
 
                 {/* People */}
                 <div className="space-y-2">
+                  {/* Şikayet Eden */}
+                  <div className="flex items-center gap-2.5 p-2.5 bg-red-50 dark:bg-red-500/[0.07] border border-red-200 dark:border-red-500/20 rounded-xl">
+                    <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-white">{c.filedByName || '—'}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{c.filedByEmail}</p>
+                    </div>
+                    <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-500/20 px-2 py-0.5 rounded-full">Şikayet Eden</span>
+                  </div>
+                  {/* Müşteri */}
                   <div className="flex items-center gap-2.5 p-2.5 bg-blue-50 dark:bg-blue-500/[0.07] border border-blue-100 dark:border-blue-500/20 rounded-xl">
                     <User size={14} className="text-blue-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -131,6 +141,7 @@ function ComplaintsTab() {
                     </div>
                     <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/20 px-2 py-0.5 rounded-full">Müşteri</span>
                   </div>
+                  {/* Usta */}
                   <div className="flex items-center gap-2.5 p-2.5 bg-amber-50 dark:bg-amber-500/[0.07] border border-amber-100 dark:border-amber-500/20 rounded-xl">
                     <Zap size={14} className="text-amber-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
