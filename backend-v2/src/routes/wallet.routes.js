@@ -1,7 +1,7 @@
 import express from 'express';
 import { authMiddleware, adminMiddleware } from '../middlewares/auth.middleware.js';
 import { walletController } from '../controllers/wallet.controller.js';
-import { havaleTalep, taleplerim, adminTalepler, adminOnayla, adminReddet } from '../controllers/havale.controller.js';
+import { havaleBilgi, havaleTalep, taleplerim, adminTalepler, adminOnayla, adminReddet } from '../controllers/havale.controller.js';
 
 const router = express.Router();
 
@@ -24,6 +24,7 @@ router.patch('/withdraw/:id/approve', authMiddleware, adminMiddleware, walletCon
 router.patch('/withdraw/:id/reject', authMiddleware, adminMiddleware, walletController.rejectWithdrawal);
 
 // Havale/EFT
+router.get('/havale/bilgi', authMiddleware, havaleBilgi);
 router.post('/havale/talep', authMiddleware, havaleTalep);
 router.get('/havale/taleplerim', authMiddleware, taleplerim);
 router.get('/havale/admin/talepler', authMiddleware, adminMiddleware, adminTalepler);

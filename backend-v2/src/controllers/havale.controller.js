@@ -6,6 +6,18 @@ const BANKA  = process.env.HAVALE_BANKA  || ''
 
 const genRef = () => `UGO-${Math.floor(1000 + Math.random() * 9000)}`
 
+// GET /wallet/havale/bilgi — IBAN/Banka bilgilerini döner
+export const havaleBilgi = (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      iban:  IBAN || '—',
+      ad:    AD   || '—',
+      banka: BANKA || '—',
+    },
+  })
+}
+
 // POST /wallet/havale/talep — müşteri havale talebi oluşturur
 export const havaleTalep = async (req, res) => {
   try {
