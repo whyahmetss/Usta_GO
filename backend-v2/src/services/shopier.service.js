@@ -37,6 +37,13 @@ export const createProduct = async ({ amount, userId, orderId }) => {
     title: `Bakiye Yükleme ${amount} TL`,
     description: `UstaGo bakiye yükleme. Sipariş: ${orderId}`,
     type: 'digital',
+    media: [
+      {
+        type: 'image',
+        url: 'https://usta-v3vu.onrender.com/pwa-192x192.svg',
+        ranking: 1,
+      },
+    ],
     priceData: {
       currency: 'TRY',
       price: String(amount),
