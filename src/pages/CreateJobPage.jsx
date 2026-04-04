@@ -346,25 +346,45 @@ function CreateJobPage() {
             )}
 
             <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white text-center" padding="p-6">
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">İş Ücreti</p>
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">Toplam İş Ücreti</p>
               <p className="text-5xl font-black mb-1">{finalPrice} TL</p>
               {selectedCoupon && (
                 <p className="text-white/50 text-xs mb-2">{estimatedPrice} TL − {selectedCoupon.amount} TL kupon</p>
               )}
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="bg-white/15 rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
-                  <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
+
+              {/* Çoklu item detayları */}
+              {aiResult.items && aiResult.items.length > 1 ? (
+                <div className="mt-4 space-y-2">
+                  {aiResult.items.map((item, idx) => (
+                    <div key={idx} className="bg-white/15 rounded-xl p-3 flex items-center justify-between">
+                      <div className="text-left">
+                        <p className="font-semibold text-xs">{item.label}{item.count > 1 ? ` ×${item.count}` : ''}</p>
+                        <p className="text-white/50 text-[10px]">{item.band === 'HIGH' ? 'Kapsamlı' : item.band === 'LOW' ? 'Basit' : 'Standart'}</p>
+                      </div>
+                      <p className="font-bold text-sm">{item.itemPrice} TL</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="bg-white/15 rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
-                  <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="bg-white/15 rounded-xl p-3 text-left">
+                    <p className="text-white/60 text-[10px] mb-0.5">Hizmet</p>
+                    <p className="font-semibold text-xs leading-tight">{aiResult.primaryLabel}</p>
+                  </div>
+                  <div className="bg-white/15 rounded-xl p-3 text-left">
+                    <p className="text-white/60 text-[10px] mb-0.5">Kapsam</p>
+                    <p className="font-semibold text-xs">{aiResult.band === 'HIGH' ? 'Kapsamlı' : aiResult.band === 'LOW' ? 'Basit' : 'Standart'}</p>
+                  </div>
+                  <div className="bg-white/15 rounded-xl p-3 text-left">
+                    <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
+                    <p className="font-semibold text-xs">{aiResult.isUrgent ? 'Acil' : 'Normal'}</p>
+                  </div>
                 </div>
-                <div className="bg-white/15 rounded-xl p-3 text-left">
-                  <p className="text-white/60 text-[10px] mb-0.5">Aciliyet</p>
-                  <p className="font-semibold text-xs">{aiResult.isUrgent ? 'Acil' : 'Normal'}</p>
-                </div>
-              </div>
+              )}
+
+              {aiResult.isUrgent && (
+                <div className="bg-white/15 rounded-xl p-2 mt-2 text-xs font-semibold text-amber-200">⚡ Acil Servis</div>
+              )}
               <p className="text-white/50 text-xs mt-4 leading-relaxed">Bu fiyat kesindir. Usta bu işi bu ücretle yapar, ekstra ücret talep edemez.</p>
             </Card>
 

@@ -27,8 +27,8 @@ const getRegionMultiplier = (address = '') => {
   return 1.15
 }
 
-// ── DeepSeek çağrısı — kategori + fiyat bandı + detay analizi ─────
-// Döndürür: { category: 'MUSLUK_DEGISIMI', band: 'MID', needsInfo: false, infoQuestion: null }
+// ── DeepSeek çağrısı — çoklu sorun desteği ──────────────────────────
+// Döndürür: { items: [{ category, band, needsInfo, infoQuestion }] }
 const classifyWithDeepSeek = async (description, services) => {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY ayarlanmamış')
@@ -46,18 +46,21 @@ const classifyWithDeepSeek = async (description, services) => {
 Kullanıcının talebini analiz et ve JSON formatında yanıt ver.
 
 Görevin:
-1. Hizmet listesinden EN UYGUN kategoriyi seç
-2. Açıklamanın detay düzeyine göre fiyat bandını belirle:
+1. Kullanıcının açıklamasında KAÇ FARKLI İŞ/SORUN varsa HER BİRİNİ ayrı ayrı belirle
+2. Her sorun için hizmet listesinden EN UYGUN kategoriyi seç
+3. Her sorun için işin büyüklüğüne göre fiyat bandını belirle:
    - LOW: Basit/küçük iş (tek priz, küçük sızıntı, ufak tamir)
    - MID: Orta ölçekli iş (birkaç priz, standart tamir)
    - HIGH: Büyük/karmaşık iş (çoklu nokta, uzun kablo, büyük alan, sistem değişimi)
-3. Eğer fiyatı doğru hesaplamak için kritik bilgi eksikse (kaç metre? kaç adet? hangi oda?) needsInfo=true yap ve kısa Türkçe soru yaz
+4. Eğer fiyatı doğru hesaplamak için kritik bilgi eksikse needsInfo=true yap
 
 ÖNEMLİ KURALLAR:
-- Açıklama anlaşılabiliyorsa mutlaka bir kategori seç, INSUFFICIENT yazma
+- Açıklamada birden fazla sorun varsa (örn: "musluk akıyor, priz çalışmıyor, kapı kırık") her birini AYRI item olarak döndür
+- Aynı kategorideki birden fazla iş de ayrı item olsun (örn: "3 musluk tamiri" = 3 item)
+- Tekrarlı adet belirtilmişse (örn: "5 priz") count alanını kullan
 - JSON dışında HİÇBİR şey yazma
-- Yanıt formatı kesinlikle şu olmalı:
-{"category":"KATEGORİ_KODU","band":"LOW|MID|HIGH","needsInfo":false,"infoQuestion":null}
+- Yanıt formatı:
+{"items":[{"category":"KOD","band":"LOW|MID|HIGH","count":1,"needsInfo":false,"infoQuestion":null}]}
 
 Hizmet listesi:
 ${serviceList}`
@@ -74,7 +77,7 @@ ${serviceList}`
         { role: 'system', content: systemPrompt },
         { role: 'user', content: description },
       ],
-      max_tokens: 120,
+      max_tokens: 300,
       temperature: 0,
       response_format: { type: 'json_object' },
     }),
@@ -90,15 +93,27 @@ ${serviceList}`
 
   try {
     const parsed = JSON.parse(raw)
+    // Çoklu items formatı
+    if (Array.isArray(parsed.items) && parsed.items.length > 0) {
+      return {
+        items: parsed.items.map(item => ({
+          category: (item.category || '').replace(/[^A-Z0-9_]/g, '').trim(),
+          band: ['LOW','MID','HIGH'].includes(item.band) ? item.band : 'MID',
+          count: Math.max(1, Math.min(10, parseInt(item.count) || 1)),
+          needsInfo: !!item.needsInfo,
+          infoQuestion: item.needsInfo ? (item.infoQuestion || null) : null,
+        }))
+      }
+    }
+    // Eski tekli format fallback
     const category = (parsed.category || '').replace(/[^A-Z0-9_]/g, '').trim()
     const band = ['LOW','MID','HIGH'].includes(parsed.band) ? parsed.band : 'MID'
     const needsInfo = !!parsed.needsInfo
     const infoQuestion = needsInfo ? (parsed.infoQuestion || null) : null
-    return { category, band, needsInfo, infoQuestion }
+    return { items: [{ category, band, count: 1, needsInfo, infoQuestion }] }
   } catch {
-    // JSON parse hatası — raw'dan category çıkarmaya çalış
     const fallbackKey = raw.split(/[\s\n"]/)[0].replace(/[^A-Z0-9_]/g, '').trim()
-    return { category: fallbackKey, band: 'MID', needsInfo: false, infoQuestion: null }
+    return { items: [{ category: fallbackKey, band: 'MID', count: 1, needsInfo: false, infoQuestion: null }] }
   }
 }
 
@@ -176,24 +191,15 @@ export const analyzeJob = async (req, res, next) => {
     const fallbackService =
       activeServices.find(s => s.category === 'GENERAL') || activeServices[0]
 
-    // 2. DeepSeek ile sınıflandır — kategori + band + needsInfo
-    let matchedCategory = fallbackService.category
-    let band = 'MID'
-    let needsInfo = false
-    let infoQuestion = null
+    // 2. DeepSeek ile sınıflandır — çoklu sorun desteği
+    let aiItems = [{ category: fallbackService.category, band: 'MID', count: 1, needsInfo: false, infoQuestion: null }]
     let isUrgent = false
     let aiUsed = false
     let aiError = null
 
     try {
       const result = await classifyWithDeepSeek(description, activeServices)
-
-      const found = activeServices.find(s => s.category === result.category)
-      if (found) matchedCategory = found.category
-
-      band        = result.band
-      needsInfo   = result.needsInfo
-      infoQuestion = result.infoQuestion
+      if (result.items && result.items.length > 0) aiItems = result.items
 
       const urgentWords = ['yangın', 'duman', 'su baskını', 'elektrik çarpma', 'gaz kokusu', 'patlama']
       isUrgent = urgentWords.some(w => description.toLowerCase().includes(w))
@@ -203,46 +209,94 @@ export const analyzeJob = async (req, res, next) => {
       aiError = aiErr.message
     }
 
-    // 3. Servisi bul
-    const matchedService =
-      activeServices.find(s => s.category === matchedCategory) || fallbackService
-
-    // 4. Fiyat hesapla (band + çarpanlar)
+    // 3. Çarpanlar
     const nightMultiplier   = getNightMultiplier()
     const urgencyMultiplier = isUrgent ? 1.3 : 1.0
     const regionMultiplier  = getRegionMultiplier(address)
+    const multiplier = nightMultiplier * urgencyMultiplier * regionMultiplier
 
-    const priceRange   = getPriceRange(matchedService)
-    const bandPrice    = calcBandPrice(matchedService, band)
-    const finalPrice   = Math.round(bandPrice * nightMultiplier * urgencyMultiplier * regionMultiplier)
-    const finalMin     = Math.round(priceRange.min * nightMultiplier * urgencyMultiplier * regionMultiplier)
-    const finalMax     = Math.round(priceRange.max * nightMultiplier * urgencyMultiplier * regionMultiplier)
+    // 4. Her item için fiyat hesapla
+    let totalPrice = 0
+    let totalMin = 0
+    let totalMax = 0
+    let anyNeedsInfo = false
+    let firstInfoQuestion = null
 
-    // 5. Müşteri mesajı
-    const displayRange   = { min: finalMin, max: finalMax }
-    const customerMessage = buildCustomerMessage(matchedService.label, displayRange, finalPrice, isUrgent, band)
+    const itemDetails = aiItems.map(item => {
+      const svc = activeServices.find(s => s.category === item.category) || fallbackService
+      const bandPrice = calcBandPrice(svc, item.band)
+      const range = getPriceRange(svc)
+      const count = item.count || 1
+      const itemPrice = Math.round(bandPrice * multiplier * count)
+      const itemMin = Math.round(range.min * multiplier * count)
+      const itemMax = Math.round(range.max * multiplier * count)
+
+      totalPrice += itemPrice
+      totalMin += itemMin
+      totalMax += itemMax
+
+      if (item.needsInfo) {
+        anyNeedsInfo = true
+        if (!firstInfoQuestion) firstInfoQuestion = item.infoQuestion
+      }
+
+      return {
+        label: svc.label,
+        category: svc.category,
+        band: item.band,
+        count,
+        bandPrice,
+        itemPrice,
+        itemMin,
+        itemMax,
+      }
+    })
+
+    // 5. Birincil hizmet (en pahalı item)
+    const primaryItem = itemDetails.reduce((a, b) => a.itemPrice >= b.itemPrice ? a : b, itemDetails[0])
+
+    // 6. Müşteri mesajı
+    const itemCount = itemDetails.length
+    const displayRange = { min: totalMin, max: totalMax }
+
+    let gelisme = ''
+    if (itemCount === 1) {
+      const bandNote = primaryItem.band === 'HIGH' ? ' Açıklamanız kapsamlı bir iş gerektirdiğini gösteriyor.' :
+                       primaryItem.band === 'LOW' ? ' Açıklamanız küçük çaplı bir iş olduğunu gösteriyor.' : ''
+      gelisme = `Açıklamanız doğrultusunda "${primaryItem.label}" kapsamında hizmet gerektirdiği değerlendirildi.${bandNote}`
+    } else {
+      const labels = itemDetails.map(i => `${i.label}${i.count > 1 ? ` (×${i.count})` : ''}`).join(', ')
+      gelisme = `Açıklamanızda ${itemCount} farklı hizmet tespit edildi: ${labels}. Her biri ayrı fiyatlandırılmıştır.`
+    }
+    if (isUrgent) gelisme += ' Acil servis talebi olarak önceliklendirileceğinizi belirtmek isteriz.'
+    gelisme += ' Uzman ustamız yerinde inceleme yaparak gerekli işlemleri gerçekleştirecektir.'
+
+    const customerMessage = {
+      giris: 'Talebinizi aldık ve teknik ekibimiz değerlendirdi.',
+      gelisme,
+      sonuc: 'Bu ücret platformdaki ustalara gösterilecektir. Usta kabul ederse işe gider, reddederse talep bir sonraki ustaya iletilir.',
+    }
 
     successResponse(res, {
-      primaryLabel: matchedService.label,
-      category:     matchedService.category,
+      primaryLabel: primaryItem.label,
+      category:     primaryItem.category,
       isUrgent,
       urgency:      isUrgent ? 'Yüksek' : 'Normal',
-      band,
-      needsInfo,
-      infoQuestion,
+      band:         primaryItem.band,
+      needsInfo:    anyNeedsInfo,
+      infoQuestion: firstInfoQuestion,
+      items:        itemDetails,
       priceBreakdown: {
-        basePrice:        matchedService.basePrice,
-        minPrice:         matchedService.minPrice ?? null,
-        maxPrice:         matchedService.maxPrice ?? null,
-        band,
-        bandPrice,
+        basePrice:        primaryItem.bandPrice,
+        band:             primaryItem.band,
         nightMultiplier,
         urgencyMultiplier,
         regionMultiplier: Math.round(regionMultiplier * 100) / 100,
+        itemCount,
       },
-      estimatedPrice: finalPrice,
-      priceMin:       finalMin,
-      priceMax:       finalMax,
+      estimatedPrice: totalPrice,
+      priceMin:       totalMin,
+      priceMax:       totalMax,
       customerMessage,
       userBalance,
       aiUsed,
