@@ -290,40 +290,51 @@ function SettingsPage() {
           </Card>
         )}
 
-        {/* Vergi Durumu (Sadece Usta için) */}
-        {user?.role === 'professional' && (
+        {/* Vergi Durumu (Sadece onaylı Usta için) */}
+        {user?.role === 'professional' && (() => {
+          const vergiLocked = user?.verificationStatus !== 'verified'
+          return (
           <Card padding="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 ${hasVergiLevhasi ? 'bg-blue-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
-                  <FileText size={24} className={hasVergiLevhasi ? 'text-blue-600' : 'text-gray-400'} />
+                <div className={`w-12 h-12 ${vergiLocked ? 'bg-gray-100' : hasVergiLevhasi ? 'bg-blue-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
+                  <FileText size={24} className={vergiLocked ? 'text-gray-300' : hasVergiLevhasi ? 'text-blue-600' : 'text-gray-400'} />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">Vergi Durumu</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {hasVergiLevhasi ? 'Vergi levham var — Stopaj kesilmez' : 'Bireysel çalışan — %20 stopaj kesilir'}
+                    {vergiLocked
+                      ? 'Belgeler onaylandıktan sonra ayarlanabilir'
+                      : hasVergiLevhasi ? 'Vergi levham var — Stopaj kesilmez' : 'Bireysel çalışan — %20 stopaj kesilir'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleToggleVergi}
-                disabled={loading}
+                disabled={loading || vergiLocked}
                 className={`relative w-16 h-8 rounded-full transition ${
-                  hasVergiLevhasi ? 'bg-blue-500' : 'bg-gray-300'
+                  vergiLocked ? 'bg-gray-200 cursor-not-allowed' : hasVergiLevhasi ? 'bg-blue-500' : 'bg-gray-300'
                 } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
-                  hasVergiLevhasi ? 'translate-x-9' : 'translate-x-1'
+                  hasVergiLevhasi && !vergiLocked ? 'translate-x-9' : 'translate-x-1'
                 }`}></div>
               </button>
             </div>
-            <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${hasVergiLevhasi ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>
-              {hasVergiLevhasi
-                ? '✅ Vergi levhanız olduğu için para çekimlerinde stopaj kesilmeyecektir. İşlerinize ait faturayı kendiniz kesmelisiniz.'
-                : '⚠️ Vergi levhanız yoksa, para çekimlerinde brüt tutar üzerinden %20 gelir vergisi stopajı kesilir. Platform adınıza gider pusulası düzenler.'}
-            </div>
+            {vergiLocked ? (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 bg-gray-50 dark:bg-white/5 rounded-lg px-3 py-2">
+                🔒 Belgeleriniz admin tarafından onaylandıktan sonra vergi durumunuzu ayarlayabilirsiniz.
+              </p>
+            ) : (
+              <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${hasVergiLevhasi ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>
+                {hasVergiLevhasi
+                  ? '✅ Vergi levhanız olduğu için para çekimlerinde stopaj kesilmeyecektir. İşlerinize ait faturayı kendiniz kesmelisiniz.'
+                  : '⚠️ Vergi levhanız yoksa, para çekimlerinde brüt tutar üzerinden %20 gelir vergisi stopajı kesilir. Platform adınıza gider pusulası düzenler.'}
+              </div>
+            )}
           </Card>
-        )}
+          )
+        })()}
 
         {/* Şifre Değiştir */}
         <Card padding="p-6">
