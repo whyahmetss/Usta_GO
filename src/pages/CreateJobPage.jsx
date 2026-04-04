@@ -340,7 +340,7 @@ function CreateJobPage() {
                 <div>
                   <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Fiyatı doğrulaştırmak için</p>
                   <p className="text-sm text-amber-700 dark:text-amber-400">{aiResult.infoQuestion}</p>
-                  <p className="text-xs text-amber-500 mt-1">Devam edebilirsiniz, usta yerinde kesin fiyat verecektir.</p>
+                  <p className="text-xs text-amber-500 mt-1">Devam edebilirsiniz, belirlenen fiyat kesindir.</p>
                 </div>
               </div>
             )}
@@ -365,7 +365,7 @@ function CreateJobPage() {
                   <p className="font-semibold text-xs">{aiResult.isUrgent ? 'Acil' : 'Normal'}</p>
                 </div>
               </div>
-              <p className="text-white/50 text-xs mt-4 leading-relaxed">Bu ücret ustaya gösterilir. Usta kabul ederse işe gider, reddederse başka usta görür.</p>
+              <p className="text-white/50 text-xs mt-4 leading-relaxed">Bu fiyat kesindir. Usta bu işi bu ücretle yapar, ekstra ücret talep edemez.</p>
             </Card>
 
             {activeCoupons.length > 0 && (
