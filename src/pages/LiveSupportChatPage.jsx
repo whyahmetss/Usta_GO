@@ -485,7 +485,7 @@ export default function LiveSupportChatPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                  {offlineMode ? 'Go AI Asistan' : agent.name}
+                  {offlineMode ? 'Go AI Asistan' : 'Canlı Destek'}
                 </p>
                 <p className="text-[11px] font-medium">
                   {offlineMode
