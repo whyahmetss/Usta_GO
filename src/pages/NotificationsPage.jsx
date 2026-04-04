@@ -210,22 +210,22 @@ function NotificationsPage() {
             onClick={() => setTab('all')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-gray-400'}`}
           >
-            Tumu
+            Tümü
           </button>
           <button
             onClick={() => setTab('archived')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${tab === 'archived' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-gray-400'}`}
           >
             <Archive size={16} />
-            Arsiv ({archived.length})
+            Arşiv ({archived.length})
           </button>
         </div>
 
         {list.length === 0 ? (
           <EmptyState
             icon={tab === 'archived' ? Archive : Bell}
-            title={tab === 'archived' ? 'Arsivde bildirim yok' : 'Henuz bildirim yok'}
-            description={tab === 'archived' ? 'Arsivlenen bildirimler burada gorunur.' : 'Is olusturulunca veya mesaj gelince bildirimler burada gorunur. Saga kaydirarak Sil, Arsivle veya Sabitle yapabilirsiniz.'}
+            title={tab === 'archived' ? 'Arşivde bildirim yok' : 'Henüz bildirim yok'}
+            description={tab === 'archived' ? 'Arşivlenen bildirimler burada görünür.' : 'İş oluşturulunca veya mesaj gelince bildirimler burada görünür. Sağa kaydırarak Sil, Arşivle veya Sabitle yapabilirsiniz.'}
           />
         ) : (
           <div className="space-y-0">
@@ -253,7 +253,7 @@ function NotificationsPage() {
             onClick={() => markAllNotificationsRead?.()}
             className="w-full mt-6 py-3.5 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-2xl font-semibold hover:opacity-90 active:scale-[0.98] transition"
           >
-            Tumunu Okundu Isaretle
+            Tümünü Okundu İşaretle
           </button>
         )}
       </div>

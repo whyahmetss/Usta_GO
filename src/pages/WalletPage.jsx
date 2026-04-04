@@ -237,7 +237,7 @@ function WalletPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-bold text-sm">{activePackage.packageName} Paketi</p>
-                      <p className="text-white/60 text-xs">{activePackage.price?.toLocaleString('tr-TR')} TL/ay</p>
+                      <p className="text-white/60 text-xs">{activePackage.price?.toLocaleString('tr-TR')} TL</p>
                     </div>
                     <span className="bg-white/20 text-white text-[10px] font-semibold px-2 py-1 rounded-lg">Aktif</span>
                   </div>
@@ -268,7 +268,7 @@ function WalletPage() {
                       <span className="text-xl">{pkg.badge}</span>
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white text-sm">{pkg.name}</p>
-                        <p className={`font-bold text-sm ${pkg.accent}`}>{pkg.price?.toLocaleString('tr-TR')} TL<span className="text-[10px] text-gray-400 font-normal">/ay</span></p>
+                        <p className={`font-bold text-sm ${pkg.accent}`}>{pkg.price?.toLocaleString('tr-TR')} TL</p>
                       </div>
                     </div>
                     <ul className="space-y-1 mb-3">
@@ -281,8 +281,7 @@ function WalletPage() {
                     </button>
                   </div>
                 ))}
-                <button onClick={() => setShowPackageSelection(false)} className="w-full py-2 text-gray-400 text-xs font-medium">Vazgeç</button>
-              </div>
+                              </div>
             )}
           </Card>
 
@@ -290,7 +289,13 @@ function WalletPage() {
           <div>
             <h3 className="font-semibold text-gray-900 text-sm mb-2.5 px-0.5">İşlem Geçmişi</h3>
             {customerTransactions.length === 0 ? (
-              <Card className="text-center !py-6"><p className="text-xs text-gray-400">Henüz işlem yok</p></Card>
+              <Card className="text-center !py-8">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Wallet size={20} className="text-gray-300" />
+                </div>
+                <p className="text-sm font-medium text-gray-400 mb-1">Henüz bir harcamanız yok</p>
+                <p className="text-[10px] text-gray-300">Hizmet kredisi yükleyerek ilk işinizi oluşturabilirsiniz.</p>
+              </Card>
             ) : (
               <div className="space-y-1.5">
                 {customerTransactions.slice(0, 10).map((tx, idx) => {
@@ -320,6 +325,15 @@ function WalletPage() {
             <div className="flex-1"><p className="font-semibold text-gray-900 dark:text-white text-sm">Hizmet Kredisi Al</p><p className="text-[10px] text-gray-400">Kredi kartı ile hızlı yükleme</p></div>
             <ChevronRight size={16} className="text-gray-300" />
           </Card>
+
+          {/* Yasal Footer */}
+          <div className="flex items-center justify-center gap-3 pt-2 pb-4">
+            <a href="/legal/mesafeli-satis-sozlesmesi" className="text-[10px] text-gray-400 hover:text-gray-600 transition">Mesafeli Satış Sözleşmesi</a>
+            <span className="text-gray-300 text-[10px]">·</span>
+            <a href="/legal/on-bilgilendirme-formu" className="text-[10px] text-gray-400 hover:text-gray-600 transition">Ön Bilgilendirme</a>
+            <span className="text-gray-300 text-[10px]">·</span>
+            <a href="/legal/kvkk" className="text-[10px] text-gray-400 hover:text-gray-600 transition">KVKK</a>
+          </div>
         </div>
       </div>
     )

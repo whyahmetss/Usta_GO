@@ -387,6 +387,13 @@ const Odeme = () => {
   const [mesafeliSatis, setMesafeliSatis] = useState(false);
   const [onBilgilendirme, setOnBilgilendirme] = useState(false);
 
+  // Kart bilgileri
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [cardHolder, setCardHolder] = useState(user?.name?.toUpperCase() || '');
+  const [cardFlipped, setCardFlipped] = useState(false);
+
   const legalAccepted = mesafeliSatis && onBilgilendirme;
 
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
@@ -403,23 +410,59 @@ const Odeme = () => {
     }
   }, [searchParams]);
 
-  const handleShopierPay = async () => {
+  const formatCardNumber = (val) => {
+    const clean = val.replace(/\D/g, '').slice(0, 16);
+    return clean.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatExpiry = (val) => {
+    const clean = val.replace(/\D/g, '').slice(0, 4);
+    if (clean.length >= 3) return `${clean.slice(0,2)}/${clean.slice(2)}`;
+    return clean;
+  };
+
+  const handleIyzicoPay = async () => {
     if (!finalAmount || finalAmount < 10) { setError('Minimum yükleme tutarı 10 TL'); return; }
+    const cleanNum = cardNumber.replace(/\s/g, '');
+    if (cleanNum.length < 15) { setError('Geçerli bir kart numarası girin.'); return; }
+    if (cardExpiry.length < 4) { setError('Son kullanma tarihini girin.'); return; }
+    if (cardCvc.length < 3) { setError('CVV kodunu girin.'); return; }
+    if (!cardHolder.trim()) { setError('Kart sahibi adını girin.'); return; }
 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_SHOPIER, {
+      const [expMonth, expYear] = cardExpiry.split('/');
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_INIT, {
         method: 'POST',
-        body: { amount: finalAmount },
+        body: {
+          amount: finalAmount,
+          cardNumber: cleanNum,
+          expireMonth: expMonth,
+          expireYear: `20${expYear}`,
+          cvc: cardCvc,
+          cardHolderName: cardHolder,
+        },
         skipAutoLogout: true,
       });
 
+      if (res?.success && res?.data?.threeDSHtmlContent) {
+        // 3D Secure: yeni pencerede göster
+        const win = window.open('', '_self');
+        win.document.write(res.data.threeDSHtmlContent);
+        win.document.close();
+        return;
+      }
       if (res?.success && res?.data?.paymentUrl) {
         window.location.href = res.data.paymentUrl;
         return;
       }
-      setError(res?.error || 'Ödeme başlatılamadı.');
+      if (res?.success) {
+        setSuccess(true);
+        setSuccessAmount(finalAmount);
+        return;
+      }
+      setError(res?.error || res?.message || 'Ödeme başlatılamadı.');
     } catch (err) {
       setError(err?.message || 'Ödeme işlemi başarısız oldu.');
     } finally {
@@ -469,7 +512,7 @@ const Odeme = () => {
 
         {/* Virtual Card */}
         <div className="px-5 mt-2 mb-6">
-          <VirtualCard amount={finalAmount} holderName={user?.name?.toUpperCase() || ''} cardNumber={''} expiry={''} cvc={''} flipped={false} />
+          <VirtualCard amount={finalAmount} holderName={cardHolder || user?.name?.toUpperCase() || ''} cardNumber={cardNumber.replace(/\s/g, '')} expiry={cardExpiry} cvc={cardCvc} flipped={cardFlipped} />
         </div>
 
 
@@ -521,7 +564,7 @@ const Odeme = () => {
                 className="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 dark:border-white/20 text-purple-600 focus:ring-purple-500 shrink-0 accent-purple-600"
               />
               <span className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                <a href="/mesafeli-satis-sozlesmesi" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
+                <a href="/legal/mesafeli-satis-sozlesmesi" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -532,7 +575,7 @@ const Odeme = () => {
                 className="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 dark:border-white/20 text-purple-600 focus:ring-purple-500 shrink-0 accent-purple-600"
               />
               <span className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                <a href="/on-bilgilendirme-formu" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Ön Bilgilendirme Formu</a>'nu okudum ve kabul ediyorum.
+                <a href="/legal/on-bilgilendirme-formu" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Ön Bilgilendirme Formu</a>'nu okudum ve kabul ediyorum.
               </span>
             </label>
           </div>
@@ -552,7 +595,7 @@ const Odeme = () => {
             >
               <CreditCard size={22} />
               Kart ile Öde
-              <span className="text-[10px] font-normal opacity-60">Shopier Güvenli Ödeme</span>
+              <span className="text-[10px] font-normal opacity-60">iyzico Güvenli Ödeme</span>
             </button>
             <button
               onClick={async () => {
@@ -578,18 +621,67 @@ const Odeme = () => {
             </button>
           </div>
 
-          {/* Shopier ile Öde butonu — sadece kart seçiliyken */}
+          {/* iyzico Kart Formu — sadece kart seçiliyken */}
           {yontem === 'kart' && (
           <>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 mb-4">
-              <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
-                <ExternalLink size={14} className="inline mr-1.5 -mt-0.5" />
-                Kart bilgilerinizi güvenli Shopier ödeme sayfasında gireceksiniz.
-              </p>
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Numarası</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                  onFocus={() => setCardFlipped(false)}
+                  placeholder="0000 0000 0000 0000"
+                  maxLength={19}
+                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base tracking-wider focus:outline-none focus:border-purple-500 transition"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Sahibi</label>
+                <input
+                  type="text"
+                  value={cardHolder}
+                  onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                  onFocus={() => setCardFlipped(false)}
+                  placeholder="AD SOYAD"
+                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm uppercase tracking-wide focus:outline-none focus:border-purple-500 transition"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Son Kullanma</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={cardExpiry}
+                    onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                    onFocus={() => setCardFlipped(false)}
+                    placeholder="AA/YY"
+                    maxLength={5}
+                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">CVV</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={cardCvc}
+                    onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onFocus={() => setCardFlipped(true)}
+                    onBlur={() => setCardFlipped(false)}
+                    placeholder="•••"
+                    maxLength={4}
+                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
+                  />
+                </div>
+              </div>
             </div>
 
             <button
-              onClick={handleShopierPay}
+              onClick={handleIyzicoPay}
               disabled={loading || finalAmount < 10 || !legalAccepted}
               className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
@@ -598,7 +690,7 @@ const Odeme = () => {
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Shopier'e yönlendiriliyorsunuz...</span>
+                  <span>Ödeme işleniyor...</span>
                 </div>
               ) : (
                 <span className="flex items-center justify-center gap-2">

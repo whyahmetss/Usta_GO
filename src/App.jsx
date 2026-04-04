@@ -32,6 +32,7 @@ const HelpPage               = lazy(() => import('./pages/HelpPage'))
 const AboutPage              = lazy(() => import('./pages/AboutPage'))
 const Odeme                  = lazy(() => import('./pages/odeme'))
 const PaymentResultPage      = lazy(() => import('./pages/PaymentResultPage'))
+const LegalPage              = lazy(() => import('./pages/LegalPage'))
 
 function PageLoader() {
   return (
@@ -114,6 +115,7 @@ function AppRoutes() {
         <Route path="/withdraw"        element={<ProtectedRoute roleRequired="professional"><Layout><WithdrawPage /></Layout></ProtectedRoute>} />
         <Route path="/odeme"           element={<ProtectedRoute><Odeme /></ProtectedRoute>} />
         <Route path="/payment-result"  element={<PaymentResultPage />} />
+        <Route path="/legal/:slug"      element={<LegalPage />} />
         <Route path="/live-support"    element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
         <Route path="/track/:id"       element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
         <Route path="/cancel-job/:id"  element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />

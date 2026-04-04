@@ -212,7 +212,7 @@ function MessagesPage() {
           {loading ? (
             <div className="text-center py-16">
               <div className="w-10 h-10 border-[3px] border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-gray-400">Yukleniyor...</p>
+              <p className="text-sm text-gray-400">Yükleniyor...</p>
             </div>
           ) : error ? (
             <div className="text-center py-16">
@@ -222,7 +222,7 @@ function MessagesPage() {
               </button>
             </div>
           ) : userJobs.length === 0 ? (
-            <EmptyState icon={MessageCircle} title="Henuz mesaj yok" description="Is kabul edildikten sonra mesajlasabilirsiniz" />
+            <EmptyState icon={MessageCircle} title="Henüz mesaj yok" description="İş kabul edildikten sonra mesajlaşabilirsiniz" />
           ) : (
             <div className="space-y-2">
               {userJobs.map(job => {
@@ -299,15 +299,15 @@ function MessagesPage() {
         {loadingMessages ? (
           <div className="text-center py-12">
             <div className="w-8 h-8 border-[3px] border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-xs text-gray-400">Mesajlar yukleniyor...</p>
+            <p className="text-xs text-gray-400">Mesajlar yükleniyor...</p>
           </div>
         ) : jobMessages.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-full bg-white dark:bg-[#141414] flex items-center justify-center mx-auto mb-3">
               <MessageCircle size={28} className="text-gray-300" />
             </div>
-            <p className="text-sm text-gray-400 font-medium mb-1">Henuz mesaj yok</p>
-            <p className="text-xs text-gray-300">Ilk mesaji gonderin!</p>
+            <p className="text-sm text-gray-400 font-medium mb-1">Henüz mesaj yok</p>
+            <p className="text-xs text-gray-300">İlk mesajı gönderin!</p>
           </div>
         ) : (
           <div className="space-y-1">
