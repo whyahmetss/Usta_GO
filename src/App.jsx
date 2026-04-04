@@ -84,7 +84,7 @@ function AppRoutes() {
               userRole === 'professional' ? <Navigate to="/professional" replace /> :
               <Navigate to="/home" replace />
             ) : (
-              <Navigate to="/auth" replace />
+              <iframe src="/landing.html" title="UstaGO" style={{position:'fixed',inset:0,width:'100%',height:'100%',border:'none',zIndex:9999}} />
             )
           }
         />
