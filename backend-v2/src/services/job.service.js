@@ -68,7 +68,7 @@ export const createJob = async (customerId, data) => {
           userId: customerId,
           jobId: newJob.id,
           amount: -amount,
-          type: "PAYMENT",
+          type: "JOB_PAYMENT",
           status: "COMPLETED",
           description: `İş ödemesi: ${title}`,
         },
