@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Star, Users, Zap, FileText, Shield, Code2 } from 'lucide-react'
+import logoAdmin from '../assets/logo-admin.png'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
@@ -13,7 +14,7 @@ function AboutPage() {
       <div className="px-4 py-6 max-w-lg mx-auto">
         {/* Logo & Info */}
         <div className="text-center mb-8">
-          <img src="/pwa-192x192.svg" alt="Usta GO" className="w-20 h-20 rounded-2xl mx-auto mb-4 shadow-lg" />
+          <img src={logoAdmin} alt="Usta GO" className="w-20 h-20 rounded-2xl mx-auto mb-4 shadow-lg object-cover" />
           <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Usta GO</h2>
           <p className="text-gray-600 dark:text-gray-400">Sürüm 2.5.0</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Profesyonel hizmetlerle bağlantı kurun</p>

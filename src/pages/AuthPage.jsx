@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import logoAdmin from '../assets/logo-admin.png'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { User, Eye, EyeOff, Phone, Mail, Lock, Gift, Calendar, ShieldCheck, Clock, BadgeCheck, ArrowLeft, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -232,9 +233,7 @@ export default function AuthPage() {
       <div className="w-full max-w-[440px] relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-            <span className="text-3xl">🔧</span>
-          </div>
+          <img src={logoAdmin} alt="Usta Go" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30 object-cover" />
           <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Usta Go</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Profesyonel Ev Hizmetleri</p>
         </div>
