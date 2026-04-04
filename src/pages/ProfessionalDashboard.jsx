@@ -11,6 +11,28 @@ import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
 
+// Müşteri adını maskele: "Ahmet Çavdar" → "Ahmet Ç."
+const maskName = (name) => {
+  if (!name) return 'Müşteri'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length <= 1) return parts[0]
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`
+}
+
+// Adresi mahalle/semt seviyesine kısalt
+const shortenAddress = (address) => {
+  if (!address) return 'Konum belirtilmedi'
+  // "1077. Sokak, Yavuz Selim Mahallesi, Bağcılar, İstanbul, ..." → "Yavuz Selim Mah., Bağcılar"
+  const parts = address.split(',')
+  const mahalle = parts.find(p => /mahalle/i.test(p))?.trim()
+  const ilce = parts.length >= 3 ? parts[parts.length - 3]?.trim() : null
+  if (mahalle && ilce) return `${mahalle}, ${ilce}`
+  if (mahalle) return mahalle
+  if (parts.length >= 3) return `${parts[parts.length - 3]?.trim()}, ${parts[parts.length - 2]?.trim()}`
+  if (parts.length >= 2) return parts.slice(-2).map(p => p.trim()).join(', ')
+  return parts[0]?.trim() || address
+}
+
 function ProfessionalDashboard() {
   const { user, getUnreadNotificationCount } = useAuth()
   const navigate = useNavigate()
@@ -253,13 +275,13 @@ function ProfessionalDashboard() {
                   {job.urgent && <StatusBadge status="urgent" />}
                 </div>
                 <p className="text-xs text-gray-500 flex items-center gap-1 mb-1.5">
-                  <MapPin size={12} /> {job.location?.address || 'Adres belirtilmedi'}
+                  <MapPin size={12} /> {shortenAddress(job.location?.address)}
                 </p>
                 <p className="text-xs text-gray-400 mb-3 line-clamp-2">{job.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400">Müşteri:</span>
-                    <span className="text-xs font-medium text-gray-700">{job.customer?.name}</span>
+                    <span className="text-xs font-medium text-gray-700">{maskName(job.customer?.name)}</span>
                   </div>
                   <span className="text-base font-bold text-emerald-600">{job.price} TL</span>
                 </div>

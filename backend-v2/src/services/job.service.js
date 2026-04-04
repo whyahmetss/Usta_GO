@@ -429,7 +429,13 @@ export const approveJob = async (jobId, customerId) => {
         amount: ustaEarning,
         type: "EARNING",
         status: "COMPLETED",
-        description: `${job.title} işi onaylandı`,
+        description: JSON.stringify({
+          text: `${job.title} işi onaylandı`,
+          gross: job.budget,
+          commissionRate: COMMISSION_RATE,
+          commission,
+          net: ustaEarning,
+        }),
       },
     });
 

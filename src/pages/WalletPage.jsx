@@ -369,22 +369,47 @@ function WalletPage() {
             <Card className="text-center !py-8"><p className="text-xs text-gray-400">İşlem geçmişi bulunamadı.</p></Card>
           ) : (
             <div className="space-y-1.5">
-              {transactions.map((tx, idx) => (
-                <Card key={tx.id || idx} className="flex items-center gap-3 !p-3.5">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tx.amount > 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                    {tx.amount > 0 ? <Coins size={16} className="text-emerald-500" /> : <ArrowUpCircle size={16} className="text-rose-500" />}
+              {transactions.map((tx, idx) => {
+                const isEarning = tx.type === 'EARNING' || (tx.amount > 0 && (tx.description?.includes('onaylandı') || tx.text?.includes('onaylandı')))
+                // Parse JSON description if available (new format from backend)
+                let parsed = null
+                try { parsed = typeof tx.description === 'string' ? JSON.parse(tx.description) : null } catch {}
+                const displayText = parsed?.text || tx.text || tx.description || 'İşlem'
+                const grossAmount = parsed?.gross || (isEarning ? Math.round(tx.amount / 0.88) : null)
+                const commissionAmount = parsed?.commission || (isEarning && grossAmount ? grossAmount - tx.amount : null)
+                return (
+                <Card key={tx.id || idx} className="!p-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.amount > 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                      {tx.amount > 0 ? <Coins size={16} className="text-emerald-500" /> : <ArrowUpCircle size={16} className="text-rose-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{displayText}</p>
+                      <p className="text-[10px] text-gray-300">{tx.date ? new Date(tx.date).toLocaleDateString('tr-TR') : ''}</p>
+                    </div>
+                    <p className={`font-bold text-xs shrink-0 ${tx.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      {tx.amount > 0 ? '+' : ''}{tx.amount} TL
+                    </p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{tx.description || 'İşlem'}</p>
-                    <p className="text-[10px] text-gray-300">{tx.date ? new Date(tx.date).toLocaleDateString('tr-TR') : ''}</p>
-                  </div>
-                  <p className={`font-bold text-xs shrink-0 ${tx.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount} TL
-                  </p>
+                  {isEarning && grossAmount > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/5 flex items-center gap-3 text-[10px] text-gray-400 pl-12">
+                      <span>Brüt: {grossAmount} TL</span>
+                      <span>→ Komisyon (%12): -{commissionAmount} TL</span>
+                      <span className="text-emerald-500 font-semibold">Net: {tx.amount} TL</span>
+                    </div>
+                  )}
                 </Card>
-              ))}
+                )
+              })}
             </div>
           )}
+        </div>
+
+        {/* Vergi Uyarısı */}
+        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30 rounded-xl px-4 py-3">
+          <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+            ⚠️ Kazançlarınızdan doğan vergi yükümlülüğü ustaya aittir. Para çekme işlemlerinde yasal kesintiler (stopaj) yapıldıktan sonra net tutar hesabınıza aktarılır. Platform komisyon oranı: %12.
+          </p>
         </div>
       </div>
     </div>

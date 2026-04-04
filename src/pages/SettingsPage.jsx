@@ -182,34 +182,44 @@ function SettingsPage() {
         </Card>
 
         {/* Aktif/Pasif Durum (Sadece Usta için) */}
-        {user?.role === 'professional' && (
+        {user?.role === 'professional' && (() => {
+          const docsLocked = user?.verificationStatus !== 'verified'
+          return (
           <Card padding="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 ${isActive ? 'bg-emerald-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
-                  <Power size={24} className={isActive ? 'text-emerald-600' : 'text-gray-400'} />
+                <div className={`w-12 h-12 ${docsLocked ? 'bg-amber-100' : isActive ? 'bg-emerald-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
+                  <Power size={24} className={docsLocked ? 'text-amber-500' : isActive ? 'text-emerald-600' : 'text-gray-400'} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">İş Alma Durumu</h3>
-                  <p className="text-sm text-gray-600">
-                    {isActive ? 'Aktif - Yeni işler alabilirsiniz' : 'Pasif - Yeni iş alamazsınız'}
+                  <h3 className="font-bold text-gray-900 dark:text-white">İş Alma Durumu</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {docsLocked
+                      ? 'Belgeleriniz onaylanmadan aktif edilemez'
+                      : isActive ? 'Aktif - Yeni işler alabilirsiniz' : 'Pasif - Yeni iş alamazsınız'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleToggleActive}
-                disabled={loading}
+                disabled={loading || docsLocked}
                 className={`relative w-16 h-8 rounded-full transition ${
-                  isActive ? 'bg-emerald-500' : 'bg-gray-300'
+                  docsLocked ? 'bg-gray-200 cursor-not-allowed' : isActive ? 'bg-emerald-500' : 'bg-gray-300'
                 } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
-                  isActive ? 'translate-x-9' : 'translate-x-1'
+                  isActive && !docsLocked ? 'translate-x-9' : 'translate-x-1'
                 }`}></div>
               </button>
             </div>
+            {docsLocked && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2">
+                ⚠️ Belgeleriniz admin tarafından onaylandıktan sonra iş almaya başlayabilirsiniz.
+              </p>
+            )}
           </Card>
-        )}
+          )
+        })()}
 
         {/* Doğrulama (Usta için) */}
         {user?.role === 'professional' && (

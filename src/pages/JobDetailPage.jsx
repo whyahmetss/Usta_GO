@@ -346,6 +346,27 @@ function CameraModal({ isOpen, onClose, onCapture }) {
   )
 }
 
+// Müşteri adını maskele: "Ahmet Çavdar" → "Ahmet Ç."
+const maskName = (name) => {
+  if (!name) return 'Müşteri'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length <= 1) return parts[0]
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`
+}
+
+// Adresi mahalle/semt seviyesine kısalt
+const shortenAddress = (address) => {
+  if (!address) return 'Konum belirtilmedi'
+  const parts = address.split(',')
+  const mahalle = parts.find(p => /mahalle/i.test(p))?.trim()
+  const ilce = parts.length >= 3 ? parts[parts.length - 3]?.trim() : null
+  if (mahalle && ilce) return `${mahalle}, ${ilce}`
+  if (mahalle) return mahalle
+  if (parts.length >= 3) return `${parts[parts.length - 3]?.trim()}, ${parts[parts.length - 2]?.trim()}`
+  if (parts.length >= 2) return parts.slice(-2).map(p => p.trim()).join(', ')
+  return parts[0]?.trim() || address
+}
+
 function JobDetailPage() {
   const { id } = useParams()
   const { user, acceptJob, startJob, completeJob } = useAuth()
@@ -766,7 +787,7 @@ function JobDetailPage() {
         <Card padding="p-4">
           <div className="flex items-center gap-2 text-gray-600 mb-3">
             <MapPin size={16} />
-            <span className="text-sm">{job.address || job.location || 'Adres belirtilmedi'}</span>
+            <span className="text-sm">{isProfessional && job.status === 'pending' ? shortenAddress(job.address || job.location) : (job.address || job.location || 'Adres belirtilmedi')}</span>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-gray-200">
             <span className="text-sm font-semibold text-gray-600">Durum</span>
@@ -788,7 +809,7 @@ function JobDetailPage() {
         {otherPerson && (
           <Card padding="p-5">
             <h3 className="font-bold text-gray-900 mb-3">
-              {isProfessional ? 'Musteri Bilgileri' : 'Usta Bilgileri'}
+              {isProfessional ? 'Müşteri Bilgileri' : 'Usta Bilgileri'}
             </h3>
             <div className="flex items-center gap-4 mb-3">
               <div className="text-4xl">
@@ -799,12 +820,15 @@ function JobDetailPage() {
                 )}
               </div>
               <div className="flex-1">
-                <p className="font-bold text-gray-900">{otherPerson.name}</p>
-                {otherPerson.phone && (
+                <p className="font-bold text-gray-900">{isProfessional && job.status === 'pending' ? maskName(otherPerson.name) : otherPerson.name}</p>
+                {otherPerson.phone && !(isProfessional && job.status === 'pending') && (
                   <a href={`tel:${otherPerson.phone}`} className="flex items-center gap-2 text-primary-500 text-sm mt-1 hover:text-primary-600">
                     <Phone size={14} />
                     {otherPerson.phone}
                   </a>
+                )}
+                {isProfessional && job.status === 'pending' && (
+                  <p className="text-xs text-gray-400 mt-1">İşi kabul ettikten sonra iletişim bilgileri açılır</p>
                 )}
               </div>
             </div>

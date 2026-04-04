@@ -49,7 +49,7 @@ export const walletController = {
       });
 
       const balance = totalEarnings - (pendingAgg._sum.amount || 0) - (approvedAgg._sum.amount || 0);
-      res.json({ success: true, data: { balance, pendingWithdrawal: pendingAgg._sum.amount || 0, totalEarnings } });
+      res.json({ success: true, data: { balance, pendingWithdrawal: pendingAgg._sum.amount || 0, totalEarnings, commissionRate: 0.12, taxRate: 0.20 } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -541,10 +541,28 @@ export const walletController = {
       const { amount, bankName, iban, accountHolder } = req.body;
       if (!amount || amount <= 0) return res.status(400).json({ success: false, error: 'Geçerli bir tutar giriniz' });
       if (!bankName || !iban || !accountHolder) return res.status(400).json({ success: false, error: 'Banka bilgileri eksik' });
+
+      const grossAmount = Number(amount);
+      const TAX_RATE = 0.20; // %20 gelir vergisi stopajı
+      const taxAmount = Math.round(grossAmount * TAX_RATE);
+      const netAmount = grossAmount - taxAmount;
+
       const transaction = await prisma.transaction.create({
-        data: { userId: req.user.id, amount: Number(amount), type: 'WITHDRAWAL', status: 'PENDING', description: JSON.stringify({ bankName, iban, accountHolder }) }
+        data: {
+          userId: req.user.id,
+          amount: grossAmount,
+          type: 'WITHDRAWAL',
+          status: 'PENDING',
+          description: JSON.stringify({
+            bankName, iban, accountHolder,
+            grossAmount,
+            taxRate: TAX_RATE,
+            taxAmount,
+            netAmount,
+          })
+        }
       });
-      res.json({ success: true, data: transaction });
+      res.json({ success: true, data: { ...transaction, grossAmount, taxRate: TAX_RATE, taxAmount, netAmount } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
