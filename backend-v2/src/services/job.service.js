@@ -539,17 +539,16 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     throw error;
   }
 
-  // Ceza: Müşteri iptal ederse 0, Usta iptal ederse config oranlarından
+  // Ceza: Kim iptal ederse ona kesilir (müşteri veya usta)
   let finalPenalty = penalty
-  if (isCustomer) {
-    finalPenalty = 0
-  } else if (finalPenalty === 0 && job.budget > 0) {
+  if (finalPenalty === 0 && job.budget > 0) {
     const rates = await getCancellationRates()
     const pct = job.status === "IN_PROGRESS" ? (rates.inProgress || 50) / 100
       : job.status === "ACCEPTED" ? (rates.accepted || 25) / 100
       : (rates.pending || 5) / 100
     finalPenalty = Math.round(job.budget * pct)
   }
+  const cancelledBy = isCustomer ? 'CUSTOMER' : 'USTA'
 
   // Sadece gerçekten ödenmiş tutarı iade et (paidAmount)
   const paidAmount = job.paidAmount || 0
@@ -572,8 +571,8 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     }),
   ]
 
-  // Müşteriye iade (sadece ödeme yapılmışsa)
-  if (refundAmount > 0) {
+  // Müşteriye iade (sadece ödeme yapılmışsa ve usta iptal ettiyse)
+  if (refundAmount > 0 && isUsta) {
     txOps.push(
       prisma.user.update({
         where: { id: job.customerId },
@@ -582,8 +581,8 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
     )
   }
 
-  // Ustadan ceza kes (usta iptal ettiyse)
-  if (isUsta && finalPenalty > 0) {
+  // İptal eden kişiden ceza kes (müşteri veya usta)
+  if (finalPenalty > 0) {
     txOps.push(
       prisma.user.update({
         where: { id: userId },
@@ -596,7 +595,7 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
 
   // Transaction kayıtları
   const txRecords = []
-  if (refundAmount > 0) {
+  if (refundAmount > 0 && isUsta) {
     txRecords.push(
       prisma.transaction.create({
         data: {
@@ -609,13 +608,13 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
       })
     )
   }
-  if (isUsta && finalPenalty > 0) {
+  if (finalPenalty > 0) {
     txRecords.push(
       prisma.transaction.create({
         data: {
           amount: -finalPenalty,
           type: 'PENALTY',
-          description: `İptal cezası: ${job.title} (${job.status === 'IN_PROGRESS' ? 'devam eden iş' : 'kabul edilmiş iş'})`,
+          description: `İptal cezası: ${job.title} — ${cancelledBy === 'CUSTOMER' ? 'müşteri' : 'usta'} iptal etti (${job.status === 'IN_PROGRESS' ? 'devam eden iş' : job.status === 'ACCEPTED' ? 'kabul edilmiş iş' : 'bekleyen iş'})`,
           userId: userId,
           jobId,
         },
@@ -624,16 +623,19 @@ export const cancelJob = async (jobId, userId, reason = "", penalty = 0) => {
   }
   if (txRecords.length > 0) await Promise.all(txRecords)
 
-  // Ustaya bildirim: ceza kesildi
-  if (isUsta && finalPenalty > 0) {
+  // İptal edene bildirim: ceza kesildi
+  if (finalPenalty > 0) {
     pushTo(userId, "⚠️ İptal Cezası", `${job.title} işini iptal ettiniz. ${finalPenalty} TL ceza kesildi.`, { type: "cancel_penalty", jobId })
   }
-  // Müşteriye bildirim: iş iptal edildi
+  // Karşı tarafa bildirim: iş iptal edildi
   if (isUsta && job.customerId) {
     pushTo(job.customerId, "❌ İş İptal Edildi", `${updatedJob.usta?.name || 'Usta'} işi iptal etti. Bakiyeniz iade edildi.`, { type: "job_cancelled", jobId })
   }
+  if (isCustomer && job.ustaId) {
+    pushTo(job.ustaId, "❌ İş İptal Edildi", `Müşteri ${updatedJob.customer?.name || ''} işi iptal etti.`, { type: "job_cancelled", jobId })
+  }
 
-  return { ...updatedJob, refundAmount, penaltyApplied: finalPenalty };
+  return { ...updatedJob, refundAmount, penaltyApplied: finalPenalty, cancelledBy };
 };
 
 export const rateJob = async (jobId, customerId, rating, review = "") => {

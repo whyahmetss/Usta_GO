@@ -81,32 +81,14 @@ function CancelJobPage() {
   }
 
   const isProfessional = user?.role === 'professional' || user?.role?.toUpperCase() === 'USTA'
-
-  // Müşteri sadece pending'de iptal edebilir
   const isCustomer = !isProfessional
-  if (isCustomer && (job.status === 'accepted' || job.status === 'in_progress')) {
-    return (
-      <div className="bg-gray-50">
-        <PageHeader title="İş iptali" />
-        <div className="px-4 py-10 text-center">
-          <AlertTriangle size={48} className="text-amber-500 mx-auto mb-4" />
-          <h3 className="font-bold text-gray-900 text-lg mb-2">İptal Edilemez</h3>
-          <p className="text-gray-600 text-sm mb-6">Usta işi kabul ettikten sonra iptal edemezsiniz. Sorun yaşıyorsanız şikayet edebilirsiniz.</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-2.5 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98]"
-          >
-            Geri Dön
-          </button>
-        </div>
-      </div>
-    )
-  }
 
+  // Ceza hesapla — kim iptal ederse ona kesilir
   let penalty = 0
-  if (isProfessional) {
-    if (job.status === 'accepted') penalty = 30
-    else if (job.status === 'in_progress') penalty = 100
+  if (job.budget > 0) {
+    if (job.status === 'in_progress') penalty = Math.round(job.budget * (cancelRates.inProgress || 50) / 100)
+    else if (job.status === 'accepted') penalty = Math.round(job.budget * (cancelRates.accepted || 25) / 100)
+    else if (job.status === 'pending') penalty = Math.round(job.budget * (cancelRates.pending || 5) / 100)
   }
 
   const reasons = isProfessional

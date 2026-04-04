@@ -434,7 +434,7 @@ function AdminPricingPage() {
         {activeTab === 'cancellation' && (
           <Card>
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Sadakatsizlik Bedeli Oranları</h3>
-            <p className="text-[11px] text-gray-500 mb-4">Usta iş iptal ettiğinde iş bütçesinin yüzdesi olarak kesilecek ceza. Müşteri iptalinde 0 TL.</p>
+            <p className="text-[11px] text-gray-500 mb-4">İşi kim iptal ederse (müşteri veya usta) iş bütçesinin yüzdesi olarak ceza kesilir.</p>
             {cancelError && <p className="text-xs text-rose-600 mb-3">{cancelError}</p>}
             <div className="space-y-4">
               {[
