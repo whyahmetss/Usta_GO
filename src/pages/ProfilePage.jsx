@@ -229,7 +229,7 @@ function ProfilePage() {
               <Share2 size={16} className="text-primary-500" />
               <h3 className="font-semibold text-gray-900 text-sm">Arkadaş Davet Et</h3>
             </div>
-            <p className="text-xs text-gray-500 mb-3">Arkadaşına davet kodunu ver, her ikiniz de <strong>50 TL</strong> bakiye kazanın!</p>
+            <p className="text-xs text-gray-500 mb-3">Arkadaşına davet kodunu ver, her ikiniz de <strong>50 TL</strong> hizmet indirimi kazanın!</p>
             <div className="flex gap-2">
               <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                 <code className="text-sm text-gray-900 font-bold font-mono tracking-wider">

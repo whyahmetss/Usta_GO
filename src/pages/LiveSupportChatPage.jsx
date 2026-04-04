@@ -385,7 +385,31 @@ export default function LiveSupportChatPage() {
 
   const fmt = (dateStr) => {
     const d = new Date(dateStr)
-    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    const now = new Date()
+    const diffMs = now - d
+    const diffMin = Math.floor(diffMs / 60000)
+    const diffHour = Math.floor(diffMs / 3600000)
+    if (diffMin < 1) return 'Az önce'
+    if (diffMin < 60) return `${diffMin} dk önce`
+    if (diffHour < 3) return `${diffHour} saat önce`
+    const isToday = d.toDateString() === now.toDateString()
+    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday = d.toDateString() === yesterday.toDateString()
+    const time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    if (isToday) return time
+    if (isYesterday) return `Dün ${time}`
+    return `${d.toLocaleDateString('tr-TR')} ${time}`
+  }
+
+  const fmtDateLabel = (dateStr) => {
+    const d = new Date(dateStr)
+    const now = new Date()
+    const isToday = d.toDateString() === now.toDateString()
+    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday = d.toDateString() === yesterday.toDateString()
+    if (isToday) return 'Bugün'
+    if (isYesterday) return 'Dün'
+    return d.toLocaleDateString('tr-TR')
   }
 
   // Parse file/image messages
@@ -416,9 +440,9 @@ export default function LiveSupportChatPage() {
   const groupedMessages = []
   let lastDate = null
   for (const msg of messages) {
-    const d = new Date(msg.createdAt).toLocaleDateString('tr-TR')
+    const d = new Date(msg.createdAt).toDateString()
     if (d !== lastDate) {
-      groupedMessages.push({ type: 'date', label: d })
+      groupedMessages.push({ type: 'date', label: fmtDateLabel(msg.createdAt) })
       lastDate = d
     }
     groupedMessages.push({ type: 'msg', msg })
@@ -621,13 +645,21 @@ export default function LiveSupportChatPage() {
                 )
               }
 
+              // Show avatar only on first message of a sender group
+              const prevItem = groupedMessages[idx - 1]
+              const showAvatar = !isMine && (!prevItem || prevItem.type !== 'msg' || prevItem.msg.senderId !== msg.senderId)
+
               return (
-                <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
+                <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${showAvatar && !isMine ? 'mt-3' : 'mt-0.5'}`}>
                   {!isMine && (
-                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mr-2 mt-1 ${
-                      aiMsg ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-primary-400 to-primary-600'
-                    }`}>
-                      {aiMsg ? <Bot size={12} className="text-white" /> : <Headphones size={12} className="text-white" />}
+                    <div className="w-7 mr-2 flex-shrink-0">
+                      {showAvatar && (
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                          aiMsg ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-primary-400 to-primary-600'
+                        }`}>
+                          {aiMsg ? <Bot size={12} className="text-white" /> : <Headphones size={12} className="text-white" />}
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
@@ -680,11 +712,9 @@ export default function LiveSupportChatPage() {
 
             {/* Typing indicator (agent) */}
             {typing && (
-              <div className="flex justify-start mb-1">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mr-2 mt-1">
-                  <Headphones size={12} className="text-white" />
-                </div>
-                <div className="bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="flex justify-start mt-1">
+                <div className="w-7 mr-2 flex-shrink-0" />
+                <div className="bg-gray-100 dark:bg-[#1E293B] rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1 items-center">
                     {[0, 1, 2].map(i => (
                       <div
@@ -700,14 +730,9 @@ export default function LiveSupportChatPage() {
 
             {/* AI thinking indicator (offline mode) */}
             {aiThinking && (
-              <div className="flex justify-start mb-1">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-purple-400 to-blue-600 flex items-center justify-center mr-2 mt-1">
-                  <svg className="w-3.5 h-3.5 text-white animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75" />
-                  </svg>
-                </div>
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-100 dark:border-purple-800/30 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="flex justify-start mt-1">
+                <div className="w-7 mr-2 flex-shrink-0" />
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1.5 items-center">
                     <span className="text-xs font-medium text-purple-600 dark:text-purple-300">Go düşünüyor</span>
                     {[0, 1, 2].map(i => (
