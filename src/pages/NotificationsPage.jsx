@@ -198,7 +198,7 @@ function NotificationsPage() {
         onBack={() => navigate(-1)}
         rightAction={
           unreadCount > 0 ? (
-            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{unreadCount} okunmamis</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{unreadCount} okunmamış</span>
           ) : null
         }
       />

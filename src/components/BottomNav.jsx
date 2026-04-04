@@ -47,9 +47,9 @@ export default function BottomNav() {
         {userRole === 'customer' && (
           <button
             onClick={() => navigate('/create-job')}
-            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
+            className="absolute left-1/2 -translate-x-1/2 -top-3 w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
           >
-            <Plus size={24} strokeWidth={2.5} className="text-white" />
+            <Plus size={22} strokeWidth={2.5} className="text-white" />
           </button>
         )}
 
@@ -57,9 +57,9 @@ export default function BottomNav() {
         {userRole === 'professional' && (
           <button
             onClick={() => navigate('/professional/map')}
-            className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
+            className="absolute left-1/2 -translate-x-1/2 -top-3 w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
           >
-            <MapPin size={24} strokeWidth={2} className="text-white" />
+            <MapPin size={22} strokeWidth={2} className="text-white" />
           </button>
         )}
 
