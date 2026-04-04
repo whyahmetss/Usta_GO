@@ -86,13 +86,13 @@ function HelpPage() {
 
           <div className="space-y-3">
             <a
-              href="mailto:support@ustagochannel.com"
+              href="mailto:mail@usta-go.com"
               className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-200"
             >
               <Mail size={20} className="text-primary-500" />
               <div>
                 <p className="text-sm font-semibold text-gray-900">E-posta Gönder</p>
-                <p className="text-xs text-gray-500">support@ustagochannel.com</p>
+                <p className="text-xs text-gray-500">mail@usta-go.com</p>
               </div>
             </a>
             <a
