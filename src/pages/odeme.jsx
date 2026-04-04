@@ -370,12 +370,49 @@ function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
   );
 }
 
+/* ── Saved card helpers ── */
+const SAVED_CARD_KEY = 'ustago_saved_card';
+const getSavedCard = () => {
+  try {
+    const raw = localStorage.getItem(SAVED_CARD_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    if (c?.number && c?.holder && c?.expiry) return c;
+    return null;
+  } catch { return null; }
+};
+const saveCardToLocal = (card) => {
+  try { localStorage.setItem(SAVED_CARD_KEY, JSON.stringify(card)); } catch {}
+};
+const removeSavedCard = () => {
+  try { localStorage.removeItem(SAVED_CARD_KEY); } catch {}
+};
+
+/* ── Tick check icon ── */
+function TickCircle({ active, className = '' }) {
+  return (
+    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+      active
+        ? 'border-emerald-400 bg-emerald-500 scale-110'
+        : 'border-white/20 bg-transparent'
+    } ${className}`}>
+      {active && (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Page ── */
 const Odeme = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
+  // step: 'yontem' → 'kart' → payment
+  const [step, setStep] = useState('yontem');
   const [yontem, setYontem] = useState(null); // null | 'kart' | 'havale'
   const [selectedAmount, setSelectedAmount] = useState(200);
   const [customAmount, setCustomAmount] = useState('');
@@ -393,10 +430,20 @@ const Odeme = () => {
   const [cardCvc, setCardCvc] = useState('');
   const [cardHolder, setCardHolder] = useState(user?.name?.toUpperCase() || '');
   const [cardFlipped, setCardFlipped] = useState(false);
+  const [saveCard, setSaveCard] = useState(true);
+  const [savedCard, setSavedCard] = useState(() => getSavedCard());
+  const [useSaved, setUseSaved] = useState(false);
 
   const legalAccepted = mesafeliSatis && onBilgilendirme;
-
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
+
+  // Load saved card on mount
+  useEffect(() => {
+    const sc = getSavedCard();
+    if (sc) {
+      setSavedCard(sc);
+    }
+  }, []);
 
   useEffect(() => {
     const status = searchParams.get('status');
@@ -423,16 +470,30 @@ const Odeme = () => {
 
   const handleIyzicoPay = async () => {
     if (!finalAmount || finalAmount < 10) { setError('Minimum yükleme tutarı 10 TL'); return; }
-    const cleanNum = cardNumber.replace(/\s/g, '');
-    if (cleanNum.length < 15) { setError('Geçerli bir kart numarası girin.'); return; }
-    if (cardExpiry.length < 4) { setError('Son kullanma tarihini girin.'); return; }
-    if (cardCvc.length < 3) { setError('CVV kodunu girin.'); return; }
-    if (!cardHolder.trim()) { setError('Kart sahibi adını girin.'); return; }
+
+    let payNum, payExpiry, payCvc, payHolder;
+    if (useSaved && savedCard) {
+      payNum = savedCard.number;
+      payExpiry = savedCard.expiry;
+      payCvc = cardCvc; // CVV her zaman yeniden girilmeli
+      payHolder = savedCard.holder;
+    } else {
+      payNum = cardNumber.replace(/\s/g, '');
+      payExpiry = cardExpiry;
+      payCvc = cardCvc;
+      payHolder = cardHolder;
+    }
+
+    if (payNum.replace(/\s/g, '').length < 15) { setError('Geçerli bir kart numarası girin.'); return; }
+    if (payExpiry.length < 4) { setError('Son kullanma tarihini girin.'); return; }
+    if (payCvc.length < 3) { setError('CVV kodunu girin.'); return; }
+    if (!payHolder.trim()) { setError('Kart sahibi adını girin.'); return; }
 
     setLoading(true);
     setError(null);
     try {
-      const [expMonth, expYear] = cardExpiry.split('/');
+      const [expMonth, expYear] = payExpiry.split('/');
+      const cleanNum = payNum.replace(/\s/g, '');
       const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_INIT, {
         method: 'POST',
         body: {
@@ -440,14 +501,23 @@ const Odeme = () => {
           cardNumber: cleanNum,
           expireMonth: expMonth,
           expireYear: `20${expYear}`,
-          cvc: cardCvc,
-          cardHolderName: cardHolder,
+          cvc: payCvc,
+          cardHolderName: payHolder,
         },
         skipAutoLogout: true,
       });
 
+      // Save card if requested (before potential redirect)
+      if (saveCard && !useSaved) {
+        saveCardToLocal({
+          number: cleanNum,
+          holder: payHolder,
+          expiry: payExpiry,
+          last4: cleanNum.slice(-4),
+        });
+      }
+
       if (res?.success && res?.data?.threeDSHtmlContent) {
-        // 3D Secure: yeni pencerede göster
         const win = window.open('', '_self');
         win.document.write(res.data.threeDSHtmlContent);
         win.document.close();
@@ -470,10 +540,32 @@ const Odeme = () => {
     }
   };
 
-  if (yontem === 'havale') {
-    return <HavaleTalimat tutar={finalAmount} ibanBilgi={ibanBilgi} onClose={() => setYontem(null)} navigate={navigate} />;
+  const handleYontemDevam = async () => {
+    if (!yontem) return;
+    if (yontem === 'havale') {
+      if (!ibanBilgi) {
+        try {
+          const res = await fetchAPI(API_ENDPOINTS.WALLET.HAVALE_BILGI);
+          if (res?.success) setIbanBilgi(res.data);
+        } catch {}
+      }
+      setStep('havale');
+      return;
+    }
+    // Kart seçildi
+    if (savedCard) {
+      setUseSaved(true);
+      setCardHolder(savedCard.holder);
+    }
+    setStep('kart');
+  };
+
+  // ── Havale ekranı ──
+  if (step === 'havale') {
+    return <HavaleTalimat tutar={finalAmount} ibanBilgi={ibanBilgi} onClose={() => setStep('yontem')} navigate={navigate} />;
   }
 
+  // ── Başarılı ──
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444] flex items-center justify-center p-6">
@@ -494,6 +586,219 @@ const Odeme = () => {
     );
   }
 
+  // ── STEP: Kart formu ──
+  if (step === 'kart') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444]">
+        <div className="relative">
+          {/* Header */}
+          <div className="flex items-center px-4 pt-12 pb-4">
+            <button onClick={() => { setStep('yontem'); setUseSaved(false); }} className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 text-white mr-3 active:scale-90 transition">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+            <div>
+              <h1 className="text-white font-black text-xl">Kart Bilgileri</h1>
+              <p className="text-white/40 text-xs">{finalAmount.toLocaleString('tr-TR')} TL yükleme</p>
+            </div>
+          </div>
+
+          {/* Virtual Card */}
+          <div className="px-5 mt-2 mb-6">
+            <VirtualCard
+              amount={finalAmount}
+              holderName={(useSaved ? savedCard?.holder : cardHolder) || user?.name?.toUpperCase() || ''}
+              cardNumber={(useSaved ? savedCard?.number : cardNumber.replace(/\s/g, '')) || ''}
+              expiry={useSaved ? savedCard?.expiry : cardExpiry}
+              cvc={cardCvc}
+              flipped={cardFlipped}
+            />
+          </div>
+
+          {/* Bottom sheet */}
+          <div className="mx-2 rounded-t-[32px] bg-white dark:bg-[#1a1a2e] shadow-2xl px-5 pt-6 pb-10">
+
+            {/* Saved card option */}
+            {savedCard && (
+              <div className="mb-5">
+                <button
+                  onClick={() => { setUseSaved(true); setCardCvc(''); }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all mb-3 ${
+                    useSaved
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                      : 'border-gray-200 dark:border-white/10'
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${useSaved ? 'bg-purple-100 dark:bg-purple-800/30' : 'bg-gray-100 dark:bg-white/10'}`}>
+                    <CreditCard size={20} className={useSaved ? 'text-purple-600' : 'text-gray-400'} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className={`text-sm font-bold ${useSaved ? 'text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                      Kayıtlı Kart
+                    </p>
+                    <p className="text-xs text-gray-400 font-mono">•••• •••• •••• {savedCard.last4}</p>
+                  </div>
+                  <TickCircle active={useSaved} />
+                </button>
+
+                <button
+                  onClick={() => { setUseSaved(false); setCardNumber(''); setCardExpiry(''); setCardCvc(''); }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                    !useSaved
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                      : 'border-gray-200 dark:border-white/10'
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${!useSaved ? 'bg-purple-100 dark:bg-purple-800/30' : 'bg-gray-100 dark:bg-white/10'}`}>
+                    <CreditCard size={20} className={!useSaved ? 'text-purple-600' : 'text-gray-400'} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className={`text-sm font-bold ${!useSaved ? 'text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                      Yeni Kart ile Öde
+                    </p>
+                    <p className="text-xs text-gray-400">Farklı bir kart kullan</p>
+                  </div>
+                  <TickCircle active={!useSaved} />
+                </button>
+
+                {/* Delete saved card */}
+                <button
+                  onClick={() => { removeSavedCard(); setSavedCard(null); setUseSaved(false); }}
+                  className="mt-2 text-xs text-rose-400 font-semibold flex items-center gap-1 mx-auto"
+                >
+                  <XCircle size={12} /> Kayıtlı kartı sil
+                </button>
+              </div>
+            )}
+
+            {/* Card form — only when NOT using saved card */}
+            {(!useSaved || !savedCard) && (
+              <div className="space-y-3 mb-4">
+                <div>
+                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Numarası</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                    onFocus={() => setCardFlipped(false)}
+                    placeholder="0000 0000 0000 0000"
+                    maxLength={19}
+                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base tracking-wider focus:outline-none focus:border-purple-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Sahibi</label>
+                  <input
+                    type="text"
+                    value={cardHolder}
+                    onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                    onFocus={() => setCardFlipped(false)}
+                    placeholder="AD SOYAD"
+                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm uppercase tracking-wide focus:outline-none focus:border-purple-500 transition"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Son Kullanma</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                      onFocus={() => setCardFlipped(false)}
+                      placeholder="AA/YY"
+                      maxLength={5}
+                      className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">CVV</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cardCvc}
+                      onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      onFocus={() => setCardFlipped(true)}
+                      onBlur={() => setCardFlipped(false)}
+                      placeholder="•••"
+                      maxLength={4}
+                      className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Save card toggle */}
+                <label className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 cursor-pointer mt-2">
+                  <input
+                    type="checkbox"
+                    checked={saveCard}
+                    onChange={(e) => setSaveCard(e.target.checked)}
+                    className="w-5 h-5 rounded border-2 border-gray-300 dark:border-white/20 text-purple-600 focus:ring-purple-500 shrink-0 accent-purple-600"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Kartımı kaydet</p>
+                    <p className="text-[10px] text-gray-400">Sonraki ödemelerde tekrar girmeyesin</p>
+                  </div>
+                </label>
+              </div>
+            )}
+
+            {/* CVV for saved card */}
+            {useSaved && savedCard && (
+              <div className="mb-5">
+                <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">CVV Kodu</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={cardCvc}
+                  onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onFocus={() => setCardFlipped(true)}
+                  onBlur={() => setCardFlipped(false)}
+                  placeholder="•••"
+                  maxLength={4}
+                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
+                />
+                <p className="text-[10px] text-gray-400 mt-1 text-center">Güvenliğiniz için CVV her seferinde girilmelidir</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 text-sm text-rose-600 dark:text-rose-400 font-medium mb-4">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handleIyzicoPay}
+              disabled={loading || finalAmount < 10 || !legalAccepted}
+              className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Ödeme işleniyor...</span>
+                </div>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Lock size={16} />
+                  {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL — Güvenli Öde` : 'Güvenli Öde'}
+                </span>
+              )}
+            </button>
+
+            <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 dark:text-gray-500 text-xs font-medium">
+              <ShieldCheck size={13} />
+              256-bit SSL · Güvenli ödeme
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── STEP: Yöntem seçimi (ilk ekran) ──
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0a1e] via-[#1a103d] to-[#0f2444]">
       <div className="relative">
@@ -506,15 +811,14 @@ const Odeme = () => {
           </button>
           <div>
             <h1 className="text-white font-black text-xl">Hizmet Kredisi Al</h1>
-            <p className="text-white/40 text-xs">Güvenli kart ödemesi</p>
+            <p className="text-white/40 text-xs">Tutar ve ödeme yöntemini seçin</p>
           </div>
         </div>
 
         {/* Virtual Card */}
         <div className="px-5 mt-2 mb-6">
-          <VirtualCard amount={finalAmount} holderName={cardHolder || user?.name?.toUpperCase() || ''} cardNumber={cardNumber.replace(/\s/g, '')} expiry={cardExpiry} cvc={cardCvc} flipped={cardFlipped} />
+          <VirtualCard amount={finalAmount} holderName={user?.name?.toUpperCase() || ''} cardNumber="" expiry="" cvc="" flipped={false} />
         </div>
-
 
         {/* Bottom sheet */}
         <div className="mx-2 rounded-t-[32px] bg-white dark:bg-[#1a1a2e] shadow-2xl px-5 pt-6 pb-10">
@@ -538,7 +842,7 @@ const Odeme = () => {
               </button>
             ))}
           </div>
-          <div className="relative mb-5">
+          <div className="relative mb-6">
             <input
               type="number" min="10" value={customAmount}
               onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); }}
@@ -554,8 +858,8 @@ const Odeme = () => {
             </div>
           )}
 
-          {/* Yasal Onay Checkbox'ları */}
-          <div className="space-y-3 mb-5">
+          {/* Yasal Onay */}
+          <div className="space-y-3 mb-6">
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="checkbox"
@@ -580,127 +884,78 @@ const Odeme = () => {
             </label>
           </div>
 
-          {/* Ödeme Yöntemi Seçimi */}
-          <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3 mt-2">
+          {/* Ödeme Yöntemi Seçimi — güzel tickli kartlar */}
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Ödeme Yöntemi
           </p>
-          <div className="grid grid-cols-2 gap-3 mb-5">
+
+          <div className="space-y-3 mb-6">
+            {/* Kart ile Öde */}
             <button
-              onClick={() => setYontem(yontem === 'kart' ? null : 'kart')}
-              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
+              onClick={() => setYontem('kart')}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
                 yontem === 'kart'
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                  : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300'
+                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-500/10'
+                  : 'border-gray-200 dark:border-white/10'
               }`}
             >
-              <CreditCard size={22} />
-              Kart ile Öde
-              <span className="text-[10px] font-normal opacity-60">iyzico Güvenli Ödeme</span>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                yontem === 'kart' ? 'bg-purple-100 dark:bg-purple-800/40' : 'bg-gray-100 dark:bg-white/10'
+              }`}>
+                <CreditCard size={22} className={yontem === 'kart' ? 'text-purple-600' : 'text-gray-400'} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className={`text-sm font-bold ${yontem === 'kart' ? 'text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                  Kart ile Öde
+                </p>
+                <p className="text-[11px] text-gray-400">iyzico 3D Secure Güvenli Ödeme</p>
+                {savedCard && (
+                  <p className="text-[10px] text-purple-400 font-semibold mt-0.5">Kayıtlı kart: •••• {savedCard.last4}</p>
+                )}
+              </div>
+              <TickCircle active={yontem === 'kart'} />
             </button>
+
+            {/* Havale / EFT */}
             <button
-              onClick={async () => {
-                if (finalAmount < 10) return;
-                if (!ibanBilgi) {
-                  try {
-                    const res = await fetchAPI(API_ENDPOINTS.WALLET.HAVALE_BILGI);
-                    if (res?.success) setIbanBilgi(res.data);
-                  } catch {}
-                }
-                setYontem('havale');
-              }}
-              disabled={finalAmount < 10 || !legalAccepted}
-              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
+              onClick={() => setYontem('havale')}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
                 yontem === 'havale'
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                  : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300'
-              } disabled:opacity-40`}
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/10'
+                  : 'border-gray-200 dark:border-white/10'
+              }`}
             >
-              <Building2 size={22} />
-              Havale / EFT
-              <span className="text-[10px] font-normal opacity-60">1-24 saat içinde</span>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                yontem === 'havale' ? 'bg-emerald-100 dark:bg-emerald-800/40' : 'bg-gray-100 dark:bg-white/10'
+              }`}>
+                <Building2 size={22} className={yontem === 'havale' ? 'text-emerald-600' : 'text-gray-400'} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className={`text-sm font-bold ${yontem === 'havale' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                  Havale / EFT
+                </p>
+                <p className="text-[11px] text-gray-400">Banka havalesi · 1-24 saat</p>
+              </div>
+              <TickCircle active={yontem === 'havale'} />
             </button>
           </div>
 
-          {/* iyzico Kart Formu — sadece kart seçiliyken */}
-          {yontem === 'kart' && (
-          <>
-            <div className="space-y-3 mb-5">
-              <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Numarası</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                  onFocus={() => setCardFlipped(false)}
-                  placeholder="0000 0000 0000 0000"
-                  maxLength={19}
-                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base tracking-wider focus:outline-none focus:border-purple-500 transition"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Sahibi</label>
-                <input
-                  type="text"
-                  value={cardHolder}
-                  onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-                  onFocus={() => setCardFlipped(false)}
-                  placeholder="AD SOYAD"
-                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-semibold text-sm uppercase tracking-wide focus:outline-none focus:border-purple-500 transition"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Son Kullanma</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={cardExpiry}
-                    onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                    onFocus={() => setCardFlipped(false)}
-                    placeholder="AA/YY"
-                    maxLength={5}
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">CVV</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={cardCvc}
-                    onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    onFocus={() => setCardFlipped(true)}
-                    onBlur={() => setCardFlipped(false)}
-                    placeholder="•••"
-                    maxLength={4}
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base text-center focus:outline-none focus:border-purple-500 transition"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleIyzicoPay}
-              disabled={loading || finalAmount < 10 || !legalAccepted}
-              className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
-            >
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Ödeme işleniyor...</span>
-                </div>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Lock size={16} />
-                  {finalAmount > 0 ? `${finalAmount.toLocaleString('tr-TR')} TL — Güvenli Öde` : 'Güvenli Öde'}
-                </span>
+          {/* Devam Et butonu */}
+          <button
+            onClick={handleYontemDevam}
+            disabled={!yontem || finalAmount < 10 || !legalAccepted}
+            className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
+          >
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
+            <span className="flex items-center justify-center gap-2">
+              {yontem === 'kart' ? <CreditCard size={16} /> : yontem === 'havale' ? <Building2 size={16} /> : <Lock size={16} />}
+              {!yontem ? 'Yöntem Seçin' : 'Devam Et'}
+              {yontem && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
               )}
-            </button>
-          </>
-          )}
+            </span>
+          </button>
 
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 dark:text-gray-500 text-xs font-medium">
             <ShieldCheck size={13} />
