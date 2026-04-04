@@ -290,9 +290,9 @@ function SettingsPage() {
           </Card>
         )}
 
-        {/* Vergi Durumu (Sadece onaylı Usta için) */}
+        {/* Vergi Durumu (Sadece vergi belgesi onaylı Usta için açılır) */}
         {user?.role === 'professional' && (() => {
-          const vergiLocked = user?.verificationStatus !== 'verified'
+          const vergiLocked = !user?.vergiLevhasiApproved
           return (
           <Card padding="p-6">
             <div className="flex items-center justify-between">
@@ -304,7 +304,7 @@ function SettingsPage() {
                   <h3 className="font-bold text-gray-900 dark:text-white">Vergi Durumu</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {vergiLocked
-                      ? 'Belgeler onaylandıktan sonra ayarlanabilir'
+                      ? 'Bireysel çalışan — %20 stopaj kesilir'
                       : hasVergiLevhasi ? 'Vergi levham var — Stopaj kesilmez' : 'Bireysel çalışan — %20 stopaj kesilir'}
                   </p>
                 </div>
@@ -323,7 +323,7 @@ function SettingsPage() {
             </div>
             {vergiLocked ? (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 bg-gray-50 dark:bg-white/5 rounded-lg px-3 py-2">
-                🔒 Belgeleriniz admin tarafından onaylandıktan sonra vergi durumunuzu ayarlayabilirsiniz.
+                🔒 Vergi levhası belgeniz yüklenmemiş veya henüz onaylanmamış. Onaylandıktan sonra bu ayarı değiştirebilirsiniz.
               </p>
             ) : (
               <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${hasVergiLevhasi ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>

@@ -298,6 +298,12 @@ export const getUserProfile = async (userId) => {
       orderBy: { createdAt: 'desc' },
     });
     user.verificationStatus = latestCert ? (latestCert.status === 'APPROVED' ? 'verified' : latestCert.status === 'PENDING' ? 'pending' : 'rejected') : 'unverified';
+
+    // Vergi levhası belgesi onaylı mı?
+    const vergiCert = await prisma.userCertificate.findFirst({
+      where: { userId, docType: 'vergi', status: 'APPROVED' },
+    });
+    user.vergiLevhasiApproved = !!vergiCert;
   }
 
   // Auto-generate referral code for users who don't have one yet
