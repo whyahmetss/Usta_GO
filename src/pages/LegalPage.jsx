@@ -2,6 +2,38 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 
 const LEGAL_CONTENT = {
+  'terms': {
+    title: 'Kullanım Şartları',
+    sections: [
+      { heading: '1. Genel', body: 'UstaGO platformunu ("Uygulama") kullanarak aşağıdaki kullanım şartlarını kabul etmiş sayılırsınız. Bu şartları kabul etmiyorsanız uygulamayı kullanmamanız gerekmektedir.' },
+      { heading: '2. Hizmet Tanımı', body: 'UstaGO, müşterileri profesyonel ev hizmeti sağlayıcıları (ustalar) ile buluşturan bir aracı platformdur. Platform, elektrik, tesisat, tadilat, temizlik, boyacı, marangoz ve benzeri kategorilerde hizmet eşleştirmesi yapar.' },
+      { heading: '3. Hesap ve Üyelik', body: 'Uygulamaya kayıt olmak için geçerli bir e-posta adresi ve telefon numarası gereklidir. Kullanıcılar verdikleri bilgilerin doğruluğundan sorumludur. Hesabınızın güvenliğini sağlamak sizin sorumluluğunuzdadır.' },
+      { heading: '4. Usta Kayıt ve Doğrulama', body: 'Usta olarak kayıt olmak isteyen kişilerin kimlik belgesi, adli sicil kaydı ve varsa mesleki yetkinlik belgelerini yüklemesi gerekmektedir. Belgeler admin tarafından incelenir ve onaylanmadan usta iş kabul edemez.' },
+      { heading: '5. Ödeme ve Komisyon', body: 'Müşteriler hizmet bedelini platform üzerinden öder. Platform, her iş için brüt tutardan %12 komisyon keser. Vergi levhası olmayan ustalara %20 gelir vergisi stopajı uygulanır. Ödeme detayları şeffaf şekilde gösterilir.' },
+      { heading: '6. İptal ve İade', body: 'Müşteri, iş başlamadan önce ücretsiz iptal hakkına sahiptir. İş başladıktan sonra iptal halinde platform iptal politikasına göre ücretlendirme yapılır. İade talepleri 1-3 iş günü içinde değerlendirilir.' },
+      { heading: '7. Değerlendirme Sistemi', body: 'İş tamamlandıktan sonra müşteri ustayı puanlayabilir. Sahte, kötü niyetli veya manipülatif değerlendirmeler kaldırılabilir. Sürekli düşük puan alan ustalar platformdan çıkarılabilir.' },
+      { heading: '8. Yasaklı Davranışlar', body: 'Platform dışı ödeme teklifi, sahte hesap oluşturma, taciz veya tehdit içeren mesajlaşma, başka kullanıcıların kişisel bilgilerini paylaşma ve platformu kötü amaçlı kullanma yasaktır.' },
+      { heading: '9. Sorumluluk Sınırı', body: 'UstaGO bir aracı platformdur ve hizmet kalitesinden doğrudan sorumlu değildir. Platform, ustalar ile müşteriler arasındaki anlaşmazlıklarda arabuluculuk yapabilir ancak nihai sorumluluk taraflara aittir.' },
+      { heading: '10. Değişiklikler', body: 'UstaGO, kullanım şartlarını önceden bildirimde bulunarak değiştirme hakkını saklı tutar. Güncellenen şartlar uygulamada yayınlandığı anda yürürlüğe girer.' },
+      { heading: '11. İletişim', body: 'Sorularınız için mail@usta-go.com adresine veya uygulama içi canlı destek hattına başvurabilirsiniz.' },
+    ]
+  },
+  'privacy': {
+    title: 'Gizlilik Politikası',
+    sections: [
+      { heading: '1. Giriş', body: 'UstaGO Teknoloji A.Ş. olarak kişisel verilerinizin güvenliği konusunda azami hassasiyet gösteriyoruz. Bu politika, hangi verilerinizi topladığımızı, nasıl kullandığımızı ve nasıl koruduğumuzu açıklar.' },
+      { heading: '2. Toplanan Veriler', body: 'Kayıt bilgileri (ad, soyad, e-posta, telefon), konum bilgileri (hizmet eşleştirmesi için), ödeme bilgileri (iyzico güvenli altyapısı üzerinden), profil fotoğrafı, iş geçmişi, mesajlaşma içerikleri ve cihaz bilgileri (FCM token, işletim sistemi).' },
+      { heading: '3. Verilerin Kullanım Amaçları', body: 'Hizmet sunumu ve eşleştirme, ödeme işlemlerinin gerçekleştirilmesi, bildirim gönderimi (push notification), müşteri desteği, platform güvenliği ve dolandırıcılık önleme, yasal yükümlülüklerin yerine getirilmesi.' },
+      { heading: '4. Verilerin Paylaşımı', body: 'Kişisel verileriniz; ödeme hizmeti sağlayıcısı (iyzico), bulut hizmetleri (Render, Cloudinary), bildirim hizmetleri (Firebase) ve yasal zorunluluk halinde yetkili makamlarla paylaşılabilir. Verileriniz üçüncü şahıslara pazarlama amacıyla satılmaz.' },
+      { heading: '5. Veri Güvenliği', body: 'Tüm iletişim SSL/TLS ile şifrelenir. Şifreler bcrypt ile hash\'lenir. Ödeme bilgileri PCI-DSS uyumlu iyzico altyapısında işlenir. Düzenli güvenlik denetimleri yapılır.' },
+      { heading: '6. Çerezler ve İzleme', body: 'UstaGO, oturum yönetimi ve deneyim iyileştirme amacıyla çerezler ve yerel depolama kullanır. Analitik verileri anonim olarak toplanır.' },
+      { heading: '7. Haklarınız (KVKK Madde 11)', body: 'Kişisel verilerinizin işlenip işlenmediğini öğrenme, düzeltilmesini isteme, silinmesini talep etme (Ayarlar > Hesabı Sil), aktarıldığı üçüncü kişileri bilme ve itiraz etme haklarınız bulunmaktadır.' },
+      { heading: '8. Hesap Silme', body: 'Uygulama içi Ayarlar sayfasından hesabınızı kalıcı olarak silebilirsiniz. Silme işlemiyle birlikte kişisel verileriniz KVKK uyarınca anonim hale getirilir veya silinir.' },
+      { heading: '9. Çocukların Gizliliği', body: 'UstaGO 18 yaş altı kullanıcılara yönelik değildir. 18 yaşından küçük bireylerin verilerini bilerek toplamayız.' },
+      { heading: '10. Değişiklikler', body: 'Gizlilik politikamızı güncelleme hakkımız saklıdır. Önemli değişikliklerde uygulama içi bildirim gönderilir.' },
+      { heading: '11. İletişim', body: 'Kişisel veri talepleriniz için mail@usta-go.com adresine başvurabilirsiniz.' },
+    ]
+  },
   'mesafeli-satis-sozlesmesi': {
     title: 'Mesafeli Satış Sözleşmesi',
     sections: [

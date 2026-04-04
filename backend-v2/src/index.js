@@ -323,6 +323,41 @@ httpServer.listen(PORT, async () => {
   }
 });
 
+// Auto-close support sessions idle for 2+ hours (runs every 30 min)
+setInterval(async () => {
+  try {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    // Find OPEN sessions where the last message is older than 2 hours
+    const openSessions = await prisma.supportSession.findMany({
+      where: { status: 'OPEN' },
+      select: { id: true, userId: true, agentId: true, openedAt: true },
+    });
+    for (const session of openSessions) {
+      // Check last message between user and agent
+      const lastMsg = await prisma.message.findFirst({
+        where: {
+          OR: [
+            { senderId: session.userId, receiverId: session.agentId },
+            { senderId: session.agentId, receiverId: session.userId },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
+      });
+      const lastActivity = lastMsg?.createdAt || session.openedAt;
+      if (lastActivity < twoHoursAgo) {
+        await prisma.supportSession.update({
+          where: { id: session.id },
+          data: { status: 'CLOSED', closedAt: new Date() },
+        });
+        console.log(`[AutoClose] Support session ${session.id} closed (idle 2h+)`);
+      }
+    }
+  } catch (err) {
+    console.error('[AutoClose] Error:', err.message);
+  }
+}, 30 * 60 * 1000); // 30 dakikada bir kontrol
+
 // Graceful shutdown
 process.on("SIGINT", () => {
   console.log("\n📛 Shutting down gracefully...");

@@ -10,6 +10,19 @@ import { ArrowLeft, MapPin, Navigation } from 'lucide-react'
 
 const DEFAULT_CENTER = [41.0082, 28.9784]
 
+// Adresi mahalle/semt seviyesine kısalt (tam adres gösterilmez)
+const shortenAddress = (address) => {
+  if (!address) return 'Konum belirtilmedi'
+  const parts = address.split(',')
+  const mahalle = parts.find(p => /mahalle/i.test(p))?.trim()
+  const ilce = parts.length >= 3 ? parts[parts.length - 3]?.trim() : null
+  if (mahalle && ilce) return `${mahalle}, ${ilce}`
+  if (mahalle) return mahalle
+  if (parts.length >= 3) return `${parts[parts.length - 3]?.trim()}, ${parts[parts.length - 2]?.trim()}`
+  if (parts.length >= 2) return parts.slice(-2).map(p => p.trim()).join(', ')
+  return parts[0]?.trim() || address
+}
+
 const JOB_PIN = L.divIcon({
   className: '',
   iconSize: [32, 42],
@@ -168,7 +181,7 @@ export default function ProfessionalMapPage() {
               <Popup>
                 <div style={{ minWidth: 160 }}>
                   <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{job.title}</p>
-                  <p style={{ fontSize: 11, color: '#6B7280', marginBottom: 4 }}>{job.location?.address}</p>
+                  <p style={{ fontSize: 11, color: '#6B7280', marginBottom: 4 }}>{shortenAddress(job.location?.address)}</p>
                   <p style={{ fontWeight: 700, color: '#22c55e', fontSize: 13, marginBottom: 8 }}>{job.price} TL</p>
                   <button
                     onClick={() => navigate(`/job/${job.id}`)}

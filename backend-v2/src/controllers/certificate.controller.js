@@ -1,4 +1,12 @@
 import prisma from '../utils/prisma.js';
+import { sendPushNotification } from '../utils/firebase.js';
+
+const pushTo = async (userId, title, body, data = {}) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } });
+    if (user?.fcmToken) await sendPushNotification(user.fcmToken, title, body, data);
+  } catch {}
+};
 
 export const uploadCertificate = async (req, res) => {
   try {
@@ -42,6 +50,14 @@ export const updateCertificateStatus = async (req, res) => {
       where: { id: req.params.id },
       data: { status, adminNote: adminNote || null, reviewedAt: new Date() },
     });
+
+    // Push bildirim gönder
+    if (status === 'APPROVED') {
+      pushTo(cert.userId, '✅ Belgeniz Onaylandı!', 'Yüklediğiniz belge admin tarafından onaylandı.', { type: 'certificate', status: 'approved' });
+    } else if (status === 'REJECTED') {
+      pushTo(cert.userId, '❌ Belgeniz Reddedildi', adminNote ? `Sebep: ${adminNote}` : 'Yüklediğiniz belge reddedildi. Lütfen tekrar yükleyin.', { type: 'certificate', status: 'rejected' });
+    }
+
     res.json({ success: true, data: cert });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
