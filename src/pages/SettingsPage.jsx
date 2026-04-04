@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2, FileText } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2, FileText, Upload, XCircle, Shield } from 'lucide-react'
+import { uploadFile } from '../utils/api'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -38,6 +39,34 @@ function SettingsPage() {
   useEffect(() => {
     if (user?.hasVergiLevhasi !== undefined) setHasVergiLevhasi(user.hasVergiLevhasi)
   }, [user?.hasVergiLevhasi])
+  const [uploadingDoc, setUploadingDoc] = useState(null) // docType being uploaded
+
+  const handleDocUpload = async (file, docType, label) => {
+    if (!file) return
+    try {
+      setUploadingDoc(docType)
+      setError(null)
+      const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+      const fileUrl = uploadRes?.data?.url || uploadRes?.url
+      if (!fileUrl) throw new Error('Dosya yüklenemedi')
+      await fetchAPI(API_ENDPOINTS.CERTIFICATES.UPLOAD, {
+        method: 'POST',
+        body: { fileUrl, type: docType, label }
+      })
+      setSuccess(`${label} yüklendi, admin onayı bekleniyor.`)
+      setTimeout(() => setSuccess(null), 4000)
+      // Refresh user data to update certificates list
+      const meRes = await fetchAPI(API_ENDPOINTS.AUTH.ME)
+      if (meRes?.data || meRes?.id) {
+        const updated = mapUserFromBackend(meRes.data || meRes)
+        setUser(prev => { const m = prev ? { ...prev, ...updated } : updated; setStoredUser(m); return m })
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploadingDoc(null)
+    }
+  }
 
   const handleToggleVergi = async () => {
     try {
@@ -251,44 +280,130 @@ function SettingsPage() {
         })()}
 
         {/* Doğrulama (Usta için) */}
-        {user?.role === 'professional' && (
+        {user?.role === 'professional' && (() => {
+          const certs = user?.certificates || []
+          const REQUIRED_DOCS = [
+            { docType: 'kimlik', label: 'Kimlik Belgesi', critical: true },
+            { docType: 'adli_sicil', label: 'Adli Sicil Kaydı', critical: true },
+          ]
+          const OPTIONAL_DOCS = [
+            { docType: 'meslek', label: 'Mesleki Sertifika', critical: false },
+            { docType: 'vergi', label: 'Vergi Levhası', critical: false },
+          ]
+          const ALL_DOCS = [...REQUIRED_DOCS, ...OPTIONAL_DOCS]
+
+          const getDocStatus = (docType) => {
+            const matching = certs.filter(c => c.docType === docType)
+            if (matching.length === 0) return null
+            if (matching.some(c => c.status === 'APPROVED')) return 'APPROVED'
+            if (matching.some(c => c.status === 'PENDING')) return 'PENDING'
+            return 'REJECTED'
+          }
+
+          const missingCritical = REQUIRED_DOCS.filter(d => !getDocStatus(d.docType))
+          const hasMissingCritical = missingCritical.length > 0
+
+          return (
           <Card padding="p-6">
-            <h3 className="font-bold text-gray-900 mb-4">Doğrulama</h3>
-            <div className="space-y-3">
-              <div className={`p-4 rounded-xl border-2 ${
-                user?.verificationStatus === 'verified' ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-900/20' :
-                user?.verificationStatus === 'pending' ? 'border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20' :
-                'border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50'
-              }`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {user?.verificationStatus === 'verified' ? (
-                    <>
-                      <CheckCircle size={20} className="text-emerald-600" />
-                      <span className="font-bold text-emerald-700 dark:text-emerald-400">Doğrulanmış</span>
-                    </>
-                  ) : user?.verificationStatus === 'pending' ? (
-                    <>
-                      <Clock size={20} className="text-amber-600" />
-                      <span className="font-bold text-amber-700 dark:text-amber-400">İnceleme Bekleniyor</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle size={20} className="text-gray-600" />
-                      <span className="font-bold text-gray-700 dark:text-gray-400">Doğrulanmamış</span>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {user?.verificationStatus === 'verified'
-                    ? 'Profil öğenin "Doğrulanmış" rozetine sahiptir. ⭐'
-                    : user?.verificationStatus === 'pending'
-                    ? 'Sertifikanız admin tarafından incelenmektedir.'
-                    : 'Kayıt sırasında yüklenen belgeler incelenmektedir.'}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 dark:text-white">Belgelerim</h3>
+              {user?.verificationStatus === 'verified' ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full">
+                  <CheckCircle size={12} /> Doğrulanmış
+                </span>
+              ) : user?.verificationStatus === 'pending' ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full">
+                  <Clock size={12} /> İnceleniyor
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                  <AlertCircle size={12} /> Doğrulanmamış
+                </span>
+              )}
+            </div>
+
+            {hasMissingCritical && (
+              <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl">
+                <p className="text-xs font-bold text-rose-700 dark:text-rose-400 mb-1">⛔ Eksik Kritik Belgeler</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">
+                  {missingCritical.map(d => d.label).join(' ve ')} yüklenmedikçe iş alamazsınız.
                 </p>
               </div>
+            )}
+
+            <div className="space-y-3">
+              {ALL_DOCS.map(doc => {
+                const status = getDocStatus(doc.docType)
+                const isUploading = uploadingDoc === doc.docType
+                return (
+                  <div key={doc.docType} className={`flex items-center justify-between p-3 rounded-xl border ${
+                    status === 'APPROVED' ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/10' :
+                    status === 'PENDING' ? 'border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10' :
+                    status === 'REJECTED' ? 'border-rose-200 dark:border-rose-700 bg-rose-50 dark:bg-rose-900/10' :
+                    doc.critical ? 'border-rose-200 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-900/5' :
+                    'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30'
+                  }`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {status === 'APPROVED' ? <CheckCircle size={16} className="text-emerald-600 flex-shrink-0" /> :
+                       status === 'PENDING' ? <Clock size={16} className="text-amber-600 flex-shrink-0" /> :
+                       status === 'REJECTED' ? <XCircle size={16} className="text-rose-600 flex-shrink-0" /> :
+                       doc.critical ? <AlertCircle size={16} className="text-rose-500 flex-shrink-0" /> :
+                       <FileText size={16} className="text-gray-400 flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold truncate ${
+                          status === 'APPROVED' ? 'text-emerald-700 dark:text-emerald-400' :
+                          status === 'PENDING' ? 'text-amber-700 dark:text-amber-400' :
+                          status === 'REJECTED' ? 'text-rose-700 dark:text-rose-400' :
+                          'text-gray-700 dark:text-gray-300'
+                        }`}>{doc.label}</p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {status === 'APPROVED' ? 'Onaylandı' :
+                           status === 'PENDING' ? 'İnceleniyor...' :
+                           status === 'REJECTED' ? 'Reddedildi — tekrar yükleyin' :
+                           doc.critical ? 'Zorunlu — yüklenmedi' : 'Opsiyonel — yüklenmedi'}
+                        </p>
+                      </div>
+                    </div>
+                    {status !== 'APPROVED' && status !== 'PENDING' && (
+                      <label className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition flex-shrink-0 ${
+                        isUploading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
+                        doc.critical ? 'bg-rose-500 hover:bg-rose-600 text-white' :
+                        'bg-primary-500 hover:bg-primary-600 text-white'
+                      }`}>
+                        {isUploading ? (
+                          <span>Yükleniyor...</span>
+                        ) : (
+                          <>
+                            <Upload size={12} />
+                            <span>Yükle</span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*,.pdf"
+                              disabled={isUploading}
+                              onChange={e => {
+                                const file = e.target.files?.[0]
+                                if (file) handleDocUpload(file, doc.docType, doc.label)
+                                e.target.value = ''
+                              }}
+                            />
+                          </>
+                        )}
+                      </label>
+                    )}
+                  </div>
+                )
+              })}
             </div>
+
+            {certs.length === 0 && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">
+                Henüz belge yüklenmemiş. Kimlik ve adli sicil kaydı yükleyerek doğrulamayı başlatın.
+              </p>
+            )}
           </Card>
-        )}
+          )
+        })()}
 
         {/* Vergi Durumu (Sadece vergi belgesi onaylı Usta için açılır) */}
         {user?.role === 'professional' && (() => {

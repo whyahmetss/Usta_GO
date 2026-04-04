@@ -293,17 +293,20 @@ export const getUserProfile = async (userId) => {
   }
 
   if (user.role === 'USTA') {
-    const latestCert = await prisma.userCertificate.findFirst({
+    const allCerts = await prisma.userCertificate.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      select: { id: true, docType: true, label: true, status: true, fileUrl: true, adminNote: true, createdAt: true },
     });
+
+    const latestCert = allCerts[0] || null;
     user.verificationStatus = latestCert ? (latestCert.status === 'APPROVED' ? 'verified' : latestCert.status === 'PENDING' ? 'pending' : 'rejected') : 'unverified';
 
     // Vergi levhası belgesi onaylı mı?
-    const vergiCert = await prisma.userCertificate.findFirst({
-      where: { userId, docType: 'vergi', status: 'APPROVED' },
-    });
-    user.vergiLevhasiApproved = !!vergiCert;
+    user.vergiLevhasiApproved = allCerts.some(c => c.docType === 'vergi' && c.status === 'APPROVED');
+
+    // Tüm belgeleri frontend'e gönder
+    user.certificates = allCerts;
   }
 
   // Auto-generate referral code for users who don't have one yet
