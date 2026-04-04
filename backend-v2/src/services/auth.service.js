@@ -101,6 +101,19 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 
+  if (user.isDeleted) {
+    const error = new Error("Bu hesap silinmiştir");
+    error.status = 403;
+    throw error;
+  }
+
+  // Social login kullanıcıları şifresiz olabilir
+  if (!user.password) {
+    const error = new Error("Bu hesap sosyal giriş ile oluşturulmuş. Lütfen Apple veya Google ile giriş yapın.");
+    error.status = 401;
+    throw error;
+  }
+
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
     const error = new Error("E-posta veya şifre hatalı");
@@ -120,6 +133,146 @@ export const loginUser = async (email, password) => {
     user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true, status: user.status },
     token,
   };
+};
+
+/**
+ * Social Login (Apple / Google) — token doğrulama + kullanıcı oluştur/bul
+ * @param {Object} data - { provider: "apple"|"google", idToken, name?, email? }
+ */
+export const socialLogin = async (data) => {
+  const { provider, idToken, name, email: providedEmail } = data;
+
+  if (!provider || !idToken) {
+    const err = new Error("provider ve idToken gerekli");
+    err.status = 400;
+    throw err;
+  }
+
+  let verifiedEmail = null;
+  let providerSub = null;
+  let providerName = name || null;
+
+  if (provider === "apple") {
+    // Apple identityToken doğrulama (JWT decode)
+    try {
+      const parts = idToken.split(".");
+      if (parts.length !== 3) throw new Error("Geçersiz Apple token formatı");
+      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+      // Apple token'dan email ve sub al
+      verifiedEmail = payload.email || providedEmail;
+      providerSub = payload.sub;
+      if (!verifiedEmail) throw new Error("Apple token'da email bulunamadı");
+    } catch (e) {
+      const err = new Error("Apple token doğrulanamadı: " + e.message);
+      err.status = 401;
+      throw err;
+    }
+  } else if (provider === "google") {
+    // Google idToken doğrulama
+    try {
+      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      if (!res.ok) throw new Error("Google token geçersiz");
+      const payload = await res.json();
+      verifiedEmail = payload.email;
+      providerSub = payload.sub;
+      providerName = providerName || payload.name || null;
+      if (!verifiedEmail) throw new Error("Google token'da email bulunamadı");
+    } catch (e) {
+      const err = new Error("Google token doğrulanamadı: " + e.message);
+      err.status = 401;
+      throw err;
+    }
+  } else {
+    const err = new Error("Desteklenmeyen provider: " + provider);
+    err.status = 400;
+    throw err;
+  }
+
+  // Mevcut kullanıcıyı bul (email veya provider+sub ile)
+  let user = await prisma.user.findUnique({ where: { email: verifiedEmail } });
+
+  if (user && user.isDeleted) {
+    const err = new Error("Bu hesap silinmiştir");
+    err.status = 403;
+    throw err;
+  }
+
+  if (user) {
+    // Mevcut kullanıcı — provider bilgisini güncelle
+    if (!user.authProvider) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { authProvider: provider, authProviderId: providerSub },
+      });
+    }
+  } else {
+    // Yeni kullanıcı oluştur
+    let newReferralCode;
+    let attempts = 0;
+    do {
+      newReferralCode = generateReferralCode();
+      const exists = await prisma.user.findUnique({ where: { referralCode: newReferralCode } });
+      if (!exists) break;
+      attempts++;
+    } while (attempts < 10);
+
+    user = await prisma.user.create({
+      data: {
+        name: providerName || verifiedEmail.split("@")[0],
+        email: verifiedEmail,
+        password: null,
+        role: "CUSTOMER",
+        authProvider: provider,
+        authProviderId: providerSub,
+        referralCode: newReferralCode,
+        status: "ACTIVE",
+      },
+    });
+  }
+
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
+
+  return {
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, referralCode: user.referralCode, isActive: user.isActive ?? true, status: user.status },
+    token,
+  };
+};
+
+/**
+ * Hesap Silme (Soft Delete) — KVKK uyumlu
+ * Kişisel verileri (ad, telefon, bio) temizler, isDeleted=true işaretler, ID kalır
+ */
+export const deleteAccount = async (userId) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    const err = new Error("Kullanıcı bulunamadı");
+    err.status = 404;
+    throw err;
+  }
+  if (user.isDeleted) {
+    const err = new Error("Bu hesap zaten silinmiş");
+    err.status = 400;
+    throw err;
+  }
+
+  // Kişisel verileri temizle, ID ve yasal kayıtlar kalsın
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: "Silinmiş Kullanıcı",
+      phone: null,
+      bio: null,
+      profileImage: null,
+      fcmToken: null,
+      password: null,
+      isDeleted: true,
+      deletedAt: new Date(),
+      status: "DELETED",
+      isActive: false,
+    },
+  });
+
+  return { message: "Hesabınız başarıyla silindi. Kişisel verileriniz KVKK uyarınca temizlenmiştir." };
 };
 
 export const getUserProfile = async (userId) => {

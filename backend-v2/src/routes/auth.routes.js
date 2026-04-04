@@ -44,4 +44,17 @@ router.put("/profile", authMiddleware, validateBody(updateProfileSchema), authCo
  */
 router.post("/fcm-token", authMiddleware, authController.saveFcmToken);
 
+/**
+ * @route POST /api/auth/social-login
+ * @desc Social login (Apple / Google) — token doğrulama + kullanıcı oluştur/bul
+ * @body {provider, idToken, name?, email?}
+ */
+router.post("/social-login", authController.socialLogin);
+
+/**
+ * @route DELETE /api/auth/account
+ * @desc Hesap silme (soft delete) — KVKK uyumlu
+ */
+router.delete("/account", authMiddleware, authController.deleteAccount);
+
 export default router;

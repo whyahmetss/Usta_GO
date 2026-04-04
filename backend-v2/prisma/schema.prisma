@@ -15,12 +15,20 @@ model User {
   id        String     @id @default(cuid())
   name      String
   email     String     @unique
-  password  String
+  password  String?
   phone     String?
   bio       String?
 
   birthDate DateTime?  // 18+ doğrulama için
   role      UserRole   @default(CUSTOMER)  // CUSTOMER, USTA, ADMIN, SUPPORT
+
+  // Social auth
+  authProvider   String?   // "apple" | "google" | null (email/password)
+  authProviderId String?   // Apple/Google sub ID
+
+  // Soft delete (KVKK)
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?
 
   // Account status
   status    UserStatus @default(ACTIVE)

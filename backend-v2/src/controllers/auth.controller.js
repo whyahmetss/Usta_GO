@@ -47,3 +47,21 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+export const socialLogin = async (req, res, next) => {
+  try {
+    const result = await authService.socialLogin(req.body);
+    successResponse(res, result, "Social login successful");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const result = await authService.deleteAccount(req.user.id);
+    successResponse(res, result, "Account deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+

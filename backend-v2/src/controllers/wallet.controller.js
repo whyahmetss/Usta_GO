@@ -74,7 +74,7 @@ export const walletController = {
             amount: amt,
             type: 'TOPUP',
             status: 'COMPLETED',
-            description: `Bakiye yükleme: ${amt} TL`,
+            description: `Hizmet kredisi yükleme: ${amt} TL`,
           },
         }),
       ]);
@@ -142,7 +142,7 @@ export const walletController = {
       const msg = success
         ? `${Number(amount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.`
         : (errorMsg || 'Ödeme işlemi tamamlanamadı.');
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Hizmet Hesabıma Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
       return res.send(html);
     };
     try {
@@ -189,7 +189,7 @@ export const walletController = {
             amount: paidPrice,
             type: 'TOPUP',
             status: 'COMPLETED',
-            description: `Bakiye yükleme (iyzico): ${paidPrice} TL`,
+            description: `Hizmet kredisi yükleme (iyzico): ${paidPrice} TL`,
           },
         }),
       ]);
@@ -259,7 +259,7 @@ export const walletController = {
       const msg = success
         ? `${Number(amount).toLocaleString('tr-TR')} TL hesabınıza yüklendi.`
         : (errorMsg || 'Ödeme işlemi tamamlanamadı.');
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Cüzdana Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body style="font-family:system-ui,sans-serif;max-width:400px;margin:60px auto;padding:24px;text-align:center"><h2>${title}</h2><p>${msg}</p><p><a href="${walletUrl}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold">Hizmet Hesabıma Dön</a></p>${!success ? `<p><a href="${odemeUrl}">Tekrar Dene</a></p>` : ''}</body></html>`;
       return res.send(html);
     };
 
@@ -296,7 +296,7 @@ export const walletController = {
             amount: paidPrice,
             type: 'TOPUP',
             status: 'COMPLETED',
-            description: `Bakiye yükleme (3DS): ${paidPrice} TL`,
+            description: `Hizmet kredisi yükleme (3DS): ${paidPrice} TL`,
           },
         }),
       ]);
@@ -423,7 +423,7 @@ export const walletController = {
           where: { id: matchedTx.id },
           data: {
             status: 'COMPLETED',
-            description: `Bakiye yükleme (Shopier): ${paidAmount} TL [shopier:${shopierOrderId}]`,
+            description: `Hizmet kredisi yükleme (Shopier): ${paidAmount} TL [shopier:${shopierOrderId}]`,
           },
         }),
       ]);

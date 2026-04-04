@@ -155,7 +155,7 @@ function ProfilePage() {
             <Wallet size={20} className="text-primary-500" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 dark:text-white text-sm">Cüzdanım</p>
+            <p className="font-semibold text-gray-900 dark:text-white text-sm">Hizmet Hesabım</p>
             <p className="text-xs text-gray-400">Bakiye ve kuponlar</p>
           </div>
           <ChevronRight size={16} className="text-gray-400" />

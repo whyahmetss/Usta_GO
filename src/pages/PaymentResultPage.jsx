@@ -45,7 +45,7 @@ const PaymentResultPage = () => {
             onClick={() => navigate('/wallet')}
             className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98] transition"
           >
-            Cüzdana Dön
+            Hizmet Hesabıma Dön
           </button>
           {!isSuccess && (
             <button

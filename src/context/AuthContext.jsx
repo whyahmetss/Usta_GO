@@ -263,6 +263,62 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const socialLogin = useCallback(async (provider, idToken, name, email) => {
+    try {
+      setError(null)
+      const response = await fetchAPI(API_ENDPOINTS.AUTH.SOCIAL_LOGIN, {
+        method: 'POST',
+        body: { provider, idToken, name, email },
+        includeAuth: false
+      })
+
+      if (response.data && response.data.token) {
+        setToken(response.data.token)
+        const mappedUser = mapUserFromBackend(response.data.user)
+        setStoredUser(mappedUser)
+        setUser(mappedUser)
+        setUseLocalStorage(false)
+        return { success: true, role: mappedUser.role }
+      }
+
+      return { success: false, error: response.message || 'Sosyal giriş başarısız' }
+    } catch (err) {
+      const errorMsg = err.message || 'Sosyal giriş başarısız oldu'
+      setError(errorMsg)
+      console.error('Social login error:', err)
+      return { success: false, error: errorMsg }
+    }
+  }, [])
+
+  const deleteAccount = useCallback(async () => {
+    try {
+      setError(null)
+      const response = await fetchAPI(API_ENDPOINTS.AUTH.DELETE_ACCOUNT, {
+        method: 'DELETE',
+      })
+
+      if (response.data || response.success) {
+        // Hesap silindikten sonra çıkış yap
+        removeToken()
+        removeStoredUser()
+        setUser(null)
+        setJobs([])
+        setMessages([])
+        setNotifications([])
+        setTransactions([])
+        setWithdrawals([])
+        return { success: true, message: response.data?.message || 'Hesabınız silindi' }
+      }
+
+      return { success: false, error: response.message || 'Hesap silinemedi' }
+    } catch (err) {
+      const errorMsg = err.message || 'Hesap silme işlemi başarısız'
+      setError(errorMsg)
+      console.error('Delete account error:', err)
+      return { success: false, error: errorMsg }
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     try {
       // Disconnect socket
@@ -1075,6 +1131,8 @@ export function AuthProvider({ children }) {
       user,
       login,
       register,
+      socialLogin,
+      deleteAccount,
       logout,
       isLoading,
       error,

@@ -6,7 +6,7 @@ import { API_ENDPOINTS } from '../config'
 import {
   User, Phone, Mail, Lock, Gift, Eye, EyeOff, Calendar,
   CreditCard, FileText, MapPin, Building2, Camera,
-  CheckCircle, ChevronLeft, Upload, AlertCircle,
+  CheckCircle, ChevronLeft, Upload, AlertCircle, ShieldCheck,
 } from 'lucide-react'
 
 const DOC_FIELDS = [
@@ -288,6 +288,22 @@ export default function UstaRegisterPage() {
                 {DOC_FIELDS.map(field => (
                   <DocCard key={field.id} field={field} file={docs[field.id] || null} onChange={file => setDocs(prev => ({ ...prev, [field.id]: file }))} />
                 ))}
+              </div>
+
+              {/* KVKK Uyarı Metni */}
+              <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 mb-4">
+                <div className="flex gap-3">
+                  <ShieldCheck size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-blue-800 dark:text-blue-300">Kişisel Verilerin Korunması</p>
+                    <p className="text-[11px] text-blue-700 dark:text-blue-400 mt-1 leading-relaxed">
+                      Yüklediğiniz belgeler 6698 sayılı KVKK kapsamında güvenle saklanmakta olup yalnızca hesap doğrulama amacıyla kullanılacaktır. Detaylı bilgi için{' '}
+                      <a href="/aydinlatma-metni" target="_blank" className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200 transition">
+                        Aydınlatma Metni
+                      </a>'ni inceleyebilirsiniz.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {error && (

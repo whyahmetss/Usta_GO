@@ -402,7 +402,7 @@ function CreateJobPage() {
                 <>
                   <div className={`rounded-2xl p-4 border ${insufficient ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800' : 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'}`}>
                     <div className="flex justify-between items-center">
-                      <span className={`text-sm font-medium ${insufficient ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>Cüzdan Bakiyeniz</span>
+                      <span className={`text-sm font-medium ${insufficient ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>Hizmet Kredisi Bakiyeniz</span>
                       <span className={`font-bold text-base ${insufficient ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{userBalance.toLocaleString('tr-TR')} TL</span>
                     </div>
                     {insufficient && (
@@ -414,7 +414,7 @@ function CreateJobPage() {
                           onClick={() => navigate('/wallet')}
                           className="mt-2 w-full py-2 bg-rose-500 text-white rounded-xl font-semibold text-xs active:scale-[0.98] transition"
                         >
-                          Bakiye Yükle
+                          Hizmet Kredisi Al
                         </button>
                       </>
                     )}

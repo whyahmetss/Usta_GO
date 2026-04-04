@@ -68,7 +68,7 @@ function WalletPage() {
           ...earningTxs.map(t => ({ id: t.id, description: t.description || 'İş Kazancı', amount: Number(t.amount) || 0, date: t.createdAt })),
           ...withdrawalTxs.map(t => ({ id: t.id, description: `Para Çekme${t.bankName ? ` - ${t.bankName}` : ''}`, amount: -(Number(t.amount) || 0), date: t.createdAt })),
         ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)))
-      } catch (err) { console.error('Cüzdan yükleme hatası:', err) }
+      } catch (err) { console.error('Hizmet hesabı yükleme hatası:', err) }
       finally { setLoading(false) }
     }
     if (user) loadWalletData()
@@ -87,14 +87,14 @@ function WalletPage() {
   if (!WALLET_ENABLED) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
-        <PageHeader title="Cüzdan" />
+        <PageHeader title="Hizmet Hesabım" />
         <div className="flex flex-col items-center justify-center px-6 pt-20 pb-10 text-center">
           <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-3xl flex items-center justify-center mb-5">
             <Lock size={36} className="text-primary-400" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Yakında Geliyor</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
-            Cüzdan ve ödeme sistemi çok yakında aktif olacak. Haberdar olmak için bizi takip etmeyi unutma!
+            Hizmet hesabı ve ödeme sistemi çok yakında aktif olacak. Haberdar olmak için bizi takip etmeyi unutma!
           </p>
           <div className="mt-6 px-5 py-2.5 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
             <p className="text-xs font-semibold text-primary-600 dark:text-primary-400">Yakında Aktif</p>
@@ -146,14 +146,14 @@ function WalletPage() {
 
     return (
       <div>
-        <PageHeader title="Cüzdan" />
+        <PageHeader title="Hizmet Hesabım" />
         <div className="px-4 py-4 space-y-4">
           {/* Balance */}
           <Card className="!bg-gradient-to-br from-primary-500 to-accent-500 !border-0 text-white" padding="p-5">
-            <p className="text-white/70 text-xs font-medium mb-1">Hesap Bakiyesi</p>
+            <p className="text-white/70 text-xs font-medium mb-1">Hizmet Kredisi</p>
             <h2 className="text-3xl font-bold mb-4">{customerBalance.toLocaleString('tr-TR')} TL</h2>
             <button onClick={() => navigate('/odeme')} className="w-full py-3 bg-white text-primary-600 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition text-sm">
-              <CreditCard size={16} /> Bakiye Yükle
+              <CreditCard size={16} /> Hizmet Kredisi Al
             </button>
           </Card>
 
@@ -261,7 +261,7 @@ function WalletPage() {
 
             {showPackageSelection && (
               <div className="space-y-3">
-                <p className="text-[10px] text-gray-400 text-center">Paketinizi seçin — ücret cüzdanınızdan düşülür</p>
+                <p className="text-[10px] text-gray-400 text-center">Paketinizi seçin — ücret hizmet hesabınızdan düşülür</p>
                 {PACKAGES.map(pkg => (
                   <div key={pkg.id} className={`border rounded-xl p-4 ${pkg.border}`}>
                     <div className="flex items-center gap-2 mb-2">
@@ -302,7 +302,7 @@ function WalletPage() {
                         {isCredit ? <ArrowDownCircle size={16} className="text-emerald-500" /> : <ShoppingCart size={16} className="text-rose-500" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{tx.description || tx.note || (isCredit ? 'Bakiye Yüklendi' : 'Ödeme')}</p>
+                        <p className="font-medium text-gray-900 dark:text-white text-xs truncate">{tx.description || tx.note || (isCredit ? 'Hizmet Kredisi Yüklendi' : 'Ödeme')}</p>
                         <p className="text-[10px] text-gray-300">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('tr-TR') : ''}</p>
                       </div>
                       <p className={`font-bold text-xs shrink-0 ${isCredit ? 'text-emerald-600' : 'text-rose-500'}`}>
@@ -317,7 +317,7 @@ function WalletPage() {
 
           <Card onClick={() => navigate('/odeme')} className="flex items-center gap-3 !p-3.5">
             <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center shrink-0"><CreditCard size={18} className="text-white" /></div>
-            <div className="flex-1"><p className="font-semibold text-gray-900 dark:text-white text-sm">Bakiye Yükle</p><p className="text-[10px] text-gray-400">Kredi kartı ile hızlı yükleme</p></div>
+            <div className="flex-1"><p className="font-semibold text-gray-900 dark:text-white text-sm">Hizmet Kredisi Al</p><p className="text-[10px] text-gray-400">Kredi kartı ile hızlı yükleme</p></div>
             <ChevronRight size={16} className="text-gray-300" />
           </Card>
         </div>
@@ -328,7 +328,7 @@ function WalletPage() {
   // Professional View
   return (
     <div>
-      <PageHeader title="Usta Cüzdanı" />
+      <PageHeader title="Hizmet Hesabım" />
       <div className="px-4 py-4 space-y-4">
         <Card className="!bg-gradient-to-br from-emerald-500 to-accent-500 !border-0 text-white" padding="p-5">
           <p className="text-white/70 text-xs font-medium mb-1">Çekilebilir Bakiye</p>

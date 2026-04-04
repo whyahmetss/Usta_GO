@@ -78,7 +78,7 @@ function VirtualCard({ amount, holderName, cardNumber, expiry, cvc, flipped }) {
           <div className="relative flex items-start justify-between px-6 pt-5">
             <div>
               <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">Usta Go</p>
-              <p className="text-white font-black text-lg tracking-tight">Cüzdan</p>
+              <p className="text-white font-black text-lg tracking-tight">Hizmet Hesabım</p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <ContactlessSVG />
@@ -137,7 +137,7 @@ function VirtualCard({ amount, holderName, cardNumber, expiry, cvc, flipped }) {
 
           <div className="px-6 mt-6">
             <p className="text-white/30 text-[10px] leading-relaxed">
-              Bu kart Usta Go Cüzdan bakiye yükleme işlemi için kullanılmaktadır. 
+              Bu kart Usta Go hizmet kredisi yükleme işlemi için kullanılmaktadır. 
               İşlem iyzico 3D Secure altyapısı ile güvence altındadır.
             </p>
           </div>
@@ -238,7 +238,7 @@ function HavaleTalimat({ tutar, ibanBilgi, onClose, navigate }) {
             className="w-full py-4 rounded-2xl font-black text-white text-base"
             style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' }}
           >
-            Cüzdana Dön
+            Hizmet Hesabıma Dön
           </button>
         </div>
       </div>
@@ -384,7 +384,10 @@ const Odeme = () => {
   const [success, setSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
   const [ibanBilgi, setIbanBilgi] = useState(null);
+  const [mesafeliSatis, setMesafeliSatis] = useState(false);
+  const [onBilgilendirme, setOnBilgilendirme] = useState(false);
 
+  const legalAccepted = mesafeliSatis && onBilgilendirme;
 
   const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
 
@@ -441,7 +444,7 @@ const Odeme = () => {
           </p>
           <p className="text-white/40 text-sm mb-10">Bakiyeniz güncellendi</p>
           <button onClick={() => navigate('/wallet')} className="px-10 py-4 bg-white text-[#1a103d] rounded-2xl font-bold text-base shadow-xl active:scale-95 transition">
-            Cüzdana Dön
+            Hizmet Hesabıma Dön
           </button>
         </div>
       </div>
@@ -459,7 +462,7 @@ const Odeme = () => {
             </svg>
           </button>
           <div>
-            <h1 className="text-white font-black text-xl">Bakiye Yükle</h1>
+            <h1 className="text-white font-black text-xl">Hizmet Kredisi Al</h1>
             <p className="text-white/40 text-xs">Güvenli kart ödemesi</p>
           </div>
         </div>
@@ -508,6 +511,32 @@ const Odeme = () => {
             </div>
           )}
 
+          {/* Yasal Onay Checkbox'ları */}
+          <div className="space-y-3 mb-5">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={mesafeliSatis}
+                onChange={(e) => setMesafeliSatis(e.target.checked)}
+                className="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 dark:border-white/20 text-purple-600 focus:ring-purple-500 shrink-0 accent-purple-600"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                <a href="/mesafeli-satis-sozlesmesi" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={onBilgilendirme}
+                onChange={(e) => setOnBilgilendirme(e.target.checked)}
+                className="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 dark:border-white/20 text-purple-600 focus:ring-purple-500 shrink-0 accent-purple-600"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                <a href="/on-bilgilendirme-formu" target="_blank" className="text-purple-500 underline font-semibold hover:text-purple-700 transition">Ön Bilgilendirme Formu</a>'nu okudum ve kabul ediyorum.
+              </span>
+            </label>
+          </div>
+
           {/* Ödeme Yöntemi Seçimi */}
           <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3 mt-2">
             Ödeme Yöntemi
@@ -536,7 +565,7 @@ const Odeme = () => {
                 }
                 setYontem('havale');
               }}
-              disabled={finalAmount < 10}
+              disabled={finalAmount < 10 || !legalAccepted}
               className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition font-semibold text-sm ${
                 yontem === 'havale'
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
@@ -561,7 +590,7 @@ const Odeme = () => {
 
             <button
               onClick={handleShopierPay}
-              disabled={loading || finalAmount < 10}
+              disabled={loading || finalAmount < 10 || !legalAccepted}
               className="relative w-full py-4 rounded-2xl font-black text-white text-base overflow-hidden active:scale-[0.98] transition disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
             >

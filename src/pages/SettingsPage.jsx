@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2 } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -16,7 +16,7 @@ const themeOptions = [
 ]
 
 function SettingsPage() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, deleteAccount } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -32,6 +32,8 @@ function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const handlePasswordChange = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -336,7 +338,71 @@ function SettingsPage() {
             <span className="text-gray-400">→</span>
           </div>
         </Card>
+
+        {/* Hesabımı Sil */}
+        <Card padding="p-4">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full flex items-center gap-3"
+          >
+            <div className="w-9 h-9 bg-rose-50 dark:bg-rose-500/10 rounded-xl flex items-center justify-center">
+              <Trash2 size={18} className="text-rose-500" />
+            </div>
+            <div className="text-left">
+              <span className="font-semibold text-rose-600 dark:text-rose-400 text-sm">Hesabımı Sil</span>
+              <p className="text-[10px] text-gray-400">Tüm kişisel verileriniz KVKK uyarınca silinir</p>
+            </div>
+          </button>
+        </Card>
       </div>
+
+      {/* Hesap Silme Onay Modalı */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="text-center mb-5">
+              <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={28} className="text-rose-500" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">Hesabınızı Silmek İstediğinize Emin Misiniz?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                Bu işlem geri alınamaz. Kişisel verileriniz (ad, telefon, adres) KVKK uyarınca kalıcı olarak temizlenecektir.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  setDeletingAccount(true)
+                  const result = await deleteAccount()
+                  setDeletingAccount(false)
+                  if (result.success) {
+                    navigate('/auth')
+                  } else {
+                    alert(result.error || 'Hesap silinemedi')
+                    setShowDeleteConfirm(false)
+                  }
+                }}
+                disabled={deletingAccount}
+                className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-sm transition disabled:opacity-50"
+              >
+                {deletingAccount ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Siliniyor...
+                  </span>
+                ) : 'Evet, Hesabımı Sil'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deletingAccount}
+                className="w-full py-3.5 bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300 rounded-2xl font-semibold text-sm transition"
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -70,10 +70,10 @@ export const initializeCheckoutForm = (params, callbackUrl) => {
       basketItems: [
         {
           id: "BI001",
-          name: "Cüzdan Bakiye Yükleme",
-          category1: "Dijital",
-          category2: "Bakiye",
-          itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
+          name: "Hizmet Kredisi Yükleme",
+          category1: "Fiziksel Hizmet",
+          category2: "Ev Hizmetleri",
+          itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
           price: priceStr,
         },
       ],
@@ -154,10 +154,10 @@ export const initiate3DSPayment = (params, callbackUrl) => {
       basketItems: [
         {
           id: 'BI001',
-          name: 'Cüzdan Bakiye Yükleme',
-          category1: 'Dijital',
-          category2: 'Bakiye',
-          itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
+          name: 'Hizmet Kredisi Yükleme',
+          category1: 'Fiziksel Hizmet',
+          category2: 'Ev Hizmetleri',
+          itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
           price: priceStr,
         },
       ],
