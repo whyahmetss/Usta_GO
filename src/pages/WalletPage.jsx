@@ -406,9 +406,11 @@ function WalletPage() {
         </div>
 
         {/* Vergi Uyarısı */}
-        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30 rounded-xl px-4 py-3">
-          <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-            ⚠️ Kazançlarınızdan doğan vergi yükümlülüğü ustaya aittir. Para çekme işlemlerinde yasal kesintiler (stopaj) yapıldıktan sonra net tutar hesabınıza aktarılır. Platform komisyon oranı: %12.
+        <div className={`${user?.hasVergiLevhasi ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-700/30' : 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-700/30'} border rounded-xl px-4 py-3`}>
+          <p className={`text-[11px] leading-relaxed ${user?.hasVergiLevhasi ? 'text-blue-700 dark:text-blue-400' : 'text-amber-700 dark:text-amber-400'}`}>
+            {user?.hasVergiLevhasi
+              ? '✅ Vergi levhanız olduğu için para çekimlerinde stopaj kesilmez. İşlerinize ait faturayı kendiniz kesmelisiniz. Platform komisyon oranı: %12.'
+              : '⚠️ Kazançlarınızdan doğan vergi yükümlülüğü ustaya aittir. Para çekimlerinde %20 gelir vergisi stopajı kesilir, platform adınıza gider pusulası düzenler. Komisyon oranı: %12.'}
           </p>
         </div>
       </div>

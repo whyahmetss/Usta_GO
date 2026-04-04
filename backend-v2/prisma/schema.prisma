@@ -38,6 +38,7 @@ model User {
   ratings   Float      @default(0)
   balance   Float      @default(0)
   isActive  Boolean    @default(true)  // Usta: iş almayı aç/kapat
+  hasVergiLevhasi Boolean @default(false) // Usta: vergi levhası var mı (varsa stopaj kesilmez)
 
   // Push Notifications
   fcmToken  String?   // Firebase Cloud Messaging token

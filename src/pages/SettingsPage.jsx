@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2 } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2, FileText } from 'lucide-react'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
@@ -34,6 +34,35 @@ function SettingsPage() {
   const [success, setSuccess] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [hasVergiLevhasi, setHasVergiLevhasi] = useState(user?.hasVergiLevhasi ?? false)
+  useEffect(() => {
+    if (user?.hasVergiLevhasi !== undefined) setHasVergiLevhasi(user.hasVergiLevhasi)
+  }, [user?.hasVergiLevhasi])
+
+  const handleToggleVergi = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const newVal = !hasVergiLevhasi
+      const res = await fetchAPI(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
+        method: 'PUT',
+        body: { hasVergiLevhasi: newVal }
+      })
+      setHasVergiLevhasi(newVal)
+      const patched = mapUserFromBackend(res.data || res)
+      setUser(prev => {
+        const merged = prev ? { ...prev, ...patched, hasVergiLevhasi: newVal } : patched
+        setStoredUser(merged)
+        return merged
+      })
+      setSuccess(newVal ? 'Vergi levhası durumu aktif edildi. Stopaj kesilmeyecek.' : 'Bireysel çalışan olarak işaretlendiniz. %20 stopaj kesilecek.')
+      setTimeout(() => setSuccess(null), 4000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handlePasswordChange = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -257,6 +286,41 @@ function SettingsPage() {
                     : 'Kayıt sırasında yüklenen belgeler incelenmektedir.'}
                 </p>
               </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Vergi Durumu (Sadece Usta için) */}
+        {user?.role === 'professional' && (
+          <Card padding="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 ${hasVergiLevhasi ? 'bg-blue-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center`}>
+                  <FileText size={24} className={hasVergiLevhasi ? 'text-blue-600' : 'text-gray-400'} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Vergi Durumu</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {hasVergiLevhasi ? 'Vergi levham var — Stopaj kesilmez' : 'Bireysel çalışan — %20 stopaj kesilir'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleVergi}
+                disabled={loading}
+                className={`relative w-16 h-8 rounded-full transition ${
+                  hasVergiLevhasi ? 'bg-blue-500' : 'bg-gray-300'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
+                  hasVergiLevhasi ? 'translate-x-9' : 'translate-x-1'
+                }`}></div>
+              </button>
+            </div>
+            <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${hasVergiLevhasi ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>
+              {hasVergiLevhasi
+                ? '✅ Vergi levhanız olduğu için para çekimlerinde stopaj kesilmeyecektir. İşlerinize ait faturayı kendiniz kesmelisiniz.'
+                : '⚠️ Vergi levhanız yoksa, para çekimlerinde brüt tutar üzerinden %20 gelir vergisi stopajı kesilir. Platform adınıza gider pusulası düzenler.'}
             </div>
           </Card>
         )}

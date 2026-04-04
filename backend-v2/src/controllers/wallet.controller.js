@@ -35,9 +35,10 @@ export const walletController = {
       // USTA: use user's balance (already net of commission) as earnings base
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { balance: true },
+        select: { balance: true, hasVergiLevhasi: true },
       });
       const totalEarnings = Number(user?.balance) || 0;
+      const hasVergiLevhasi = !!user?.hasVergiLevhasi;
 
       const pendingAgg = await prisma.transaction.aggregate({
         _sum: { amount: true },
@@ -49,7 +50,7 @@ export const walletController = {
       });
 
       const balance = totalEarnings - (pendingAgg._sum.amount || 0) - (approvedAgg._sum.amount || 0);
-      res.json({ success: true, data: { balance, pendingWithdrawal: pendingAgg._sum.amount || 0, totalEarnings, commissionRate: 0.12, taxRate: 0.20 } });
+      res.json({ success: true, data: { balance, pendingWithdrawal: pendingAgg._sum.amount || 0, totalEarnings, commissionRate: 0.12, taxRate: hasVergiLevhasi ? 0 : 0.20, hasVergiLevhasi } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -542,8 +543,14 @@ export const walletController = {
       if (!amount || amount <= 0) return res.status(400).json({ success: false, error: 'Geçerli bir tutar giriniz' });
       if (!bankName || !iban || !accountHolder) return res.status(400).json({ success: false, error: 'Banka bilgileri eksik' });
 
+      // Vergi levhası kontrolü — varsa stopaj kesilmez
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { hasVergiLevhasi: true },
+      });
+
       const grossAmount = Number(amount);
-      const TAX_RATE = 0.20; // %20 gelir vergisi stopajı
+      const TAX_RATE = user?.hasVergiLevhasi ? 0 : 0.20; // Vergi levhalı: %0, Bireysel: %20
       const taxAmount = Math.round(grossAmount * TAX_RATE);
       const netAmount = grossAmount - taxAmount;
 
@@ -559,10 +566,11 @@ export const walletController = {
             taxRate: TAX_RATE,
             taxAmount,
             netAmount,
+            hasVergiLevhasi: !!user?.hasVergiLevhasi,
           })
         }
       });
-      res.json({ success: true, data: { ...transaction, grossAmount, taxRate: TAX_RATE, taxAmount, netAmount } });
+      res.json({ success: true, data: { ...transaction, grossAmount, taxRate: TAX_RATE, taxAmount, netAmount, hasVergiLevhasi: !!user?.hasVergiLevhasi } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }

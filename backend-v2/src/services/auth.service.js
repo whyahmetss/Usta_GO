@@ -282,6 +282,7 @@ export const getUserProfile = async (userId) => {
       id: true, name: true, email: true, role: true, phone: true,
       bio: true, profileImage: true, ratings: true, balance: true,
       isActive: true, referralCode: true, status: true, birthDate: true, createdAt: true, updatedAt: true,
+      hasVergiLevhasi: true,
     },
   });
 
@@ -317,6 +318,7 @@ export const getUserProfile = async (userId) => {
         id: true, name: true, email: true, role: true, phone: true,
         bio: true, profileImage: true, ratings: true, balance: true,
         isActive: true, referralCode: true, status: true, birthDate: true, createdAt: true, updatedAt: true,
+        hasVergiLevhasi: true,
       },
     });
   }
@@ -338,7 +340,7 @@ export const saveFcmToken = async (userId, fcmToken) => {
 };
 
 export const updateUserProfile = async (userId, data) => {
-  const allowed = ['name', 'phone', 'bio', 'profileImage', 'isActive'];
+  const allowed = ['name', 'phone', 'bio', 'profileImage', 'isActive', 'hasVergiLevhasi'];
   const sanitized = Object.fromEntries(
     Object.entries(data).filter(([k]) => allowed.includes(k))
   );
@@ -348,6 +350,7 @@ export const updateUserProfile = async (userId, data) => {
     select: {
       id: true, name: true, email: true, role: true, phone: true,
       bio: true, profileImage: true, isActive: true, referralCode: true,
+      hasVergiLevhasi: true,
     },
   });
   return user;

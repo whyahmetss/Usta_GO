@@ -188,29 +188,52 @@ function WithdrawPage() {
           </div>
         </Card>
 
-        {/* Stopaj Dökümü */}
-        {amount && parseInt(amount) >= minWithdrawal && (
-          <Card padding="p-5" className="!border-emerald-200 !bg-emerald-50/50 dark:!bg-emerald-900/10">
-            <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center gap-2">
+        {/* Şeffaf Ödeme Dökümü */}
+        {amount && parseInt(amount) >= minWithdrawal && (() => {
+          const brut = parseInt(amount)
+          const vergiLevhali = user?.hasVergiLevhasi
+          const stopajOran = vergiLevhali ? 0 : 0.20
+          const stopajTutar = Math.round(brut * stopajOran)
+          const net = brut - stopajTutar
+          return (
+          <Card padding="p-5" className="!border-2 !border-emerald-200 !bg-gradient-to-b !from-emerald-50/80 !to-white dark:!from-emerald-900/10 dark:!to-transparent">
+            <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-4 flex items-center gap-2">
               <Info size={16} className="text-emerald-600" />
-              Ödeme Dökümü
+              Şeffaf Ödeme Dökümü
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Brüt Tutar</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{parseInt(amount).toLocaleString('tr-TR')} TL</span>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Çekim Tutarı</span>
+                <span className="font-bold text-gray-900 dark:text-white">{brut.toLocaleString('tr-TR')} TL</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Gelir Vergisi Stopajı (%20)</span>
-                <span className="font-semibold text-rose-600">-{Math.round(parseInt(amount) * 0.20).toLocaleString('tr-TR')} TL</span>
+              <div className="flex justify-between items-center text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-white/5 rounded-lg px-3 py-2">
+                <span>Platform Komisyonu (%12)</span>
+                <span>Kazanç anında kesilmiştir ✓</span>
               </div>
-              <div className="border-t border-emerald-200 dark:border-emerald-800 pt-2 flex justify-between">
-                <span className="font-bold text-gray-900 dark:text-white">Net Ödeme</span>
-                <span className="font-black text-emerald-600 text-lg">{Math.round(parseInt(amount) * 0.80).toLocaleString('tr-TR')} TL</span>
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Yasal Stopaj </span>
+                  <span className={`text-xs font-semibold ${vergiLevhali ? 'text-blue-500' : 'text-rose-500'}`}>
+                    ({vergiLevhali ? '%0 — Vergi levhalı' : '%20 — Bireysel'})
+                  </span>
+                </div>
+                <span className={`font-semibold ${stopajTutar > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  {stopajTutar > 0 ? `-${stopajTutar.toLocaleString('tr-TR')}` : '0'} TL
+                </span>
+              </div>
+              <div className="border-t-2 border-emerald-200 dark:border-emerald-800 pt-3 flex justify-between items-center">
+                <span className="font-black text-gray-900 dark:text-white">Hesabınıza Yatacak</span>
+                <span className="font-black text-emerald-600 text-xl">{net.toLocaleString('tr-TR')} TL</span>
               </div>
             </div>
+            {!vergiLevhali && brut >= 500 && (
+              <p className="text-[10px] text-gray-400 mt-3">
+                💡 Vergi levhanız varsa Ayarlar → Vergi Durumu'ndan belirtin, stopaj kesilmez.
+              </p>
+            )}
           </Card>
-        )}
+          )
+        })()}
 
         {/* Önemli Bilgiler */}
         <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700/40 rounded-2xl p-5">
@@ -227,14 +250,23 @@ function WithdrawPage() {
                   <span className="mt-0.5">•</span>
                   <span><strong>İşlem süresi 1-3 iş günüdür.</strong></span>
                 </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="mt-0.5">•</span>
-                  <span>Brüt tutar üzerinden <strong>%20 gelir vergisi stopajı</strong> kesilerek net tutar hesabınıza aktarılır.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="mt-0.5">•</span>
-                  <span>Kazançlarınızdan doğan vergi yükümlülüğü ustaya aittir. Platform, gider pusulası düzenleyerek yasal kesintileri yapar.</span>
-                </li>
+                {user?.hasVergiLevhasi ? (
+                  <li className="flex items-start gap-1.5">
+                    <span className="mt-0.5">•</span>
+                    <span>Vergi levhanız olduğu için stopaj kesilmez. <strong>İşlerinize ait faturayı kendiniz kesmelisiniz.</strong></span>
+                  </li>
+                ) : (
+                  <>
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-0.5">•</span>
+                      <span>Brüt tutar üzerinden <strong>%20 gelir vergisi stopajı</strong> kesilerek net tutar hesabınıza aktarılır.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-0.5">•</span>
+                      <span>Kazançlarınızdan doğan vergi yükümlülüğü ustaya aittir. Platform adınıza gider pusulası düzenler.</span>
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
           </div>
