@@ -131,10 +131,14 @@ function AppRoutes() {
 }
 
 function AppWithOnboarding() {
+  const { user } = useAuth()
   const [splashDone, setSplashDone] = useState(false)
   const [onboardingDone, setOnboardingDone] = useState(
     () => !!localStorage.getItem('ug_onboarding_done')
   )
+
+  // Giriş yapmamış kullanıcıya splash/onboarding gösterme — direkt landing/auth göster
+  if (!user) return <AppRoutes />
 
   if (!splashDone)     return <SplashScreen onDone={() => setSplashDone(true)} />
   if (!onboardingDone) return <OnboardingScreen onDone={() => setOnboardingDone(true)} />
