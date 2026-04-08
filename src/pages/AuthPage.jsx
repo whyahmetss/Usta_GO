@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import logoAdmin from '../assets/logo-admin.png'
+import logoAdmin from '../assets/main-logo.png'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { User, Eye, EyeOff, Phone, Mail, Lock, Gift, Calendar, ShieldCheck, Clock, BadgeCheck, ArrowLeft, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'

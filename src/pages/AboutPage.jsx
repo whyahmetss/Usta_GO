@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Star, Users, Zap, FileText, Shield, Code2 } from 'lucide-react'
-import logoAdmin from '../assets/logo-admin.png'
+import logoAdmin from '../assets/main-logo.png'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 

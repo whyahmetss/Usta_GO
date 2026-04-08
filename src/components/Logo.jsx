@@ -1,8 +1,4 @@
-import { useAuth } from '../context/AuthContext'
-import logoCustomer from '../assets/logo-customer.png'
-import logoProfessional from '../assets/logo-professional.png'
-import logoAdmin from '../assets/logo-admin.png'
-import logoDefault from '../assets/logo-default.png'
+import mainLogo from '../assets/main-logo.png'
 
 const sizeMap = {
     xs: 'w-8 h-8',    // Eskiden w-8 idi, artık daha görünür
@@ -13,13 +9,7 @@ const sizeMap = {
   }
 
 export default function Logo({ size = 'md', className = '' }) {
-  const { user } = useAuth()
-  const role = user?.role
-
-  let src = logoDefault
-  if (role === 'customer' || role === 'CUSTOMER') src = logoCustomer
-  else if (role === 'professional' || role === 'USTA') src = logoProfessional
-  else if (role === 'admin' || role === 'ADMIN') src = logoAdmin
+  const src = mainLogo
 
   return (
     <img
