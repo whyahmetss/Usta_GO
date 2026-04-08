@@ -494,7 +494,19 @@ const Odeme = () => {
     try {
       const [expMonth, expYear] = payExpiry.split('/');
       const cleanNum = payNum.replace(/\s/g, '');
-      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_INIT, {
+
+      // Save card if requested (before potential redirect)
+      if (saveCard && !useSaved) {
+        saveCardToLocal({
+          number: cleanNum,
+          holder: payHolder,
+          expiry: payExpiry,
+          last4: cleanNum.slice(-4),
+        });
+      }
+
+      // 3D Secure ödeme — kart bilgileriyle TOPUP_3DS endpoint'i
+      const res = await fetchAPI(API_ENDPOINTS.WALLET.TOPUP_3DS, {
         method: 'POST',
         body: {
           amount: finalAmount,
@@ -507,24 +519,16 @@ const Odeme = () => {
         skipAutoLogout: true,
       });
 
-      // Save card if requested (before potential redirect)
-      if (saveCard && !useSaved) {
-        saveCardToLocal({
-          number: cleanNum,
-          holder: payHolder,
-          expiry: payExpiry,
-          last4: cleanNum.slice(-4),
-        });
-      }
-
-      if (res?.success && res?.data?.threeDSHtmlContent) {
-        const win = window.open('', '_self');
-        win.document.write(res.data.threeDSHtmlContent);
-        win.document.close();
+      if (res?.success && res?.data?.htmlContent) {
+        // Backend base64 encoded HTML döner — decode edip göster
+        const html = atob(res.data.htmlContent);
+        document.open();
+        document.write(html);
+        document.close();
         return;
       }
-      if (res?.success && res?.data?.paymentUrl) {
-        window.location.href = res.data.paymentUrl;
+      if (res?.success && res?.data?.paymentPageUrl) {
+        window.location.href = res.data.paymentPageUrl;
         return;
       }
       if (res?.success) {
