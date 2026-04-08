@@ -519,10 +519,10 @@ const Odeme = () => {
         skipAutoLogout: true,
       });
 
-      if (res?.success && res?.data?.htmlContent) {
-        // Backend base64 encoded HTML döner — decode edip göster
-        const html = atob(res.data.htmlContent);
-        document.open();
+      if (res?.success && res?.data?.threeDSHtmlContent) {
+        // 3DS HTML formu — sayfayı tamamen değiştir, iyzico sandbox formu auto-submit olacak
+        const html = res.data.threeDSHtmlContent;
+        document.open('text/html', 'replace');
         document.write(html);
         document.close();
         return;

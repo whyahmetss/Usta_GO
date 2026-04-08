@@ -237,8 +237,7 @@ export const walletController = {
       if (!result?.htmlContent) {
         return res.status(500).json({ success: false, error: '3DS HTML içeriği alınamadı. iyzico yapılandırmasını kontrol edin.' });
       }
-      const encoded = Buffer.from(result.htmlContent, 'utf8').toString('base64');
-      res.json({ success: true, data: { htmlContent: encoded, conversationId: result.conversationId } });
+      res.json({ success: true, data: { threeDSHtmlContent: result.htmlContent, conversationId: result.conversationId } });
     } catch (error) {
       console.error('topup3DSInit error:', error);
       const msg = (error.message || '').toLowerCase();
