@@ -8,6 +8,10 @@ function getSystemTheme() {
 
 function applyTheme(resolvedTheme) {
   const root = document.documentElement
+  if (root.getAttribute('data-force-light') === 'true') {
+    root.classList.remove('dark')
+    return
+  }
   if (resolvedTheme === 'dark') {
     root.classList.add('dark')
   } else {
