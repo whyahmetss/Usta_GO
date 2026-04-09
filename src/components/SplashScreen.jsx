@@ -1,171 +1,255 @@
 import { useEffect, useState } from 'react'
 
+const MESSAGES = [
+  'Ustanız Hazırlanıyor...',
+  'AI Fiyat Analizi Saniyeler İçinde...',
+  'En İyi Usta Eşleştiriliyor...',
+  'Hizmet Altyapısı Kuruluyor...',
+  'Akıllı Sistem Devrede...',
+]
+
 export default function SplashScreen({ onDone }) {
   const [phase, setPhase] = useState(0)
+  const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * MESSAGES.length))
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 400)
-    const t2 = setTimeout(() => setPhase(2), 2200)
-    const t3 = setTimeout(() => onDone?.(), 2800)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    const t1 = setTimeout(() => setPhase(1), 300)
+    const t2 = setTimeout(() => setMsgIdx(i => (i + 1) % MESSAGES.length), 1200)
+    const t3 = setTimeout(() => setPhase(2), 2400)
+    const t4 = setTimeout(() => onDone?.(), 3000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
   }, [onDone])
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 transition-opacity duration-500 ${phase === 2 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      {/* Arka plan daireler */}
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white transition-opacity duration-600 ${phase === 2 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+
+      {/* Subtle network background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-80px] right-[-80px] w-64 h-64 rounded-full bg-white/5" />
-        <div className="absolute bottom-[-60px] left-[-60px] w-80 h-80 rounded-full bg-white/5" />
-        <div className="absolute top-1/3 left-[-40px] w-40 h-40 rounded-full bg-white/5" />
+        <svg className="splash-net" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="glow1" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#0A66C2" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#0A66C2" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="400" height="800" fill="url(#glow1)" />
+          <line x1="40" y1="120" x2="180" y2="200" stroke="#0A66C2" strokeOpacity="0.06" strokeWidth="0.5" />
+          <line x1="220" y1="100" x2="360" y2="260" stroke="#C5930C" strokeOpacity="0.06" strokeWidth="0.5" />
+          <line x1="80" y1="500" x2="300" y2="620" stroke="#0A66C2" strokeOpacity="0.05" strokeWidth="0.5" />
+          <line x1="320" y1="400" x2="150" y2="550" stroke="#C5930C" strokeOpacity="0.05" strokeWidth="0.5" />
+          <circle cx="40" cy="120" r="2" fill="#0A66C2" opacity="0.1" />
+          <circle cx="180" cy="200" r="2" fill="#0A66C2" opacity="0.08" />
+          <circle cx="360" cy="260" r="1.5" fill="#C5930C" opacity="0.1" />
+          <circle cx="300" cy="620" r="2" fill="#0A66C2" opacity="0.06" />
+          <circle cx="150" cy="550" r="1.5" fill="#C5930C" opacity="0.08" />
+        </svg>
       </div>
 
-      <div className={`flex flex-col items-center transition-all duration-500 ${phase >= 0 ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+      <div className={`flex flex-col items-center transition-all duration-700 ${phase >= 1 ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-6 opacity-0 scale-95'}`}>
 
-        {/* Çekiç ikonu — kutu yok */}
-        <div className="relative w-28 h-28 mb-6 flex items-center justify-center">
-          <HammerIcon active={phase >= 1} />
+        {/* Central Gear + Orbiting Icons */}
+        <div className="splash-gear-wrap">
+          {/* Outer ring glow */}
+          <div className="splash-ring" />
+
+          {/* Main rotating gear */}
+          <svg className="splash-gear" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gearGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#D4A843" />
+                <stop offset="30%" stopColor="#E8C86A" />
+                <stop offset="60%" stopColor="#C49530" />
+                <stop offset="100%" stopColor="#A67C20" />
+              </linearGradient>
+              <linearGradient id="gearInner" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#E8D8A8" />
+                <stop offset="100%" stopColor="#C8A848" />
+              </linearGradient>
+              <filter id="gearShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#C5930C" floodOpacity="0.2" />
+              </filter>
+            </defs>
+            <g filter="url(#gearShadow)">
+              {/* Gear teeth */}
+              {[...Array(12)].map((_, i) => {
+                const angle = (i * 30) * Math.PI / 180
+                const x = 100 + 78 * Math.cos(angle)
+                const y = 100 + 78 * Math.sin(angle)
+                return <rect key={i} x={x - 8} y={y - 12} width="16" height="24" rx="3" fill="url(#gearGold)" transform={`rotate(${i * 30}, ${x}, ${y})`} />
+              })}
+              {/* Gear body */}
+              <circle cx="100" cy="100" r="65" fill="url(#gearGold)" />
+              <circle cx="100" cy="100" r="55" fill="url(#gearInner)" />
+              <circle cx="100" cy="100" r="52" fill="white" />
+              {/* Inner detail circle */}
+              <circle cx="100" cy="100" r="30" stroke="#C5930C" strokeWidth="1.5" strokeOpacity="0.3" fill="none" />
+              <circle cx="100" cy="100" r="18" stroke="#0A66C2" strokeWidth="1" strokeOpacity="0.2" fill="none" strokeDasharray="3 3" />
+              {/* Center bolt */}
+              <circle cx="100" cy="100" r="8" fill="url(#gearGold)" />
+              <circle cx="100" cy="100" r="4" fill="#B8892A" />
+            </g>
+          </svg>
+
+          {/* Orbiting tool icons */}
+          <div className="splash-orbit">
+            <div className="splash-orbit-icon" style={{ '--orbit-delay': '0s', '--orbit-start': '0deg' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0A66C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div className="splash-orbit-icon" style={{ '--orbit-delay': '-2.67s', '--orbit-start': '120deg' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#C5930C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+              </svg>
+            </div>
+            <div className="splash-orbit-icon" style={{ '--orbit-delay': '-5.34s', '--orbit-start': '240deg' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0A66C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18h6" /><path d="M10 22h4" />
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Data flow particles */}
+          <div className="splash-particles">
+            {[...Array(8)].map((_, i) => (
+              <span key={i} className="splash-particle" style={{ '--p-delay': `${i * 0.3}s`, '--p-angle': `${i * 45}deg` }} />
+            ))}
+          </div>
         </div>
 
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Usta Go</h1>
-        <p className="text-blue-200 text-sm font-medium">Profesyonel Ev Hizmetleri</p>
+        {/* Logo text */}
+        <div className="mt-6 flex flex-col items-center">
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: '#0A66C2' }}>
+            <span style={{ color: '#C5930C' }}>U</span>sta<span style={{ color: '#C5930C' }}>G</span>o
+          </h1>
+          <p className="text-[13px] font-medium text-gray-400 mt-0.5 tracking-wide">Ev İşleri Artık Daha Kolay</p>
+        </div>
 
-        {/* İlerleme çubuğu */}
-        <div className="mt-8 w-40 h-1.5 bg-white/20 rounded-full overflow-hidden">
+        {/* Progress bar */}
+        <div className="mt-8 w-52 h-[5px] bg-gray-100 rounded-full overflow-hidden relative">
           <div
-            className="h-full bg-white rounded-full transition-all ease-in-out"
+            className="h-full rounded-full transition-all ease-in-out"
             style={{
-              width: phase === 0 ? '15%' : phase === 1 ? '85%' : '100%',
-              transitionDuration: phase === 1 ? '1.6s' : '0.4s',
+              background: 'linear-gradient(90deg, #0A66C2, #C5930C)',
+              width: phase === 0 ? '10%' : phase === 1 ? '88%' : '100%',
+              transitionDuration: phase === 1 ? '2s' : '0.4s',
             }}
           />
+          {/* Gear end cap */}
+          <svg className="splash-bar-gear" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ left: phase === 0 ? '10%' : phase === 1 ? '88%' : '100%', transitionDuration: phase === 1 ? '2s' : '0.4s' }}>
+            <circle cx="12" cy="12" r="10" fill="#C5930C" />
+            {[...Array(6)].map((_, i) => {
+              const a = (i * 60) * Math.PI / 180
+              return <rect key={i} x={12 + 8 * Math.cos(a) - 2} y={12 + 8 * Math.sin(a) - 3} width="4" height="6" rx="1" fill="#C5930C" transform={`rotate(${i * 60}, ${12 + 8 * Math.cos(a)}, ${12 + 8 * Math.sin(a)})`} />
+            })}
+            <circle cx="12" cy="12" r="5" fill="white" />
+          </svg>
         </div>
       </div>
 
-      <p className="absolute bottom-12 text-blue-300/60 text-xs font-medium">
-        Hazırlanıyor...
+      {/* Rotating message */}
+      <p className="absolute bottom-14 text-sm font-semibold tracking-wide transition-opacity duration-300" style={{ color: '#6B7280' }}>
+        {MESSAGES[msgIdx]}
       </p>
-    </div>
-  )
-}
-
-function HammerIcon({ active }) {
-  return (
-    <div className={`hammer-root ${active ? 'is-active' : ''}`}>
-      <span className="sp sp1" />
-      <span className="sp sp2" />
-      <span className="sp sp3" />
-      <span className="glow" />
-
-      <svg className="hammer" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#B8783D" />
-            <stop offset="30%" stopColor="#D4A05A" />
-            <stop offset="55%" stopColor="#E8C080" />
-            <stop offset="75%" stopColor="#D4A05A" />
-            <stop offset="100%" stopColor="#9A6830" />
-          </linearGradient>
-          <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#E0E0E0" />
-            <stop offset="25%" stopColor="#C8C8C8" />
-            <stop offset="50%" stopColor="#A8A8A8" />
-            <stop offset="75%" stopColor="#B8B8B8" />
-            <stop offset="100%" stopColor="#909090" />
-          </linearGradient>
-          <linearGradient id="metalFace" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D0D0D0" />
-            <stop offset="50%" stopColor="#A0A0A0" />
-            <stop offset="100%" stopColor="#888888" />
-          </linearGradient>
-          <linearGradient id="neck" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#B0B0B0" />
-            <stop offset="50%" stopColor="#D0D0D0" />
-            <stop offset="100%" stopColor="#999" />
-          </linearGradient>
-        </defs>
-
-        <g transform="rotate(45, 50, 50)">
-          {/* Sap */}
-          <rect x="44" y="38" width="12" height="58" rx="5.5" fill="url(#handle)" />
-          <rect x="47" y="40" width="3" height="54" rx="1.5" fill="#E8C888" opacity="0.35" />
-          <rect x="44.5" y="92" width="11" height="4" rx="2" fill="#8B6530" />
-
-          {/* Sap-baş metal bağlantı */}
-          <rect x="43" y="34" width="14" height="8" rx="2" fill="url(#neck)" />
-          <rect x="44" y="35" width="12" height="1.5" rx="0.7" fill="#E8E8E8" opacity="0.4" />
-
-          {/* Çekiç başı ana gövde */}
-          <rect x="18" y="12" width="64" height="24" rx="4" fill="url(#metal)" />
-
-          {/* Üst kenar parlaklık */}
-          <rect x="20" y="13" width="60" height="8" rx="3" fill="#D8D8D8" opacity="0.5" />
-          <rect x="24" y="15" width="52" height="2.5" rx="1.2" fill="#F0F0F0" opacity="0.3" />
-
-          {/* Vurma yüzeyi (sağ) - düz kesim */}
-          <rect x="76" y="10" width="10" height="28" rx="2.5" fill="url(#metalFace)" />
-          <rect x="82" y="13" width="2.5" height="22" rx="1.2" fill="#C8C8C8" opacity="0.4" />
-          <rect x="76" y="10" width="2" height="28" rx="1" fill="#808080" opacity="0.3" />
-
-          {/* Sol taraf yuvarlak bitim */}
-          <rect x="14" y="12" width="10" height="24" rx="4" fill="url(#metalFace)" />
-
-          {/* Alt kenar gölge */}
-          <rect x="18" y="32" width="64" height="3" rx="1.5" fill="#808080" opacity="0.3" />
-        </g>
-      </svg>
 
       <style>{`
-        .hammer-root {
-          position: relative;
-          width: 80px; height: 80px;
+        .splash-net {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+        }
+
+        .splash-gear-wrap {
+          position: relative; width: 180px; height: 180px;
           display: flex; align-items: center; justify-content: center;
         }
-        .hammer {
-          width: 80px; height: 80px;
-          transform-origin: 50% 72%;
-          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+
+        .splash-ring {
+          position: absolute; inset: -14px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(10,102,194,0.08);
+          animation: splash-ring-pulse 2.5s ease-in-out infinite;
+        }
+        @keyframes splash-ring-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(1.06); opacity: 1; }
         }
 
-        @keyframes strike {
-          0%   { transform: rotate(0deg); }
-          18%  { transform: rotate(-20deg); }
-          46%  { transform: rotate(16deg); }
-          54%  { transform: rotate(18deg); }
-          68%  { transform: rotate(-3deg); }
-          84%  { transform: rotate(1deg); }
-          100% { transform: rotate(0deg); }
+        .splash-gear {
+          width: 140px; height: 140px;
+          animation: splash-gear-spin 8s linear infinite;
         }
-        .is-active .hammer {
-          animation: strike 0.8s cubic-bezier(0.22, 0.68, 0.32, 1.12) infinite;
+        @keyframes splash-gear-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
-        .glow {
-          position: absolute; bottom: 6px; right: 4px;
-          width: 16px; height: 16px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,220,100,0.9) 0%, transparent 70%);
-          transform: scale(0); opacity: 0; pointer-events: none;
+        .splash-orbit {
+          position: absolute; inset: -20px;
+          animation: splash-orbit-spin 8s linear infinite reverse;
         }
-        @keyframes flash {
-          0%,42% { transform: scale(0); opacity: 0; }
-          50%    { transform: scale(2); opacity: 1; }
-          62%    { transform: scale(3); opacity: 0.5; }
-          76%    { transform: scale(3.5); opacity: 0; }
-          100%   { transform: scale(0); opacity: 0; }
+        @keyframes splash-orbit-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
-        .is-active .glow { animation: flash 0.8s ease-out infinite; }
 
-        .sp {
-          position: absolute; bottom: 10px; right: 8px;
-          width: 3px; height: 3px; border-radius: 50%;
-          background: #FFE070; opacity: 0; pointer-events: none;
+        .splash-orbit-icon {
+          position: absolute;
+          width: 28px; height: 28px;
+          background: white;
+          border-radius: 10px;
+          padding: 5px;
+          box-shadow: 0 2px 12px rgba(10,102,194,0.15);
+          animation: splash-icon-float 3s ease-in-out infinite;
+          animation-delay: var(--orbit-delay);
         }
-        @keyframes s1 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(10px,12px);opacity:0}100%{opacity:0} }
-        @keyframes s2 { 0%,44%{transform:translate(0,0);opacity:0}50%{opacity:1}74%{transform:translate(-6px,14px);opacity:0}100%{opacity:0} }
-        @keyframes s3 { 0%,44%{transform:translate(0,0);opacity:0}52%{opacity:.8}74%{transform:translate(14px,6px);opacity:0}100%{opacity:0} }
+        .splash-orbit-icon:nth-child(1) { top: -14px; left: 50%; transform: translateX(-50%); }
+        .splash-orbit-icon:nth-child(2) { bottom: 10px; left: -10px; }
+        .splash-orbit-icon:nth-child(3) { bottom: 10px; right: -10px; }
 
-        .is-active .sp1 { animation: s1 .8s ease-out infinite; }
-        .is-active .sp2 { animation: s2 .8s ease-out infinite; }
-        .is-active .sp3 { animation: s3 .8s ease-out infinite; }
+        @keyframes splash-icon-float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-4px) scale(1.05); }
+        }
+
+        .splash-orbit-icon svg {
+          width: 100%; height: 100%;
+        }
+
+        .splash-particles {
+          position: absolute; inset: 0;
+          animation: splash-gear-spin 12s linear infinite;
+        }
+        .splash-particle {
+          position: absolute;
+          top: 50%; left: 50%;
+          width: 3px; height: 3px;
+          border-radius: 50%;
+          background: #0A66C2;
+          opacity: 0;
+          animation: splash-p 2.5s ease-out infinite;
+          animation-delay: var(--p-delay);
+          transform: rotate(var(--p-angle)) translateX(70px);
+        }
+        .splash-particle:nth-child(even) { background: #C5930C; }
+
+        @keyframes splash-p {
+          0% { opacity: 0; transform: rotate(var(--p-angle)) translateX(50px) scale(0.5); }
+          30% { opacity: 0.6; }
+          100% { opacity: 0; transform: rotate(var(--p-angle)) translateX(100px) scale(0); }
+        }
+
+        .splash-bar-gear {
+          position: absolute;
+          top: 50%; width: 18px; height: 18px;
+          transform: translate(-50%, -50%);
+          transition: left ease-in-out;
+          animation: splash-mini-spin 2s linear infinite;
+        }
+        @keyframes splash-mini-spin {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
       `}</style>
     </div>
   )
