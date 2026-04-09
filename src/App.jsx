@@ -14,6 +14,7 @@ const UstaRegisterPage       = lazy(() => import('./pages/UstaRegisterPage'))
 const CustomerRegisterPage   = lazy(() => import('./pages/CustomerRegisterPage'))
 const HomePage               = lazy(() => import('./pages/HomePage'))
 const CreateJobPage          = lazy(() => import('./pages/CreateJobPage'))
+const AIAssistantPage        = lazy(() => import('./pages/AIAssistantPage'))
 const ProfessionalDashboard  = lazy(() => import('./pages/ProfessionalDashboard'))
 const ProfessionalMapPage    = lazy(() => import('./pages/ProfessionalMapPage'))
 const ProfilePage            = lazy(() => import('./pages/ProfilePage'))
@@ -95,6 +96,7 @@ function AppRoutes() {
         {/* Müşteri */}
         <Route path="/home"       element={<ProtectedRoute roleRequired="customer"><Layout><HomePage /></Layout></ProtectedRoute>} />
         <Route path="/create-job" element={<ProtectedRoute roleRequired="customer"><Layout><CreateJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/ai-assistant" element={<ProtectedRoute roleRequired="customer"><AIAssistantPage /></ProtectedRoute>} />
 
         {/* Usta */}
         <Route path="/professional"     element={<ProtectedRoute roleRequired="professional"><Layout><ProfessionalDashboard /></Layout></ProtectedRoute>} />

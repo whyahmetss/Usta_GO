@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 const customerTabs = [
   { path: '/home', icon: Home, label: 'Ana Sayfa' },
   { path: '/my-jobs', icon: Briefcase, label: 'İşlerim' },
-  { type: 'action', path: '/create-job?mode=ai', label: 'AI Asistan' },
+  { type: 'action', path: '/ai-assistant', label: 'AI Asistan' },
   { path: '/messages', icon: MessageCircle, label: 'Mesajlar', badgeKey: 'messages' },
   { path: '/profile', icon: User, label: 'Profil' },
 ]
@@ -46,7 +46,7 @@ export default function BottomNav() {
         {/* Center action button for customers */}
         {userRole === 'customer' && (
           <button
-            onClick={() => navigate('/create-job?mode=ai')}
+            onClick={() => navigate('/ai-assistant')}
             className="absolute left-1/2 -translate-x-1/2 -top-3 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-[#0A66C2]/40 active:scale-90 transition-all z-10"
             style={{ background: 'linear-gradient(135deg, #0A66C2 0%, #0D7AE8 50%, #3B9BF5 100%)' }}
           >
