@@ -53,8 +53,8 @@ export default function OnboardingScreen({ onDone }) {
   const isLast = current === slides.length - 1
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-white flex flex-col items-center select-none overflow-hidden"
-      style={{ fontFamily: "'Inter', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div className="fixed inset-0 z-[9998] flex flex-col items-center select-none overflow-hidden"
+      style={{ fontFamily: "'Inter', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: '#ffffff', colorScheme: 'light' }}>
 
       {/* Top bar */}
       <div className="w-full flex items-center justify-between px-6 pt-[max(env(safe-area-inset-top),12px)] pb-2 mt-2">
@@ -86,7 +86,7 @@ export default function OnboardingScreen({ onDone }) {
         <div className={`transition-all duration-280 ease-out ${exiting ? 'opacity-0 scale-[0.96] translate-y-6' : 'opacity-100 scale-100 translate-y-0'}`}>
 
           {/* Illustration */}
-          <div className="w-64 h-64 mx-auto mb-6 flex items-center justify-center">
+          <div className="w-64 h-64 mx-auto mb-6 flex items-center justify-center rounded-3xl" style={{ backgroundColor: '#ffffff' }}>
             <img src={slide.image} alt={slide.title} className="w-full h-full object-contain drop-shadow-xl" draggable={false} />
           </div>
 
