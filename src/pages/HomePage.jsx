@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper } from 'lucide-react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper, Mic } from 'lucide-react'
 
 const CAMPAIGN_ICONS = { flower: Flower, zap: Zap, gift: Gift, sparkles: Sparkles, heart: Heart, star: Star, party: PartyPopper }
 import { useAuth } from '../context/AuthContext'
@@ -53,12 +53,12 @@ function HomePage() {
   }, [])
 
   const SERVICE_DEFS = [
-    { id: 'electric',   name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri',    Icon: Zap,       bgColor: 'bg-amber-50',  iconColor: 'text-amber-600',  keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
-    { id: 'plumbing',   name: 'Tesisat',  desc: 'Su kaçağı, tıkanıklık, musluk',  Icon: Wrench,    bgColor: 'bg-blue-50',   iconColor: 'text-blue-600',   keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
-    { id: 'renovation', name: 'Tadilat',  desc: 'Duvar, zemin, kapı tamiri',      Icon: Hammer,    bgColor: 'bg-orange-50', iconColor: 'text-orange-600', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
-    { id: 'cleaning',   name: 'Temizlik', desc: 'Ev, ofis, derin temizlik',       Icon: Sparkles,  bgColor: 'bg-purple-50', iconColor: 'text-purple-600', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
-    { id: 'painting',   name: 'Boyacı',   desc: 'İç cephe, dış cephe boyama',    Icon: Paintbrush,bgColor: 'bg-green-50',  iconColor: 'text-green-600',  keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
-    { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       bgColor: 'bg-yellow-50', iconColor: 'text-yellow-700', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
+    { id: 'electric',   name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri',    Icon: Zap,       gradient: 'from-amber-400 to-orange-500', iconColor: 'text-white', bgColor: 'bg-amber-50', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
+    { id: 'plumbing',   name: 'Tesisat',  desc: 'Su kaçağı, tıkanıklık, musluk',  Icon: Wrench,    gradient: 'from-blue-400 to-blue-600',    iconColor: 'text-white', bgColor: 'bg-blue-50',  keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
+    { id: 'renovation', name: 'Tadilat',  desc: 'Duvar, zemin, kapı tamiri',      Icon: Hammer,    gradient: 'from-orange-400 to-red-500',   iconColor: 'text-white', bgColor: 'bg-orange-50', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
+    { id: 'cleaning',   name: 'Temizlik', desc: 'Ev, ofis, derin temizlik',       Icon: Sparkles,  gradient: 'from-purple-400 to-purple-600',iconColor: 'text-white', bgColor: 'bg-purple-50', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
+    { id: 'painting',   name: 'Boyacı',   desc: 'İç cephe, dış cephe boyama',    Icon: Paintbrush,gradient: 'from-emerald-400 to-green-600',iconColor: 'text-white', bgColor: 'bg-green-50', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
+    { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       gradient: 'from-yellow-400 to-amber-600', iconColor: 'text-white', bgColor: 'bg-yellow-50', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
   ]
 
   const FALLBACK_STATUS = { electric: true, plumbing: false, renovation: false, cleaning: false, painting: false, carpentry: false }
@@ -120,10 +120,13 @@ function HomePage() {
         {/* Search trigger */}
         <button
           onClick={() => setShowSearch(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/50 dark:shadow-none text-left"
+          className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#262626] shadow-lg shadow-gray-300/40 dark:shadow-none text-left transition-all hover:shadow-xl hover:shadow-gray-300/50 active:scale-[0.98]"
         >
-          <Search size={17} strokeWidth={1.8} className="text-primary-400 flex-shrink-0" />
-          <span className="text-[13px] text-gray-400">Hangi hizmete ihtiyacınız var?</span>
+          <Search size={20} strokeWidth={2} className="text-[#0A66C2] flex-shrink-0" />
+          <span className="text-[14px] text-gray-400 flex-1">Ne tamir edilecek? <span className='text-gray-300'>(Örn: Musluk damlatıyor)</span></span>
+          <div className="w-9 h-9 rounded-xl bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
+            <Mic size={16} className="text-[#0A66C2]" />
+          </div>
         </button>
       </div>
 
@@ -207,10 +210,10 @@ function HomePage() {
                 key={svc.id}
                 onClick={() => svc.active ? navigate('/create-job?service=' + svc.id) : null}
                 disabled={!svc.active}
-                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all aspect-square border ${
+                className={`relative rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 transition-all duration-200 aspect-square border ${
                   svc.active
-                    ? 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none active:scale-95'
-                    : 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-md shadow-gray-200/60 dark:shadow-none opacity-50'
+                    ? 'bg-white dark:bg-[#141414] border-gray-100 dark:border-[#262626] shadow-lg shadow-gray-200/70 dark:shadow-none active:scale-[0.93] hover:shadow-xl hover:-translate-y-0.5'
+                    : 'bg-white dark:bg-[#141414] border-gray-200 dark:border-[#262626] shadow-sm opacity-50'
                 }`}
               >
                 {!svc.active && (
@@ -218,8 +221,10 @@ function HomePage() {
                     Yakında
                   </span>
                 )}
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${svc.active ? svc.bgColor : 'bg-gray-100 dark:bg-[#1f1f1f]'}`}>
-                  <CatIcon size={24} className={svc.active ? svc.iconColor : 'text-gray-400'} strokeWidth={1.8} />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md ${
+                  svc.active ? `bg-gradient-to-br ${svc.gradient} shadow-lg` : 'bg-gray-100 dark:bg-[#1f1f1f]'
+                }`}>
+                  <CatIcon size={26} className={svc.active ? 'text-white drop-shadow-sm' : 'text-gray-400'} strokeWidth={1.8} />
                 </div>
                 <span className={`text-[12px] font-semibold ${svc.active ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400'}`}>
                   {svc.name}
