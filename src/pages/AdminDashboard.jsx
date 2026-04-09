@@ -5,16 +5,13 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import {
-  LogOut,
   Users,
   Briefcase,
   DollarSign,
   TrendingUp,
   UserCheck,
-  Wallet,
   AlertCircle,
   MessageSquare,
-  Ticket,
   Coins,
   Award,
   ClipboardList,
@@ -24,15 +21,11 @@ import {
   BarChart2,
   Headphones,
 } from 'lucide-react'
-import Layout from '../components/Layout'
-import PageHeader from '../components/PageHeader'
-import Card from '../components/Card'
-import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
 
 function AdminDashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -129,11 +122,6 @@ function AdminDashboard() {
     loadDashboardData()
   }, [])
 
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
-
   const pendingWithdrawals = allJobs.filter(
     (j) => j.withdrawalRequest?.status === 'pending'
   ).length
@@ -147,31 +135,41 @@ function AdminDashboard() {
       label: 'Toplam Kullanıcı',
       value: stats.totalUsers.toString(),
       icon: Users,
-      color: 'primary',
+      iconColor: 'text-blue-400',
+      trend: '+12%',
+      trendUp: true,
     },
     {
       label: 'Aktif İşler',
       value: stats.activeJobs.toString(),
       icon: Briefcase,
-      color: 'emerald',
+      iconColor: 'text-emerald-400',
+      trend: '+5%',
+      trendUp: true,
     },
     {
       label: 'Toplam Gelir',
       value: `${stats.totalRevenue.toLocaleString('tr-TR')} TL`,
       icon: DollarSign,
-      color: 'accent',
+      iconColor: 'text-amber-400',
+      trend: '+18%',
+      trendUp: true,
     },
     {
       label: 'Toplam İş',
       value: stats.totalJobs.toString(),
       icon: TrendingUp,
-      color: 'violet',
+      iconColor: 'text-violet-400',
+      trend: '+8%',
+      trendUp: true,
     },
     {
       label: 'Aktif Usta',
       value: stats.activeUstas.toString(),
       icon: UserCheck,
-      color: 'emerald',
+      iconColor: 'text-teal-400',
+      trend: '+3%',
+      trendUp: true,
     },
   ]
 
@@ -244,101 +242,104 @@ function AdminDashboard() {
   ]
 
   const colorMap = {
-    primary: 'bg-primary-50 text-primary-600',
-    accent: 'bg-accent-50 text-accent-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    amber: 'bg-amber-50 text-amber-600',
-    rose: 'bg-rose-50 text-rose-600',
-    violet: 'bg-violet-50 text-violet-600',
-    teal: 'bg-teal-50 text-teal-600',
+    primary: 'bg-blue-500/10 text-blue-400',
+    accent: 'bg-amber-500/10 text-amber-400',
+    emerald: 'bg-emerald-500/10 text-emerald-400',
+    amber: 'bg-amber-500/10 text-amber-400',
+    rose: 'bg-rose-500/10 text-rose-400',
+    violet: 'bg-violet-500/10 text-violet-400',
+    teal: 'bg-teal-500/10 text-teal-400',
   }
+
+  // Mini sparkline SVG
+  const Sparkline = ({ color = '#3b82f6' }) => (
+    <svg width="64" height="28" viewBox="0 0 64 28" fill="none" className="opacity-40">
+      <polyline points="0,22 8,18 16,20 24,12 32,14 40,8 48,10 56,4 64,6" stroke={color} strokeWidth="1.5" fill="none" />
+      <linearGradient id={`sg-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+        <stop offset="100%" stopColor={color} stopOpacity="0" />
+      </linearGradient>
+      <polygon points="0,22 8,18 16,20 24,12 32,14 40,8 48,10 56,4 64,6 64,28 0,28" fill={`url(#sg-${color.replace('#','')})`} />
+    </svg>
+  )
+
+  const sparkColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#14b8a6']
 
   if (loading) {
     return (
-      <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-gray-600">Admin paneli yükleniyor...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-zinc-500">Admin paneli yükleniyor...</p>
         </div>
-      </Layout>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Layout hideNav>
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] dark:bg-[#0d0d0d]">
-          <div className="text-center">
-            <p className="text-sm text-rose-600 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary-500 text-white rounded-2xl font-semibold active:scale-[0.98] transition"
-            >
-              Yenile
-            </button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-sm text-rose-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition"
+          >
+            Yenile
+          </button>
         </div>
-      </Layout>
+      </div>
     )
   }
 
   return (
-    <Layout hideNav>
-      <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0d0d0d]">
-        <PageHeader
-          title="Admin Paneli"
-          onBack={false}
-          rightAction={
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition"
-            >
-              <LogOut size={18} /> Çıkış
-            </button>
-          }
-        />
+      <div className="min-h-screen p-6 lg:p-8">
+        {/* Header */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-sm text-zinc-500 mt-1">Hoş geldin, {user?.name}</p>
+        </div>
 
-        <div className="max-w-2xl mx-auto px-4 pb-8">
-          <p className="text-sm text-gray-500 font-medium mt-2 mb-6">
-            Hoş geldin, {user?.name}
-          </p>
+        <div className="max-w-6xl mx-auto">
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             {statsList.map((stat, idx) => {
-              const gradients = [
-                'from-primary-500 to-primary-600',
-                'from-emerald-500 to-emerald-600',
-                'from-violet-500 to-violet-600',
-                'from-amber-500 to-amber-600',
-              ]
               const StatIcon = stat.icon
               return (
                 <div
                   key={idx}
-                  className={`bg-gradient-to-br ${gradients[idx % gradients.length]} rounded-2xl p-4 text-white shadow-md`}
+                  className="bg-zinc-900 rounded-2xl p-5 border border-white/[0.06] hover:border-white/[0.1] transition-all"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center mb-3">
-                    <StatIcon size={18} className="text-white" />
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center bg-white/[0.06]`}>
+                      <StatIcon size={16} className={stat.iconColor} strokeWidth={1.8} />
+                    </div>
+                    <Sparkline color={sparkColors[idx % sparkColors.length]} />
                   </div>
-                  <p className="text-xl font-bold leading-tight">{stat.value}</p>
-                  <p className="text-[11px] mt-0.5 text-white/80 font-medium">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white tracking-tight leading-none">{stat.value}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[11px] text-zinc-500 font-medium">{stat.label}</p>
+                    {stat.trend && (
+                      <span className={`text-[10px] font-semibold ${stat.trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {stat.trend}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )
             })}
           </div>
 
           {/* Management Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             {managementItems.map((item, idx) => {
               const Icon = item.icon
               return (
-                <Card
+                <button
                   key={idx}
                   onClick={() => navigate(item.path)}
-                  padding="p-4"
+                  className="bg-zinc-900 rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] hover:bg-zinc-800/80 transition-all text-left active:scale-[0.98]"
                 >
                   <div className="flex flex-col">
                     <div className="flex items-start justify-between mb-3">
@@ -347,27 +348,27 @@ function AdminDashboard() {
                           colorMap[item.color] || colorMap.primary
                         }`}
                       >
-                        <Icon size={20} />
+                        <Icon size={18} />
                       </div>
                       {item.badge && (
-                        <span className="text-[10px] px-2 py-1 rounded-full font-bold bg-rose-500 text-white">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
                           {item.badge}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
+                    <h3 className="text-[13px] font-semibold text-white mb-0.5">
                       {item.title}
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-snug">{item.desc}</p>
+                    <p className="text-[11px] text-zinc-500 leading-snug">{item.desc}</p>
                   </div>
-                </Card>
+                </button>
               )
             })}
           </div>
 
           {/* Recent Jobs */}
-          <Card padding="p-4" className="mb-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">
+          <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-5 mb-6">
+            <h2 className="text-[15px] font-semibold text-white mb-4">
               Son İşler
             </h2>
             {recentJobs.length === 0 ? (
@@ -377,22 +378,22 @@ function AdminDashboard() {
                 description="Yeni işler burada görünecek"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.06] transition"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-zinc-200 truncate">
                         {job.title}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-zinc-500 truncate">
                         {job.customer?.name} — {job.location?.address}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <p className="text-sm font-semibold text-emerald-600">
+                      <p className="text-sm font-semibold text-emerald-400">
                         {job.price ?? job.budget} TL
                       </p>
                       <StatusBadge status={job.status} size="sm" />
@@ -401,11 +402,11 @@ function AdminDashboard() {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Ratings */}
-          <Card padding="p-4" className="mb-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">
+          <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-5 mb-6">
+            <h2 className="text-[15px] font-semibold text-white mb-4">
               Tüm Değerlendirmeler
             </h2>
             {allJobs.filter((j) => j.rating).length === 0 ? (
@@ -415,51 +416,51 @@ function AdminDashboard() {
                 description="Müşteri değerlendirmeleri burada görünecek"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {allJobs
                   .filter((j) => j.rating)
                   .slice(0, 10)
                   .map((job) => (
                     <div
                       key={job.id}
-                      className="p-3 rounded-xl bg-primary-50/50 border border-gray-200"
+                      className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
+                          <p className="text-sm font-semibold text-zinc-200 truncate">
                             {job.customer?.name} → {job.professional?.name || 'Usta'}
                           </p>
-                          <p className="text-xs text-gray-600 truncate">
+                          <p className="text-xs text-zinc-500 truncate">
                             {job.title}
                           </p>
                         </div>
                         <div className="flex gap-0.5 shrink-0">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                            <Star key={i} size={12} className={i < (job.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-zinc-700'} />
                           ))}
                         </div>
                       </div>
                       {job.ratingReview && (
-                        <p className="text-xs text-gray-700 bg-white/60 p-2 rounded-lg">
+                        <p className="text-xs text-zinc-400 bg-white/[0.04] p-2 rounded-lg">
                           "{job.ratingReview}"
                         </p>
                       )}
-                      <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                      <p className="text-[10px] text-zinc-600 mt-2 font-medium">
                         {new Date(job.createdAt).toLocaleDateString('tr-TR')}
                       </p>
                     </div>
                   ))}
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Complaints */}
-          <Card padding="p-4">
+          <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">
+              <h2 className="text-[15px] font-semibold text-white">
                 Tüm Şikayetler
               </h2>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {[
                   { key: 'all', label: 'Tümü' },
                   { key: 'open', label: 'Bekleyen' },
@@ -469,10 +470,10 @@ function AdminDashboard() {
                   <button
                     key={tab.key}
                     onClick={() => setComplaintFilter(tab.key)}
-                    className={`text-[11px] px-2.5 py-1 rounded-full font-medium transition ${
+                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition ${
                       complaintFilter === tab.key
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-white/[0.1] text-white'
+                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
                     }`}
                   >
                     {tab.label}
@@ -489,7 +490,7 @@ function AdminDashboard() {
                 description="Şikayetler filtreye göre listelenecek"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {allComplaints
                   .filter(
                     (c) =>
@@ -500,18 +501,18 @@ function AdminDashboard() {
                       key={complaint.id}
                       className={`p-3 rounded-xl border ${
                         complaint.status === 'resolved'
-                          ? 'bg-emerald-50/50 border-emerald-100'
+                          ? 'bg-emerald-500/[0.05] border-emerald-500/10'
                           : complaint.status === 'rejected'
-                          ? 'bg-rose-50/50 border-rose-100'
-                          : 'bg-amber-50/50 border-amber-100'
+                          ? 'bg-rose-500/[0.05] border-rose-500/10'
+                          : 'bg-amber-500/[0.05] border-amber-500/10'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-zinc-200">
                             {complaint.customerName}
                           </p>
-                          <p className="text-xs text-gray-600 truncate">
+                          <p className="text-xs text-zinc-500 truncate">
                             {complaint.jobTitle} — {complaint.reason}
                           </p>
                         </div>
@@ -530,21 +531,20 @@ function AdminDashboard() {
                         />
                       </div>
                       {complaint.details && (
-                        <p className="text-xs text-gray-700 bg-white/60 p-2 rounded-lg">
+                        <p className="text-xs text-zinc-400 bg-white/[0.04] p-2 rounded-lg">
                           {complaint.details}
                         </p>
                       )}
-                      <p className="text-[10px] text-gray-500 mt-2">
+                      <p className="text-[10px] text-zinc-600 mt-2">
                         {new Date(complaint.filedAt).toLocaleDateString('tr-TR')}
                       </p>
                     </div>
                   ))}
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </div>
-    </Layout>
   )
 }
 

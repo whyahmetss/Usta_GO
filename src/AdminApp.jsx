@@ -9,13 +9,13 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { ThemeProvider } from './context/ThemeContext'
 import PageErrorBoundary from './components/PageErrorBoundary'
 import AuthPage from './pages/AuthPage'
 import {
   LayoutDashboard, Users, Briefcase, MessageSquare, AlertCircle,
   Wallet, Tag, DollarSign, Award, Clock, Megaphone, ShieldCheck,
-  Headphones, LogOut, Sun, Moon, Menu, X, Building2,
+  Headphones, LogOut, Menu, X, Building2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -42,23 +42,27 @@ const SupportDashboard = lazy(() => import('./pages/SupportDashboard'))
 const SupportChatPage  = lazy(() => import('./pages/SupportChatPage'))
 const SupportGuidePage = lazy(() => import('./pages/SupportGuidePage'))
 
-/* ── Sidebar nav items ── */
+/* ── Sidebar nav items (grouped) ── */
 const ADMIN_NAV = [
+  { group: 'GENEL' },
   { to: '/admin',                   icon: LayoutDashboard, label: 'Dashboard'         },
   { to: '/admin/users',             icon: Users,           label: 'Kullanıcılar'      },
   { to: '/admin/jobs',              icon: Briefcase,       label: 'İşler'             },
-  { to: '/admin/complaints',        icon: AlertCircle,     label: 'Şikayetler'        },
   { to: '/admin/messages',          icon: MessageSquare,   label: 'Mesajlar'          },
+  { group: 'FİNANS' },
+  { to: '/admin/finance',           icon: DollarSign,      label: 'Muhasebe'          },
   { to: '/admin/withdrawals',       icon: Wallet,          label: 'Para Çekme'        },
   { to: '/admin/havale',            icon: Building2,       label: 'Havale Talepleri'  },
-  { to: '/admin/coupons',           icon: Tag,             label: 'Kuponlar'          },
   { to: '/admin/pricing',           icon: DollarSign,      label: 'Fiyatlandırma'     },
-  { to: '/admin/certificates',      icon: Award,           label: 'Sertifikalar'      },
-  { to: '/admin/pending-ustas',     icon: Clock,           label: 'Bekleyen Ustalar'  },
-  { to: '/admin/campaigns',         icon: Megaphone,       label: 'Kampanyalar'       },
-  { to: '/admin/finance',           icon: DollarSign,      label: 'Finans'            },
-  { to: '/admin/promotions',        icon: Tag,             label: 'Promosyonlar'      },
+  { group: 'İŞLEMLER' },
+  { to: '/admin/complaints',        icon: AlertCircle,     label: 'Şikayetler'        },
   { to: '/admin/verification',      icon: ShieldCheck,     label: 'Doğrulama'         },
+  { to: '/admin/pending-ustas',     icon: Clock,           label: 'Bekleyen Ustalar'  },
+  { to: '/admin/certificates',      icon: Award,           label: 'Sertifikalar'      },
+  { group: 'SİSTEM' },
+  { to: '/admin/campaigns',         icon: Megaphone,       label: 'Kampanyalar'       },
+  { to: '/admin/coupons',           icon: Tag,             label: 'Kuponlar'          },
+  { to: '/admin/promotions',        icon: Tag,             label: 'Promosyonlar'      },
   { to: '/admin/support-monitor',   icon: Headphones,      label: 'Destek Monitörü'   },
 ]
 
@@ -69,10 +73,10 @@ const SUPPORT_NAV = [
 /* ── Page loader ── */
 function PageLoader() {
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
+    <div className="flex-1 flex items-center justify-center bg-zinc-950">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-400 font-medium">Yükleniyor...</p>
+        <p className="text-sm text-zinc-500 font-medium">Yükleniyor...</p>
       </div>
     </div>
   )
@@ -85,14 +89,14 @@ function Unauthorized() {
   const handleLogout = () => { logout(); navigate('/') }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0d0d0d]">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
       <div className="text-center p-8 max-w-sm">
-        <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldCheck size={36} className="text-red-500" />
         </div>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Erişim Reddedildi</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
-          Bu panel yalnızca <strong>Admin</strong> ve <strong>Destek</strong> personeline açıktır.
+        <h2 className="text-2xl font-black text-white mb-2">Erişim Reddedildi</h2>
+        <p className="text-zinc-400 text-sm mb-8">
+          Bu panel yalnızca <strong className="text-white">Admin</strong> ve <strong className="text-white">Destek</strong> personeline açıktır.
         </p>
         <button
           onClick={handleLogout}
@@ -109,9 +113,6 @@ function Unauthorized() {
 function AdminSidebar({ open, onClose, role }) {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const { resolvedTheme, setTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark')
   const navItems = role === 'support' ? SUPPORT_NAV : ADMIN_NAV
 
   const handleLogout = () => {
@@ -124,7 +125,7 @@ function AdminSidebar({ open, onClose, role }) {
       {/* Backdrop (mobile) */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -132,65 +133,68 @@ function AdminSidebar({ open, onClose, role }) {
       <aside
         className={`
           fixed top-0 left-0 h-full z-40 w-64
-          bg-white dark:bg-[#0d1b2e] border-r border-gray-200 dark:border-white/[0.07]
-          flex flex-col shadow-xl
+          bg-zinc-900 border-r border-white/[0.06]
+          flex flex-col
           transition-transform duration-300
           ${open ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:shadow-none
+          lg:translate-x-0 lg:static
         `}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-200 dark:border-white/[0.07]">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
           <div>
-            <p className="font-black text-lg text-gray-900 dark:text-white">Usta Go</p>
-            <p className="text-xs text-gray-400 font-medium">
+            <p className="font-black text-lg text-white tracking-tight">Usta Go</p>
+            <p className="text-[11px] text-zinc-500 font-medium">
               {role === 'support' ? 'Destek Paneli' : 'Yönetim Paneli'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition"
+            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:bg-white/[0.06] transition"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/admin' || to === '/support'}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white'
-                }`
-              }
-            >
-              <Icon size={18} />
-              <span className="flex-1">{label}</span>
-            </NavLink>
-          ))}
+        {/* Nav items with groups */}
+        <nav className="flex-1 overflow-y-auto py-3 px-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+          {navItems.map((item, idx) => {
+            if (item.group) {
+              return (
+                <p key={`g-${idx}`} className={`text-[10px] font-semibold tracking-widest uppercase text-zinc-500 px-3 ${idx > 0 ? 'mt-5' : ''} mb-2`}>
+                  {item.group}
+                </p>
+              )
+            }
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/admin' || item.to === '/support'}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
+                    isActive
+                      ? 'bg-white/[0.08] text-white'
+                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
+                  }`
+                }
+              >
+                <Icon size={16} strokeWidth={1.8} />
+                <span className="flex-1">{item.label}</span>
+              </NavLink>
+            )
+          })}
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-3 border-t border-gray-200 dark:border-white/[0.07] space-y-1">
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white transition"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            {isDark ? 'Açık Tema' : 'Koyu Tema'}
-          </button>
+        <div className="px-3 py-3 border-t border-white/[0.06]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Çıkış Yap
           </button>
         </div>
@@ -204,23 +208,23 @@ function AdminLayout({ children, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#0d0d0d] overflow-hidden">
+    <div className="flex h-screen bg-zinc-950 overflow-hidden">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} role={role} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#0d1b2e] border-b border-gray-200 dark:border-white/[0.07]">
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-zinc-900 border-b border-white/[0.06]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:bg-white/[0.06] transition"
           >
             <Menu size={20} />
           </button>
-          <span className="font-bold text-gray-900 dark:text-white text-sm">Usta Go Yönetim</span>
+          <span className="font-semibold text-white text-sm">Usta Go Yönetim</span>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
           {children}
         </main>
       </div>
