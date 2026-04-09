@@ -1,11 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Briefcase, MessageCircle, User, LayoutDashboard, Plus, MapPin } from 'lucide-react'
+import { Home, Briefcase, MessageCircle, User, LayoutDashboard, Sparkles, MapPin } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const customerTabs = [
   { path: '/home', icon: Home, label: 'Ana Sayfa' },
   { path: '/my-jobs', icon: Briefcase, label: 'İşlerim' },
-  { type: 'action', path: '/create-job', label: 'Oluştur' },
+  { type: 'action', path: '/create-job?mode=ai', label: 'AI Asistan' },
   { path: '/messages', icon: MessageCircle, label: 'Mesajlar', badgeKey: 'messages' },
   { path: '/profile', icon: User, label: 'Profil' },
 ]
@@ -46,10 +46,11 @@ export default function BottomNav() {
         {/* Center action button for customers */}
         {userRole === 'customer' && (
           <button
-            onClick={() => navigate('/create-job')}
-            className="absolute left-1/2 -translate-x-1/2 -top-3 w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/40 active:scale-90 transition-transform z-10"
+            onClick={() => navigate('/create-job?mode=ai')}
+            className="absolute left-1/2 -translate-x-1/2 -top-3 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-[#0A66C2]/40 active:scale-90 transition-all z-10"
+            style={{ background: 'linear-gradient(135deg, #0A66C2 0%, #0D7AE8 50%, #3B9BF5 100%)' }}
           >
-            <Plus size={22} strokeWidth={2.5} className="text-white" />
+            <Sparkles size={24} strokeWidth={2} className="text-white drop-shadow-sm" />
           </button>
         )}
 

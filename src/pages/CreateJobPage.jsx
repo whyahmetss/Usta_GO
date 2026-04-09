@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Camera, Sparkles, MapPin, ChevronRight, Check } from 'lucide-react'
+import { Camera, Sparkles, MapPin, ChevronRight, Check, Mic, ArrowRight, Image, MessageSquare } from 'lucide-react'
 import { emitEvent } from '../utils/socket'
 import MapPickerModal from '../components/MapPickerModal'
 import PageHeader from '../components/PageHeader'
@@ -46,7 +46,9 @@ function CreateJobPage() {
   const { user, createJob } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const isAIMode = searchParams.get('mode') === 'ai'
   const serviceMeta = SERVICE_META[searchParams.get('service')] || null
+  const [showAIIntro, setShowAIIntro] = useState(isAIMode)
   const [step, setStep]               = useState(1)
   const [description, setDescription] = useState('')
   const [photo, setPhoto]             = useState(null)
@@ -62,6 +64,41 @@ function CreateJobPage() {
   const [activeCoupons, setActiveCoupons]   = useState([])
   const [isCreating, setIsCreating]   = useState(false)
   const [error, setError]             = useState(null)
+  const [voiceListening, setVoiceListening] = useState(false)
+  const voiceRef = useRef(null)
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    if (voiceListening && voiceRef.current) { voiceRef.current.stop(); return }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'tr-TR'
+    recognition.continuous = false
+    recognition.interimResults = false
+    voiceRef.current = recognition
+    recognition.onstart = () => setVoiceListening(true)
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript
+      setDescription(prev => prev ? prev + ' ' + text : text)
+    }
+    recognition.onerror = () => setVoiceListening(false)
+    recognition.onend = () => setVoiceListening(false)
+    recognition.start()
+  }
+
+  const handleAICameraCapture = () => {
+    setShowAIIntro(false)
+    setTimeout(() => document.getElementById('photo-upload')?.click(), 100)
+  }
+
+  const handleAIVoiceStart = () => {
+    setShowAIIntro(false)
+    setTimeout(() => startVoiceInput(), 100)
+  }
+
+  const handleAITextStart = () => {
+    setShowAIIntro(false)
+  }
 
   const estimatedPrice = aiResult?.estimatedPrice || 0
   const finalPrice     = Math.max(0, estimatedPrice - (selectedCoupon?.amount || 0))
@@ -189,6 +226,83 @@ function CreateJobPage() {
 
   const stepLabels = ['Bilgiler', 'Analiz', 'Onay']
 
+  if (showAIIntro) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col"
+        style={{ background: 'linear-gradient(160deg, #0A66C2 0%, #0D7AE8 40%, #3B9BF5 100%)' }}>
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),12px)] pb-2 mt-2">
+          <button onClick={() => navigate(-1)} className="text-white/70 text-sm font-medium px-3 py-1.5 rounded-full hover:bg-white/10 transition">
+            ← Geri
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <div className="w-20 h-20 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-6 shadow-lg">
+            <Sparkles size={38} className="text-white" strokeWidth={1.8} />
+          </div>
+          <h1 className="text-[28px] font-extrabold text-white leading-tight mb-3">
+            AI Asistan
+          </h1>
+          <p className="text-white/70 text-[15px] leading-relaxed max-w-[280px] mb-10">
+            Arızanın fotoğrafını çek veya sesli anlat.<br/>AI fiyatı anında hesaplasın.
+          </p>
+
+          {/* Action buttons */}
+          <div className="w-full max-w-sm space-y-3">
+            <button
+              onClick={handleAICameraCapture}
+              className="w-full flex items-center gap-4 px-5 py-4 bg-white rounded-2xl text-left active:scale-[0.97] transition-all shadow-lg shadow-black/10"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+                <Camera size={22} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900 text-[15px]">Fotoğraf Çek</p>
+                <p className="text-gray-400 text-[12px]">Arızayı fotoğrafla, AI analiz etsin</p>
+              </div>
+              <ArrowRight size={18} className="text-gray-300" />
+            </button>
+
+            <button
+              onClick={handleAIVoiceStart}
+              className="w-full flex items-center gap-4 px-5 py-4 bg-white/15 backdrop-blur-sm rounded-2xl text-left active:scale-[0.97] transition-all border border-white/20"
+            >
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <Mic size={22} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-white text-[15px]">Sesli Anlat</p>
+                <p className="text-white/50 text-[12px]">Sorunu sesli anlat, AI yazıya çevirsin</p>
+              </div>
+              <ArrowRight size={18} className="text-white/40" />
+            </button>
+
+            <button
+              onClick={handleAITextStart}
+              className="w-full flex items-center gap-4 px-5 py-4 bg-white/10 backdrop-blur-sm rounded-2xl text-left active:scale-[0.97] transition-all border border-white/10"
+            >
+              <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
+                <MessageSquare size={22} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-white text-[15px]">Yazarak Anlat</p>
+                <p className="text-white/50 text-[12px]">Klasik yöntemle sorunu yaz</p>
+              </div>
+              <ArrowRight size={18} className="text-white/40" />
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom hint */}
+        <div className="px-8 pb-[max(env(safe-area-inset-bottom),24px)] text-center">
+          <p className="text-white/40 text-[11px]">AI tarafından analiz edilen fiyat kesindir. Usta ekstra ücret talep edemez.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader title={serviceMeta ? `Yeni ${serviceMeta.label} Talebi` : 'Yeni İş Talebi'} />
@@ -260,14 +374,25 @@ function CreateJobPage() {
                   ))}
                 </div>
               )}
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                maxLength={500}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none resize-none text-sm"
-                rows={4}
-                placeholder={serviceMeta?.placeholder || 'Örn: Sorununuzu detaylıca açıklayın...'}
-              />
+              <div className="relative">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={500}
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none resize-none text-sm"
+                  rows={4}
+                  placeholder={serviceMeta?.placeholder || 'Örn: Sorununuzu detaylıca açıklayın...'}
+                />
+                <button
+                  type="button"
+                  onClick={startVoiceInput}
+                  className={`absolute right-3 bottom-3 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                    voiceListening ? 'bg-red-500 animate-pulse' : 'bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20'
+                  }`}
+                >
+                  <Mic size={14} className={voiceListening ? 'text-white' : 'text-[#0A66C2]'} />
+                </button>
+              </div>
               <p className="text-right text-xs text-gray-300 mt-1">{description.length}/500</p>
             </Card>
 
