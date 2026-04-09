@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper, Mic } from 'lucide-react'
 
 const CAMPAIGN_ICONS = { flower: Flower, zap: Zap, gift: Gift, sparkles: Sparkles, heart: Heart, star: Star, party: PartyPopper }
@@ -16,8 +16,37 @@ function HomePage() {
   const [campaign, setCampaign] = useState(null)
   const [campaignLoading, setCampaignLoading] = useState(true)
   const [svcStatus, setSvcStatus] = useState(null)
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef(null)
 
   const unreadNotifs = getUnreadNotificationCount()
+
+  const startVoiceSearch = (e) => {
+    e.stopPropagation()
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setShowSearch(true)
+      return
+    }
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      return
+    }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'tr-TR'
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognitionRef.current = recognition
+    recognition.onstart = () => setListening(true)
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript
+      setSearchQuery(text)
+      setShowSearch(true)
+    }
+    recognition.onerror = () => setListening(false)
+    recognition.onend = () => setListening(false)
+    recognition.start()
+  }
 
   const greeting = (() => {
     const h = parseInt(new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }).format(new Date()), 10)
@@ -124,8 +153,14 @@ function HomePage() {
         >
           <Search size={20} strokeWidth={2} className="text-[#0A66C2] flex-shrink-0" />
           <span className="text-[14px] text-gray-400 flex-1">Ne tamir edilecek? <span className='text-gray-300'>(Örn: Musluk damlatıyor)</span></span>
-          <div className="w-9 h-9 rounded-xl bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
-            <Mic size={16} className="text-[#0A66C2]" />
+          <div
+            role="button"
+            onClick={startVoiceSearch}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+              listening ? 'bg-red-500 animate-pulse' : 'bg-[#0A66C2]/10'
+            }`}
+          >
+            <Mic size={16} className={listening ? 'text-white' : 'text-[#0A66C2]'} />
           </div>
         </button>
       </div>
