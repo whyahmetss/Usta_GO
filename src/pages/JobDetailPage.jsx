@@ -5,7 +5,7 @@ import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobFromBackend } from '../utils/fieldMapper'
 import { useCapacitorCamera } from '../hooks/useCapacitorCamera'
-import { MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2, RefreshCw, User } from 'lucide-react'
+import { MapPin, Phone, Camera, CheckCircle, Navigation, X, Radio, Navigation2, RefreshCw, User, Zap, Clock } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { connectSocket, getSocket, emitEvent } from '../utils/socket'
 import PageHeader from '../components/PageHeader'
@@ -783,6 +783,41 @@ function JobDetailPage() {
       <PageHeader title={job.title} />
 
       <div className="px-4 py-4 space-y-4">
+        {/* Urgent Job Banner */}
+        {job.urgent && (
+          <div className="bg-gradient-to-r from-rose-500 to-red-600 rounded-2xl p-4 text-white relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+            <div className="absolute right-3 bottom-2 opacity-20">
+              <Zap size={48} className="text-white" />
+            </div>
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 animate-pulse">
+                <Zap size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Acil Servis Talebi</p>
+                <p className="text-[11px] text-red-100">En yakın müsait usta yönlendirilecek</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scheduled Job Info */}
+        {job.scheduledDate && (
+          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Clock size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-primary-700 dark:text-primary-300 text-sm">Planlı Randevu</p>
+              <p className="text-xs text-primary-600 dark:text-primary-400">
+                {new Date(job.scheduledDate).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {job.scheduledTime && ` • ${job.scheduledTime}`}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Address & Status */}
         <Card padding="p-4">
           <div className="flex items-center gap-2 text-gray-600 mb-3">

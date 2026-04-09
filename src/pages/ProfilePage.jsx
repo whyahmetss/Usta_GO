@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadFile, fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign, User, Headphones } from 'lucide-react'
+import { LogOut, Copy, Share2, Camera, Star, Wallet, ChevronRight, Briefcase, CheckCircle, TrendingUp, Award, Tag, DollarSign, User, Headphones, ImagePlus, X, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
@@ -25,6 +25,35 @@ function ProfilePage() {
   const [uploading, setUploading] = useState(false)
   const [ustaReviews, setUstaReviews] = useState([])
   const [cropperSrc, setCropperSrc] = useState(null)
+
+  // Portfolio
+  const LS_PORTFOLIO_KEY = `ug_portfolio_${user?.id || ''}`
+  const [portfolio, setPortfolio] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_PORTFOLIO_KEY)) || [] } catch { return [] }
+  })
+  const [portfolioUploading, setPortfolioUploading] = useState(false)
+
+  const handlePortfolioAdd = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPortfolioUploading(true)
+    try {
+      const uploadRes = await uploadFile(API_ENDPOINTS.UPLOAD.SINGLE, file, 'photo')
+      const url = uploadRes?.data?.url || uploadRes?.url
+      if (url) {
+        const next = [...portfolio, { id: Date.now(), url, caption: '' }]
+        setPortfolio(next)
+        localStorage.setItem(LS_PORTFOLIO_KEY, JSON.stringify(next))
+      }
+    } catch (err) { console.error('Portfolio upload error:', err) }
+    finally { setPortfolioUploading(false); e.target.value = '' }
+  }
+
+  const handlePortfolioDelete = (id) => {
+    const next = portfolio.filter(p => p.id !== id)
+    setPortfolio(next)
+    localStorage.setItem(LS_PORTFOLIO_KEY, JSON.stringify(next))
+  }
 
   const fetchStats = async () => {
     try {
@@ -149,6 +178,51 @@ function ProfilePage() {
       </div>
 
       <div className="px-4 space-y-4 pb-6">
+        {/* Usta Level Badge */}
+        {isPro && (() => {
+          const completed = statsData.completedJobs || 0
+          const levels = [
+            { name: 'Bronz', min: 0, max: 9, color: 'from-amber-600 to-amber-700', textColor: 'text-amber-700', bg: 'bg-amber-50', icon: '🥉' },
+            { name: 'Gümüş', min: 10, max: 24, color: 'from-gray-400 to-gray-500', textColor: 'text-gray-500', bg: 'bg-gray-50', icon: '🥈' },
+            { name: 'Altın', min: 25, max: 49, color: 'from-yellow-400 to-amber-500', textColor: 'text-amber-500', bg: 'bg-amber-50', icon: '🥇' },
+            { name: 'Platin', min: 50, max: Infinity, color: 'from-violet-500 to-indigo-600', textColor: 'text-violet-600', bg: 'bg-violet-50', icon: '💎' },
+          ]
+          const current = levels.find(l => completed >= l.min && completed <= l.max) || levels[0]
+          const next = levels[levels.indexOf(current) + 1]
+          const progress = next ? Math.min(100, ((completed - current.min) / (next.min - current.min)) * 100) : 100
+
+          return (
+            <Card className="!p-0 overflow-hidden">
+              <div className={`bg-gradient-to-r ${current.color} p-4 text-white`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{current.icon}</span>
+                    <div>
+                      <p className="text-white/70 text-[10px] font-medium uppercase tracking-wider">Usta Seviyesi</p>
+                      <p className="text-lg font-bold">{current.name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-black">{completed}</p>
+                    <p className="text-[10px] text-white/70">tamamlanan iş</p>
+                  </div>
+                </div>
+              </div>
+              {next && (
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-semibold text-gray-400">Sonraki: {next.name}</span>
+                    <span className="text-[10px] font-bold text-gray-500">{completed}/{next.min} iş</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className={`h-full bg-gradient-to-r ${current.color} rounded-full transition-all duration-500`} style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
+            </Card>
+          )
+        })()}
+
         {/* Wallet Button */}
         <Card onClick={() => navigate('/wallet')} className="flex items-center gap-3 !p-3.5">
           <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
@@ -184,6 +258,46 @@ function ProfilePage() {
           </div>
         )}
 
+        {/* Portfolio */}
+        {isPro && (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                <Camera size={16} className="text-accent-500" />
+                Portfolyo / Vitrin
+              </h3>
+              <span className="text-[10px] text-gray-400">{portfolio.length} fotoğraf</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {portfolio.map(item => (
+                <div key={item.id} className="relative aspect-square rounded-xl overflow-hidden group">
+                  <img src={item.url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => handlePortfolioDelete(item.id)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <Trash2 size={10} className="text-white" />
+                  </button>
+                </div>
+              ))}
+              <label className={`aspect-square rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition ${portfolioUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                {portfolioUploading ? (
+                  <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ImagePlus size={20} className="text-gray-300 mb-1" />
+                    <span className="text-[9px] text-gray-400 font-medium">Ekle</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" onChange={handlePortfolioAdd} className="hidden" disabled={portfolioUploading} />
+              </label>
+            </div>
+            {portfolio.length === 0 && (
+              <p className="text-xs text-gray-400 mt-2">Tamamladığınız işlerin fotoğraflarını ekleyerek müşterilere vitrin oluşturun.</p>
+            )}
+          </Card>
+        )}
+
         {/* Reviews */}
         {isPro && ustaReviews.length > 0 && (
           <Card>
@@ -209,18 +323,66 @@ function ProfilePage() {
         )}
 
         {/* Loyalty */}
-        {user?.role === 'customer' && (
-          <Card className="!bg-gradient-to-br from-violet-500 to-pink-500 !border-0 text-white">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm">Sadakat Programı</h3>
-              <span className="px-2 py-1 bg-white/20 rounded-lg text-xs font-semibold">{loyaltyLevel}</span>
-            </div>
-            <div className="w-full h-1.5 bg-white/25 rounded-full overflow-hidden mb-1.5">
-              <div className="h-full bg-white rounded-full transition-all duration-300" style={{ width: `${loyaltyProgress}%` }} />
-            </div>
-            <p className="text-[11px] text-white/70">{customerCompletedJobs} / {nextMilestone} iş tamamlandı</p>
-          </Card>
-        )}
+        {user?.role === 'customer' && (() => {
+          const tiers = [
+            { name: 'Yeni Üye', min: 0, max: 4, icon: '🌱', gradient: 'from-gray-400 to-gray-500', perks: ['Standart hizmet'] },
+            { name: 'Sadık Üye', min: 5, max: 9, icon: '⭐', gradient: 'from-blue-500 to-cyan-500', perks: ['%5 indirim', 'Öncelikli destek'] },
+            { name: 'Usta Müşteri', min: 10, max: 19, icon: '💎', gradient: 'from-violet-500 to-pink-500', perks: ['%10 indirim', 'Öncelikli eşleşme', 'Özel kuponlar'] },
+            { name: 'Efsane', min: 20, max: Infinity, icon: '👑', gradient: 'from-amber-500 to-orange-600', perks: ['%15 indirim', 'VIP destek', 'Ücretsiz acil servis', 'Özel kampanyalar'] },
+          ]
+          const currentTier = tiers.find(t => customerCompletedJobs >= t.min && customerCompletedJobs <= t.max) || tiers[0]
+          const nextTier = tiers[tiers.indexOf(currentTier) + 1]
+          const progress = nextTier ? Math.min(100, ((customerCompletedJobs - currentTier.min) / (nextTier.min - currentTier.min)) * 100) : 100
+
+          return (
+            <Card className="!p-0 overflow-hidden !border-0">
+              <div className={`bg-gradient-to-br ${currentTier.gradient} p-5 text-white`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">{currentTier.icon}</span>
+                    <div>
+                      <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Sadakat Seviyesi</p>
+                      <p className="text-base font-bold">{currentTier.name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-black">{customerCompletedJobs}</p>
+                    <p className="text-[10px] text-white/60">tamamlanan iş</p>
+                  </div>
+                </div>
+                {nextTier && (
+                  <>
+                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden mb-1.5">
+                      <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="text-[10px] text-white/60">{nextTier.min - customerCompletedJobs} iş daha → <strong className="text-white">{nextTier.name}</strong></p>
+                  </>
+                )}
+              </div>
+              <div className="p-4">
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-2">Avantajların</p>
+                <div className="space-y-1.5">
+                  {currentTier.perks.map((perk, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <CheckCircle size={12} className="text-emerald-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-600 dark:text-gray-400">{perk}</span>
+                    </div>
+                  ))}
+                </div>
+                {nextTier && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <p className="text-[10px] text-gray-400 mb-1.5">{nextTier.name} seviyesinde:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {nextTier.perks.filter(p => !currentTier.perks.includes(p)).map((perk, i) => (
+                        <span key={i} className="text-[10px] bg-primary-50 dark:bg-primary-900/20 text-primary-600 font-semibold px-2 py-0.5 rounded-full">+ {perk}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )
+        })()}
 
         {/* Referral */}
         {user?.role === 'customer' && (

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, MessageCircle, Briefcase, CheckCircle, XCircle, Rocket, Star, Coins, Sparkles, PlusCircle, Trash2, Archive, ArchiveRestore, Pin, PinOff } from 'lucide-react'
+import { Bell, MessageCircle, Briefcase, CheckCircle, XCircle, Rocket, Star, Coins, Sparkles, PlusCircle, Trash2, Archive, ArchiveRestore, Pin, PinOff, MapPin, Calendar, CreditCard, Award, AlertTriangle, Tag, ThumbsUp, Zap, Clock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
@@ -18,22 +18,40 @@ const ICON_MAP = {
   sparkle:         { Icon: Sparkles,      bg: 'bg-primary-500/15', color: 'text-primary-400' },
   new:             { Icon: PlusCircle,    bg: 'bg-blue-500/15',    color: 'text-blue-400' },
   job:             { Icon: Briefcase,     bg: 'bg-primary-500/15', color: 'text-primary-400' },
+  location:        { Icon: MapPin,        bg: 'bg-teal-500/15',    color: 'text-teal-400' },
+  schedule:        { Icon: Calendar,      bg: 'bg-indigo-500/15',  color: 'text-indigo-400' },
+  payment:         { Icon: CreditCard,    bg: 'bg-purple-500/15',  color: 'text-purple-400' },
+  level:           { Icon: Award,         bg: 'bg-yellow-500/15',  color: 'text-yellow-500' },
+  warning:         { Icon: AlertTriangle, bg: 'bg-orange-500/15',  color: 'text-orange-400' },
+  coupon:          { Icon: Tag,           bg: 'bg-pink-500/15',    color: 'text-pink-400' },
+  thumbsup:        { Icon: ThumbsUp,      bg: 'bg-sky-500/15',     color: 'text-sky-400' },
+  urgent:          { Icon: Zap,           bg: 'bg-rose-500/15',    color: 'text-rose-500' },
+  reminder:        { Icon: Clock,         bg: 'bg-slate-500/15',   color: 'text-slate-400' },
 }
 
 const EMOJI_TO_KEY = {
   '🔔': 'bell', '💬': 'message', '✅': 'check', '❌': 'cancel',
   '🚀': 'rocket', '⭐': 'star', '💰': 'coins', '✨': 'sparkle',
   '💼': 'job', '🆕': 'new', '🎉': 'party', '📩': 'message',
+  '📍': 'location', '📅': 'schedule', '💳': 'payment', '🏆': 'level',
+  '⚠️': 'warning', '🏷️': 'coupon', '👍': 'thumbsup', '⚡': 'urgent', '⏰': 'reminder',
 }
 
 const TYPE_KEYWORDS = [
   ['message', 'message'], ['support', 'support_message'],
   ['job', 'job'], ['iş', 'job'], ['work', 'job'],
-  ['pay', 'coins'], ['wallet', 'coins'], ['topup', 'coins'], ['earn', 'coins'], ['para', 'coins'],
-  ['complete', 'check'], ['accept', 'check'], ['onay', 'check'], ['approv', 'check'],
+  ['pay', 'payment'], ['wallet', 'coins'], ['topup', 'coins'], ['earn', 'coins'], ['para', 'coins'], ['ödeme', 'payment'],
+  ['complete', 'check'], ['accept', 'check'], ['onay', 'check'], ['approv', 'check'], ['tamamla', 'check'],
   ['cancel', 'cancel'], ['reject', 'cancel'], ['iptal', 'cancel'], ['red', 'cancel'],
-  ['review', 'star'], ['rating', 'star'], ['rate', 'star'], ['star', 'star'],
-  ['offer', 'rocket'], ['match', 'rocket'], ['new', 'new'], ['creat', 'new'],
+  ['review', 'star'], ['rating', 'star'], ['rate', 'star'], ['star', 'star'], ['değerlendir', 'star'],
+  ['offer', 'rocket'], ['match', 'rocket'], ['new', 'new'], ['creat', 'new'], ['teklif', 'rocket'],
+  ['location', 'location'], ['konum', 'location'], ['adres', 'location'], ['navigas', 'location'],
+  ['schedule', 'schedule'], ['randevu', 'schedule'], ['takvim', 'schedule'], ['planlı', 'schedule'],
+  ['level', 'level'], ['seviye', 'level'], ['terfi', 'level'], ['badge', 'level'],
+  ['warn', 'warning'], ['uyarı', 'warning'], ['ceza', 'warning'], ['ihlal', 'warning'],
+  ['coupon', 'coupon'], ['kupon', 'coupon'], ['indirim', 'coupon'], ['kampanya', 'coupon'],
+  ['urgent', 'urgent'], ['acil', 'urgent'],
+  ['hatırlat', 'reminder'], ['remind', 'reminder'],
 ]
 
 function resolveIconKey(icon, type) {
@@ -227,26 +245,54 @@ function NotificationsPage() {
             title={tab === 'archived' ? 'Arşivde bildirim yok' : 'Henüz bildirim yok'}
             description={tab === 'archived' ? 'Arşivlenen bildirimler burada görünür.' : 'İş oluşturulunca veya mesaj gelince bildirimler burada görünür. Sağa kaydırarak Sil, Arşivle veya Sabitle yapabilirsiniz.'}
           />
-        ) : (
-          <div className="space-y-0">
-            {list.filter(Boolean).map((notif, i) => (
-              <SwipeableNotif
-                key={notif?.id || `n-${i}`}
-                notif={notif}
-                onPress={handleNotificationClick}
-                onDelete={removeNotification}
-                onArchive={archiveNotification}
-                onUnarchive={unarchiveNotification}
-                onPin={pinNotification}
-                onUnpin={unpinNotification}
-                isPinned={pinnedIds.has(notif?.id)}
-                isArchived={tab === 'archived'}
-                formatTime={formatTime}
-                NotifIcon={NotifIcon}
-              />
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const sorted = [...list.filter(Boolean)].sort((a, b) => {
+            const aPinned = pinnedIds.has(a?.id) ? 0 : 1
+            const bPinned = pinnedIds.has(b?.id) ? 0 : 1
+            if (aPinned !== bPinned) return aPinned - bPinned
+            return new Date(b?.time || 0) - new Date(a?.time || 0)
+          })
+          const groups = []
+          let lastLabel = ''
+          const now = new Date()
+          sorted.forEach(notif => {
+            const d = notif?.time ? new Date(notif.time) : null
+            let label = ''
+            if (d) {
+              const diff = Math.floor((now - d) / 86400000)
+              if (diff === 0) label = 'Bugün'
+              else if (diff === 1) label = 'Dün'
+              else if (diff < 7) label = 'Bu Hafta'
+              else label = 'Daha Önce'
+            } else { label = 'Daha Önce' }
+            if (label !== lastLabel) { groups.push({ type: 'header', label }); lastLabel = label }
+            groups.push({ type: 'notif', data: notif })
+          })
+          return (
+            <div className="space-y-0">
+              {groups.map((item, i) =>
+                item.type === 'header' ? (
+                  <p key={`h-${i}`} className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider pt-4 pb-1.5 px-1">{item.label}</p>
+                ) : (
+                  <SwipeableNotif
+                    key={item.data?.id || `n-${i}`}
+                    notif={item.data}
+                    onPress={handleNotificationClick}
+                    onDelete={removeNotification}
+                    onArchive={archiveNotification}
+                    onUnarchive={unarchiveNotification}
+                    onPin={pinNotification}
+                    onUnpin={unpinNotification}
+                    isPinned={pinnedIds.has(item.data?.id)}
+                    isArchived={tab === 'archived'}
+                    formatTime={formatTime}
+                    NotifIcon={NotifIcon}
+                  />
+                )
+              )}
+            </div>
+          )
+        })()}
 
         {tab === 'all' && unreadCount > 0 && (
           <button

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper, Mic } from 'lucide-react'
+import { Search, Bell, Settings, Zap, Wrench, Hammer, Sparkles, Paintbrush, Axe, X, ArrowRight, ChevronRight, Clock, TrendingUp, Flower, Gift, Heart, Star, PartyPopper, Mic } from 'lucide-react'
 
 const CAMPAIGN_ICONS = { flower: Flower, zap: Zap, gift: Gift, sparkles: Sparkles, heart: Heart, star: Star, party: PartyPopper }
 import { useAuth } from '../context/AuthContext'
@@ -82,13 +82,21 @@ function HomePage() {
   }, [])
 
   const SERVICE_DEFS = [
-    { id: 'electric',   name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri',    Icon: Zap,       gradient: 'from-amber-400 to-orange-500', iconColor: 'text-white', bgColor: 'bg-amber-50', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'] },
-    { id: 'plumbing',   name: 'Tesisat',  desc: 'Su kaçağı, tıkanıklık, musluk',  Icon: Wrench,    gradient: 'from-blue-400 to-blue-600',    iconColor: 'text-white', bgColor: 'bg-blue-50',  keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'] },
-    { id: 'renovation', name: 'Tadilat',  desc: 'Duvar, zemin, kapı tamiri',      Icon: Hammer,    gradient: 'from-orange-400 to-red-500',   iconColor: 'text-white', bgColor: 'bg-orange-50', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'] },
-    { id: 'cleaning',   name: 'Temizlik', desc: 'Ev, ofis, derin temizlik',       Icon: Sparkles,  gradient: 'from-purple-400 to-purple-600',iconColor: 'text-white', bgColor: 'bg-purple-50', keywords: ['temizlik', 'ev', 'ofis', 'derin'] },
-    { id: 'painting',   name: 'Boyacı',   desc: 'İç cephe, dış cephe boyama',    Icon: Paintbrush,gradient: 'from-emerald-400 to-green-600',iconColor: 'text-white', bgColor: 'bg-green-50', keywords: ['boya', 'boyacı', 'badana', 'cephe'] },
-    { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       gradient: 'from-yellow-400 to-amber-600', iconColor: 'text-white', bgColor: 'bg-yellow-50', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'] },
+    { id: 'electric',   name: 'Elektrik', desc: 'Priz, kablo, sigorta tamiri',    Icon: Zap,       gradient: 'from-amber-400 to-orange-500', iconColor: 'text-white', bgColor: 'bg-amber-50', keywords: ['elektrik', 'priz', 'sigorta', 'kablo', 'aydınlatma'],
+      subServices: ['Priz/Anahtar değişimi', 'Sigorta tamiri', 'Kablo döşeme', 'Aydınlatma montajı', 'Elektrik tablo tamiri', 'Kısa devre tespiti'] },
+    { id: 'plumbing',   name: 'Tesisat',  desc: 'Su kacağı, tıkanıklık, musluk',  Icon: Wrench,    gradient: 'from-blue-400 to-blue-600',    iconColor: 'text-white', bgColor: 'bg-blue-50',  keywords: ['tesisat', 'su', 'kaçak', 'musluk', 'tıkanıklık'],
+      subServices: ['Musluk değişimi', 'Musluk tamiri', 'Tıkanıklık açma', 'Su kacağı tamiri', 'Batarya değişimi', 'Tuvalet tamiri', 'Pıs su gideri temizleme'] },
+    { id: 'renovation', name: 'Tadilat',  desc: 'Duvar, zemin, kapı tamiri',      Icon: Hammer,    gradient: 'from-orange-400 to-red-500',   iconColor: 'text-white', bgColor: 'bg-orange-50', keywords: ['tadilat', 'duvar', 'zemin', 'kapı', 'pencere'],
+      subServices: ['Duvar tamiri', 'Zemin kaplama', 'Kapı değişimi', 'Pencere tamiri', 'Alçıpan işleri', 'Seramik döşeme'] },
+    { id: 'cleaning',   name: 'Temizlik', desc: 'Ev, ofis, derin temizlik',       Icon: Sparkles,  gradient: 'from-purple-400 to-purple-600',iconColor: 'text-white', bgColor: 'bg-purple-50', keywords: ['temizlik', 'ev', 'ofis', 'derin'],
+      subServices: ['Ev temizliği', 'Ofis temizliği', 'Derin temizlik', 'Inşaat sonrası temizlik', 'Halı yıkama', 'Cam temizliği'] },
+    { id: 'painting',   name: 'Boyacı',   desc: 'İç cephe, dış cephe boyama',    Icon: Paintbrush,gradient: 'from-emerald-400 to-green-600',iconColor: 'text-white', bgColor: 'bg-green-50', keywords: ['boya', 'boyacı', 'badana', 'cephe'],
+      subServices: ['İç cephe boyama', 'Dış cephe boyama', 'Badana', 'Dekoratif boya', 'Tavan boyama', 'Ahşap boyama'] },
+    { id: 'carpentry',  name: 'Marangoz', desc: 'Mobilya, dolap, ahşap işleri',   Icon: Axe,       gradient: 'from-yellow-400 to-amber-600', iconColor: 'text-white', bgColor: 'bg-yellow-50', keywords: ['marangoz', 'mobilya', 'dolap', 'ahşap'],
+      subServices: ['Dolap tamiri', 'Mobilya montajı', 'Menteşe değişimi', 'Raf montajı', 'Ahşap kaplama', 'Kapı menteşe tamiri'] },
   ]
+
+  const [expandedService, setExpandedService] = useState(null)
 
   const FALLBACK_STATUS = { electric: true, plumbing: false, renovation: false, cleaning: false, painting: false, carpentry: false }
 
@@ -101,11 +109,18 @@ function HomePage() {
     ? allServices.filter(s =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.keywords.some(k => k.includes(searchQuery.toLowerCase()))
+        s.keywords.some(k => k.includes(searchQuery.toLowerCase())) ||
+        s.subServices?.some(sub => sub.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : allServices
 
-  const popularSearches = ['Priz tamiri', 'Su kaçağı', 'Boya badana', 'Kapı tamiri']
+  // Autocomplete suggestions from sub-services
+  const autocompleteSuggestions = searchQuery.trim().length >= 2
+    ? allServices.flatMap(s =>
+        (s.subServices || []).filter(sub => sub.toLowerCase().includes(searchQuery.toLowerCase())).map(sub => ({ label: sub, serviceId: s.id, serviceName: s.name })))
+    : []
+
+  const popularSearches = ['Priz tamiri', 'Su kacağı', 'Boya badana', 'Kapı tamiri', 'Musluk değişimi', 'Tıkanıklık açma']
 
   return (
     <div className="bg-[#F5F7FB] dark:bg-[#0d0d0d] min-h-screen">
@@ -169,7 +184,7 @@ function HomePage() {
       <div className="px-5 mb-5">
         {campaign ? (
           <div
-            onClick={() => navigate('/create-job')}
+            onClick={() => navigate('/campaign')}
             className="rounded-3xl p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform min-h-[140px]"
             style={{
               backgroundColor: campaign.bg_color || '#111827',
@@ -297,6 +312,33 @@ function HomePage() {
           </div>
 
           <div className="overflow-y-auto h-[calc(100vh-80px)] px-5 py-5">
+            {/* Autocomplete suggestions */}
+            {autocompleteSuggestions.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Öneriler</p>
+                <div className="space-y-1">
+                  {autocompleteSuggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setShowSearch(false)
+                        setSearchQuery('')
+                        navigate(`/create-job?service=${s.serviceId}&sub=${encodeURIComponent(s.label)}`)
+                      }}
+                      className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition text-left"
+                    >
+                      <Search size={14} className="text-primary-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{s.label}</p>
+                        <p className="text-[10px] text-gray-400">{s.serviceName}</p>
+                      </div>
+                      <ArrowRight size={14} className="text-primary-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Popular searches */}
             {!searchQuery.trim() && (
               <div className="mb-6">
@@ -309,7 +351,7 @@ function HomePage() {
                     <button
                       key={q}
                       onClick={() => setSearchQuery(q)}
-                      className="px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl text-[13px] text-gray-600 font-medium hover:bg-gray-100 transition"
+                      className="px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl text-[13px] text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 transition"
                     >
                       {q}
                     </button>
@@ -326,45 +368,86 @@ function HomePage() {
               </div>
             )}
 
-            {searchQuery.trim() && (
+            {searchQuery.trim() && autocompleteSuggestions.length === 0 && (
               <p className="text-xs text-gray-400 mb-3">{filteredServices.length} sonuç</p>
             )}
 
-            {/* Service list */}
+            {/* Service list with expandable sub-services */}
             <div className="space-y-2">
               {filteredServices.map(svc => {
                 const SvcIcon = svc.Icon
+                const isExpanded = expandedService === svc.id
                 return (
-                  <button
-                    key={svc.id}
-                    onClick={() => {
-                      if (svc.active) {
-                        setShowSearch(false)
-                        setSearchQuery('')
-                        navigate('/create-job?service=' + svc.id)
-                      }
-                    }}
-                    disabled={!svc.active}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all ${
-                      svc.active
-                        ? 'bg-gray-50 dark:bg-[#141414] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] active:scale-[0.98]'
-                        : 'bg-gray-50/50 opacity-40'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.bgColor}`}>
-                      <SvcIcon size={22} className={svc.iconColor} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 text-sm">{svc.name}</h3>
-                        {!svc.active && (
-                          <span className="bg-gray-200 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded-full">Yakında</span>
+                  <div key={svc.id}>
+                    <button
+                      onClick={() => {
+                        if (!svc.active) return
+                        if (svc.subServices?.length) {
+                          setExpandedService(isExpanded ? null : svc.id)
+                        } else {
+                          setShowSearch(false)
+                          setSearchQuery('')
+                          navigate('/create-job?service=' + svc.id)
+                        }
+                      }}
+                      disabled={!svc.active}
+                      className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all ${
+                        svc.active
+                          ? 'bg-gray-50 dark:bg-[#141414] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] active:scale-[0.98]'
+                          : 'bg-gray-50/50 opacity-40'
+                      } ${isExpanded ? 'ring-2 ring-primary-200 dark:ring-primary-800' : ''}`}
+                    >
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${svc.bgColor}`}>
+                        <SvcIcon size={22} className={svc.iconColor} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{svc.name}</h3>
+                          {!svc.active && (
+                            <span className="bg-gray-200 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded-full">Yakında</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5">{svc.desc}</p>
+                        {svc.active && svc.subServices?.length > 0 && (
+                          <p className="text-[10px] text-primary-500 font-medium mt-1">{svc.subServices.length} alt hizmet</p>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{svc.desc}</p>
-                    </div>
-                    {svc.active && <ArrowRight size={16} className="text-gray-300 flex-shrink-0" />}
-                  </button>
+                      {svc.active && (
+                        <ChevronRight size={16} className={`text-gray-300 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      )}
+                    </button>
+
+                    {/* Sub-services list */}
+                    {isExpanded && svc.subServices && (
+                      <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-primary-200 dark:border-primary-800 pl-3">
+                        {svc.subServices.map(sub => (
+                          <button
+                            key={sub}
+                            onClick={() => {
+                              setShowSearch(false)
+                              setSearchQuery('')
+                              navigate(`/create-job?service=${svc.id}&sub=${encodeURIComponent(sub)}`)
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1a] transition active:scale-[0.98]"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary-400 flex-shrink-0" />
+                            <span className="text-[13px] text-gray-700 dark:text-gray-300 font-medium">{sub}</span>
+                            <ArrowRight size={12} className="text-gray-300 ml-auto flex-shrink-0" />
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setShowSearch(false)
+                            setSearchQuery('')
+                            navigate('/create-job?service=' + svc.id)
+                          }}
+                          className="w-full px-3 py-2 rounded-xl text-left text-[12px] text-primary-500 font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition"
+                        >
+                          Diğer {svc.name} sorunları →
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
 

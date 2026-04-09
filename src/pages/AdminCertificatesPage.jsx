@@ -45,23 +45,23 @@ function AdminCertificatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <PageHeader
         title="Sertifika Onayları"
         onBack={() => navigate('/admin')}
       />
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-3">
         {error && (
-          <Card className="!bg-rose-50 !border-rose-200">
-            <p className="text-xs text-rose-600 font-medium">{error}</p>
+          <Card className="!bg-rose-500/10 !border-rose-500/20">
+            <p className="text-xs text-rose-400 font-medium">{error}</p>
           </Card>
         )}
 
         {loading ? (
           <div className="flex flex-col items-center py-16">
-            <Loader size={28} className="text-primary-500 animate-spin mb-3" />
-            <p className="text-xs text-gray-500">Sertifikalar yükleniyor...</p>
+            <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+            <p className="text-xs text-zinc-500">Sertifikalar yükleniyor...</p>
           </div>
         ) : certificates.length === 0 ? (
           <EmptyState
@@ -74,24 +74,24 @@ function AdminCertificatesPage() {
             {certificates.map((c) => (
               <Card key={c.id}>
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
-                    <FileText size={18} className="text-amber-600" />
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                    <FileText size={18} className="text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900">{c.user?.name || 'Usta'}</p>
-                    <p className="text-xs text-gray-500 truncate">{c.user?.email}</p>
-                    <p className="text-[11px] text-gray-400 mt-1">
+                    <p className="text-sm font-semibold text-white">{c.user?.name || 'Usta'}</p>
+                    <p className="text-xs text-zinc-500 truncate">{c.user?.email}</p>
+                    <p className="text-[11px] text-zinc-600 mt-1">
                       {new Date(c.createdAt).toLocaleString('tr-TR')}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.06]">
                   <a
                     href={c.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-2.5 bg-primary-50 text-primary-600 rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                    className="flex-1 py-2.5 bg-blue-500/10 text-blue-400 rounded-2xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
                   >
                     <ExternalLink size={13} /> Görüntüle
                   </a>

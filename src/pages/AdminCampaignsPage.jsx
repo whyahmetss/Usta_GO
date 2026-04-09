@@ -145,12 +145,12 @@ function AdminCampaignsPage() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <PageHeader title="Kampanya Yonetimi" onBack={() => navigate('/admin')} />
 
-      <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
+      <div className="px-4 py-6 max-w-6xl mx-auto space-y-4">
         {msg && (
-          <div className={`rounded-2xl p-4 flex items-center gap-3 text-sm font-medium ${msg.ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-rose-50 border border-rose-200 text-rose-700'}`}>
+          <div className={`rounded-2xl p-4 flex items-center gap-3 text-sm font-medium ${msg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'}`}>
             {msg.text}
           </div>
         )}
@@ -159,8 +159,8 @@ function AdminCampaignsPage() {
         <Card padding="p-0">
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 mb-3">
-              <Eye size={14} className="text-gray-400" />
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Onizleme</h3>
+              <Eye size={14} className="text-zinc-500" />
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Onizleme</h3>
             </div>
           </div>
           <div className="px-4 pb-4">
@@ -215,8 +215,8 @@ function AdminCampaignsPage() {
         {/* Color Themes */}
         <Card>
           <div className="flex items-center gap-2 mb-3">
-            <Palette size={16} className="text-gray-500" />
-            <h3 className="font-semibold text-gray-900 text-sm">Renk Temasi</h3>
+            <Palette size={16} className="text-zinc-500" />
+            <h3 className="font-semibold text-white text-sm">Renk Temasi</h3>
           </div>
           <div className="grid grid-cols-6 gap-2">
             {presetThemes.map(theme => (
@@ -232,7 +232,7 @@ function AdminCampaignsPage() {
                     borderColor: campaign.bg_color === theme.bg_color ? theme.badge_color : 'transparent',
                   }}
                 />
-                <span className="text-[9px] text-gray-500">{theme.name}</span>
+                <span className="text-[9px] text-zinc-500">{theme.name}</span>
               </button>
             ))}
           </div>
@@ -240,51 +240,51 @@ function AdminCampaignsPage() {
 
         {/* Form */}
         <Card padding="p-5">
-          <h3 className="font-semibold text-gray-900 text-sm mb-4">Kampanya Detaylari</h3>
+          <h3 className="font-semibold text-white text-sm mb-4">Kampanya Detaylari</h3>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Etiket (badge)</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Etiket (badge)</label>
               <input
                 type="text"
                 value={campaign.badge_text}
                 onChange={(e) => setCampaign(p => ({ ...p, badge_text: e.target.value }))}
                 placeholder="Orn: 8 MART OZEL, %20 INDIRIM"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Baslik *</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Baslik *</label>
               <input
                 type="text"
                 value={campaign.title}
                 onChange={(e) => setCampaign(p => ({ ...p, title: e.target.value }))}
                 placeholder="Orn: Kadinlar Gunune Ozel!"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Aciklama</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Aciklama</label>
               <textarea
                 value={campaign.description}
                 onChange={(e) => setCampaign(p => ({ ...p, description: e.target.value }))}
                 placeholder="Orn: Tum hizmetlerde gecerli ozel indirim"
                 rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm resize-none"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Buton Yazisi</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Buton Yazisi</label>
               <input
                 type="text"
                 value={campaign.button_text}
                 onChange={(e) => setCampaign(p => ({ ...p, button_text: e.target.value }))}
                 placeholder="Orn: Hemen Basla"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block flex items-center gap-2">
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block flex items-center gap-2">
                 <Image size={12} /> Arka Plan Resmi
               </label>
               <div className="flex gap-2">
@@ -293,9 +293,9 @@ function AdminCampaignsPage() {
                   value={campaign.bg_image}
                   onChange={(e) => setCampaign(p => ({ ...p, bg_image: e.target.value }))}
                   placeholder="https://... veya yukleyin"
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm"
                 />
-                <label className={`px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer whitespace-nowrap ${uploadingBg ? 'opacity-50' : 'bg-gray-50 hover:bg-gray-100'}`}>
+                <label className={`px-4 py-3 rounded-xl border border-white/[0.06] text-sm font-medium cursor-pointer whitespace-nowrap text-zinc-300 ${uploadingBg ? 'opacity-50' : 'bg-white/[0.04] hover:bg-white/[0.08]'}`}>
                   {uploadingBg ? '...' : 'Yukle'}
                   <input type="file" accept="image/*" onChange={handleUploadBg} className="hidden" disabled={uploadingBg} />
                 </label>
@@ -303,7 +303,7 @@ function AdminCampaignsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Sagdaki Ikon (orn. Kadinlar Gunu icin cicek)</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Sagdaki Ikon (orn. Kadinlar Gunu icin cicek)</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {ICON_OPTIONS.filter(o => o.value).map(opt => {
                   const Icon = opt.Icon
@@ -314,8 +314,8 @@ function AdminCampaignsPage() {
                       onClick={() => setCampaign(p => ({ ...p, icon_type: campaign.icon_type === opt.value ? '' : opt.value, icon_image: '' }))}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition ${
                         campaign.icon_type === opt.value
-                          ? 'bg-primary-500 text-white border-primary-500'
-                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white/[0.04] border-white/[0.06] text-zinc-400 hover:bg-white/[0.08]'
                       }`}
                     >
                       <Icon size={14} /> {opt.label.split(' ')[0]}
@@ -329,36 +329,36 @@ function AdminCampaignsPage() {
                   value={campaign.icon_image}
                   onChange={(e) => setCampaign(p => ({ ...p, icon_image: e.target.value, icon_type: '' }))}
                   placeholder="Ozel ikon resmi URL (opsiyonel)"
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm"
                 />
-                <label className={`px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer whitespace-nowrap ${uploadingIcon ? 'opacity-50' : 'bg-gray-50 hover:bg-gray-100'}`}>
+                <label className={`px-4 py-3 rounded-xl border border-white/[0.06] text-sm font-medium cursor-pointer whitespace-nowrap text-zinc-300 ${uploadingIcon ? 'opacity-50' : 'bg-white/[0.04] hover:bg-white/[0.08]'}`}>
                   {uploadingIcon ? '...' : 'Yukle'}
                   <input type="file" accept="image/*" onChange={handleUploadIcon} className="hidden" disabled={uploadingIcon} />
                 </label>
               </div>
-              <p className="text-[10px] text-gray-400 mt-1">Ikon veya ozel resim secin. Ozel resim onceliklidir.</p>
+              <p className="text-[10px] text-zinc-600 mt-1">Ikon veya ozel resim secin. Ozel resim onceliklidir.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[10px] font-medium text-gray-400 mb-1 block">Arka Plan</label>
+                <label className="text-[10px] font-medium text-zinc-500 mb-1 block">Arka Plan</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={campaign.bg_color} onChange={(e) => setCampaign(p => ({ ...p, bg_color: e.target.value }))} className="w-8 h-8 rounded-lg cursor-pointer border-0" />
-                  <span className="text-[10px] text-gray-400">{campaign.bg_color}</span>
+                  <span className="text-[10px] text-zinc-500">{campaign.bg_color}</span>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-medium text-gray-400 mb-1 block">Etiket Renk</label>
+                <label className="text-[10px] font-medium text-zinc-500 mb-1 block">Etiket Renk</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={campaign.badge_color} onChange={(e) => setCampaign(p => ({ ...p, badge_color: e.target.value }))} className="w-8 h-8 rounded-lg cursor-pointer border-0" />
-                  <span className="text-[10px] text-gray-400">{campaign.badge_color}</span>
+                  <span className="text-[10px] text-zinc-500">{campaign.badge_color}</span>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-medium text-gray-400 mb-1 block">Yazi Renk</label>
+                <label className="text-[10px] font-medium text-zinc-500 mb-1 block">Yazi Renk</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={campaign.text_color} onChange={(e) => setCampaign(p => ({ ...p, text_color: e.target.value }))} className="w-8 h-8 rounded-lg cursor-pointer border-0" />
-                  <span className="text-[10px] text-gray-400">{campaign.text_color}</span>
+                  <span className="text-[10px] text-zinc-500">{campaign.text_color}</span>
                 </div>
               </div>
             </div>
@@ -370,7 +370,7 @@ function AdminCampaignsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-600 active:scale-[0.98] transition disabled:opacity-60"
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-500 active:scale-[0.98] transition disabled:opacity-60"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {saving ? 'Kaydediliyor...' : hasExisting ? 'Kampanyayi Guncelle' : 'Kampanyayi Yayinla'}
@@ -380,7 +380,7 @@ function AdminCampaignsPage() {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="w-full py-4 bg-rose-50 text-rose-600 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-rose-100 active:scale-[0.98] transition disabled:opacity-60"
+              className="w-full py-4 bg-rose-500/10 text-rose-400 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-rose-500/20 active:scale-[0.98] transition disabled:opacity-60"
             >
               {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
               {deleting ? 'Kaldiriliyor...' : 'Kampanyayi Kaldir'}

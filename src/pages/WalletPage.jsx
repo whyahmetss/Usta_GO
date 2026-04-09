@@ -3,12 +3,50 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle, Package, Calendar, ArrowDownCircle, ArrowUpCircle, Coins, ShoppingCart, Wallet, Lock } from 'lucide-react'
+import { TrendingUp, Plus, Tag, CreditCard, ChevronRight, CheckCircle, Clock, XCircle, Package, Calendar, ArrowDownCircle, ArrowUpCircle, Coins, ShoppingCart, Wallet, Lock, FileText, Download } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
 // Beta: Ödeme sistemi henüz aktif değil
 const WALLET_ENABLED = true
+
+function generateReceipt(tx, user) {
+  const date = tx.date ? new Date(tx.date).toLocaleDateString('tr-TR') : '-'
+  let parsed = null
+  try { parsed = typeof tx.description === 'string' ? JSON.parse(tx.description) : null } catch {}
+  const text = parsed?.text || tx.description || 'İşlem'
+  const gross = parsed?.gross || Math.round(Math.abs(tx.amount) / 0.88)
+  const commission = gross - Math.abs(tx.amount)
+  const lines = [
+    '═══════════════════════════════════',
+    '          USTA GO - MAKBUZ          ',
+    '═══════════════════════════════════',
+    '',
+    `Tarih     : ${date}`,
+    `İşlem No  : ${tx.id || '-'}`,
+    `Usta      : ${user?.name || '-'}`,
+    '',
+    '───────────────────────────────────',
+    `Açıklama  : ${text}`,
+    `Brüt Tutar: ${gross} TL`,
+    `Komisyon  : -${commission} TL (%12)`,
+    `Net Tutar : ${Math.abs(tx.amount)} TL`,
+    '───────────────────────────────────',
+    '',
+    'Bu belge bilgilendirme amaçlıdır.',
+    'Resmi fatura niteliği taşımaz.',
+    '',
+    '═══════════════════════════════════',
+  ].join('\n')
+
+  const blobFull = new Blob([lines], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blobFull)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `makbuz-${tx.id || Date.now()}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 function WalletPage() {
   const { user } = useAuth()
@@ -262,14 +300,25 @@ function WalletPage() {
             {showPackageSelection && (
               <div className="space-y-3">
                 <p className="text-[10px] text-gray-400 text-center">Paketinizi seçin — ücret hizmet hesabınızdan düşülür</p>
-                {PACKAGES.map(pkg => (
-                  <div key={pkg.id} className={`border rounded-xl p-4 ${pkg.border}`}>
+                {PACKAGES.map((pkg, pkgIdx) => (
+                  <div key={pkg.id} className={`border rounded-xl p-4 ${pkg.border} relative`}>
+                    {pkgIdx === 1 && (
+                      <span className="absolute -top-2.5 right-3 px-2.5 py-0.5 bg-primary-500 text-white text-[9px] font-bold rounded-full">En Popüler</span>
+                    )}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">{pkg.badge}</span>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-bold text-gray-900 dark:text-white text-sm">{pkg.name}</p>
-                        <p className={`font-bold text-sm ${pkg.accent}`}>{pkg.price?.toLocaleString('tr-TR')} TL</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <p className={`font-bold text-sm ${pkg.accent}`}>{pkg.price?.toLocaleString('tr-TR')} TL</p>
+                          {pkg.durationDays && <span className="text-[9px] text-gray-400">/ {pkg.durationDays} gün</span>}
+                        </div>
                       </div>
+                      {pkg.durationDays > 0 && pkg.price > 0 && (
+                        <span className="text-[9px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
+                          {Math.round(pkg.price / (pkg.durationDays / 30)).toLocaleString('tr-TR')} TL/ay
+                        </span>
+                      )}
                     </div>
                     <ul className="space-y-1 mb-3">
                       {(pkg.features || []).map((f, i) => (
@@ -363,6 +412,81 @@ function WalletPage() {
           </Card>
         </div>
 
+        {/* Weekly Earnings Mini Chart */}
+        {(() => {
+          const earningTxs = transactions.filter(t => t.amount > 0)
+          const weekLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+          const now = new Date()
+          const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay() + 1); weekStart.setHours(0,0,0,0)
+          const weeklyData = Array(7).fill(0)
+          earningTxs.forEach(tx => {
+            const d = tx.date ? new Date(tx.date) : null
+            if (!d || d < weekStart) return
+            const day = (d.getDay() + 6) % 7
+            weeklyData[day] += Math.abs(tx.amount)
+          })
+          const maxVal = Math.max(...weeklyData, 1)
+          const todayIdx = (now.getDay() + 6) % 7
+
+          return (
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Bu Hafta</h3>
+                <span className="text-xs font-bold text-emerald-600">{weeklyData.reduce((a,b) => a+b, 0).toLocaleString('tr-TR')} TL</span>
+              </div>
+              <div className="flex items-end gap-1.5 h-16">
+                {weeklyData.map((val, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className={`w-full rounded-t-md transition-all ${i === todayIdx ? 'bg-emerald-500' : val > 0 ? 'bg-emerald-200 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-800'}`}
+                      style={{ height: `${Math.max(4, (val / maxVal) * 48)}px` }}
+                    />
+                    <span className={`text-[8px] font-medium ${i === todayIdx ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>{weekLabels[i]}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )
+        })()}
+
+        {/* Category Breakdown */}
+        {(() => {
+          const earningTxs = transactions.filter(t => t.amount > 0)
+          const catMap = {}
+          earningTxs.forEach(tx => {
+            let parsed = null
+            try { parsed = typeof tx.description === 'string' ? JSON.parse(tx.description) : null } catch {}
+            const cat = parsed?.category || tx.category || 'Genel'
+            catMap[cat] = (catMap[cat] || 0) + Math.abs(tx.amount)
+          })
+          const cats = Object.entries(catMap).sort((a,b) => b[1] - a[1])
+          const total = cats.reduce((s, [,v]) => s + v, 0) || 1
+          const catColors = ['bg-emerald-500', 'bg-primary-500', 'bg-amber-500', 'bg-violet-500', 'bg-rose-500', 'bg-cyan-500']
+
+          if (cats.length === 0) return null
+
+          return (
+            <Card>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-3">Kategori Dağılımı</h3>
+              <div className="flex h-2 rounded-full overflow-hidden mb-3">
+                {cats.map(([cat, val], i) => (
+                  <div key={cat} className={`${catColors[i % catColors.length]} transition-all`} style={{ width: `${(val / total) * 100}%` }} />
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                {cats.slice(0, 5).map(([cat, val], i) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${catColors[i % catColors.length]} flex-shrink-0`} />
+                    <span className="text-xs text-gray-600 dark:text-gray-400 flex-1">{cat}</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white">{val.toLocaleString('tr-TR')} TL</span>
+                    <span className="text-[10px] text-gray-400">{Math.round((val / total) * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )
+        })()}
+
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2.5 px-0.5">İşlem Özeti</h3>
           {transactions.length === 0 ? (
@@ -392,10 +516,19 @@ function WalletPage() {
                     </p>
                   </div>
                   {isEarning && grossAmount > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/5 flex items-center gap-3 text-[10px] text-gray-400 pl-12">
-                      <span>Brüt: {grossAmount} TL</span>
-                      <span>→ Komisyon (%12): -{commissionAmount} TL</span>
-                      <span className="text-emerald-500 font-semibold">Net: {tx.amount} TL</span>
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between pl-12">
+                      <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                        <span>Brüt: {grossAmount} TL</span>
+                        <span>→ Komisyon (%12): -{commissionAmount} TL</span>
+                        <span className="text-emerald-500 font-semibold">Net: {tx.amount} TL</span>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); generateReceipt(tx, user) }}
+                        className="flex items-center gap-1 text-[10px] text-primary-500 font-semibold hover:text-primary-600 transition flex-shrink-0"
+                        title="Makbuz İndir"
+                      >
+                        <Download size={10} /> Makbuz
+                      </button>
                     </div>
                   )}
                 </Card>

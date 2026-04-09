@@ -120,21 +120,21 @@ function AdminMessagesPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <PageHeader
         title="Mesaj Gönder"
         onBack={() => navigate('/admin')}
       />
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
         {/* Send Message */}
         <Card>
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Mesaj Gönder</h2>
+          <h2 className="text-sm font-semibold text-white mb-4">Mesaj Gönder</h2>
 
           {loading ? (
             <div className="flex flex-col items-center py-8">
-              <Loader size={28} className="text-primary-500 animate-spin mb-3" />
-              <p className="text-xs text-gray-500">Kullanıcılar yükleniyor...</p>
+              <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+              <p className="text-xs text-zinc-500">Kullanıcılar yükleniyor...</p>
             </div>
           ) : (
             <>
@@ -148,12 +148,12 @@ function AdminMessagesPage() {
                     onClick={() => setSendMode(mode.id)}
                     className={`p-3 rounded-xl border-2 transition-all active:scale-[0.98] ${
                       sendMode === mode.id
-                        ? 'bg-primary-50 border-primary-500'
-                        : 'bg-white border-gray-200'
+                        ? 'bg-blue-500/10 border-blue-500'
+                        : 'bg-white/[0.04] border-white/[0.06]'
                     }`}
                   >
                     <div className="mb-1"><ModeIcon size={20} /></div>
-                    <p className={`text-[11px] font-semibold ${sendMode === mode.id ? 'text-primary-600' : 'text-gray-600'}`}>
+                    <p className={`text-[11px] font-semibold ${sendMode === mode.id ? 'text-blue-400' : 'text-zinc-400'}`}>
                       {mode.label}
                     </p>
                   </button>
@@ -163,11 +163,11 @@ function AdminMessagesPage() {
               {/* Individual user picker */}
               {sendMode === 'individual' && (
                 <div className="mb-4">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Kullanıcı Seç</label>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Kullanıcı Seç</label>
                   <select
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                   >
                     <option value="">-- Kullanıcı Seçin --</option>
                     {users.map(user => (
@@ -181,34 +181,34 @@ function AdminMessagesPage() {
 
               {/* Subject input */}
               <div className="mb-3">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Konu Başlığı <span className="text-gray-400 font-normal">(bildirim başlığı olur)</span></label>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Konu Başlığı <span className="text-zinc-600 font-normal">(bildirim başlığı olur)</span></label>
                 <input
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Örn: Kampanya Duyurusu, Önemli Bilgi..."
-                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                   maxLength={80}
                 />
               </div>
 
               {/* Message textarea */}
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Mesaj</label>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Mesaj</label>
                 <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Mesajınızı yazın..."
-                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none"
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 resize-none"
                   rows={5}
                 />
-                <p className="text-[11px] text-gray-400 mt-1">{messageText.length} karakter</p>
+                <p className="text-[11px] text-zinc-600 mt-1">{messageText.length} karakter</p>
               </div>
 
               {/* Send button */}
               <button
                 onClick={handleSendMessage}
                 disabled={sending}
-                className="w-full py-3 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {sending ? (
                   <Loader size={18} className="animate-spin" />
@@ -223,7 +223,7 @@ function AdminMessagesPage() {
 
         {/* Sent Messages History */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-900 mb-3 px-1">
+          <h2 className="text-sm font-semibold text-white mb-3 px-1">
             Gönderilen Mesajlar ({sentMessages.length})
           </h2>
 
@@ -239,23 +239,23 @@ function AdminMessagesPage() {
                 <Card key={idx}>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">{msg.targetUserName}</p>
-                      <p className="text-[11px] text-gray-500 truncate">{msg.targetUserEmail}</p>
-                      <p className="text-[11px] text-gray-400">{roleLabel(msg.targetUserRole)}</p>
+                      <p className="text-sm font-semibold text-white">{msg.targetUserName}</p>
+                      <p className="text-[11px] text-zinc-500 truncate">{msg.targetUserEmail}</p>
+                      <p className="text-[11px] text-zinc-600">{roleLabel(msg.targetUserRole)}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         Gönderildi
                       </span>
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="text-[11px] text-zinc-600 mt-1">
                         {new Date(msg.sentAt).toLocaleDateString('tr-TR', {
                           month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
                         })}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl">{msg.message}</p>
+                  <p className="text-xs text-zinc-400 bg-white/[0.04] p-3 rounded-xl">{msg.message}</p>
                 </Card>
               ))}
             </div>

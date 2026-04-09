@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle, Zap } from 'lucide-react'
+import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle, Zap, Clock, Calendar } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -10,6 +10,41 @@ import Card from '../components/Card'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
+
+// Countdown timer for job acceptance
+function AcceptCountdown({ createdAt }) {
+  const [remaining, setRemaining] = useState('')
+  const ACCEPT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+
+  useEffect(() => {
+    if (!createdAt) return
+    const update = () => {
+      const elapsed = Date.now() - new Date(createdAt).getTime()
+      const left = Math.max(0, ACCEPT_WINDOW_MS - elapsed)
+      if (left <= 0) { setRemaining('Süre doldu'); return }
+      const mins = Math.floor(left / 60000)
+      const secs = Math.floor((left % 60000) / 1000)
+      setRemaining(`${mins}:${String(secs).padStart(2, '0')}`)
+    }
+    update()
+    const interval = setInterval(update, 1000)
+    return () => clearInterval(interval)
+  }, [createdAt])
+
+  if (!remaining) return null
+
+  const isLow = remaining !== 'Süre doldu' && parseInt(remaining) < 5
+  const isExpired = remaining === 'Süre doldu'
+
+  return (
+    <div className={`flex items-center gap-1 text-[10px] font-bold ${
+      isExpired ? 'text-gray-400' : isLow ? 'text-rose-500 animate-pulse' : 'text-amber-500'
+    }`}>
+      <Clock size={10} />
+      <span>{remaining}</span>
+    </div>
+  )
+}
 
 // Müşteri adını maskele: "Ahmet Çavdar" → "Ahmet Ç."
 const maskName = (name) => {
@@ -250,6 +285,25 @@ function ProfessionalDashboard() {
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="px-4 pb-3">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {[
+            { label: 'Cüzdan', icon: DollarSign, path: '/wallet', color: 'bg-emerald-500' },
+            { label: 'İşlerim', icon: Briefcase, path: '/my-jobs', color: 'bg-primary-500' },
+            { label: 'Profil', icon: Settings, path: '/settings', color: 'bg-violet-500' },
+            { label: 'Takvim', icon: Calendar, path: '/settings', color: 'bg-amber-500' },
+          ].map(a => (
+            <button key={a.label} onClick={() => navigate(a.path)} className="flex flex-col items-center gap-1.5 min-w-[64px]">
+              <div className={`w-12 h-12 ${a.color} rounded-2xl flex items-center justify-center shadow-sm`}>
+                <a.icon size={20} className="text-white" />
+              </div>
+              <span className="text-[10px] font-semibold text-gray-500">{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Job Requests */}
       <div className="px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
@@ -269,14 +323,24 @@ function ProfessionalDashboard() {
         ) : (
           <div className="space-y-3">
             {jobRequests.map(job => (
-              <Card key={job.id} onClick={() => navigate(`/job/${job.id}`)}>
+              <Card key={job.id} onClick={() => navigate(`/job/${job.id}`)} className={job.urgent ? '!border-rose-200 !bg-rose-50/50 dark:!border-rose-900 dark:!bg-rose-900/10' : ''}>
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-gray-900 text-sm flex-1 mr-2">{job.title}</h3>
-                  {job.urgent && <StatusBadge status="urgent" />}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <AcceptCountdown createdAt={job.createdAt} />
+                    {job.urgent && <StatusBadge status="urgent" />}
+                  </div>
                 </div>
                 <p className="text-xs text-gray-500 flex items-center gap-1 mb-1.5">
                   <MapPin size={12} /> {shortenAddress(job.location?.address)}
                 </p>
+                {job.scheduledDate && (
+                  <p className="text-[10px] text-primary-500 font-semibold flex items-center gap-1 mb-1.5">
+                    <Calendar size={10} />
+                    {new Date(job.scheduledDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                    {job.scheduledTime && ` • ${job.scheduledTime}`}
+                  </p>
+                )}
                 <p className="text-xs text-gray-400 mb-3 line-clamp-2">{job.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                   <div className="flex items-center gap-2">

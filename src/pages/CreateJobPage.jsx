@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI, uploadFile } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { Camera, Sparkles, MapPin, ChevronRight, Check } from 'lucide-react'
+import { Camera, Sparkles, MapPin, ChevronRight, Check, Calendar, Clock, Zap as ZapIcon } from 'lucide-react'
 import { emitEvent } from '../utils/socket'
 import MapPickerModal from '../components/MapPickerModal'
+import SavedAddresses from '../components/SavedAddresses'
 import PageHeader from '../components/PageHeader'
 import Card from '../components/Card'
 
@@ -47,8 +48,9 @@ function CreateJobPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const serviceMeta = SERVICE_META[searchParams.get('service')] || null
+  const subService = searchParams.get('sub') || ''
   const [step, setStep]               = useState(1)
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState(subService ? `${subService} — ` : '')
   const [photo, setPhoto]             = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [aiResult, setAiResult]       = useState(null)
@@ -62,6 +64,25 @@ function CreateJobPage() {
   const [activeCoupons, setActiveCoupons]   = useState([])
   const [isCreating, setIsCreating]   = useState(false)
   const [error, setError]             = useState(null)
+  const [scheduleType, setScheduleType] = useState('now') // 'now' | 'scheduled'
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+
+  // Generate next 7 days for date picker
+  const dateOptions = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i)
+    const label = i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
+    return { value: d.toISOString().split('T')[0], label, dayName: d.toLocaleDateString('tr-TR', { weekday: 'short' }), dayNum: d.getDate() }
+  })
+
+  const timeSlots = [
+    { value: '09:00-11:00', label: '09:00 - 11:00', period: 'Sabah' },
+    { value: '11:00-13:00', label: '11:00 - 13:00', period: 'Sabah' },
+    { value: '13:00-15:00', label: '13:00 - 15:00', period: 'Öğle' },
+    { value: '15:00-17:00', label: '15:00 - 17:00', period: 'Öğle' },
+    { value: '17:00-19:00', label: '17:00 - 19:00', period: 'Akşam' },
+    { value: '19:00-21:00', label: '19:00 - 21:00', period: 'Akşam' },
+  ]
 
   const estimatedPrice = aiResult?.estimatedPrice || 0
   const finalPrice     = Math.max(0, estimatedPrice - (selectedCoupon?.amount || 0))
@@ -167,9 +188,13 @@ function CreateJobPage() {
         address:     address.trim(),
         ...(lat && lng ? { lat, lng } : {}),
         category:    aiResult?.category || 'GENERAL',
-        urgent:      aiResult?.isUrgent || false,
+        urgent:      scheduleType === 'now' || aiResult?.isUrgent || false,
         status:      'pending',
         photos:      photoUrl ? [photoUrl] : [],
+        ...(scheduleType === 'scheduled' && selectedDate && selectedTime ? {
+          scheduledDate: selectedDate,
+          scheduledTime: selectedTime,
+        } : {}),
       }
 
       const result = await createJob(jobData)
@@ -290,13 +315,106 @@ function CreateJobPage() {
                 </span>
                 <ChevronRight size={16} className="shrink-0 text-gray-300" />
               </button>
+              <div className="mt-3">
+                <SavedAddresses currentAddress={address} onSelect={(addr) => setAddress(addr)} />
+              </div>
+            </Card>
+
+            {/* Schedule Picker */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm flex items-center gap-1.5">
+                <Calendar size={16} className="text-primary-500" /> Ne Zaman?
+              </h3>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('now')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all active:scale-[0.97] ${
+                    scheduleType === 'now'
+                      ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <ZapIcon size={16} /> Hemen (Acil)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('scheduled')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all active:scale-[0.97] ${
+                    scheduleType === 'scheduled'
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <Calendar size={16} /> Tarih Seç
+                </button>
+              </div>
+
+              {scheduleType === 'scheduled' && (
+                <div className="space-y-3 pt-1">
+                  {/* Date Selection */}
+                  <div>
+                    <p className="text-xs text-gray-400 mb-2 font-medium">Gün seçin</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                      {dateOptions.map(d => (
+                        <button
+                          key={d.value}
+                          type="button"
+                          onClick={() => setSelectedDate(d.value)}
+                          className={`flex flex-col items-center min-w-[56px] py-2.5 px-2 rounded-xl border-2 text-center transition-all active:scale-[0.95] ${
+                            selectedDate === d.value
+                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                              : 'border-gray-100 dark:border-gray-800 hover:border-gray-200'
+                          }`}
+                        >
+                          <span className={`text-[10px] font-medium ${selectedDate === d.value ? 'text-primary-500' : 'text-gray-400'}`}>{d.dayName}</span>
+                          <span className={`text-lg font-bold ${selectedDate === d.value ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}`}>{d.dayNum}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Time Slot Selection */}
+                  {selectedDate && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2 font-medium">Saat dilimi seçin</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {timeSlots.map(t => (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => setSelectedTime(t.value)}
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-left transition-all active:scale-[0.97] ${
+                              selectedTime === t.value
+                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                : 'border-gray-100 dark:border-gray-800 hover:border-gray-200'
+                            }`}
+                          >
+                            <Clock size={14} className={selectedTime === t.value ? 'text-primary-500' : 'text-gray-300'} />
+                            <div>
+                              <p className={`text-xs font-semibold ${selectedTime === t.value ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}`}>{t.label}</p>
+                              <p className="text-[10px] text-gray-400">{t.period}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {scheduleType === 'now' && (
+                <p className="text-xs text-rose-500 dark:text-rose-400 font-medium flex items-center gap-1.5 mt-1">
+                  <ZapIcon size={12} /> En yakın müsait usta hemen yönlendirilecek
+                </p>
+              )}
             </Card>
 
             <button
               onClick={handleAIAnalysis}
-              disabled={!description.trim() || !address.trim()}
+              disabled={!description.trim() || !address.trim() || (scheduleType === 'scheduled' && (!selectedDate || !selectedTime))}
               className={`w-full py-4 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-                !description.trim() || !address.trim()
+                !description.trim() || !address.trim() || (scheduleType === 'scheduled' && (!selectedDate || !selectedTime))
                   ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
                   : 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98] shadow-card'
               }`}

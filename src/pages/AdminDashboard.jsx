@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
+import { SkeletonKPI, SkeletonList } from '../components/SkeletonLoader'
 import {
   Users,
   Briefcase,
@@ -20,6 +21,8 @@ import {
   Megaphone,
   BarChart2,
   Headphones,
+  FileText,
+  Shield,
 } from 'lucide-react'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
@@ -138,6 +141,7 @@ function AdminDashboard() {
       iconColor: 'text-blue-400',
       trend: '+12%',
       trendUp: true,
+      link: '/admin/users',
     },
     {
       label: 'Aktif İşler',
@@ -146,6 +150,7 @@ function AdminDashboard() {
       iconColor: 'text-emerald-400',
       trend: '+5%',
       trendUp: true,
+      link: '/admin/jobs',
     },
     {
       label: 'Toplam Gelir',
@@ -154,6 +159,7 @@ function AdminDashboard() {
       iconColor: 'text-amber-400',
       trend: '+18%',
       trendUp: true,
+      link: '/admin/finance',
     },
     {
       label: 'Toplam İş',
@@ -162,6 +168,7 @@ function AdminDashboard() {
       iconColor: 'text-violet-400',
       trend: '+8%',
       trendUp: true,
+      link: '/admin/analytics',
     },
     {
       label: 'Aktif Usta',
@@ -170,6 +177,7 @@ function AdminDashboard() {
       iconColor: 'text-teal-400',
       trend: '+3%',
       trendUp: true,
+      link: '/admin/usta-levels',
     },
   ]
 
@@ -239,6 +247,27 @@ function AdminDashboard() {
       desc: 'Temsilci performansı, oturumlar ve puanlar',
       color: 'teal',
     },
+    {
+      path: '/admin/analytics',
+      icon: BarChart2,
+      title: 'Analitik & İş Zekası',
+      desc: 'Funnel, kategori gelir, usta performans, trendler',
+      color: 'primary',
+    },
+    {
+      path: '/admin/reports',
+      icon: FileText,
+      title: 'Raporlama & Export',
+      desc: 'CSV raporları oluştur ve indir',
+      color: 'emerald',
+    },
+    {
+      path: '/admin/audit-log',
+      icon: Shield,
+      title: 'Denetim Logu',
+      desc: 'Tüm platform olaylarını izle',
+      color: 'violet',
+    },
   ]
 
   const colorMap = {
@@ -251,15 +280,15 @@ function AdminDashboard() {
     teal: 'bg-teal-500/10 text-teal-400',
   }
 
-  // Mini sparkline SVG
+  // Mini sparkline SVG - bigger & readable
   const Sparkline = ({ color = '#3b82f6' }) => (
-    <svg width="64" height="28" viewBox="0 0 64 28" fill="none" className="opacity-40">
-      <polyline points="0,22 8,18 16,20 24,12 32,14 40,8 48,10 56,4 64,6" stroke={color} strokeWidth="1.5" fill="none" />
+    <svg width="80" height="36" viewBox="0 0 80 36" fill="none" className="opacity-60">
+      <polyline points="0,28 10,22 20,24 30,14 40,16 50,8 60,12 70,4 80,7" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       <linearGradient id={`sg-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+        <stop offset="0%" stopColor={color} stopOpacity="0.2" />
         <stop offset="100%" stopColor={color} stopOpacity="0" />
       </linearGradient>
-      <polygon points="0,22 8,18 16,20 24,12 32,14 40,8 48,10 56,4 64,6 64,28 0,28" fill={`url(#sg-${color.replace('#','')})`} />
+      <polygon points="0,28 10,22 20,24 30,14 40,16 50,8 60,12 70,4 80,7 80,36 0,36" fill={`url(#sg-${color.replace('#','')})`} />
     </svg>
   )
 
@@ -267,10 +296,16 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-zinc-500">Admin paneli yükleniyor...</p>
+      <div className="min-h-screen p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="animate-pulse bg-white/[0.06] h-6 w-48 rounded-lg" />
+              <div className="animate-pulse bg-white/[0.06] h-3 w-32 rounded" />
+            </div>
+          </div>
+          <SkeletonKPI count={5} />
+          <SkeletonList count={3} />
         </div>
       </div>
     )
@@ -278,15 +313,17 @@ function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-sm text-rose-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition"
-          >
-            Yenile
-          </button>
+      <div className="min-h-screen flex items-center justify-center" role="alert">
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-rose-400"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+          </div>
+          <p className="text-sm font-semibold text-white mb-1">Veriler Yuklenemedi</p>
+          <p className="text-xs text-zinc-500 mb-4">{error}</p>
+          <div className="flex gap-2 justify-center">
+            <button onClick={() => navigate('/admin')} className="px-4 py-2 bg-white/[0.06] text-zinc-300 rounded-xl text-xs font-semibold hover:bg-white/[0.1] transition">Dashboard</button>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition">Tekrar Dene</button>
+          </div>
         </div>
       </div>
     )
@@ -309,7 +346,8 @@ function AdminDashboard() {
               return (
                 <div
                   key={idx}
-                  className="bg-zinc-900 rounded-2xl p-5 border border-white/[0.06] hover:border-white/[0.1] transition-all"
+                  onClick={() => stat.link && navigate(stat.link)}
+                  className={`bg-zinc-900 rounded-2xl p-5 border border-white/[0.06] hover:border-white/[0.1] transition-all ${stat.link ? 'cursor-pointer active:scale-[0.98]' : ''}`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center bg-white/[0.06]`}>
@@ -376,21 +414,28 @@ function AdminDashboard() {
                 icon={ClipboardList}
                 title="Henüz iş yok"
                 description="Yeni işler burada görünecek"
+                action={<button onClick={() => navigate('/admin/jobs')} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition">İşleri Görüntüle</button>}
               />
             ) : (
               <div className="space-y-2">
                 {recentJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.06] transition"
+                    onClick={() => navigate('/admin/jobs')}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.06] transition cursor-pointer active:scale-[0.99]"
                   >
+                    <div className="w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                      <Briefcase size={14} className="text-zinc-500" />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-zinc-200 truncate">
                         {job.title}
                       </p>
-                      <p className="text-xs text-zinc-500 truncate">
-                        {job.customer?.name} — {job.location?.address}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-zinc-500 truncate">{job.customer?.name}</span>
+                        {job.category && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400">{job.category}</span>}
+                      </div>
+                      {job.location?.address && <p className="text-[10px] text-zinc-600 truncate mt-0.5">{job.location.address}</p>}
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <p className="text-sm font-semibold text-emerald-400">
@@ -413,7 +458,8 @@ function AdminDashboard() {
               <EmptyState
                 icon={Star}
                 title="Henüz değerlendirme yok"
-                description="Müşteri değerlendirmeleri burada görünecek"
+                description="Tamamlanan işlerden sonra müşteri değerlendirmeleri burada görünecek."
+                action={<button onClick={() => navigate('/admin/complaints')} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition">Değerlendirmeleri Gör</button>}
               />
             ) : (
               <div className="space-y-2">
@@ -488,6 +534,7 @@ function AdminDashboard() {
                 icon={Inbox}
                 title="Bu kategoride şikayet yok"
                 description="Şikayetler filtreye göre listelenecek"
+                action={<button onClick={() => navigate('/admin/complaints')} className="px-4 py-2 bg-white/[0.06] text-zinc-300 rounded-xl text-xs font-semibold active:scale-[0.98] transition hover:bg-white/[0.1]">Tüm Şikayetleri Gör</button>}
               />
             ) : (
               <div className="space-y-2">

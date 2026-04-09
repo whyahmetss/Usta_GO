@@ -34,6 +34,7 @@ const AboutPage              = lazy(() => import('./pages/AboutPage'))
 const Odeme                  = lazy(() => import('./pages/odeme'))
 const PaymentResultPage      = lazy(() => import('./pages/PaymentResultPage'))
 const LegalPage              = lazy(() => import('./pages/LegalPage'))
+const CampaignDetailPage     = lazy(() => import('./pages/CampaignDetailPage'))
 
 function PageLoader() {
   return (
@@ -121,6 +122,7 @@ function AppRoutes() {
         <Route path="/live-support"    element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
         <Route path="/track/:id"       element={<ProtectedRoute><Layout hideNav><LiveTrackingPage /></Layout></ProtectedRoute>} />
         <Route path="/cancel-job/:id"  element={<ProtectedRoute><Layout><CancelJobPage /></Layout></ProtectedRoute>} />
+        <Route path="/campaign"         element={<ProtectedRoute><Layout><CampaignDetailPage /></Layout></ProtectedRoute>} />
 
         {/* Admin/Support kullanıcıları panel.usta-go.com'a yönlendir */}
         <Route path="/admin/*"   element={<Navigate to="/" replace />} />

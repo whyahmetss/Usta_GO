@@ -22,6 +22,9 @@ export const mapJobFromBackend = (job) => {
     professionalId: job.ustaId || job.professionalId,
     professional: job.usta || job.professional,
     status: job.status?.toLowerCase(),
+    urgent: job.urgent ?? job.isUrgent ?? false,
+    scheduledDate: job.scheduledDate || null,
+    scheduledTime: job.scheduledTime || null,
   }
 }
 

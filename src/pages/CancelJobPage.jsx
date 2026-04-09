@@ -92,8 +92,10 @@ function CancelJobPage() {
   }
 
   const reasons = isProfessional
-    ? ['Müsait değilim', 'Malzeme eksikliği', 'Konum çok uzak', 'Acil durum', 'Diğer']
-    : ['Vazgeçtim', 'Yanlış adres girdim', 'Başka bir usta buldum', 'Fiyat yüksek', 'Diğer']
+    ? ['Müsait değilim', 'Çok uzak', 'Uzmanlık alanım değil', 'Fiyat düşük', 'Malzeme eksikliği', 'Acil durum', 'Diğer']
+    : ['Vazgeçtim', 'Yanlış adres girdim', 'Başka bir usta buldum', 'Fiyat yüksek', 'Süre çok uzun', 'Diğer']
+
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const myOffer = job.status === 'pending' && isProfessional && job.offers?.find(
     o => (o.ustaId || o.usta?.id) === user?.id && (o.status === 'PENDING' || o.status === 'pending')
@@ -103,7 +105,6 @@ function CancelJobPage() {
 
   const handleCancel = async () => {
     if (job.status === 'pending' && isProfessional && myOffer) {
-      if (!confirm('Teklifinizi geri çekmek istediğinize emin misiniz?')) return
       setSubmitting(true)
       try {
         await fetchAPI(API_ENDPOINTS.OFFERS.WITHDRAW(myOffer.id), { method: 'PATCH' })
@@ -129,29 +130,28 @@ function CancelJobPage() {
       return
     }
 
-    const warningMsg = penalty > 0
-      ? `Bu iş iptal edilecek ve ${penalty} TL sadakatsizlik bedeli kesilecek. Devam etmek istiyor musunuz?`
-      : 'Bu iş iptal edilecek. Devam etmek istiyor musunuz?'
+    if (!showConfirm) {
+      setShowConfirm(true)
+      return
+    }
 
-    if (confirm(warningMsg)) {
-      setSubmitting(true)
-      try {
-        const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
-          method: 'PUT',
-          body: { reason: finalReason, penalty }
-        })
+    setSubmitting(true)
+    try {
+      const response = await fetchAPI(API_ENDPOINTS.JOBS.CANCEL(id), {
+        method: 'PUT',
+        body: { reason: finalReason, penalty }
+      })
 
-        if (response.data || response.success !== false) {
-          const withdrawn = response.data?.withdrawnOffer
-          alert(withdrawn ? 'Teklifiniz geri alındı.' : 'İş iptal edildi.')
-          navigate(isProfessional ? '/professional' : '/home')
-        }
-      } catch (err) {
-        console.error('Cancel job error:', err)
-        alert(`Hata: ${err.message}`)
-      } finally {
-        setSubmitting(false)
+      if (response.data || response.success !== false) {
+        const withdrawn = response.data?.withdrawnOffer
+        alert(withdrawn ? 'Teklifiniz geri alındı.' : 'İş iptal edildi.')
+        navigate(isProfessional ? '/professional' : '/home')
       }
+    } catch (err) {
+      console.error('Cancel job error:', err)
+      alert(`Hata: ${err.message}`)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -235,14 +235,27 @@ function CancelJobPage() {
               )}
             </Card>
 
+            {/* Confirmation Banner */}
+            {showConfirm && (
+              <div className="bg-rose-50 dark:bg-rose-900/30 border-2 border-rose-300 dark:border-rose-700 rounded-2xl p-5 text-center">
+                <AlertTriangle size={32} className="text-rose-500 mx-auto mb-2" />
+                <h4 className="font-bold text-rose-900 dark:text-rose-200 mb-1">Emin misiniz?</h4>
+                <p className="text-sm text-rose-700 dark:text-rose-300">
+                  {penalty > 0
+                    ? `Bu iş iptal edilecek ve ${penalty} TL sadakatsizlik bedeli kesilecek.`
+                    : 'Bu iş iptal edilecek ve geri alınamaz.'}
+                </p>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => { if (showConfirm) { setShowConfirm(false) } else { navigate(-1) } }}
                 disabled={submitting}
                 className="py-4 bg-gray-200 text-gray-700 rounded-2xl font-semibold hover:bg-gray-300 active:scale-[0.98] transition disabled:opacity-50"
               >
-                Vazgeç
+                {showConfirm ? 'Hayır, Vazgeç' : 'Vazgeç'}
               </button>
               <button
                 onClick={handleCancel}
@@ -250,7 +263,7 @@ function CancelJobPage() {
                 className={`py-4 rounded-2xl font-semibold transition flex items-center justify-center gap-2 active:scale-[0.98] ${
                   (isWithdrawCase ? submitting : (!reason || (reason === 'Diğer' && !customReason) || submitting))
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-rose-500 text-white hover:bg-rose-600'
+                    : showConfirm ? 'bg-rose-600 text-white hover:bg-rose-700 animate-pulse' : 'bg-rose-500 text-white hover:bg-rose-600'
                 }`}
               >
                 {submitting ? (
@@ -260,7 +273,7 @@ function CancelJobPage() {
                   </>
                 ) : (
                   <>
-                    {isWithdrawCase ? 'Teklifimi Geri Al' : `İptal Et ${penalty > 0 ? `(${penalty} TL)` : ''}`}
+                    {isWithdrawCase ? 'Teklifimi Geri Al' : showConfirm ? 'Evet, İptal Et' : `İptal Et ${penalty > 0 ? `(${penalty} TL)` : ''}`}
                   </>
                 )}
               </button>

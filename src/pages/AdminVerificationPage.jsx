@@ -42,29 +42,29 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
   const busy = actioning === u.id
 
   return (
-    <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+    <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 text-white font-black text-lg">
           {u.name?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-800 dark:text-white text-sm">{u.name}</p>
-          <p className="text-xs text-slate-500 truncate">{u.email}</p>
-          {u.phone && <p className="text-xs text-slate-400">{u.phone}</p>}
+          <p className="font-bold text-white text-sm">{u.name}</p>
+          <p className="text-xs text-zinc-500 truncate">{u.email}</p>
+          {u.phone && <p className="text-xs text-zinc-600">{u.phone}</p>}
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          <span className="text-[10px] text-slate-400">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</span>
-          <button onClick={() => setOpen(o => !o)} className="text-slate-400 hover:text-slate-600">
+          <span className="text-[10px] text-zinc-600">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</span>
+          <button onClick={() => setOpen(o => !o)} className="text-zinc-500 hover:text-zinc-300">
             {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
       </div>
 
       {open && (
-        <div className="px-4 pb-3 border-t border-slate-100 dark:border-white/5 pt-3">
+        <div className="px-4 pb-3 border-t border-white/[0.06] pt-3">
           {u.certificates?.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
                 Belgeler ({u.certificates.length})
               </p>
               {u.certificates.map(cert => (
@@ -73,30 +73,30 @@ function UstaCard({ u, onApprove, onReject, actioning }) {
                   href={cert.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.04] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition group"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-blue-500/10 transition group"
                 >
-                  <FileText size={14} className="text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
-                  <span className="text-[12px] text-slate-600 dark:text-slate-300 flex-1 truncate">
+                  <FileText size={14} className="text-zinc-500 group-hover:text-blue-400 flex-shrink-0" />
+                  <span className="text-[12px] text-zinc-300 flex-1 truncate">
                     {cert.label || DOC_LABELS[cert.docType] || cert.docType || 'Belge'}
                   </span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    cert.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
-                    cert.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
-                    'bg-amber-100 text-amber-600'
+                    cert.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400' :
+                    cert.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-400' :
+                    'bg-amber-500/10 text-amber-400'
                   }`}>
                     {cert.status === 'APPROVED' ? 'Onaylı' : cert.status === 'REJECTED' ? 'Reddedildi' : 'Bekliyor'}
                   </span>
-                  <ExternalLink size={12} className="text-slate-300 group-hover:text-blue-400 flex-shrink-0" />
+                  <ExternalLink size={12} className="text-zinc-600 group-hover:text-blue-400 flex-shrink-0" />
                 </a>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 italic">Belge yüklenmemiş</p>
+            <p className="text-xs text-zinc-600 italic">Belge yüklenmemiş</p>
           )}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-slate-100 dark:border-white/5">
+      <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-white/[0.06]">
         <button
           onClick={() => onApprove(u.id)}
           disabled={busy}
@@ -169,9 +169,9 @@ function UstaApprovalTab() {
       <Toast toast={toast} />
 
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-gray-500">Onay bekleyen usta başvuruları</p>
-        <button onClick={() => load(true)} disabled={refreshing} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-          <RefreshCw size={14} className={`text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
+        <p className="text-xs text-zinc-500">Onay bekleyen usta başvuruları</p>
+        <button onClick={() => load(true)} disabled={refreshing} className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center">
+          <RefreshCw size={14} className={`text-zinc-400 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -188,12 +188,12 @@ function UstaApprovalTab() {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-sm text-slate-400">Yükleniyor...</p></div>
+        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-sm text-zinc-500">Yükleniyor...</p></div>
       ) : list.length === 0 ? (
-        <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center shadow-sm">
+        <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-10 text-center">
           <CheckCircle2 size={36} className="text-emerald-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
-          <p className="text-xs text-slate-400 mt-1">Yeni usta kayıtları burada görünecek</p>
+          <p className="font-bold text-zinc-300">Bekleyen başvuru yok</p>
+          <p className="text-xs text-zinc-600 mt-1">Yeni usta kayıtları burada görünecek</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -212,56 +212,56 @@ function CustomerCard({ u, onApprove, onReject, actioning }) {
   const busy = actioning === u.id
 
   return (
-    <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+    <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0 text-white font-black text-lg">
           {u.name?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-800 dark:text-white text-sm">{u.name}</p>
-          <p className="text-xs text-slate-500 truncate">{u.email}</p>
-          {u.phone && <p className="text-xs text-slate-400">{u.phone}</p>}
+          <p className="font-bold text-white text-sm">{u.name}</p>
+          <p className="text-xs text-zinc-500 truncate">{u.email}</p>
+          {u.phone && <p className="text-xs text-zinc-600">{u.phone}</p>}
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          <span className="text-[10px] text-slate-400">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</span>
-          <button onClick={() => setOpen(o => !o)} className="text-slate-400 hover:text-slate-600">
+          <span className="text-[10px] text-zinc-600">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</span>
+          <button onClick={() => setOpen(o => !o)} className="text-zinc-500 hover:text-zinc-300">
             {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
       </div>
 
       {open && (
-        <div className="px-4 pb-3 border-t border-slate-100 dark:border-white/5 pt-3">
+        <div className="px-4 pb-3 border-t border-white/[0.06] pt-3">
           {u.certificates?.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
                 Belgeler ({u.certificates.length})
               </p>
               {u.certificates.map(cert => (
                 <a key={cert.id} href={cert.fileUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.04] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition group">
-                  <FileText size={14} className="text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
-                  <span className="text-[12px] text-slate-600 dark:text-slate-300 flex-1 truncate">
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-blue-500/10 transition group">
+                  <FileText size={14} className="text-zinc-500 group-hover:text-blue-400 flex-shrink-0" />
+                  <span className="text-[12px] text-zinc-300 flex-1 truncate">
                     {cert.label || DOC_LABELS[cert.docType] || cert.docType || 'Belge'}
                   </span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    cert.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
-                    cert.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
-                    'bg-amber-100 text-amber-600'
+                    cert.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400' :
+                    cert.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-400' :
+                    'bg-amber-500/10 text-amber-400'
                   }`}>
                     {cert.status === 'APPROVED' ? 'Onaylı' : cert.status === 'REJECTED' ? 'Reddedildi' : 'Bekliyor'}
                   </span>
-                  <ExternalLink size={12} className="text-slate-300 group-hover:text-blue-400 flex-shrink-0" />
+                  <ExternalLink size={12} className="text-zinc-600 group-hover:text-blue-400 flex-shrink-0" />
                 </a>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 italic">Belge yüklenmemiş</p>
+            <p className="text-xs text-zinc-600 italic">Belge yüklenmemiş</p>
           )}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-slate-100 dark:border-white/5">
+      <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-white/[0.06]">
         <button onClick={() => onApprove(u.id)} disabled={busy}
           className="flex items-center justify-center gap-1.5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm active:scale-[0.97] transition disabled:opacity-50">
           {busy ? <Loader size={14} className="animate-spin" /> : <Check size={15} />} Onayla
@@ -321,9 +321,9 @@ function CustomerApprovalTab() {
     <div>
       <Toast toast={toast} />
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-gray-500">Onay bekleyen müşteri başvuruları</p>
-        <button onClick={() => load(true)} disabled={refreshing} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-          <RefreshCw size={14} className={`text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
+        <p className="text-xs text-zinc-500">Onay bekleyen müşteri başvuruları</p>
+        <button onClick={() => load(true)} disabled={refreshing} className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center">
+          <RefreshCw size={14} className={`text-zinc-400 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -340,12 +340,12 @@ function CustomerApprovalTab() {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-sm text-slate-400">Yükleniyor...</p></div>
+        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-sm text-zinc-500">Yükleniyor...</p></div>
       ) : list.length === 0 ? (
-        <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-10 text-center shadow-sm">
+        <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-10 text-center">
           <CheckCircle2 size={36} className="text-emerald-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-600 dark:text-slate-300">Bekleyen başvuru yok</p>
-          <p className="text-xs text-slate-400 mt-1">Yeni müşteri kayıtları burada görünecek</p>
+          <p className="font-bold text-zinc-300">Bekleyen başvuru yok</p>
+          <p className="text-xs text-zinc-600 mt-1">Yeni müşteri kayıtları burada görünecek</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -407,61 +407,61 @@ function CertificatesTab() {
       <div className="space-y-2 mb-4">
         <div className="flex gap-2">
           {[{ key: 'all', label: 'Tümü' }, { key: 'USTA', label: 'Usta' }, { key: 'CUSTOMER', label: 'Müşteri' }].map(f => (
-            <button key={f.key} onClick={() => setRoleFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${roleFilter === f.key ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            <button key={f.key} onClick={() => setRoleFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${roleFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1]'}`}>
               {f.label}
             </button>
           ))}
-          <button onClick={loadCertificates} disabled={loading} className="ml-auto w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-            <RefreshCw size={14} className={`text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+          <button onClick={loadCertificates} disabled={loading} className="ml-auto w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center">
+            <RefreshCw size={14} className={`text-zinc-400 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
         <div className="flex gap-2">
           {[{ key: 'all', label: 'Tümü' }, { key: 'PENDING', label: 'Bekleyen' }, { key: 'APPROVED', label: 'Onaylı' }, { key: 'REJECTED', label: 'Reddedildi' }].map(f => (
-            <button key={f.key} onClick={() => setStatusFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${statusFilter === f.key ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            <button key={f.key} onClick={() => setStatusFilter(f.key)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${statusFilter === f.key ? 'bg-zinc-700 text-white' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1]'}`}>
               {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      <p className="text-xs text-gray-500 mb-3">{filtered.length} belge</p>
+      <p className="text-xs text-zinc-500 mb-3">{filtered.length} belge</p>
 
       {loading ? (
-        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-primary-500 animate-spin mb-3" /><p className="text-xs text-gray-500">Yükleniyor...</p></div>
+        <div className="flex flex-col items-center py-16"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-xs text-zinc-500">Yükleniyor...</p></div>
       ) : filtered.length === 0 ? (
         <EmptyState icon={FileText} title="Belge bulunamadı" description="Seçilen filtreye uygun belge yok." />
       ) : (
         <div className="space-y-3">
           {filtered.map(c => (
-            <div key={c.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] overflow-hidden shadow-sm">
+            <div key={c.id} className="bg-zinc-900 rounded-2xl border border-white/[0.06] overflow-hidden">
               <div className="flex items-start gap-3 p-4">
-                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
                   {c.user?.role?.toUpperCase() === 'USTA'
-                    ? <ShieldCheck size={18} className="text-amber-600" />
-                    : <User size={18} className="text-blue-600" />
+                    ? <ShieldCheck size={18} className="text-amber-400" />
+                    : <User size={18} className="text-blue-400" />
                   }
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{c.user?.name || 'Kullanıcı'}</p>
+                    <p className="text-sm font-semibold text-white">{c.user?.name || 'Kullanıcı'}</p>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      c.user?.role?.toUpperCase() === 'USTA' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                      c.user?.role?.toUpperCase() === 'USTA' ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'
                     }`}>
                       {c.user?.role?.toUpperCase() === 'USTA' ? 'Usta' : 'Müşteri'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{c.user?.email}</p>
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mt-1">
+                  <p className="text-xs text-zinc-500 truncate">{c.user?.email}</p>
+                  <p className="text-xs font-medium text-zinc-300 mt-1">
                     {c.label || DOC_LABELS[c.docType] || c.docType || 'Belge'}
                   </p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
+                  <p className="text-[11px] text-zinc-600 mt-0.5">
                     {new Date(c.createdAt).toLocaleString('tr-TR')}
                   </p>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
-                  c.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
-                  c.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                  'bg-amber-100 text-amber-700'
+                  c.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400' :
+                  c.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-400' :
+                  'bg-amber-500/10 text-amber-400'
                 }`}>
                   {c.status === 'APPROVED' ? 'Onaylı' : c.status === 'REJECTED' ? 'Reddedildi' : 'Bekliyor'}
                 </span>
@@ -472,7 +472,7 @@ function CertificatesTab() {
                   href={c.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-2.5 bg-primary-50 text-primary-600 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                  className="flex-1 py-2.5 bg-blue-500/10 text-blue-400 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
                 >
                   <ExternalLink size={13} /> Görüntüle
                 </a>
@@ -517,7 +517,7 @@ export default function AdminVerificationPage() {
   return (
     <Layout hideNav>
       <PageHeader title="Onay & Sertifika" onBack={() => navigate('/admin')} />
-      <div className="max-w-lg mx-auto px-4 pb-10">
+      <div className="max-w-6xl mx-auto px-4 pb-10">
         {/* Tabs */}
         <div className="flex gap-2 mt-4 mb-5">
           {tabs.map(t => (
@@ -526,8 +526,8 @@ export default function AdminVerificationPage() {
               onClick={() => setTab(t.key)}
               className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition ${
                 tab === t.key
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-zinc-900 border border-white/[0.06] text-zinc-400 hover:border-white/[0.1]'
               }`}
             >
               {t.label}

@@ -94,56 +94,63 @@ function AdminJobsPage() {
     : jobs.filter(j => j.status === filterStatus)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
+    <div className="min-h-screen">
       <PageHeader title="İş Yönetimi" onBack={() => navigate('/admin')} />
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
-        <p className="text-xs text-slate-500 font-medium px-1">Toplam {jobs.length} iş</p>
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
+        <p className="text-xs text-zinc-500 font-medium px-1">Toplam {jobs.length} iş</p>
 
         {error && (
-          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-3">
-            <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-amber-700 dark:text-amber-300">{error}</p>
+          <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3">
+            <AlertTriangle size={14} className="text-amber-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-amber-300">{error}</p>
           </div>
         )}
 
         {/* Filter tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {statuses.map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              disabled={loading}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                filterStatus === status
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.07] text-slate-600 dark:text-slate-400'
-              } ${loading ? 'opacity-50' : ''}`}
-            >
-              {statusLabels[status]}
-              {status !== 'all' && ` (${jobs.filter(j => j.status === status).length})`}
-            </button>
-          ))}
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-0 flex-wrap sm:flex-nowrap">
+            {statuses.map(status => {
+              const count = status === 'all' ? jobs.length : jobs.filter(j => j.status === status).length
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  disabled={loading}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 flex items-center gap-1.5 ${
+                    filterStatus === status
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-zinc-900 border border-white/[0.06] text-zinc-400 hover:border-white/[0.1]'
+                  } ${loading ? 'opacity-50' : ''}`}
+                >
+                  {statusLabels[status]}
+                  <span className={`text-[10px] font-bold ${filterStatus === status ? 'opacity-70' : 'text-zinc-600'}`}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader size={32} className="text-blue-500 animate-spin mb-3" />
-            <p className="text-sm text-slate-500">İşler yükleniyor...</p>
+            <p className="text-sm text-zinc-500">İşler yükleniyor...</p>
           </div>
         ) : filteredJobs.length === 0 ? (
           <EmptyState icon={ClipboardList} title="Bu durumda iş yok" description="Farklı bir filtre deneyin." />
         ) : (
           <div className="space-y-3">
             {filteredJobs.map(job => (
-              <div key={job.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
+              <div key={job.id} className="bg-zinc-900 rounded-2xl border border-white/[0.06] overflow-hidden">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 p-4 pb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate">{job.title}</h3>
+                    <h3 className="text-sm font-bold text-white truncate">{job.title}</h3>
                     <div className="flex items-center gap-1 mt-1">
-                      <MapPin size={11} className="text-slate-400 flex-shrink-0" />
-                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate">{job.location || job.address || 'Adres belirtilmedi'}</span>
+                      <MapPin size={11} className="text-zinc-600 flex-shrink-0" />
+                      <span className="text-xs text-zinc-500 truncate">{job.location || job.address || 'Adres belirtilmedi'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -151,7 +158,7 @@ function AdminJobsPage() {
                     <button
                       onClick={() => deleteJob(job.id)}
                       disabled={deletingId === job.id}
-                      className="w-8 h-8 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-500 rounded-xl flex items-center justify-center transition-colors"
+                      className="w-8 h-8 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl flex items-center justify-center transition-colors"
                     >
                       {deletingId === job.id ? <Loader size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
@@ -165,64 +172,64 @@ function AdminJobsPage() {
                     { label: 'Kategori', value: job.category || '—' },
                     { label: 'Tarih', value: new Date(job.createdAt).toLocaleDateString('tr-TR') },
                   ].map(s => (
-                    <div key={s.label} className="bg-slate-50 dark:bg-white/[0.05] rounded-xl p-2.5 text-center">
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{s.label}</p>
-                      <p className="text-xs font-bold text-slate-800 dark:text-white truncate mt-0.5">{s.value}</p>
+                    <div key={s.label} className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+                      <p className="text-[10px] text-zinc-500">{s.label}</p>
+                      <p className="text-xs font-bold text-white truncate mt-0.5">{s.value}</p>
                     </div>
                   ))}
                 </div>
 
                 {job.urgent && (
-                  <div className="mx-4 mb-3 px-3 py-1.5 bg-rose-50 dark:bg-rose-500/10 rounded-xl inline-flex items-center gap-1.5">
+                  <div className="mx-4 mb-3 px-3 py-1.5 bg-rose-500/10 rounded-xl inline-flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
-                    <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Acil</span>
+                    <span className="text-[11px] font-semibold text-rose-400">Acil</span>
                   </div>
                 )}
 
                 {/* Description */}
                 {job.description && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.05] mx-4 p-3 rounded-xl mb-3">{job.description}</p>
+                  <p className="text-xs text-zinc-400 bg-white/[0.04] mx-4 p-3 rounded-xl mb-3">{job.description}</p>
                 )}
 
                 {/* Customer & Professional */}
                 <div className="space-y-2 px-4 pb-4">
-                  <div className="flex items-center gap-2.5 p-3 bg-blue-50 dark:bg-blue-500/[0.08] border border-blue-100 dark:border-blue-500/20 rounded-xl">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                      <User size={15} className="text-blue-600 dark:text-blue-400" />
+                  <div className="flex items-center gap-2.5 p-3 bg-blue-500/[0.06] border border-blue-500/15 rounded-xl">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                      <User size={15} className="text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 dark:text-white">{job.customer?.name || '—'}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{job.customer?.email}</p>
-                      {job.customer?.phone && <p className="text-[11px] text-slate-500 dark:text-slate-400">{job.customer.phone}</p>}
+                      <p className="text-xs font-semibold text-white">{job.customer?.name || '—'}</p>
+                      <p className="text-[11px] text-zinc-500 truncate">{job.customer?.email}</p>
+                      {job.customer?.phone && <p className="text-[11px] text-zinc-500">{job.customer.phone}</p>}
                     </div>
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/20 px-2 py-1 rounded-full flex-shrink-0">Müşteri</span>
+                    <span className="text-[10px] font-bold text-blue-400 bg-blue-500/15 px-2 py-1 rounded-full flex-shrink-0">Müşteri</span>
                   </div>
 
-                  <div className="flex items-center gap-2.5 p-3 bg-amber-50 dark:bg-amber-500/[0.08] border border-amber-100 dark:border-amber-500/20 rounded-xl">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                      <Zap size={15} className="text-amber-600 dark:text-amber-400" />
+                  <div className="flex items-center gap-2.5 p-3 bg-amber-500/[0.06] border border-amber-500/15 rounded-xl">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                      <Zap size={15} className="text-amber-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       {job.professional ? (
                         <>
-                          <p className="text-xs font-semibold text-slate-800 dark:text-white">{job.professional.name}</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{job.professional.email}</p>
-                          {job.professional.phone && <p className="text-[11px] text-slate-500 dark:text-slate-400">{job.professional.phone}</p>}
+                          <p className="text-xs font-semibold text-white">{job.professional.name}</p>
+                          <p className="text-[11px] text-zinc-500 truncate">{job.professional.email}</p>
+                          {job.professional.phone && <p className="text-[11px] text-zinc-500">{job.professional.phone}</p>}
                         </>
                       ) : (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 italic">Henüz kabul edilmedi</p>
+                        <p className="text-xs text-zinc-600 italic">Henüz kabul edilmedi</p>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 px-2 py-1 rounded-full flex-shrink-0">Usta</span>
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/15 px-2 py-1 rounded-full flex-shrink-0">Usta</span>
                   </div>
                 </div>
 
                 {/* Photos */}
                 {(job.beforePhotos?.length > 0 || job.afterPhotos?.length > 0) && (
-                  <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-white/[0.05] space-y-3">
+                  <div className="px-4 pb-4 pt-1 border-t border-white/[0.06] space-y-3">
                     {job.beforePhotos?.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase mb-2">Başlangıç ({job.beforePhotos.length})</p>
+                        <p className="text-[11px] font-semibold text-zinc-500 uppercase mb-2">Başlangıç ({job.beforePhotos.length})</p>
                         <div className="grid grid-cols-4 gap-2">
                           {job.beforePhotos.map((photo, idx) => (
                             <button key={idx} onClick={() => setSelectedImage(photo)} className="relative group rounded-xl overflow-hidden aspect-square">
@@ -237,7 +244,7 @@ function AdminJobsPage() {
                     )}
                     {job.afterPhotos?.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase mb-2">Bitiş ({job.afterPhotos.length})</p>
+                        <p className="text-[11px] font-semibold text-zinc-500 uppercase mb-2">Bitiş ({job.afterPhotos.length})</p>
                         <div className="grid grid-cols-4 gap-2">
                           {job.afterPhotos.map((photo, idx) => (
                             <button key={idx} onClick={() => setSelectedImage(photo)} className="relative group rounded-xl overflow-hidden aspect-square">

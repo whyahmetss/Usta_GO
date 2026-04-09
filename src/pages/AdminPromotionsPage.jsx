@@ -100,14 +100,14 @@ function CampaignTab() {
   return (
     <div className="space-y-4">
       {msg && (
-        <div className={`rounded-2xl p-4 text-sm font-medium ${msg.ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-rose-50 border border-rose-200 text-rose-700'}`}>
+        <div className={`rounded-2xl p-4 text-sm font-medium ${msg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'}`}>
           {msg.text}
         </div>
       )}
 
       {/* Preview */}
       <Card padding="p-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Önizleme</p>
+        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Önizleme</p>
         <div
           className="rounded-3xl p-5 relative overflow-hidden min-h-[140px]"
           style={{ backgroundColor: campaign.bg_color, backgroundImage: campaign.bg_image ? `url(${campaign.bg_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -139,12 +139,12 @@ function CampaignTab() {
 
       {/* Preset themes */}
       <Card padding="p-4">
-        <p className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-2"><Palette size={14} /> Renk Teması</p>
+        <p className="text-xs font-semibold text-zinc-500 mb-3 flex items-center gap-2"><Palette size={14} /> Renk Teması</p>
         <div className="grid grid-cols-6 gap-2">
           {presetThemes.map(theme => (
             <button key={theme.name} onClick={() => setCampaign(p => ({ ...p, ...theme }))} className="flex flex-col items-center gap-1">
               <div className="w-10 h-10 rounded-xl border-2 transition-all" style={{ backgroundColor: theme.bg_color, borderColor: campaign.bg_color === theme.bg_color ? theme.badge_color : 'transparent' }} />
-              <span className="text-[9px] text-gray-500">{theme.name}</span>
+              <span className="text-[9px] text-zinc-500">{theme.name}</span>
             </button>
           ))}
         </div>
@@ -152,7 +152,7 @@ function CampaignTab() {
 
       {/* Form */}
       <Card padding="p-4">
-        <p className="text-sm font-semibold text-gray-900 mb-4">Kampanya Detayları</p>
+        <p className="text-sm font-semibold text-white mb-4">Kampanya Detayları</p>
         <div className="space-y-3">
           {[
             { key: 'badge_text', label: 'Etiket (badge)', placeholder: 'Örn: 8 MART ÖZEL, %20 İNDİRİM' },
@@ -161,20 +161,20 @@ function CampaignTab() {
             { key: 'button_text', label: 'Buton Yazısı', placeholder: 'Hemen Başla' },
           ].map(f => (
             <div key={f.key}>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">{f.label}</label>
+              <label className="text-xs font-medium text-zinc-500 mb-1.5 block">{f.label}</label>
               {f.textarea ? (
-                <textarea value={campaign[f.key]} onChange={e => setCampaign(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={2} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm resize-none" />
+                <textarea value={campaign[f.key]} onChange={e => setCampaign(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={2} className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm resize-none" />
               ) : (
-                <input value={campaign[f.key]} onChange={e => setCampaign(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm" />
+                <input value={campaign[f.key]} onChange={e => setCampaign(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm" />
               )}
             </div>
           ))}
 
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block flex items-center gap-2"><Image size={12} /> Arka Plan Resmi</label>
+            <label className="text-xs font-medium text-zinc-500 mb-1.5 block flex items-center gap-2"><Image size={12} /> Arka Plan Resmi</label>
             <div className="flex gap-2">
-              <input type="url" value={campaign.bg_image} onChange={e => setCampaign(p => ({ ...p, bg_image: e.target.value }))} placeholder="https://... veya yükleyin" className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm" />
-              <label className={`px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer whitespace-nowrap ${uploadingBg ? 'opacity-50' : 'bg-gray-50 hover:bg-gray-100'}`}>
+              <input type="url" value={campaign.bg_image} onChange={e => setCampaign(p => ({ ...p, bg_image: e.target.value }))} placeholder="https://... veya yükleyin" className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm" />
+              <label className={`px-4 py-3 rounded-xl border border-white/[0.06] text-sm font-medium cursor-pointer whitespace-nowrap text-zinc-300 ${uploadingBg ? 'opacity-50' : 'bg-white/[0.04] hover:bg-white/[0.08]'}`}>
                 {uploadingBg ? '...' : 'Yükle'}
                 <input type="file" accept="image/*" onChange={uploadBg} className="hidden" disabled={uploadingBg} />
               </label>
@@ -182,20 +182,20 @@ function CampaignTab() {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Sağdaki İkon</label>
+            <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Sağdaki İkon</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {ICON_OPTIONS.filter(o => o.value).map(opt => {
                 const Icon = opt.Icon
                 return (
-                  <button key={opt.value} type="button" onClick={() => setCampaign(p => ({ ...p, icon_type: p.icon_type === opt.value ? '' : opt.value, icon_image: '' }))} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition ${campaign.icon_type === opt.value ? 'bg-primary-500 text-white border-primary-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
+                  <button key={opt.value} type="button" onClick={() => setCampaign(p => ({ ...p, icon_type: p.icon_type === opt.value ? '' : opt.value, icon_image: '' }))} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition ${campaign.icon_type === opt.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/[0.04] border-white/[0.06] text-zinc-400 hover:bg-white/[0.08]'}`}>
                     <Icon size={14} /> {opt.label}
                   </button>
                 )
               })}
             </div>
             <div className="flex gap-2">
-              <input type="url" value={campaign.icon_image} onChange={e => setCampaign(p => ({ ...p, icon_image: e.target.value, icon_type: '' }))} placeholder="Özel ikon URL (opsiyonel)" className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none text-sm" />
-              <label className={`px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer whitespace-nowrap ${uploadingIcon ? 'opacity-50' : 'bg-gray-50 hover:bg-gray-100'}`}>
+              <input type="url" value={campaign.icon_image} onChange={e => setCampaign(p => ({ ...p, icon_image: e.target.value, icon_type: '' }))} placeholder="Özel ikon URL (opsiyonel)" className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none text-sm" />
+              <label className={`px-4 py-3 rounded-xl border border-white/[0.06] text-sm font-medium cursor-pointer whitespace-nowrap text-zinc-300 ${uploadingIcon ? 'opacity-50' : 'bg-white/[0.04] hover:bg-white/[0.08]'}`}>
                 {uploadingIcon ? '...' : 'Yükle'}
                 <input type="file" accept="image/*" onChange={uploadIcon} className="hidden" disabled={uploadingIcon} />
               </label>
@@ -205,10 +205,10 @@ function CampaignTab() {
           <div className="grid grid-cols-3 gap-3">
             {[{ key: 'bg_color', label: 'Arka Plan' }, { key: 'badge_color', label: 'Etiket Renk' }, { key: 'text_color', label: 'Yazı Renk' }].map(c => (
               <div key={c.key}>
-                <label className="text-[10px] font-medium text-gray-400 mb-1 block">{c.label}</label>
+                <label className="text-[10px] font-medium text-zinc-500 mb-1 block">{c.label}</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={campaign[c.key]} onChange={e => setCampaign(p => ({ ...p, [c.key]: e.target.value }))} className="w-8 h-8 rounded-lg cursor-pointer border-0" />
-                  <span className="text-[10px] text-gray-400">{campaign[c.key]}</span>
+                  <span className="text-[10px] text-zinc-500">{campaign[c.key]}</span>
                 </div>
               </div>
             ))}
@@ -217,12 +217,12 @@ function CampaignTab() {
       </Card>
 
       <div className="space-y-3 pb-4">
-        <button onClick={handleSave} disabled={saving} className="w-full py-4 bg-primary-500 text-white rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-600 active:scale-[0.98] transition disabled:opacity-60">
+        <button onClick={handleSave} disabled={saving} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-500 active:scale-[0.98] transition disabled:opacity-60">
           {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           {saving ? 'Kaydediliyor...' : hasExisting ? 'Güncelle' : 'Yayınla'}
         </button>
         {hasExisting && (
-          <button onClick={handleDelete} disabled={deleting} className="w-full py-4 bg-rose-50 text-rose-600 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-rose-100 active:scale-[0.98] transition disabled:opacity-60">
+          <button onClick={handleDelete} disabled={deleting} className="w-full py-4 bg-rose-500/10 text-rose-400 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-rose-500/20 active:scale-[0.98] transition disabled:opacity-60">
             {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
             {deleting ? 'Kaldırılıyor...' : 'Kampanyayı Kaldır'}
           </button>
@@ -279,43 +279,43 @@ function CouponTab() {
   return (
     <div className="space-y-4">
       <Card padding="p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2"><Plus size={16} className="text-primary-500" /> Yeni Kupon Oluştur</h2>
+        <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><Plus size={16} className="text-blue-400" /> Yeni Kupon Oluştur</h2>
         <form onSubmit={handleCreate} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Kupon Kodu *</label>
-              <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="YAZA50" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500" />
+              <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Kupon Kodu *</label>
+              <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="YAZA50" className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm font-mono font-semibold text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Bakiye (TL) *</label>
-              <input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} placeholder="50" min="1" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500" />
+              <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Bakiye (TL) *</label>
+              <input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} placeholder="50" min="1" className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" />
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Açıklama</label>
-            <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Yaz kampanyası kuponu" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500" />
+            <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Açıklama</label>
+            <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Yaz kampanyası kuponu" className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Maks. Kullanım</label>
-              <input type="number" value={form.maxUses} onChange={e => setForm(p => ({ ...p, maxUses: e.target.value }))} placeholder="Sınırsız" min="1" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500" />
+              <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Maks. Kullanım</label>
+              <input type="number" value={form.maxUses} onChange={e => setForm(p => ({ ...p, maxUses: e.target.value }))} placeholder="Sınırsız" min="1" className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Son Kullanma</label>
-              <input type="date" value={form.expiresAt} onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500" />
+              <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Son Kullanma</label>
+              <input type="date" value={form.expiresAt} onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))} className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" />
             </div>
           </div>
           {msg && <p className={`text-xs font-medium px-1 ${msg.ok ? 'text-emerald-600' : 'text-rose-500'}`}>{msg.text}</p>}
-          <button type="submit" disabled={creating} className="w-full py-3 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-50">
+          <button type="submit" disabled={creating} className="w-full py-3 bg-blue-600 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-50">
             {creating ? 'Oluşturuluyor...' : 'Kupon Oluştur'}
           </button>
         </form>
       </Card>
 
-      <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2 px-1"><Tag size={14} className="text-gray-400" /> Tüm Kuponlar ({coupons.length})</h2>
+      <h2 className="text-sm font-semibold text-white flex items-center gap-2 px-1"><Tag size={14} className="text-zinc-500" /> Tüm Kuponlar ({coupons.length})</h2>
 
       {loading ? (
-        <div className="flex flex-col items-center py-12"><Loader size={28} className="text-primary-500 animate-spin mb-3" /><p className="text-xs text-gray-500">Yükleniyor...</p></div>
+        <div className="flex flex-col items-center py-12"><Loader size={28} className="text-blue-500 animate-spin mb-3" /><p className="text-xs text-zinc-500">Yükleniyor...</p></div>
       ) : coupons.length === 0 ? (
         <EmptyState icon={Tag} title="Henüz kupon yok" description="Yukarıdan yeni kupon oluşturabilirsiniz." />
       ) : (
@@ -324,28 +324,28 @@ function CouponTab() {
             <Card key={coupon.id} className={!coupon.isActive ? 'opacity-60' : ''}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${coupon.isActive ? 'bg-emerald-50' : 'bg-gray-100'}`}>
-                    <Tag size={18} className={coupon.isActive ? 'text-emerald-600' : 'text-gray-400'} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${coupon.isActive ? 'bg-emerald-500/10' : 'bg-white/[0.06]'}`}>
+                    <Tag size={18} className={coupon.isActive ? 'text-emerald-400' : 'text-zinc-600'} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900 font-mono">{coupon.code}</p>
-                    <p className="text-xs font-semibold text-primary-600">{coupon.amount} TL bakiye</p>
+                    <p className="text-sm font-bold text-white font-mono">{coupon.code}</p>
+                    <p className="text-xs font-semibold text-blue-400">{coupon.amount} TL bakiye</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => handleToggle(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
-                    {coupon.isActive ? <ToggleRight size={22} className="text-emerald-600" /> : <ToggleLeft size={22} className="text-gray-400" />}
+                  <button onClick={() => handleToggle(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/[0.06] transition-colors">
+                    {coupon.isActive ? <ToggleRight size={22} className="text-emerald-400" /> : <ToggleLeft size={22} className="text-zinc-600" />}
                   </button>
-                  <button onClick={() => handleDelete(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 transition-colors">
+                  <button onClick={() => handleDelete(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-500/10 transition-colors">
                     <Trash2 size={16} className="text-rose-500" />
                   </button>
                 </div>
               </div>
               <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {coupon.description && <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{coupon.description}</span>}
-                <span className="text-[11px] bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full font-medium">{coupon.usedCount || 0} kullanım{coupon.maxUses ? ` / ${coupon.maxUses}` : ''}</span>
-                {coupon.expiresAt && <span className="text-[11px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-medium">Son: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</span>}
-                <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${coupon.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>{coupon.isActive ? 'Aktif' : 'Devre Dışı'}</span>
+                {coupon.description && <span className="text-[11px] bg-white/[0.06] text-zinc-400 px-2 py-0.5 rounded-full">{coupon.description}</span>}
+                <span className="text-[11px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-medium">{coupon.usedCount || 0} kullanım{coupon.maxUses ? ` / ${coupon.maxUses}` : ''}</span>
+                {coupon.expiresAt && <span className="text-[11px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-medium">Son: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}</span>}
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${coupon.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>{coupon.isActive ? 'Aktif' : 'Devre Dışı'}</span>
               </div>
             </Card>
           ))}
@@ -382,56 +382,56 @@ function ReferralTab() {
     finally { setSaving(false); setTimeout(() => setMsg(null), 4000) }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-16"><Loader size={28} className="text-primary-500 animate-spin" /></div>
+  if (loading) return <div className="flex items-center justify-center py-16"><Loader size={28} className="text-blue-500 animate-spin" /></div>
 
   return (
     <div className="space-y-4">
       <Card padding="p-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-            <Users size={20} className="text-emerald-600" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+            <Users size={20} className="text-emerald-400" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Arkadaş Davet Bonusu</p>
-            <p className="text-xs text-gray-500">Davet eden ve davet edilen kullanıcıya verilecek bonus</p>
+            <p className="text-sm font-semibold text-white">Arkadaş Davet Bonusu</p>
+            <p className="text-xs text-zinc-500">Davet eden ve davet edilen kullanıcıya verilecek bonus</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Davet Eden (Referans Sahibi) Bonusu (TL)</label>
+            <label className="text-xs font-semibold text-zinc-400 mb-2 block">Davet Eden (Referans Sahibi) Bonusu (TL)</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
                 min="0"
                 value={bonus.referrerBonus}
                 onChange={e => setBonus(p => ({ ...p, referrerBonus: e.target.value }))}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
-              <span className="text-sm font-bold text-gray-500">TL</span>
+              <span className="text-sm font-bold text-zinc-500">TL</span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-1">Arkadaşını davet eden kişi bu kadar bonus alır</p>
+            <p className="text-[11px] text-zinc-600 mt-1">Arkadaşını davet eden kişi bu kadar bonus alır</p>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Davet Edilen (Yeni Üye) Bonusu (TL)</label>
+            <label className="text-xs font-semibold text-zinc-400 mb-2 block">Davet Edilen (Yeni Üye) Bonusu (TL)</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
                 min="0"
                 value={bonus.newUserBonus}
                 onChange={e => setBonus(p => ({ ...p, newUserBonus: e.target.value }))}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
-              <span className="text-sm font-bold text-gray-500">TL</span>
+              <span className="text-sm font-bold text-zinc-500">TL</span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-1">Davet kodu ile kayıt olan yeni üye bu kadar bonus alır</p>
+            <p className="text-[11px] text-zinc-600 mt-1">Davet kodu ile kayıt olan yeni üye bu kadar bonus alır</p>
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-            <p className="text-xs text-blue-700 font-medium">Örnek: Ahmet, Mehmet'i davet etti.</p>
-            <p className="text-xs text-blue-600 mt-1">→ Ahmet {bonus.referrerBonus} TL bakiye kazandı</p>
-            <p className="text-xs text-blue-600">→ Mehmet hoş geldin bonusu olarak {bonus.newUserBonus} TL bakiye aldı</p>
+          <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20">
+            <p className="text-xs text-blue-300 font-medium">Örnek: Ahmet, Mehmet'i davet etti.</p>
+            <p className="text-xs text-blue-400 mt-1">→ Ahmet {bonus.referrerBonus} TL bakiye kazandı</p>
+            <p className="text-xs text-blue-400">→ Mehmet hoş geldin bonusu olarak {bonus.newUserBonus} TL bakiye aldı</p>
           </div>
 
           {msg && <p className={`text-xs font-medium ${msg.ok ? 'text-emerald-600' : 'text-rose-500'}`}>{msg.text}</p>}
@@ -439,7 +439,7 @@ function ReferralTab() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full py-3 bg-primary-500 text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-50"
+            className="w-full py-3 bg-blue-600 text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-50"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
@@ -473,8 +473,8 @@ export default function AdminPromotionsPage() {
               onClick={() => setTab(t.key)}
               className={`flex-1 py-2 rounded-2xl text-sm font-semibold transition ${
                 tab === t.key
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-zinc-900 border border-white/[0.06] text-zinc-400 hover:border-white/[0.1]'
               }`}
             >
               {t.label}

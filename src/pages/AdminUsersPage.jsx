@@ -20,22 +20,22 @@ const ROLE_FILTERS = [
 const roleBadge = (role) => {
   const r = (role || '').toLowerCase()
   if (r === 'admin') return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-500/15 text-violet-400">
       <Shield size={10} /> Admin
     </span>
   )
   if (r === 'professional' || r === 'usta') return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400">
       Usta
     </span>
   )
   if (r === 'support') return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-500/15 text-teal-400">
       <Headphones size={10} /> Destek
     </span>
   )
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/15 text-blue-400">
       Müşteri
     </span>
   )
@@ -109,31 +109,31 @@ function AdminUsersPage() {
   }), [users])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
+    <div className="min-h-screen">
       <PageHeader
         title="Kullanıcı Yönetimi"
         onBack={() => navigate('/admin')}
         rightAction={
           <button
             onClick={() => { logout(); navigate('/') }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
           >
             <LogOut size={18} />
           </button>
         }
       />
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Müşteri', count: counts.customer, color: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' },
-            { label: 'Usta', count: counts.professional, color: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-            { label: 'Destek', count: counts.support, color: 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300' },
-            { label: 'Admin', count: counts.admin, color: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300' },
+            { label: 'Müşteri', count: counts.customer, color: 'bg-blue-500/10 text-blue-400' },
+            { label: 'Usta', count: counts.professional, color: 'bg-amber-500/10 text-amber-400' },
+            { label: 'Destek', count: counts.support, color: 'bg-teal-500/10 text-teal-400' },
+            { label: 'Admin', count: counts.admin, color: 'bg-violet-500/10 text-violet-400' },
           ].map(s => (
-            <div key={s.label} className={`${s.color} rounded-2xl p-3 text-center`}>
+            <div key={s.label} className={`${s.color} rounded-2xl p-3 text-center border border-white/[0.06]`}>
               <p className="text-lg font-black">{s.count}</p>
               <p className="text-[10px] font-medium mt-0.5">{s.label}</p>
             </div>
@@ -143,32 +143,32 @@ function AdminUsersPage() {
         {/* Top/Bottom rated summary */}
         {(topRated.length > 0 || bottomRated.length > 0) && (
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
+            <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-3">
               <div className="flex items-center gap-1.5 mb-2">
-                <TrendingUp size={14} className="text-emerald-500" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Yüksek</p>
+                <TrendingUp size={14} className="text-emerald-400" />
+                <p className="text-xs font-bold text-zinc-300">En Yüksek</p>
               </div>
               {topRated.length === 0
-                ? <p className="text-xs text-slate-400 italic">Henüz puan yok</p>
+                ? <p className="text-xs text-zinc-600 italic">Henüz puan yok</p>
                 : topRated.map((u, i) => (
                   <div key={u.id} className="flex items-center gap-2 py-1">
-                    <span className="text-[10px] font-black text-slate-400 w-3">{i + 1}.</span>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{u.name}</p>
-                    <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
+                    <span className="text-[10px] font-black text-zinc-600 w-3">{i + 1}.</span>
+                    <p className="text-xs text-zinc-300 truncate flex-1">{u.name}</p>
+                    <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-400">
                       <Star size={10} fill="currentColor" />{(u.rating || 0).toFixed(1)}
                     </span>
                   </div>
                 ))}
             </div>
-            <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] p-3 shadow-sm">
+            <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-3">
               <div className="flex items-center gap-1.5 mb-2">
-                <TrendingDown size={14} className="text-rose-500" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">En Düşük</p>
+                <TrendingDown size={14} className="text-rose-400" />
+                <p className="text-xs font-bold text-zinc-300">En Düşük</p>
               </div>
               {bottomRated.map((u, i) => (
                 <div key={u.id} className="flex items-center gap-2 py-1">
-                  <span className="text-[10px] font-black text-slate-400 w-3">{i + 1}.</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{u.name}</p>
+                  <span className="text-[10px] font-black text-zinc-600 w-3">{i + 1}.</span>
+                  <p className="text-xs text-zinc-300 truncate flex-1">{u.name}</p>
                   <span className="flex items-center gap-0.5 text-[11px] font-bold text-rose-400">
                     <Star size={10} fill={(u.rating||0) > 0 ? 'currentColor' : 'none'} />{(u.rating || 0).toFixed(1)}
                   </span>
@@ -179,48 +179,48 @@ function AdminUsersPage() {
         )}
 
         {error && (
-          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-3">
-            <AlertCircle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700 dark:text-amber-300">{error}</p>
+          <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3">
+            <AlertCircle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-300">{error}</p>
           </div>
         )}
 
         {/* View toggle */}
         <div className="flex gap-2">
-          <button onClick={() => setView('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'users' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+          <button onClick={() => setView('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'users' ? 'bg-blue-600 text-white' : 'bg-zinc-900 text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'}`}>
             <Users size={13} /> Kullanıcılar
           </button>
-          <button onClick={() => setView('ratings')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'ratings' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'}`}>
+          <button onClick={() => setView('ratings')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition ${view === 'ratings' ? 'bg-blue-600 text-white' : 'bg-zinc-900 text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'}`}>
             <BarChart2 size={13} /> Puan Listesi
           </button>
         </div>
 
         {/* Ratings view */}
         {view === 'ratings' && !loading && (
-          <div className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.05] flex items-center justify-between">
-              <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Tüm Kullanıcılar — Puana Göre</p>
-              <p className="text-[10px] text-slate-400">{allSortedDesc.length} kullanıcı</p>
+          <div className="bg-zinc-900 rounded-2xl border border-white/[0.06] overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
+              <p className="text-xs font-bold text-zinc-300">Tüm Kullanıcılar — Puana Göre</p>
+              <p className="text-[10px] text-zinc-600">{allSortedDesc.length} kullanıcı</p>
             </div>
             {allSortedDesc.map((u, i) => {
               const rating = u.rating || 0
               const pct = (rating / 5) * 100
               return (
-                <div key={u.id} className={`flex items-center gap-3 px-4 py-3 ${i !== allSortedDesc.length - 1 ? 'border-b border-slate-50 dark:border-white/[0.04]' : ''}`}>
-                  <span className="text-xs font-black text-slate-400 w-5 text-right flex-shrink-0">{i + 1}</span>
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-[11px] font-black text-slate-500 dark:text-slate-300">
+                <div key={u.id} className={`flex items-center gap-3 px-4 py-3 ${i !== allSortedDesc.length - 1 ? 'border-b border-white/[0.04]' : ''}`}>
+                  <span className="text-xs font-black text-zinc-600 w-5 text-right flex-shrink-0">{i + 1}</span>
+                  <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0 text-[11px] font-black text-zinc-400">
                     {u.name?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{u.name}</p>
+                    <p className="text-xs font-semibold text-white truncate">{u.name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${rating >= 4 ? 'bg-emerald-400' : rating >= 3 ? 'bg-amber-400' : rating > 0 ? 'bg-rose-400' : 'bg-slate-200 dark:bg-white/10'}`}
+                          className={`h-full rounded-full transition-all ${rating >= 4 ? 'bg-emerald-400' : rating >= 3 ? 'bg-amber-400' : rating > 0 ? 'bg-rose-400' : 'bg-white/[0.06]'}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className={`text-[11px] font-bold w-7 text-right flex-shrink-0 ${rating >= 4 ? 'text-emerald-500' : rating >= 3 ? 'text-amber-500' : rating > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                      <span className={`text-[11px] font-bold w-7 text-right flex-shrink-0 ${rating >= 4 ? 'text-emerald-400' : rating >= 3 ? 'text-amber-400' : rating > 0 ? 'text-rose-400' : 'text-zinc-600'}`}>
                         {rating.toFixed(1)}
                       </span>
                     </div>
@@ -243,12 +243,12 @@ function AdminUsersPage() {
               onClick={() => setRoleFilter(f.key)}
               className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 roleFilter === f.key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.07]'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-zinc-900 text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'
               }`}
             >
               {f.label}
-              <span className={`ml-1.5 text-[10px] font-bold ${roleFilter === f.key ? 'opacity-70' : 'text-slate-400'}`}>
+              <span className={`ml-1.5 text-[10px] font-bold ${roleFilter === f.key ? 'opacity-70' : 'text-zinc-600'}`}>
                 {counts[f.key] ?? counts.all}
               </span>
             </button>
@@ -258,42 +258,52 @@ function AdminUsersPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader size={32} className="text-blue-500 animate-spin mb-3" />
-            <p className="text-sm text-slate-500">Kullanıcılar yükleniyor...</p>
+            <p className="text-sm text-zinc-500">Kullanıcılar yükleniyor...</p>
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState icon={Users} title="Kullanıcı bulunamadı" description="Bu kategoride kayıtlı kullanıcı yok." />
         ) : (
           <div className="space-y-2">
             {filtered.map((user) => (
-              <div key={user.id} className="bg-white dark:bg-[#141414] rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-sm p-3.5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+              <div key={user.id} className="bg-zinc-900 rounded-2xl border border-white/[0.06] p-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
                   {user.profileImage
                     ? <img src={user.profileImage} className="w-10 h-10 rounded-xl object-cover" alt="" />
-                    : <User size={18} className="text-slate-400" />
+                    : <User size={18} className="text-zinc-500" />
                   }
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0" onClick={() => navigate(`/admin/users/${user.id}`)} role="button">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user.name}</p>
+                    <p className="text-sm font-semibold text-white truncate hover:text-blue-400 cursor-pointer transition">{user.name}</p>
                     {roleBadge(user.role)}
                   </div>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
+                  <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                  <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    <span className="flex items-center gap-1 text-xs text-zinc-500">
                       <Star size={11} className="text-amber-400" fill={user.rating > 0 ? 'currentColor' : 'none'} />
                       {(user.rating || 0).toFixed(1)}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Briefcase size={11} className="text-slate-400" />
+                    <span className="flex items-center gap-1 text-xs text-zinc-500">
+                      <Briefcase size={11} className="text-zinc-600" />
                       {user.jobCount || 0} iş
                     </span>
+                    {user.createdAt && (
+                      <span className="text-[10px] text-zinc-600">
+                        Kayıt: {new Date(user.createdAt).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
+                    {user.address && (
+                      <span className="text-[10px] text-zinc-600 truncate max-w-[120px]">
+                        📍 {typeof user.address === 'string' ? user.address : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {(user.role || '').toLowerCase() !== 'admin' && (
                   <button
                     onClick={() => handleDeleteUser(user.id)}
                     disabled={deletingId === user.id}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors disabled:opacity-50 flex-shrink-0"
+                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors disabled:opacity-50 flex-shrink-0"
                   >
                     {deletingId === user.id
                       ? <Loader size={14} className="animate-spin" />

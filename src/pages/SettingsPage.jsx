@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { fetchAPI, setStoredUser } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
-import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2, FileText, Upload, XCircle, Shield } from 'lucide-react'
+import { User, Mail, Phone, Lock, Power, CheckCircle, Clock, AlertCircle, Sun, Moon, Monitor, MessageCircle, Info, Trash2, FileText, Upload, XCircle, Shield, Calendar, MapPin } from 'lucide-react'
 import { uploadFile } from '../utils/api'
 import { mapUserFromBackend } from '../utils/fieldMapper'
 import PageHeader from '../components/PageHeader'
@@ -40,6 +40,49 @@ function SettingsPage() {
     if (user?.hasVergiLevhasi !== undefined) setHasVergiLevhasi(user.hasVergiLevhasi)
   }, [user?.hasVergiLevhasi])
   const [uploadingDoc, setUploadingDoc] = useState(null) // docType being uploaded
+
+  // Usta Availability
+  const LS_AVAIL_KEY = `ug_availability_${user?.id || ''}`
+  const defaultAvailability = {
+    Pzt: { active: true, start: '09:00', end: '18:00' },
+    Sal: { active: true, start: '09:00', end: '18:00' },
+    Çar: { active: true, start: '09:00', end: '18:00' },
+    Per: { active: true, start: '09:00', end: '18:00' },
+    Cum: { active: true, start: '09:00', end: '18:00' },
+    Cmt: { active: false, start: '10:00', end: '15:00' },
+    Paz: { active: false, start: '10:00', end: '15:00' },
+  }
+  const [availability, setAvailability] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_AVAIL_KEY)) || defaultAvailability } catch { return defaultAvailability }
+  })
+  const updateAvailability = (day, field, value) => {
+    setAvailability(prev => {
+      const next = { ...prev, [day]: { ...prev[day], [field]: value } }
+      localStorage.setItem(LS_AVAIL_KEY, JSON.stringify(next))
+      return next
+    })
+  }
+
+  // Usta Working Areas
+  const LS_AREAS_KEY = `ug_work_areas_${user?.id || ''}`
+  const ISTANBUL_DISTRICTS = [
+    'Kadıköy', 'Üsküdar', 'Beşiktaş', 'Şişli', 'Beyoğlu', 'Bakırköy', 'Ataşehir', 'Maltepe',
+    'Kartal', 'Pendik', 'Tuzla', 'Sultanbeyli', 'Ümraniye', 'Sancaktepe', 'Çekmeköy', 'Beykoz',
+    'Sarıyer', 'Eyüpsultan', 'Fatih', 'Bayrampaşa', 'Zeytinburnu', 'Güngören', 'Esenler',
+    'Bağcılar', 'Küçükçekmece', 'Bahçelievler', 'Avcılar', 'Esenyurt', 'Beylikdüzü',
+    'Büyükçekmece', 'Çatalca', 'Silivri', 'Arnavutköy', 'Başakşehir', 'Sultangazi', 'Gaziosmanpaşa',
+    'Kağıthane', 'Adalar', 'Şile'
+  ]
+  const [workAreas, setWorkAreas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_AREAS_KEY)) || [] } catch { return [] }
+  })
+  const toggleWorkArea = (district) => {
+    setWorkAreas(prev => {
+      const next = prev.includes(district) ? prev.filter(d => d !== district) : [...prev, district]
+      localStorage.setItem(LS_AREAS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
 
   const handleDocUpload = async (file, docType, label) => {
     if (!file) return
@@ -278,6 +321,83 @@ function SettingsPage() {
           </Card>
           )
         })()}
+
+        {/* Müsaitlik Takvimi (Usta için) */}
+        {user?.role === 'professional' && (
+          <Card padding="p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={18} className="text-primary-500" />
+              <h3 className="font-bold text-gray-900 dark:text-white">Müsaitlik Takvimi</h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">Müsait olduğunuz gün ve saatleri belirleyin. Sadece bu saatlerde iş talepleri alırsınız.</p>
+            <div className="space-y-2">
+              {Object.entries(availability).map(([day, config]) => (
+                <div key={day} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition ${config.active ? 'bg-primary-50 dark:bg-primary-900/10' : 'bg-gray-50 dark:bg-[#1a1a1a]'}`}>
+                  <button
+                    onClick={() => updateAvailability(day, 'active', !config.active)}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition ${
+                      config.active ? 'bg-primary-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                    }`}
+                  >
+                    {config.active ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                  </button>
+                  <span className={`text-xs font-semibold w-7 ${config.active ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{day}</span>
+                  {config.active ? (
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <input
+                        type="time"
+                        value={config.start}
+                        onChange={(e) => updateAvailability(day, 'start', e.target.value)}
+                        className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[11px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      />
+                      <span className="text-gray-300 text-[10px]">—</span>
+                      <input
+                        type="time"
+                        value={config.end}
+                        onChange={(e) => updateAvailability(day, 'end', e.target.value)}
+                        className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[11px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">Kapalı</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Çalışma Bölgesi (Usta için) */}
+        {user?.role === 'professional' && (
+          <Card padding="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin size={18} className="text-accent-500" />
+              <h3 className="font-bold text-gray-900 dark:text-white">Çalışma Bölgeleri</h3>
+              {workAreas.length > 0 && <span className="text-[10px] bg-accent-50 dark:bg-accent-900/30 text-accent-600 font-semibold px-2 py-0.5 rounded-full">{workAreas.length} ilçe</span>}
+            </div>
+            <p className="text-xs text-gray-400 mb-3">İş almak istediğiniz ilçeleri seçin. Seçmezseniz tüm İstanbul'dan iş alırsınız.</p>
+            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+              {ISTANBUL_DISTRICTS.map(d => (
+                <button
+                  key={d}
+                  onClick={() => toggleWorkArea(d)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition active:scale-[0.96] ${
+                    workAreas.includes(d)
+                      ? 'bg-accent-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            {workAreas.length > 0 && (
+              <button onClick={() => { setWorkAreas([]); localStorage.setItem(LS_AREAS_KEY, '[]') }} className="mt-3 text-[11px] text-rose-500 font-semibold hover:text-rose-600 transition">
+                Tüm seçimi temizle
+              </button>
+            )}
+          </Card>
+        )}
 
         {/* Doğrulama (Usta için) */}
         {user?.role === 'professional' && (() => {

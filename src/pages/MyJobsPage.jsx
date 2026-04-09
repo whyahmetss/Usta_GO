@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
 import { mapJobsFromBackend } from '../utils/fieldMapper'
-import { MapPin, ClipboardList } from 'lucide-react'
+import { MapPin, ClipboardList, RotateCcw } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
@@ -107,6 +107,23 @@ function MyJobsPage() {
                   <span className="text-base font-bold text-primary-600">{job.price || job.budget} TL</span>
                   <span className="text-[11px] text-gray-400">{new Date(job.createdAt).toLocaleDateString('tr-TR')}</span>
                 </div>
+                {activeTab === 'completed' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const cat = job.category?.toLowerCase() || ''
+                      const svcMap = { electric: 'electric', elektrik: 'electric', plumbing: 'plumbing', tesisat: 'plumbing', renovation: 'renovation', tadilat: 'renovation', cleaning: 'cleaning', temizlik: 'cleaning', painting: 'painting', boyaci: 'painting', carpentry: 'carpentry', marangoz: 'carpentry' }
+                      const serviceId = svcMap[cat] || ''
+                      const params = new URLSearchParams()
+                      if (serviceId) params.set('service', serviceId)
+                      if (job.description) params.set('sub', job.title || '')
+                      navigate(`/create-job?${params.toString()}`)
+                    }}
+                    className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-xl text-xs font-semibold hover:bg-primary-100 transition active:scale-[0.98]"
+                  >
+                    <RotateCcw size={14} /> Tekrar Talep Et
+                  </button>
+                )}
               </div>
             ))}
           </div>

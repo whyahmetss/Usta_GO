@@ -7,6 +7,30 @@ import { useAuth } from '../context/AuthContext';
 
 const PRESET_AMOUNTS = [100, 200, 500, 1000];
 
+/* ── Luhn Validation ── */
+function luhnCheck(num) {
+  const digits = num.replace(/\D/g, '');
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0;
+  let alternate = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = parseInt(digits[i], 10);
+    if (alternate) { n *= 2; if (n > 9) n -= 9; }
+    sum += n;
+    alternate = !alternate;
+  }
+  return sum % 10 === 0;
+}
+
+function detectCardType(num) {
+  const clean = num.replace(/\D/g, '');
+  if (/^4/.test(clean)) return 'Visa';
+  if (/^5[1-5]/.test(clean) || /^2[2-7]/.test(clean)) return 'Mastercard';
+  if (/^3[47]/.test(clean)) return 'Amex';
+  if (/^9792/.test(clean)) return 'Troy';
+  return null;
+}
+
 /* ── Chip SVG ── */
 function ChipSVG() {
   return (
@@ -484,8 +508,16 @@ const Odeme = () => {
       payHolder = cardHolder;
     }
 
-    if (payNum.replace(/\s/g, '').length < 15) { setError('Geçerli bir kart numarası girin.'); return; }
+    const cleanPayNum = payNum.replace(/\s/g, '');
+    if (cleanPayNum.length < 13) { setError('Kart numarası çok kısa.'); return; }
+    if (!luhnCheck(cleanPayNum)) { setError('Geçersiz kart numarası. Lütfen kontrol edin.'); return; }
     if (payExpiry.length < 4) { setError('Son kullanma tarihini girin.'); return; }
+    const [valEM, valEY] = payExpiry.split('/');
+    const valMonth = parseInt(valEM, 10);
+    const valYear = parseInt(`20${valEY}`, 10);
+    const now = new Date();
+    if (valMonth < 1 || valMonth > 12) { setError('Geçersiz son kullanma ayı.'); return; }
+    if (valYear < now.getFullYear() || (valYear === now.getFullYear() && valMonth < now.getMonth() + 1)) { setError('Kartınızın süresi dolmuş.'); return; }
     if (payCvc.length < 3) { setError('CVV kodunu girin.'); return; }
     if (!payHolder.trim()) { setError('Kart sahibi adını girin.'); return; }
 
@@ -687,8 +719,26 @@ const Odeme = () => {
                     onFocus={() => setCardFlipped(false)}
                     placeholder="0000 0000 0000 0000"
                     maxLength={19}
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base tracking-wider focus:outline-none focus:border-purple-500 transition"
+                    className={`w-full px-4 py-3.5 rounded-2xl border-2 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white font-mono text-base tracking-wider focus:outline-none transition ${
+                      cardNumber.replace(/\s/g, '').length >= 13
+                        ? luhnCheck(cardNumber.replace(/\s/g, ''))
+                          ? 'border-emerald-400 focus:border-emerald-500'
+                          : 'border-rose-400 focus:border-rose-500'
+                        : 'border-gray-200 dark:border-white/10 focus:border-purple-500'
+                    }`}
                   />
+                  {cardNumber.replace(/\s/g, '').length >= 4 && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {detectCardType(cardNumber) && (
+                        <span className="text-[10px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">{detectCardType(cardNumber)}</span>
+                      )}
+                      {cardNumber.replace(/\s/g, '').length >= 13 && (
+                        luhnCheck(cardNumber.replace(/\s/g, ''))
+                          ? <span className="text-[10px] text-emerald-500 font-semibold">✓ Geçerli</span>
+                          : <span className="text-[10px] text-rose-500 font-semibold">✗ Geçersiz numara</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Kart Sahibi</label>

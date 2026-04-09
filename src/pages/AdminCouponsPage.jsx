@@ -70,72 +70,72 @@ function AdminCouponsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <PageHeader
         title="Kupon Yönetimi"
         onBack={() => navigate('/admin')}
       />
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
-        <p className="text-xs text-gray-500 font-medium px-1">{coupons.length} kupon</p>
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
+        <p className="text-xs text-zinc-500 font-medium px-1">{coupons.length} kupon</p>
 
         {/* Create Form */}
         <Card>
-          <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Plus size={16} className="text-primary-500" />
+          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <Plus size={16} className="text-blue-400" />
             Yeni Kupon Oluştur
           </h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Kupon Kodu *</label>
+                <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Kupon Kodu *</label>
                 <input
                   value={form.code}
                   onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))}
                   placeholder="YAZA50"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm font-mono font-semibold text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Bakiye (TL) *</label>
+                <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Bakiye (TL) *</label>
                 <input
                   type="number"
                   value={form.amount}
                   onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
                   placeholder="50"
                   min="1"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                 />
               </div>
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Açıklama</label>
+              <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Açıklama</label>
               <input
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                 placeholder="Yaz kampanyası kuponu"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Maks. Kullanım</label>
+                <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Maks. Kullanım</label>
                 <input
                   type="number"
                   value={form.maxUses}
                   onChange={e => setForm(p => ({ ...p, maxUses: e.target.value }))}
                   placeholder="Sınırsız"
                   min="1"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Son Kullanma</label>
+                <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">Son Kullanma</label>
                 <input
                   type="date"
                   value={form.expiresAt}
                   onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
+                  className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.04] text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ function AdminCouponsPage() {
             <button
               type="submit"
               disabled={creating}
-              className="w-full py-3 bg-primary-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {creating ? 'Oluşturuluyor...' : 'Kupon Oluştur'}
             </button>
@@ -154,15 +154,15 @@ function AdminCouponsPage() {
 
         {/* Coupons List */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2 px-1 mb-3">
-            <Tag size={14} className="text-gray-400" />
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2 px-1 mb-3">
+            <Tag size={14} className="text-zinc-500" />
             Tüm Kuponlar
           </h2>
 
           {loading ? (
             <div className="flex flex-col items-center py-12">
-              <Loader size={28} className="text-primary-500 animate-spin mb-3" />
-              <p className="text-xs text-gray-500">Yükleniyor...</p>
+              <Loader size={28} className="text-blue-500 animate-spin mb-3" />
+              <p className="text-xs text-zinc-500">Yükleniyor...</p>
             </div>
           ) : coupons.length === 0 ? (
             <EmptyState
@@ -176,38 +176,38 @@ function AdminCouponsPage() {
                 <Card key={coupon.id} className={!coupon.isActive ? 'opacity-60' : ''}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${coupon.isActive ? 'bg-emerald-50' : 'bg-gray-100'}`}>
-                        <Tag size={18} className={coupon.isActive ? 'text-emerald-600' : 'text-gray-400'} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${coupon.isActive ? 'bg-emerald-500/10' : 'bg-white/[0.06]'}`}>
+                        <Tag size={18} className={coupon.isActive ? 'text-emerald-400' : 'text-zinc-600'} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900 font-mono">{coupon.code}</p>
-                        <p className="text-xs font-semibold text-primary-600">{coupon.amount} TL bakiye</p>
+                        <p className="text-sm font-bold text-white font-mono">{coupon.code}</p>
+                        <p className="text-xs font-semibold text-blue-400">{coupon.amount} TL bakiye</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <button onClick={() => handleToggle(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+                      <button onClick={() => handleToggle(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/[0.06] transition-colors">
                         {coupon.isActive
-                          ? <ToggleRight size={22} className="text-emerald-600" />
-                          : <ToggleLeft size={22} className="text-gray-400" />}
+                          ? <ToggleRight size={22} className="text-emerald-400" />
+                          : <ToggleLeft size={22} className="text-zinc-600" />}
                       </button>
-                      <button onClick={() => handleDelete(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 transition-colors">
+                      <button onClick={() => handleDelete(coupon.id)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-500/10 transition-colors">
                         <Trash2 size={16} className="text-rose-500" />
                       </button>
                     </div>
                   </div>
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {coupon.description && (
-                      <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{coupon.description}</span>
+                      <span className="text-[11px] bg-white/[0.06] text-zinc-400 px-2 py-0.5 rounded-full">{coupon.description}</span>
                     )}
-                    <span className="text-[11px] bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-[11px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-medium">
                       {coupon.usedCount || 0} kullanım{coupon.maxUses ? ` / ${coupon.maxUses}` : ''}
                     </span>
                     {coupon.expiresAt && (
-                      <span className="text-[11px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-[11px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-medium">
                         Son: {new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}
                       </span>
                     )}
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${coupon.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${coupon.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                       {coupon.isActive ? 'Aktif' : 'Devre Dışı'}
                     </span>
                   </div>
