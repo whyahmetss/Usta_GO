@@ -285,25 +285,6 @@ function ProfessionalDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="px-4 pb-3">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {[
-            { label: 'Cüzdan', icon: DollarSign, path: '/wallet', color: 'bg-emerald-500' },
-            { label: 'İşlerim', icon: Briefcase, path: '/my-jobs', color: 'bg-primary-500' },
-            { label: 'Profil', icon: Settings, path: '/settings', color: 'bg-violet-500' },
-            { label: 'Takvim', icon: Calendar, path: '/settings', color: 'bg-amber-500' },
-          ].map(a => (
-            <button key={a.label} onClick={() => navigate(a.path)} className="flex flex-col items-center gap-1.5 min-w-[64px]">
-              <div className={`w-12 h-12 ${a.color} rounded-2xl flex items-center justify-center shadow-sm`}>
-                <a.icon size={20} className="text-white" />
-              </div>
-              <span className="text-[10px] font-semibold text-gray-500">{a.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Job Requests */}
       <div className="px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
