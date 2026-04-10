@@ -261,6 +261,20 @@ export const acceptJob = async (jobId, ustaId) => {
     throw error;
   }
 
+  // Zorunlu belge doğrulama kontrolü
+  const requiredDocs = ['kimlik', 'adli_sicil'];
+  const approvedCerts = await prisma.userCertificate.findMany({
+    where: { userId: ustaId, status: 'APPROVED', docType: { in: requiredDocs } },
+    select: { docType: true },
+  });
+  const approvedTypes = approvedCerts.map(c => c.docType);
+  const missingDocs = requiredDocs.filter(d => !approvedTypes.includes(d));
+  if (missingDocs.length > 0) {
+    const error = new Error("Zorunlu belgeleriniz onaylanmadan iş kabul edemezsiniz. Lütfen Ayarlar > Belgelerim bölümünden belgelerinizi yükleyin.");
+    error.status = 403;
+    throw error;
+  }
+
   const job = await prisma.job.findUnique({
     where: { id: jobId },
     include: { usta: true },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle, Zap, Clock, Calendar } from 'lucide-react'
+import { Bell, Settings, DollarSign, Star, TrendingUp, Briefcase, MapPin, ClipboardList, CheckCircle, Zap, Clock, Calendar, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { fetchAPI } from '../utils/api'
 import { API_ENDPOINTS } from '../config'
@@ -194,6 +194,9 @@ function ProfessionalDashboard() {
     return () => { clearInterval(interval); clearTimeout(flashTimer.current) }
   }, [user?.role, user?.status])
 
+  // Belge doğrulama kontrolü
+  const docsVerified = user?.verificationStatus === 'verified'
+
   // Bekleyen genel işler (iş talepleri listesi) - kendi kabul etmedikleri
   const jobRequests = allJobs.filter(j => j.status === 'pending')
   // İstatistikler için sadece kendi işleri kullan (MY_JOBS endpoint zaten filtreli döner)
@@ -284,6 +287,22 @@ function ProfessionalDashboard() {
           <StatCard icon={TrendingUp} label="Aktif İş" value={myActiveJobs.length} color="violet" />
         </div>
       </div>
+
+      {/* Document Verification Warning */}
+      {!docsVerified && (
+        <div className="px-4 mb-3">
+          <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30 rounded-xl px-4 py-3 flex items-start gap-3">
+            <div className="w-8 h-8 bg-amber-100 dark:bg-amber-800/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertTriangle size={16} className="text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-amber-800 dark:text-amber-400">Belgeleriniz Onaylanmamış</p>
+              <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-0.5 leading-relaxed">Kimlik Belgesi ve Adli Sicil Kaydı onaylanmadan iş kabul edemezsiniz.</p>
+              <button onClick={() => navigate('/settings')} className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 underline">Belgeleri Yükle →</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Job Requests */}
       <div className="px-4 pb-6">
